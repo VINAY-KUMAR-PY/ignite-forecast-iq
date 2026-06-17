@@ -66,6 +66,20 @@ function SimulatorPage() {
     return out;
   }, [rows]);
 
+  const totalBudget = (ch: string) =>
+    budgets[ch] ?? Math.round(((baselines?.[ch]?.dailySpend ?? 0) * horizon));
+
+  // Run GBRT forecast per channel with the chosen daily spend
+  const sims: SimChannelResult[] = useMemo(() => {
+    if (!rows.length || !baselines) return [];
+    return CHANNELS.map((ch) => {
+      const total = totalBudget(ch);
+      const newDaily = total / horizon;
+      return simulateChannelForecast(rows, ch, newDaily, horizon);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, horizon, baselines, JSON.stringify(budgets)]);
+
   if (!rows.length || !baselines) {
     return (
       <>
@@ -74,19 +88,6 @@ function SimulatorPage() {
       </>
     );
   }
-
-  const totalBudget = (ch: string) =>
-    budgets[ch] ?? Math.round((baselines[ch]?.dailySpend ?? 0) * horizon);
-
-  // Run GBRT forecast per channel with the chosen daily spend
-  const sims: SimChannelResult[] = useMemo(() => {
-    return CHANNELS.map((ch) => {
-      const total = totalBudget(ch);
-      const newDaily = total / horizon;
-      return simulateChannelForecast(rows, ch, newDaily, horizon);
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows, horizon, JSON.stringify(budgets)]);
 
   const totalNewSpend = sims.reduce((s, p) => s + p.newTotalSpend, 0);
   const totalBaseSpend = sims.reduce((s, p) => s + p.baselineTotalSpend, 0);

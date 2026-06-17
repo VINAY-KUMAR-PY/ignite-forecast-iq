@@ -437,3 +437,139 @@ export function forecastRevenue(rows: CampaignRow[], horizon: number): ForecastP
 export function forecastRoas(rows: CampaignRow[], horizon: number): ForecastPoint[] {
   return forecastTarget(aggregateDaily(rows), horizon, "roas");
 }
+
+// ---------------------------------------------------------------------------
+// Budget simulation — drives the Budget Simulator screen
+// ---------------------------------------------------------------------------
+
+export interface SimChannelResult {
+  channel: string;
+  horizonDays: number;
+  baselineDailySpend: number;
+  newDailySpend: number;
+  baselineTotalSpend: number;
+  newTotalSpend: number;
+  baselineRevenue: number;
+  projectedRevenue: number;
+  projectedRevenueLower: number;
+  projectedRevenueUpper: number;
+  baselineRoas: number;
+  projectedRoas: number;
+  daily: ForecastPoint[]; // forecast horizon only
+}
+
+/**
+ * Run the gradient-boosted forecasting model for a single channel with a
+ * user-supplied future daily spend. Click / impression / conversion volumes
+ * are scaled proportionally to the spend change, while the booster learns
+ * the non-linear revenue response from history.
+ */
+export function simulateChannelForecast(
+  rows: CampaignRow[],
+  channel: string,
+  newDailySpend: number,
+  horizon: number,
+): SimChannelResult {
+  const chRows = rows.filter((r) => r.channel === channel);
+  const daily = aggregateDaily(chRows);
+
+  const lookback = Math.min(horizon, daily.length);
+  const baseSlice = daily.slice(-Math.max(1, lookback));
+  const baselineDailySpend = baseSlice.reduce((s, d) => s + d.spend, 0) / Math.max(1, baseSlice.length);
+  const baselineDailyRevenue = baseSlice.reduce((s, d) => s + d.revenue, 0) / Math.max(1, baseSlice.length);
+  const baselineRevenue = baselineDailyRevenue * horizon;
+  const baselineTotalSpend = baselineDailySpend * horizon;
+  const baselineRoas = baselineTotalSpend > 0 ? baselineRevenue / baselineTotalSpend : 0;
+
+  const minHistory = Math.max(...LAGS, ...ROLLS) + 5;
+  const spendRatio = baselineDailySpend > 0 ? newDailySpend / baselineDailySpend : 1;
+  const newTotalSpend = newDailySpend * horizon;
+
+  if (daily.length < minHistory) {
+    const projRev = baselineRevenue * Math.pow(Math.max(0, spendRatio), 0.85);
+    return {
+      channel,
+      horizonDays: horizon,
+      baselineDailySpend,
+      newDailySpend,
+      baselineTotalSpend,
+      newTotalSpend,
+      baselineRevenue,
+      projectedRevenue: projRev,
+      projectedRevenueLower: projRev * 0.75,
+      projectedRevenueUpper: projRev * 1.25,
+      baselineRoas,
+      projectedRoas: newTotalSpend > 0 ? projRev / newTotalSpend : 0,
+      daily: [],
+    };
+  }
+
+  const { X, y } = buildFeatures(daily, "revenue");
+  const model = trainGBRT(X, y);
+  const preds = X.map((x) => predictGBRT(model, x));
+  const residuals = y.map((v, i) => v - preds[i]);
+  const rMean = residuals.reduce((s, v) => s + v, 0) / residuals.length;
+  const variance = residuals.reduce((s, v) => s + (v - rMean) ** 2, 0) / Math.max(1, residuals.length - 1);
+  const stderr = Math.sqrt(variance);
+
+  const history = daily.slice();
+  const lastDate = new Date(daily[daily.length - 1].date);
+  const out: ForecastPoint[] = [];
+  let sumRev = 0;
+  let sumLower = 0;
+  let sumUpper = 0;
+
+  for (let h = 1; h <= horizon; h++) {
+    const fd = new Date(lastDate);
+    fd.setUTCDate(lastDate.getUTCDate() + h);
+    const baseExog = projectExog(history, fd);
+    const dowFactor = baselineDailySpend > 0 ? baseExog.spend / baselineDailySpend : 1;
+    const exog = {
+      spend: newDailySpend * dowFactor,
+      clicks: baseExog.clicks * spendRatio,
+      impressions: baseExog.impressions * spendRatio,
+      conversions: baseExog.conversions * spendRatio,
+    };
+    const row = buildFutureRow(history, fd, exog, "revenue");
+    const pred = Math.max(0, predictGBRT(model, row));
+    const margin = 1.96 * stderr * Math.sqrt(1 + h / 30);
+    const lower = Math.max(0, pred - margin);
+    const upper = pred + margin;
+    sumRev += pred;
+    sumLower += lower;
+    sumUpper += upper;
+
+    out.push({
+      date: fd.toISOString().slice(0, 10),
+      value: Math.round(pred * 100) / 100,
+      lower: Math.round(lower * 100) / 100,
+      upper: Math.round(upper * 100) / 100,
+    });
+
+    history.push({
+      date: fd.toISOString().slice(0, 10),
+      spend: exog.spend,
+      clicks: exog.clicks,
+      impressions: exog.impressions,
+      conversions: exog.conversions,
+      revenue: pred,
+      roas: exog.spend > 0 ? pred / exog.spend : 0,
+    });
+  }
+
+  return {
+    channel,
+    horizonDays: horizon,
+    baselineDailySpend,
+    newDailySpend,
+    baselineTotalSpend,
+    newTotalSpend,
+    baselineRevenue,
+    projectedRevenue: sumRev,
+    projectedRevenueLower: sumLower,
+    projectedRevenueUpper: sumUpper,
+    baselineRoas,
+    projectedRoas: newTotalSpend > 0 ? sumRev / newTotalSpend : 0,
+    daily: out,
+  };
+}

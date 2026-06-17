@@ -50,12 +50,13 @@ function SimulatorPage() {
   const current = (ch: string) => budgets[ch] ?? Math.round((baselines?.[ch]?.dailySpend ?? 0) * 30);
 
   // Diminishing returns: revenue = baselineRevenue * (newSpend/baselineSpend)^0.85
+  const bl = baselines;
   function project(ch: string) {
-    const b = baselines[ch];
+    const b = bl[ch];
     const newSpend = current(ch);
     const baseSpend = b.dailySpend * 30 || 1;
     const ratio = newSpend / baseSpend;
-    const efficiency = Math.pow(ratio, 0.85) / Math.max(ratio, 0.0001); // ratio^-0.15
+    const efficiency = Math.pow(ratio, 0.85) / Math.max(ratio, 0.0001);
     const projectedRevenue = b.revenue * Math.pow(ratio, 0.85);
     const projectedRoas = b.roas * efficiency;
     return { newSpend, projectedRevenue, projectedRoas, baseRevenue: b.revenue, baseSpend, baseRoas: b.roas };

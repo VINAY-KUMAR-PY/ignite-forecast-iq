@@ -218,6 +218,3 @@ function TT({ active, payload, label, formatter }: any) {
       ))}
     </div>
   );
-}
-// re-export Cell to avoid unused warning
-export const _C = Cell;

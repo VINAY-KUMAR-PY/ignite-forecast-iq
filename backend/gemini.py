@@ -1,6 +1,9 @@
+"""Gemini-backed executive insight generation with deterministic fallback."""
+
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 from typing import Any, Dict, List
@@ -8,11 +11,15 @@ from typing import Any, Dict, List
 from .schemas import InsightsResponse
 
 
+logger = logging.getLogger(__name__)
+
+
 def _money(value: float) -> str:
     return f"${value:,.0f}"
 
 
 def _fallback_insights(summary: Dict[str, Any]) -> InsightsResponse:
+    """Create data-grounded insights when Gemini is unavailable."""
     channels: List[Dict[str, Any]] = summary.get("channels") or []
     top_campaigns: List[Dict[str, Any]] = summary.get("topCampaigns") or []
     bottom_campaigns: List[Dict[str, Any]] = summary.get("bottomCampaigns") or []
@@ -192,6 +199,7 @@ def _extract_json(text: str) -> dict:
 
 
 async def generate_gemini_insights(summary: Dict[str, Any]) -> InsightsResponse:
+    """Generate structured CMO-ready insights from Gemini or fallback rules."""
     key = os.getenv("GEMINI_API_KEY")
     if not key:
         return _fallback_insights(summary)
@@ -222,5 +230,6 @@ DATA:
 """
         response = await model.generate_content_async(prompt)
         return InsightsResponse.model_validate(_extract_json(response.text or "{}"))
-    except Exception:
+    except Exception as exc:
+        logger.warning("Gemini insight generation failed; using fallback insights: %s", exc)
         return _fallback_insights(summary)

@@ -1,54 +1,180 @@
 # AIgnition ForecastIQ
 
-AIgnition ForecastIQ is an ecommerce marketing forecasting platform for NetElixir AIgnition 3.0. It keeps the existing Lovable React + TypeScript interface and adds a FastAPI backend with XGBoost-based revenue and ROAS forecasting, validation, budget simulation, model persistence and Gemini-powered executive insights.
+AIgnition ForecastIQ is an AI-powered ecommerce forecasting platform built for NetElixir AIgnition 3.0. It preserves the original Lovable React experience and adds a production-style FastAPI backend for data validation, XGBoost revenue and ROAS forecasting, budget simulation, model persistence, and Gemini-assisted executive insights.
+
+## Problem Statement
+
+Ecommerce marketing teams need to understand how paid media spend across Google Ads, Meta Ads, and Microsoft Ads will affect revenue and ROAS over the next 30, 60, and 90 days. Static dashboards show what happened, but they do not reliably answer planning questions such as:
+
+- Which channel should receive incremental budget?
+- What revenue range should leadership expect?
+- Which campaigns are creating or destroying efficiency?
+- What risks should be addressed before reallocating spend?
+
+ForecastIQ turns historical campaign data into forward-looking forecasts, confidence intervals, and business recommendations.
+
+## Business Context
+
+Digital marketing decisions are made under uncertainty. A useful planning product must connect predictive modeling with practical media operations: validation of uploaded data, explainable forecasts, scenario planning, and executive-level recommendations. This project focuses on the workflows a growth, analytics, or performance marketing team would use before weekly or monthly budget decisions.
+
+## Solution Overview
+
+The application contains four core flows:
+
+- Dashboard: campaign performance overview and analytics charts.
+- CSV Upload: client-side parsing plus backend validation for missing values, invalid dates, duplicate records, negative spend, and invalid revenue.
+- Forecast: backend-powered 30, 60, and 90-day forecasts for overall, channel, campaign type, and campaign-level planning.
+- Budget Simulator: dynamic revenue and ROAS projections when Google Ads, Meta Ads, or Microsoft Ads budgets change.
+- AI Insights: Gemini-generated, or deterministic fallback, executive summaries, risks, opportunities, revenue drivers, budget recommendations, and action plans.
+
+The frontend keeps the existing pages, routes, components, and styling. Backend APIs replace the mock forecast and insight paths while frontend fallbacks remain available for local resilience.
 
 ## Architecture
 
-- Frontend: React, TypeScript, TanStack Router, Recharts and the existing Lovable UI components.
-- Backend: Python FastAPI with CORS enabled.
-- Machine learning: XGBoost regressors for revenue and ROAS with feature engineering, lag features, rolling means, seasonality and residual confidence intervals.
-- Model persistence: `pickle/model.pkl` stores the trained model bundle when training or prediction runs.
-- Explainability: forecast responses include model fit MAPE, interval coverage and top revenue/ROAS feature drivers.
-- AI insights: Gemini via `GEMINI_API_KEY`, with deterministic data-grounded fallback insights when no key is configured.
-- Business action plan: AI insights include prioritized owners, timelines, actions and KPIs.
+```text
+React + TypeScript frontend
+  |
+  | HTTP JSON
+  v
+FastAPI backend
+  |
+  +-- data_preprocessing.py: validation, aggregation, feature engineering
+  +-- forecasting.py: XGBoost training, prediction, intervals, simulation
+  +-- gemini.py: Gemini insights with deterministic fallback
+  +-- train.py / predict.py: offline model and submission workflows
+  |
+  v
+pickle/model.pkl
+```
 
-## Required Hackathon Contract
+Key design choices:
 
-The repository includes the required root-level command:
+- FastAPI provides typed request and response contracts through Pydantic.
+- The backend accepts normalized campaign rows from the frontend and CSV-driven CLI workflows.
+- `pickle/model.pkl` stores a model bundle containing revenue and ROAS estimators.
+- The offline `run.sh` path does not require Gemini or internet access.
+- CORS defaults support Vite development on ports 5173 and 3000.
+
+## Forecasting Methodology
+
+ForecastIQ aggregates validated campaign rows to the requested planning grain and trains supervised time-series regressors. The primary estimator is XGBoost; if XGBoost is unavailable, the code can fall back to a scikit-learn gradient boosting regressor.
+
+Feature engineering includes:
+
+- Spend, clicks, impressions, and conversions.
+- Day of week, month, trend, and yearly seasonality.
+- Revenue or ROAS lag features at 1, 7, and 14 days.
+- Rolling target and spend averages at 7 and 28 days.
+- Recursive future features for multi-day forecasting.
+
+Forecast outputs include:
+
+- Historical points for chart continuity.
+- Future predicted values.
+- Lower and upper confidence bounds derived from residual volatility.
+- Model diagnostics: fit MAPE, interval coverage, training days, and top feature drivers.
+
+Supported horizons are 30, 60, and 90 days. Supported levels are overall, channel, campaign type, and campaign.
+
+## Budget Simulator
+
+The simulator accepts planned budget totals by channel and reprojects future daily media activity. For each channel it returns:
+
+- Baseline daily and total spend.
+- New daily and total spend.
+- Baseline revenue.
+- Projected revenue with lower and upper bounds.
+- Baseline and projected ROAS.
+- Daily forecast points for charting.
+
+The simulator is dynamic: changing budgets in the UI triggers a backend forecast call and recalculates projected revenue, ROAS, and expected lift.
+
+## AI Insights
+
+The `/api/insights` endpoint converts performance summaries into structured executive guidance:
+
+- Executive summary.
+- Revenue drivers.
+- Channel performance.
+- Top and bottom campaign observations.
+- Budget allocation recommendations.
+- Risks and mitigations.
+- Growth opportunities.
+- Prioritized action plan with owners, timelines, and KPIs.
+
+When `GEMINI_API_KEY` is configured, Gemini generates the structured response. Without a key, the backend returns deterministic data-grounded insights so the application remains demo-ready and offline-safe.
+
+## Technology Stack
+
+- Frontend: React 19, TypeScript, Vite, TanStack Router, Recharts, Tailwind CSS, Radix UI, shadcn-style components.
+- Backend: Python, FastAPI, Pydantic, Uvicorn.
+- Machine learning: XGBoost, scikit-learn, pandas, NumPy, joblib.
+- AI insights: Google Gemini via `google-generativeai`.
+- Tooling: ESLint, Prettier, TypeScript, shell-based offline runner.
+
+## Installation Guide
+
+Prerequisites:
+
+- Node.js 20+.
+- pnpm, npm, or bun. The repository includes `bun.lock`, but Vite scripts also work through npm-compatible package managers.
+- Python 3.10+.
+
+Install frontend dependencies:
 
 ```bash
-./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
+pnpm install
 ```
 
-The script reads CSV files from `data/`, validates records, trains or loads `pickle/model.pkl`, and writes aggregate 30/60/90-day predictions to the provided output path.
-
-## CSV Schema
-
-Input CSV files should include:
-
-```text
-date,channel,campaign_type,campaign_name,spend,clicks,impressions,conversions,revenue,roas
-```
-
-Supported channels include Google Ads, Meta Ads and Microsoft Ads, while the backend also accepts additional channel names.
-
-## Backend Setup
+Install backend dependencies:
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-On Windows PowerShell:
+Windows PowerShell:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 ```
+
+Copy environment defaults if needed:
+
+```bash
+cp .env.example .env
+```
+
+## Usage Guide
+
+Start the backend:
+
+```bash
+python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+Or use the package script:
+
+```bash
+pnpm run api
+```
+
+Start the frontend:
+
+```bash
+pnpm run dev
+```
+
+Open the Vite URL and use the existing app routes:
+
+- `/app` for the dashboard.
+- `/app/upload` for CSV upload and validation.
+- `/app/forecast` for forecasting.
+- `/app/simulator` for budget simulation.
+- `/app/insights` for AI recommendations.
 
 Optional Gemini configuration:
 
@@ -57,43 +183,175 @@ export GEMINI_API_KEY="your-key"
 export GEMINI_MODEL="gemini-1.5-flash"
 ```
 
-## Frontend Setup
+## API Documentation
 
-```bash
-pnpm install
-pnpm run dev
+Health:
+
+```http
+GET /health
 ```
 
-The frontend calls `http://localhost:8000` by default. Override with:
+Validate campaign rows:
 
-```bash
-VITE_API_BASE_URL=http://localhost:8000 pnpm run dev
+```http
+POST /api/validate
 ```
 
-## Main API Endpoints
+Generate forecasts:
 
-- `GET /health`
-- `POST /api/validate`
-- `POST /api/forecast`
-- `POST /api/simulate`
-- `POST /api/insights`
-- `POST /api/train`
+```http
+POST /api/forecast
+```
 
-## Forecasting Methodology
+Request body fields:
 
-The backend aggregates campaign data to the selected planning level, engineers time-series and media features, trains XGBoost revenue and ROAS models, projects future exogenous media signals, and rolls forecasts forward recursively for 30, 60 and 90 days. Confidence intervals are computed from in-sample residual volatility and widened by horizon.
+- `rows`: validated campaign rows.
+- `horizon`: `30`, `60`, or `90`.
+- `level`: `overall`, `channel`, `campaign_type`, or `campaign`.
+- `value`: optional segment name.
 
-The app supports overall, channel, campaign type and campaign-level forecasts. Budget simulation reprojects future spend, clicks, impressions and conversions by channel before re-running the revenue model.
+Simulate budgets:
 
-## Judge-Ready Highlights
+```http
+POST /api/simulate
+```
 
-- Offline scorer path works through `run.sh`.
-- Backend API powers validation, forecasts, simulation and AI insights.
-- Forecasting includes uncertainty ranges instead of single-point estimates.
-- Model diagnostics and top feature drivers make the outputs explainable.
-- Gemini insights produce executive summaries, risks, opportunities, budget recommendations and an action plan.
-- The existing Lovable interface is preserved while replacing browser-only logic with production APIs.
+Request body fields:
 
-## Notes For Judges
+- `rows`: validated campaign rows.
+- `horizon`: `30`, `60`, or `90`.
+- `budgets`: channel-to-budget map.
 
-Runtime prediction does not require internet access. Gemini is only used by the interactive AI Insights endpoint when an API key is configured. The `run.sh` scoring path remains offline and deterministic.
+Generate insights:
+
+```http
+POST /api/insights
+```
+
+Train model:
+
+```http
+POST /api/train
+```
+
+Interactive OpenAPI docs are available at:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+## Offline Submission Command
+
+The repository includes the root-level command expected by a scoring workflow:
+
+```bash
+./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
+```
+
+The script:
+
+1. Locates a usable Python interpreter.
+2. Checks required Python dependencies.
+3. Reads CSV files from `data/`.
+4. Validates campaign records.
+5. Loads or trains `pickle/model.pkl`.
+6. Writes 30, 60, and 90-day prediction rows to the output CSV.
+
+On Windows Git Bash, set `PYTHON` when multiple Python installations exist:
+
+```bash
+PYTHON="/c/path/to/.venv/Scripts/python.exe" ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
+```
+
+## Quality Checks
+
+Frontend:
+
+```bash
+pnpm run check
+```
+
+Backend compile check:
+
+```bash
+python -m compileall backend
+```
+
+Train model:
+
+```bash
+python -m backend.train --data-dir data --model pickle/model.pkl
+```
+
+Generate predictions:
+
+```bash
+python -m backend.predict --data-dir data --model pickle/model.pkl --output output/predictions.csv
+```
+
+## Folder Structure
+
+```text
+.
+├── backend/
+│   ├── main.py
+│   ├── forecasting.py
+│   ├── train.py
+│   ├── predict.py
+│   ├── data_preprocessing.py
+│   ├── gemini.py
+│   ├── schemas.py
+│   └── utils.py
+├── data/
+│   └── sample_campaigns.csv
+├── pickle/
+│   └── model.pkl
+├── public/
+├── src/
+│   ├── components/
+│   ├── lib/
+│   └── routes/
+├── .env.example
+├── requirements.txt
+├── run.sh
+├── package.json
+└── README.md
+```
+
+## Deployment Instructions
+
+Backend:
+
+```bash
+pip install -r requirements.txt
+python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
+```
+
+Frontend:
+
+```bash
+VITE_API_BASE_URL=https://your-api-domain.example pnpm run build
+```
+
+Deploy `dist/` to a static host and deploy the FastAPI app to a Python-capable service. Configure:
+
+- `CORS_ORIGINS` with the production frontend URL.
+- `GEMINI_API_KEY` only in the backend environment.
+- Persistent storage or artifact packaging for `pickle/model.pkl`.
+
+## Limitations
+
+- Forecast quality depends on the amount and cleanliness of uploaded campaign history.
+- Confidence intervals are residual-based and should be recalibrated with real holdout data before production media commitments.
+- The current model does not ingest external demand signals such as promotions, holidays, price changes, inventory, or competitor activity.
+- Gemini output quality depends on the configured model and API availability; fallback insights remain deterministic.
+- The frontend currently uses local sample data as the default demo state.
+
+## Future Improvements
+
+- Add train/test backtesting dashboards with MAPE, WAPE, and interval calibration by channel.
+- Add authentication and role-based access for agency or brand teams.
+- Add scheduled retraining and model registry metadata.
+- Add feature support for promotions, holidays, product categories, and margin.
+- Add experiment tracking for budget scenario comparisons.
+- Add CI/CD workflows for frontend, backend, and Docker deployment.

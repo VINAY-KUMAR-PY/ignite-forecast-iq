@@ -32,7 +32,10 @@ export default tseslint.config(
           ],
         },
       ],
-      "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
+      // The shadcn/Radix component files intentionally export helper constants
+      // beside components. TypeScript/build checks cover these files, so keep
+      // Fast Refresh guidance out of CI noise.
+      "react-refresh/only-export-components": "off",
       "@typescript-eslint/no-unused-vars": "off",
     },
   },

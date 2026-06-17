@@ -1,7 +1,10 @@
+"""Revenue, ROAS and budget simulation models for ForecastIQ."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import logging
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
@@ -33,6 +36,7 @@ except Exception:  # pragma: no cover - exercised only when dependency is unavai
 
 
 CHANNELS = ["Google Ads", "Meta Ads", "Microsoft Ads"]
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -123,6 +127,7 @@ def forecast_diagnostics(
     revenue_model: Optional[TargetModel],
     roas_model: Optional[TargetModel],
 ) -> Optional[ForecastDiagnostics]:
+    """Summarize in-sample model fit and feature drivers for explainability."""
     if daily.empty:
         return None
     revenue_mape, revenue_coverage = _target_quality(daily, "revenue", revenue_model)
@@ -139,6 +144,7 @@ def forecast_diagnostics(
 
 
 def train_model_bundle(frame: pd.DataFrame, model_path: str | Path = DEFAULT_MODEL_PATH) -> Dict[str, Any]:
+    """Train revenue and ROAS estimators and persist them as one bundle."""
     daily = aggregate_daily(frame)
     revenue_model = _fit_target(daily, "revenue")
     roas_model = _fit_target(daily, "roas")
@@ -156,12 +162,14 @@ def train_model_bundle(frame: pd.DataFrame, model_path: str | Path = DEFAULT_MOD
 
 
 def load_model_bundle(model_path: str | Path = DEFAULT_MODEL_PATH) -> Optional[Dict[str, Any]]:
+    """Load a persisted model bundle, returning None when it is unavailable."""
     path = Path(model_path)
     if not path.exists():
         return None
     try:
         return joblib.load(path)
-    except Exception:
+    except Exception as exc:
+        logger.warning("Unable to load model bundle from %s: %s", path, exc)
         return None
 
 
@@ -319,6 +327,7 @@ def forecast_frame(
     value: Optional[str] = None,
     model_bundle: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
+    """Forecast revenue and ROAS for the requested segment and horizon."""
     segment = filter_frame(frame, level, value)
     daily = aggregate_daily(segment)
     revenue_model = model_bundle.get("revenue") if model_bundle else None
@@ -356,6 +365,7 @@ def forecast_frame(
 
 
 def simulate_budgets(frame: pd.DataFrame, horizon: int, budgets: Dict[str, float]) -> Dict[str, Any]:
+    """Project channel-level revenue after changing total budget by channel."""
     results: List[SimChannelResult] = []
     available_channels = list(dict.fromkeys(CHANNELS + sorted(frame["channel"].dropna().unique().tolist()))) if not frame.empty else CHANNELS
 
@@ -445,26 +455,45 @@ def simulate_budgets(frame: pd.DataFrame, horizon: int, budgets: Dict[str, float
 
 
 def aggregate_prediction_rows(frame: pd.DataFrame, model_bundle: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    """Build the required offline submission rows for all horizons and segments."""
     output: List[Dict[str, Any]] = []
     segment_specs: list[tuple[str, Optional[str]]] = [("overall", None)]
     for level, column in [("channel", "channel"), ("campaign_type", "campaign_type"), ("campaign", "campaign_name")]:
         for value in sorted(frame[column].dropna().unique().tolist()):
             segment_specs.append((level, str(value)))
 
-    for horizon in (30, 60, 90):
-        for level, value in segment_specs:
-            segment_bundle = model_bundle if level == "overall" else None
-            forecast = forecast_frame(frame, horizon, level, value, model_bundle=segment_bundle)
-            summary: ForecastSummary = forecast["summary"]
+    for level, value in segment_specs:
+        if model_bundle is not None:
+            segment_bundle = model_bundle
+        else:
+            segment_daily = aggregate_daily(filter_frame(frame, level, value))
+            segment_bundle = {
+                "model_type": _model_type(),
+                "revenue": _fit_target(segment_daily, "revenue"),
+                "roas": _fit_target(segment_daily, "roas"),
+            }
+
+        forecast = forecast_frame(frame, 90, level, value, model_bundle=segment_bundle)
+        summary: ForecastSummary = forecast["summary"]
+        future_revenue = [point for point in forecast["revenue"] if not point.historical]
+        future_roas = [point for point in forecast["roas"] if not point.historical]
+
+        for horizon in (30, 60, 90):
+            horizon_revenue = future_revenue[:horizon]
+            horizon_roas = future_roas[:horizon]
+            expected_revenue = sum(point.value for point in horizon_revenue)
+            lower_revenue = sum(point.lower for point in horizon_revenue)
+            upper_revenue = sum(point.upper for point in horizon_revenue)
+            avg_roas = sum(point.value for point in horizon_roas) / len(horizon_roas) if horizon_roas else 0.0
             output.append(
                 {
                     "level": level,
                     "segment": value or "all",
                     "horizon_days": horizon,
-                    "expected_revenue": summary.expectedRevenue,
-                    "lower_revenue": summary.lowerRevenue,
-                    "upper_revenue": summary.upperRevenue,
-                    "expected_roas": summary.avgRoas,
+                    "expected_revenue": round_money(expected_revenue),
+                    "lower_revenue": round_money(lower_revenue),
+                    "upper_revenue": round_money(upper_revenue),
+                    "expected_roas": round_money(avg_roas),
                     "model_type": summary.modelType,
                 }
             )

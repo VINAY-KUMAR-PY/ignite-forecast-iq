@@ -1,3 +1,5 @@
+"""Command line entry point for training the ForecastIQ model bundle."""
+
 from __future__ import annotations
 
 import argparse
@@ -8,6 +10,7 @@ from .utils import DEFAULT_MODEL_PATH, read_csv_folder
 
 
 def main() -> None:
+    """Train revenue and ROAS models from CSV input."""
     parser = argparse.ArgumentParser(description="Train and persist the ForecastIQ model bundle.")
     parser.add_argument("--data-dir", default="data", help="Folder containing training CSV files")
     parser.add_argument("--model", default=str(DEFAULT_MODEL_PATH), help="Output model pickle path")
@@ -27,4 +30,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

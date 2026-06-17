@@ -64,7 +64,7 @@ function InsightsPage() {
     <>
       <PageHeader
         title="AI executive insights"
-        description="Board-ready briefing combining historical performance with the GBRT forecasting model."
+        description="Board-ready briefing combining historical performance with the XGBoost forecasting model."
         actions={
           <Button variant="hero" onClick={run} disabled={loading}>
             <Sparkles className="mr-2 h-4 w-4" />

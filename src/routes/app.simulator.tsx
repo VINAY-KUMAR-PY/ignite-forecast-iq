@@ -32,7 +32,6 @@ import {
 import { useData } from "@/lib/data-store";
 import { fmtCompact, fmtCurrency, fmtDate, fmtPct, fmtRoas } from "@/lib/format";
 import { KpiCard } from "@/components/kpi-card";
-import { simulateChannelForecast } from "@/lib/forecasting";
 import { simulateBudgetsApi, type SimChannelResult } from "@/lib/backend-api";
 
 export const Route = createFileRoute("/app/simulator")({
@@ -92,12 +91,39 @@ function SimulatorPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [baselines, horizon, JSON.stringify(budgets)]);
 
-  const fallbackSims: SimChannelResult[] = useMemo(() => {
+  const baselineSims: SimChannelResult[] = useMemo(() => {
     if (!rows.length || !baselines) return [];
+    const dates = [...new Set(rows.map((r) => r.date))].sort();
+    const recentDates = new Set(dates.slice(-Math.min(30, dates.length)));
+    const recentRows = rows.filter((r) => recentDates.has(r.date));
+
     return CHANNELS.map((ch) => {
-      const total = totalBudget(ch);
-      const newDaily = total / horizon;
-      return simulateChannelForecast(rows, ch, newDaily, horizon);
+      const channelRows = recentRows.filter((r) => r.channel === ch);
+      const activeDays = Math.max(1, new Set(channelRows.map((r) => r.date)).size);
+      const baselineDailySpend = channelRows.reduce((sum, row) => sum + row.spend, 0) / activeDays;
+      const baselineDailyRevenue =
+        channelRows.reduce((sum, row) => sum + row.revenue, 0) / activeDays;
+      const baselineTotalSpend = baselineDailySpend * horizon;
+      const baselineRevenue = baselineDailyRevenue * horizon;
+      const newTotalSpend = totalBudget(ch);
+      const spendRatio = baselineTotalSpend > 0 ? newTotalSpend / baselineTotalSpend : 1;
+      const projectedRevenue = baselineRevenue * Math.pow(Math.max(0, spendRatio), 0.85);
+
+      return {
+        channel: ch,
+        horizonDays: horizon,
+        baselineDailySpend,
+        newDailySpend: newTotalSpend / horizon,
+        baselineTotalSpend,
+        newTotalSpend,
+        baselineRevenue,
+        projectedRevenue,
+        projectedRevenueLower: projectedRevenue * 0.85,
+        projectedRevenueUpper: projectedRevenue * 1.15,
+        baselineRoas: baselineTotalSpend > 0 ? baselineRevenue / baselineTotalSpend : 0,
+        projectedRoas: newTotalSpend > 0 ? projectedRevenue / newTotalSpend : 0,
+        daily: [],
+      };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows, horizon, baselines, JSON.stringify(budgets)]);
@@ -119,7 +145,7 @@ function SimulatorPage() {
     };
   }, [rows, horizon, baselines, budgetPayload]);
 
-  const sims = apiSims ?? fallbackSims;
+  const sims = apiSims ?? baselineSims;
 
   if (!rows.length || !baselines) {
     return (
@@ -406,7 +432,7 @@ function SimulatorPage() {
                   </p>
                 </div>
                 <span className="rounded-full border border-border/60 bg-background/60 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                  GBRT model
+                  XGBoost model
                 </span>
               </div>
               <ResponsiveContainer width="100%" height={220}>

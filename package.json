@@ -5,11 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
+    "api": "python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000",
     "build": "vite build",
     "build:dev": "vite build --mode development",
+    "check": "tsc --noEmit && eslint . && vite build",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "train:model": "python -m backend.train --data-dir data --model pickle/model.pkl",
+    "predict": "python -m backend.predict --data-dir data --model pickle/model.pkl --output output/predictions.csv"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

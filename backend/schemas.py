@@ -1,3 +1,5 @@
+"""Pydantic contracts shared by the API, frontend and CLI workflows."""
+
 from __future__ import annotations
 
 from typing import Any, Dict, List, Literal, Optional

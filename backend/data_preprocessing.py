@@ -1,3 +1,5 @@
+"""Validation and feature engineering helpers for campaign-level media data."""
+
 from __future__ import annotations
 
 from typing import Iterable, List, Tuple
@@ -6,7 +8,6 @@ import numpy as np
 import pandas as pd
 
 from .schemas import CampaignRow, ValidationIssue, ValidationResponse
-
 
 REQUIRED_COLUMNS = [
     "date",
@@ -25,11 +26,13 @@ NUMERIC_COLUMNS = ["spend", "clicks", "impressions", "conversions", "revenue", "
 
 
 def rows_to_frame(rows: Iterable[CampaignRow]) -> pd.DataFrame:
+    """Convert validated API rows to the canonical campaign dataframe shape."""
     records = [row.model_dump() for row in rows]
     return pd.DataFrame(records, columns=REQUIRED_COLUMNS)
 
 
 def validate_records(records: Iterable[dict]) -> Tuple[pd.DataFrame, ValidationResponse]:
+    """Normalize raw rows and return both a clean dataframe and validation issues."""
     raw = pd.DataFrame(list(records))
     issues: List[ValidationIssue] = []
     total_rows = len(raw)
@@ -83,9 +86,16 @@ def validate_records(records: Iterable[dict]) -> Tuple[pd.DataFrame, ValidationR
         issues.append(ValidationIssue(type="invalid_revenue", row=int(idx) + 2, message="Negative revenue"))
     valid_mask &= ~negative_revenue
 
+    for column in ["clicks", "impressions", "conversions", "roas"]:
+        negative_values = frame[column] < 0
+        for idx in frame.index[negative_values]:
+            issues.append(ValidationIssue(type="invalid_number", row=int(idx) + 2, message=f"Negative {column}"))
+        valid_mask &= ~negative_values
+
     dupes = frame.duplicated(subset=["date", "channel", "campaign_name"], keep=False)
     for idx in frame.index[dupes]:
         issues.append(ValidationIssue(type="duplicate", row=int(idx) + 2, message="Duplicate date/channel/campaign record"))
+    valid_mask &= ~dupes
 
     consistency = frame.dropna(subset=["campaign_name", "channel", "campaign_type"])
     for campaign, grp in consistency.groupby("campaign_name"):
@@ -109,6 +119,7 @@ def validate_records(records: Iterable[dict]) -> Tuple[pd.DataFrame, ValidationR
 
 
 def aggregate_daily(frame: pd.DataFrame) -> pd.DataFrame:
+    """Aggregate campaign rows into the daily model grain."""
     if frame.empty:
         return pd.DataFrame(columns=["date", "spend", "clicks", "impressions", "conversions", "revenue", "roas"])
     daily = (
@@ -122,6 +133,7 @@ def aggregate_daily(frame: pd.DataFrame) -> pd.DataFrame:
 
 
 def filter_frame(frame: pd.DataFrame, level: str, value: str | None = None) -> pd.DataFrame:
+    """Slice campaign data to the requested forecast level."""
     if level == "overall" or not value:
         return frame.copy()
     if level == "channel":
@@ -136,6 +148,7 @@ def filter_frame(frame: pd.DataFrame, level: str, value: str | None = None) -> p
 
 
 def feature_frame(daily: pd.DataFrame, target: str) -> tuple[pd.DataFrame, pd.Series]:
+    """Build supervised learning features for revenue or ROAS targets."""
     data = daily.copy().sort_values("date").reset_index(drop=True)
     data["date_dt"] = pd.to_datetime(data["date"])
     data["dow"] = data["date_dt"].dt.dayofweek
@@ -183,6 +196,7 @@ def future_features(
     future_date: pd.Timestamp,
     exog: dict,
 ) -> pd.DataFrame:
+    """Build one recursive future feature row for a forecast step."""
     hist = history.copy().sort_values("date").reset_index(drop=True)
     target_values = hist[target].tolist()
     spend_values = hist["spend"].tolist()

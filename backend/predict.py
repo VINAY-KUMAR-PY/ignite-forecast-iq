@@ -1,3 +1,5 @@
+"""Offline prediction entry point used by the hackathon scoring command."""
+
 from __future__ import annotations
 
 import argparse
@@ -8,6 +10,7 @@ from .utils import DEFAULT_MODEL_PATH, read_csv_folder, write_prediction_rows
 
 
 def main() -> None:
+    """Load or train the persisted model and write scorer-ready predictions."""
     parser = argparse.ArgumentParser(description="Generate ForecastIQ predictions for the hackathon scorer.")
     parser.add_argument("--data-dir", default="data", help="Folder containing input CSV files")
     parser.add_argument("--model", default=str(DEFAULT_MODEL_PATH), help="Pickled model bundle path")
@@ -33,4 +36,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

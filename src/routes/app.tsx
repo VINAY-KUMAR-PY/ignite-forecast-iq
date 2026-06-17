@@ -23,13 +23,14 @@ export const Route = createFileRoute("/app")({
   component: AppLayout,
 });
 
-const NAV = [
+type NavItem = { to: string; label: string; icon: typeof BarChart3; exact?: boolean };
+const NAV: NavItem[] = [
   { to: "/app", label: "Dashboard", icon: BarChart3, exact: true },
   { to: "/app/upload", label: "Data Upload", icon: Upload },
   { to: "/app/forecast", label: "Forecasting", icon: LineChart },
   { to: "/app/simulator", label: "Budget Simulator", icon: Calculator },
   { to: "/app/insights", label: "AI Insights", icon: Brain },
-] as const;
+];
 
 function AppLayout() {
   const { theme, toggle } = useTheme();

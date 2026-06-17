@@ -47,7 +47,7 @@ function SimulatorPage() {
 
   if (!rows.length || !baselines) return (<><PageHeader title="Budget simulator" /><EmptyState /></>);
 
-  const current = (ch: string) => budgets[ch] ?? Math.round(baselines[ch].dailySpend * 30);
+  const current = (ch: string) => budgets[ch] ?? Math.round((baselines?.[ch]?.dailySpend ?? 0) * 30);
 
   // Diminishing returns: revenue = baselineRevenue * (newSpend/baselineSpend)^0.85
   function project(ch: string) {

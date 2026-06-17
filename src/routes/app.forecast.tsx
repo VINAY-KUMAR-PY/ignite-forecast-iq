@@ -114,16 +114,19 @@ function ForecastPage() {
 
       <div className="mt-6 grid gap-4">
         <Card className="bg-gradient-card border-border/60 p-5">
-          <div className="mb-3">
-            <h3 className="text-sm font-semibold">Revenue forecast</h3>
-            <p className="text-xs text-muted-foreground">Historical + projected with 95% confidence band</p>
+          <div className="mb-3 flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold">Revenue forecast</h3>
+              <p className="text-xs text-muted-foreground">Expected forecast with lower &amp; upper bounds</p>
+            </div>
+            <span className="rounded-full border border-border/60 bg-background/60 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">95% CI</span>
           </div>
           <ResponsiveContainer width="100%" height={340}>
             <AreaChart data={revData} margin={{ left: -10, right: 8, top: 8 }}>
               <defs>
-                <linearGradient id="band" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stopColor="var(--color-chart-1)" stopOpacity={0.25} />
-                  <stop offset="100%" stopColor="var(--color-chart-1)" stopOpacity={0.05} />
+                <linearGradient id="revBand" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="var(--color-chart-1)" stopOpacity={0.32} />
+                  <stop offset="100%" stopColor="var(--color-chart-1)" stopOpacity={0.06} />
                 </linearGradient>
               </defs>
               <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" />
@@ -131,28 +134,41 @@ function ForecastPage() {
               <YAxis stroke="var(--color-muted-foreground)" fontSize={11} tickFormatter={(v) => fmtCompact(v as number)} />
               <Tooltip content={<TT formatter={fmtCurrency} />} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Area type="monotone" dataKey="upper" stroke="none" fill="url(#band)" name="Upper bound" />
-              <Area type="monotone" dataKey="lower" stroke="none" fill="var(--color-background)" name="Lower bound" />
+              <Area type="monotone" dataKey="range" stroke="none" fill="url(#revBand)" name="95% confidence band" isAnimationActive={false} activeDot={false} legendType="rect" />
               <Line type="monotone" dataKey="historical" stroke="var(--color-chart-2)" strokeWidth={2} dot={false} name="Historical" />
-              <Line type="monotone" dataKey="forecast" stroke="var(--color-chart-1)" strokeWidth={2} strokeDasharray="5 4" dot={false} name="Forecast" />
+              <Line type="monotone" dataKey="forecast" stroke="var(--color-chart-1)" strokeWidth={2} strokeDasharray="5 4" dot={false} name="Expected forecast" />
+              <Line type="monotone" dataKey="upper" stroke="var(--color-chart-1)" strokeWidth={1} strokeDasharray="2 3" strokeOpacity={0.6} dot={false} name="Upper bound" />
+              <Line type="monotone" dataKey="lower" stroke="var(--color-chart-1)" strokeWidth={1} strokeDasharray="2 3" strokeOpacity={0.6} dot={false} name="Lower bound" />
             </AreaChart>
           </ResponsiveContainer>
         </Card>
 
         <Card className="bg-gradient-card border-border/60 p-5">
-          <div className="mb-3">
-            <h3 className="text-sm font-semibold">ROAS forecast</h3>
-            <p className="text-xs text-muted-foreground">Daily blended ROAS projection</p>
+          <div className="mb-3 flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold">ROAS forecast</h3>
+              <p className="text-xs text-muted-foreground">Daily blended ROAS with lower &amp; upper bounds</p>
+            </div>
+            <span className="rounded-full border border-border/60 bg-background/60 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">95% CI</span>
           </div>
           <ResponsiveContainer width="100%" height={280}>
             <AreaChart data={roasData} margin={{ left: -10, right: 8, top: 8 }}>
+              <defs>
+                <linearGradient id="roasBand" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="var(--color-chart-2)" stopOpacity={0.28} />
+                  <stop offset="100%" stopColor="var(--color-chart-2)" stopOpacity={0.05} />
+                </linearGradient>
+              </defs>
               <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" />
               <XAxis dataKey="date" tickFormatter={fmtDate} stroke="var(--color-muted-foreground)" fontSize={11} minTickGap={50} />
               <YAxis stroke="var(--color-muted-foreground)" fontSize={11} tickFormatter={(v) => `${(v as number).toFixed(1)}x`} />
               <Tooltip content={<TT formatter={(v: number) => `${v.toFixed(2)}x`} />} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Area type="monotone" dataKey="range" stroke="none" fill="url(#roasBand)" name="95% confidence band" isAnimationActive={false} activeDot={false} legendType="rect" />
               <Line type="monotone" dataKey="historical" stroke="var(--color-chart-3)" strokeWidth={2} dot={false} name="Historical" />
-              <Line type="monotone" dataKey="forecast" stroke="var(--color-chart-2)" strokeWidth={2} strokeDasharray="5 4" dot={false} name="Forecast" />
+              <Line type="monotone" dataKey="forecast" stroke="var(--color-chart-2)" strokeWidth={2} strokeDasharray="5 4" dot={false} name="Expected forecast" />
+              <Line type="monotone" dataKey="upper" stroke="var(--color-chart-2)" strokeWidth={1} strokeDasharray="2 3" strokeOpacity={0.6} dot={false} name="Upper bound" />
+              <Line type="monotone" dataKey="lower" stroke="var(--color-chart-2)" strokeWidth={1} strokeDasharray="2 3" strokeOpacity={0.6} dot={false} name="Lower bound" />
             </AreaChart>
           </ResponsiveContainer>
         </Card>
@@ -167,8 +183,8 @@ function sampleSeries(points: { date: string; value: number; lower: number; uppe
   const step = Math.max(1, Math.floor(hist.length / maxHistorical));
   const sampled = hist.filter((_, i) => i % step === 0 || i === hist.length - 1);
   return [
-    ...sampled.map((p) => ({ date: p.date, historical: p.value, forecast: null as number | null, lower: null as number | null, upper: null as number | null })),
-    ...fc.map((p) => ({ date: p.date, historical: null as number | null, forecast: p.value, lower: p.lower, upper: p.upper })),
+    ...sampled.map((p) => ({ date: p.date, historical: p.value, forecast: null as number | null, lower: null as number | null, upper: null as number | null, range: null as [number, number] | null })),
+    ...fc.map((p) => ({ date: p.date, historical: null as number | null, forecast: p.value, lower: p.lower, upper: p.upper, range: [p.lower, p.upper] as [number, number] })),
   ];
 }
 

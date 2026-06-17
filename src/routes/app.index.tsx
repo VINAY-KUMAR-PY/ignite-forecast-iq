@@ -6,7 +6,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   Legend,
   Line,
   LineChart,
@@ -218,3 +217,4 @@ function TT({ active, payload, label, formatter }: any) {
       ))}
     </div>
   );
+}

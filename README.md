@@ -30,7 +30,43 @@ The application contains four core flows:
 
 The frontend keeps the existing pages, routes, components, and styling. Backend APIs replace the mock forecast and insight paths while frontend fallbacks remain available for local resilience.
 
+## Feature Highlights
+
+- Production-style FastAPI backend with CORS and typed API contracts.
+- CSV validation for missing values, invalid dates, duplicates, negative spend, and invalid revenue.
+- XGBoost revenue and ROAS forecasting for 30, 60, and 90 day horizons.
+- Forecast Accuracy Dashboard with MAE, RMSE, MAPE, and R2.
+- Forecast Explainability Center with XGBoost feature importance and natural-language driver explanations.
+- Confidence interval visualization and planning-case summaries.
+- Budget Simulator for Google Ads, Meta Ads, and Microsoft Ads.
+- Decision intelligence: AI budget optimizer, what-if scenarios, risk detection, opportunity detection, and channel health scoring.
+- Gemini-backed AI insights with deterministic fallback output.
+- Executive PDF report export from the AI Insights workflow.
+
+## Business Impact
+
+ForecastIQ is designed for weekly and monthly marketing planning. It helps teams:
+
+- Quantify revenue and ROAS expectations before budgets are committed.
+- Compare conservative, expected, and upside planning cases.
+- Identify budget inefficiency and over-spending risk.
+- Find high-growth or underinvested channels.
+- Convert technical forecast output into executive-ready actions.
+- Export a PDF-ready business report for leadership review.
+
 ## Architecture
+
+```mermaid
+flowchart LR
+  UI["React + TypeScript frontend"] --> API["FastAPI backend"]
+  UI --> LocalStore["Browser data store"]
+  API --> Validation["Validation and preprocessing"]
+  API --> Forecasting["XGBoost forecasting"]
+  API --> Decision["Decision intelligence"]
+  API --> Gemini["Gemini or fallback insights"]
+  Forecasting --> Model["pickle/model.pkl"]
+  API --> UI
+```
 
 ```text
 React + TypeScript frontend
@@ -57,6 +93,31 @@ Key design choices:
 - The offline `run.sh` path does not require Gemini or internet access.
 - CORS defaults support Vite development on ports 5173 and 3000.
 
+## Data Flow Diagram
+
+```mermaid
+sequenceDiagram
+  participant User
+  participant Frontend
+  participant API as FastAPI
+  participant Model as XGBoost
+  participant AI as Gemini/Fallback
+
+  User->>Frontend: Upload campaign CSV
+  Frontend->>API: POST /api/validate
+  API-->>Frontend: Valid rows and issues
+  Frontend->>API: POST /api/forecast
+  API->>Model: Train and forecast revenue/ROAS
+  API-->>Frontend: Forecasts, intervals, diagnostics, brief
+  Frontend->>API: POST /api/simulate
+  Frontend->>API: POST /api/decision-support
+  API-->>Frontend: Budget, risk, opportunity, health analytics
+  Frontend->>API: POST /api/insights
+  API->>AI: Generate or fallback
+  API-->>Frontend: Executive insights
+  Frontend-->>User: Export PDF report
+```
+
 ## Forecasting Methodology
 
 ForecastIQ aggregates validated campaign rows to the requested planning grain and trains supervised time-series regressors. The primary estimator is XGBoost; if XGBoost is unavailable, the code can fall back to a scikit-learn gradient boosting regressor.
@@ -78,6 +139,8 @@ Forecast outputs include:
 - Model diagnostics: interval coverage, training days, XGBoost feature importance, and top feature drivers.
 - Natural-language explainability for revenue and ROAS drivers.
 - Executive business brief with summary, risks, opportunities, and recommended actions.
+
+Confidence intervals are residual-based and widen over the forecast horizon. They are shown both as chart bands and as planning-case summaries so users can distinguish conservative, expected, and upside outcomes.
 
 Supported horizons are 30, 60, and 90 days. Supported levels are overall, channel, campaign type, and campaign.
 
@@ -190,12 +253,39 @@ Open the Vite URL and use the existing app routes:
 - `/app/simulator` for budget simulation.
 - `/app/insights` for AI recommendations.
 
+## Demo Workflow
+
+1. Open `/app` and show the Business Impact Dashboard.
+2. Open `/app/upload`, upload `data/sample_campaigns.csv`, and confirm validation results.
+3. Open `/app/forecast` and show forecast, confidence intervals, accuracy metrics, explainability, and executive business brief.
+4. Open `/app/simulator`, adjust channel budgets, and review decision intelligence.
+5. Open `/app/insights`, generate insights, and export the executive PDF report.
+
 Optional Gemini configuration:
 
 ```bash
 export GEMINI_API_KEY="your-key"
 export GEMINI_MODEL="gemini-1.5-flash"
 ```
+
+## Screenshots Section
+
+Recommended screenshots for the final submission:
+
+| Screen    | What to show                                                          |
+| --------- | --------------------------------------------------------------------- |
+| Dashboard | Business Impact Dashboard and top KPI cards                           |
+| Upload    | Validated sample dataset with zero issues                             |
+| Forecast  | Accuracy Dashboard, confidence intervals, and Explainability Center   |
+| Simulator | AI Budget Optimizer, What-if Scenario Engine, risk/opportunity panels |
+| Insights  | Executive summary, action plan, and Export PDF button                 |
+
+## Submission Guides
+
+- [Architecture](./ARCHITECTURE.md)
+- [Demo Guide](./DEMO_GUIDE.md)
+- [Presentation Guide](./PRESENTATION_GUIDE.md)
+- [Judge Q&A](./JUDGE_QA.md)
 
 ## API Documentation
 

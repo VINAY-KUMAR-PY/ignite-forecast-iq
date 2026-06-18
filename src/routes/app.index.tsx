@@ -14,7 +14,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Activity, DollarSign, Target, TrendingUp } from "lucide-react";
+import { Activity, ArrowUpRight, DollarSign, Target, TrendingUp } from "lucide-react";
 import { useData } from "@/lib/data-store";
 import { aggregateDaily } from "@/lib/forecasting";
 import { fmtCompact, fmtCurrency, fmtDate, fmtRoas } from "@/lib/format";
@@ -50,13 +50,22 @@ function Dashboard() {
     const last30 = daily.slice(-30);
     const prev30 = daily.slice(-60, -30);
     const sum = (arr: typeof daily, k: "revenue" | "spend") => arr.reduce((s, d) => s + d[k], 0);
-    const revPrev = sum(prev30, "revenue") || 1;
-    const spendPrev = sum(prev30, "spend") || 1;
-    const revDelta = ((sum(last30, "revenue") - revPrev) / revPrev) * 100;
-    const spendDelta = ((sum(last30, "spend") - spendPrev) / spendPrev) * 100;
-    const lastRoas = sum(last30, "spend") > 0 ? sum(last30, "revenue") / sum(last30, "spend") : 0;
-    const prevRoas = sum(prev30, "spend") > 0 ? sum(prev30, "revenue") / sum(prev30, "spend") : 0;
+    const last30Revenue = sum(last30, "revenue");
+    const prev30Revenue = sum(prev30, "revenue");
+    const last30Spend = sum(last30, "spend");
+    const prev30Spend = sum(prev30, "spend");
+    const revPrev = prev30Revenue || 1;
+    const spendPrev = prev30Spend || 1;
+    const revDelta = ((last30Revenue - revPrev) / revPrev) * 100;
+    const spendDelta = ((last30Spend - spendPrev) / spendPrev) * 100;
+    const lastRoas = last30Spend > 0 ? last30Revenue / last30Spend : 0;
+    const prevRoas = prev30Spend > 0 ? prev30Revenue / prev30Spend : 0;
     const roasDelta = prevRoas > 0 ? ((lastRoas - prevRoas) / prevRoas) * 100 : 0;
+    const last30Profit = last30Revenue - last30Spend;
+    const prev30Profit = prev30Revenue - prev30Spend;
+    const incrementalRevenue = last30Revenue - prev30Revenue;
+    const incrementalSpend = last30Spend - prev30Spend;
+    const marginalRoas = incrementalSpend > 0 ? incrementalRevenue / incrementalSpend : lastRoas;
 
     // channel agg
     const chMap = new Map<string, { spend: number; revenue: number }>();
@@ -72,6 +81,13 @@ function Dashboard() {
       revenue: v.revenue,
       roas: v.spend > 0 ? v.revenue / v.spend : 0,
     }));
+    const rankedChannels = [...channels].sort((a, b) => b.roas - a.roas);
+    const strongestChannel = rankedChannels[0];
+    const weakestChannel = rankedChannels[rankedChannels.length - 1];
+    const reallocationOpportunity =
+      strongestChannel && weakestChannel
+        ? Math.max(0, weakestChannel.spend * 0.1 * (strongestChannel.roas - weakestChannel.roas))
+        : 0;
 
     return {
       totalRevenue,
@@ -83,6 +99,16 @@ function Dashboard() {
       revDelta,
       spendDelta,
       roasDelta,
+      businessImpact: {
+        last30Revenue,
+        incrementalRevenue,
+        last30Profit,
+        profitDelta: last30Profit - prev30Profit,
+        marginalRoas,
+        reallocationOpportunity,
+        strongestChannel: strongestChannel?.name ?? "N/A",
+        weakestChannel: weakestChannel?.name ?? "N/A",
+      },
     };
   }, [rows]);
 
@@ -136,6 +162,43 @@ function Dashboard() {
           hint={`${stats.channels.length} channels`}
         />
       </div>
+
+      <Card
+        data-testid="business-impact-dashboard"
+        className="mt-6 bg-gradient-card border-border/60 p-5"
+      >
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold">Business impact dashboard</h3>
+            <p className="text-xs text-muted-foreground">
+              Executive view of recent revenue lift, profit movement and reallocation upside.
+            </p>
+          </div>
+          <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-4">
+          <ImpactMetric
+            label="30d revenue impact"
+            value={fmtCurrency(stats.businessImpact.last30Revenue)}
+            hint={`${formatSignedCurrency(stats.businessImpact.incrementalRevenue)} vs prior 30d`}
+          />
+          <ImpactMetric
+            label="Profit impact"
+            value={fmtCurrency(stats.businessImpact.last30Profit)}
+            hint={`${formatSignedCurrency(stats.businessImpact.profitDelta)} vs prior 30d`}
+          />
+          <ImpactMetric
+            label="Marginal ROAS"
+            value={fmtRoas(stats.businessImpact.marginalRoas)}
+            hint="incremental revenue per new media dollar"
+          />
+          <ImpactMetric
+            label="Reallocation upside"
+            value={fmtCurrency(stats.businessImpact.reallocationOpportunity)}
+            hint={`${stats.businessImpact.weakestChannel} to ${stats.businessImpact.strongestChannel}`}
+          />
+        </div>
+      </Card>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <ChartCard title="Revenue trend" subtitle="Daily revenue over time">
@@ -282,6 +345,20 @@ function Dashboard() {
       </div>
     </>
   );
+}
+
+function ImpactMetric({ label, value, hint }: { label: string; value: string; hint: string }) {
+  return (
+    <div className="rounded-lg border border-border/40 bg-background/40 p-4">
+      <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="mt-1 text-xl font-semibold">{value}</div>
+      <div className="mt-1 text-xs text-muted-foreground">{hint}</div>
+    </div>
+  );
+}
+
+function formatSignedCurrency(value: number) {
+  return `${value >= 0 ? "+" : ""}${fmtCurrency(value)}`;
 }
 
 function ChartCard({

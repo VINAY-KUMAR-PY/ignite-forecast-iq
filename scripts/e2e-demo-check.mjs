@@ -282,6 +282,28 @@ try {
     })()`,
   );
 
+  await navigate(cdp, sessionId, `${base}/app`, 1500);
+  await waitUntil(
+    cdp,
+    sessionId,
+    `document.querySelector('[data-testid="business-impact-dashboard"]')`,
+    30000,
+  );
+  result.dashboard = await evaluate(
+    cdp,
+    sessionId,
+    `(() => {
+      const text = document.body.innerText || "";
+      const normalized = text.toLowerCase();
+      return {
+        title: document.title,
+        hasBusinessImpact: Boolean(document.querySelector('[data-testid="business-impact-dashboard"]')),
+        hasRevenueImpact: normalized.includes("30d revenue impact"),
+        hasReallocationUpside: normalized.includes("reallocation upside")
+      };
+    })()`,
+  );
+
   await navigate(cdp, sessionId, `${base}/app/forecast`, 1500);
   await waitUntil(
     cdp,
@@ -385,7 +407,8 @@ try {
         hasExecutiveSummary: normalized.includes("executive summary"),
         hasRevenueDrivers: normalized.includes("revenue drivers"),
         hasRiskAnalysis: normalized.includes("risk analysis"),
-        hasActionPlan: normalized.includes("action plan")
+        hasActionPlan: normalized.includes("action plan"),
+        hasPdfExport: normalized.includes("export pdf")
       };
     })()`,
   );
@@ -397,6 +420,7 @@ try {
 
   result.ok =
     Object.values(result.upload).every(Boolean) &&
+    Object.values(result.dashboard).every(Boolean) &&
     result.forecast.hasRevenueForecast &&
     result.forecast.hasRoasForecast &&
     result.forecast.hasConfidenceIntervals &&

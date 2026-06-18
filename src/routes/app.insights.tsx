@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   ArrowUpRight,
   Brain,
+  Download,
   Lightbulb,
   ListChecks,
   Sparkles,
@@ -22,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { useData } from "@/lib/data-store";
 import { aggregateDaily, type DailyAgg } from "@/lib/forecasting";
 import { generateInsights, type InsightsResponse } from "@/lib/ai-insights.functions";
+import { exportExecutivePdfReport } from "@/lib/report-export";
 import { fmtCurrency, fmtPct, fmtRoas } from "@/lib/format";
 import type { CampaignRow } from "@/lib/types";
 
@@ -58,16 +60,34 @@ function InsightsPage() {
     }
   }
 
+  function exportReport() {
+    if (!insights || !summary) return;
+    try {
+      exportExecutivePdfReport(summary, insights);
+      toast.success("Executive PDF report ready to print");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Unable to export report");
+    }
+  }
+
   return (
     <>
       <PageHeader
         title="AI executive insights"
         description="Board-ready briefing combining historical performance with the XGBoost forecasting model."
         actions={
-          <Button variant="hero" onClick={run} disabled={loading}>
-            <Sparkles className="mr-2 h-4 w-4" />
-            {loading ? "Analyzing…" : insights ? "Regenerate" : "Generate insights"}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {insights && (
+              <Button variant="outline" onClick={exportReport}>
+                <Download className="mr-2 h-4 w-4" />
+                Export PDF
+              </Button>
+            )}
+            <Button variant="hero" onClick={run} disabled={loading}>
+              <Sparkles className="mr-2 h-4 w-4" />
+              {loading ? "Analyzing…" : insights ? "Regenerate" : "Generate insights"}
+            </Button>
+          </div>
         }
       />
 

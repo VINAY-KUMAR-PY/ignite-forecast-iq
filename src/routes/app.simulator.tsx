@@ -354,6 +354,7 @@ function SimulatorPage() {
                     innerRadius={55}
                     outerRadius={85}
                     paddingAngle={2}
+                    isAnimationActive={false}
                   >
                     {contributionData.map((d) => (
                       <Cell key={d.name} fill={d.color} stroke="var(--color-background)" />
@@ -411,11 +412,17 @@ function SimulatorPage() {
                   />
                   <Tooltip content={<TT formatter={fmtCurrency} />} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Bar dataKey="Baseline revenue" fill="var(--color-muted)" radius={[6, 6, 0, 0]} />
+                  <Bar
+                    dataKey="Baseline revenue"
+                    fill="var(--color-muted)"
+                    radius={[6, 6, 0, 0]}
+                    isAnimationActive={false}
+                  />
                   <Bar
                     dataKey="Projected revenue"
                     fill="var(--color-chart-1)"
                     radius={[6, 6, 0, 0]}
+                    isAnimationActive={false}
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -457,6 +464,7 @@ function SimulatorPage() {
                     stroke="var(--color-chart-1)"
                     strokeWidth={2}
                     dot={false}
+                    isAnimationActive={false}
                     name="Expected"
                   />
                   <Line
@@ -467,6 +475,7 @@ function SimulatorPage() {
                     strokeDasharray="2 3"
                     strokeOpacity={0.5}
                     dot={false}
+                    isAnimationActive={false}
                     name="Upper 95%"
                   />
                   <Line
@@ -477,6 +486,7 @@ function SimulatorPage() {
                     strokeDasharray="2 3"
                     strokeOpacity={0.5}
                     dot={false}
+                    isAnimationActive={false}
                     name="Lower 95%"
                   />
                 </LineChart>
@@ -484,7 +494,7 @@ function SimulatorPage() {
             </Card>
           )}
 
-          <Card className="bg-gradient-card border-border/60 p-5">
+          <Card data-testid="channel-breakdown" className="bg-gradient-card border-border/60 p-5">
             <h3 className="mb-3 text-sm font-semibold">Channel breakdown</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">

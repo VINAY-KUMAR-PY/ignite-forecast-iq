@@ -23,10 +23,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useData } from "@/lib/data-store";
-import { filterRows, forecastRevenue, forecastRoas } from "@/lib/forecasting";
+import { aggregateDaily, filterRows } from "@/lib/forecasting";
 import { fetchForecastApi, type ForecastApiResponse } from "@/lib/backend-api";
 import { fmtCompact, fmtCurrency, fmtDate, fmtRoas } from "@/lib/format";
 import { KpiCard } from "@/components/kpi-card";
+import type { CampaignRow, ForecastPoint } from "@/lib/types";
 
 export const Route = createFileRoute("/app/forecast")({
   head: () => ({ meta: [{ title: "Forecasting · ForecastIQ" }] }),
@@ -34,6 +35,7 @@ export const Route = createFileRoute("/app/forecast")({
 });
 
 type Level = "overall" | "channel" | "campaign_type" | "campaign";
+type ForecastTarget = "revenue" | "roas";
 
 function ForecastPage() {
   const { rows } = useData();
@@ -61,13 +63,23 @@ function ForecastPage() {
     [rows, level, selectedValue],
   );
 
-  const fallbackRevFc = useMemo(() => forecastRevenue(filtered, horizon), [filtered, horizon]);
-  const fallbackRoasFc = useMemo(() => forecastRoas(filtered, horizon), [filtered, horizon]);
+  const fallbackRevFc = useMemo(
+    () => lightweightTrendForecast(filtered, horizon, "revenue"),
+    [filtered, horizon],
+  );
+  const fallbackRoasFc = useMemo(
+    () => lightweightTrendForecast(filtered, horizon, "roas"),
+    [filtered, horizon],
+  );
 
   useEffect(() => {
-    if (!rows.length || (level !== "overall" && !selectedValue)) return;
+    if (!rows.length || (level !== "overall" && !selectedValue)) {
+      setApiForecast(null);
+      return;
+    }
     let active = true;
     setApiError(null);
+    setApiForecast(null);
     fetchForecastApi(rows, horizon, level, selectedValue)
       .then((response) => {
         if (!active) return;
@@ -248,6 +260,7 @@ function ForecastPage() {
                 stroke="var(--color-chart-2)"
                 strokeWidth={2}
                 dot={false}
+                isAnimationActive={false}
                 name="Historical"
               />
               <Line
@@ -257,6 +270,7 @@ function ForecastPage() {
                 strokeWidth={2}
                 strokeDasharray="5 4"
                 dot={false}
+                isAnimationActive={false}
                 name="Expected forecast"
               />
               <Line
@@ -267,6 +281,7 @@ function ForecastPage() {
                 strokeDasharray="2 3"
                 strokeOpacity={0.6}
                 dot={false}
+                isAnimationActive={false}
                 name="Upper bound"
               />
               <Line
@@ -277,6 +292,7 @@ function ForecastPage() {
                 strokeDasharray="2 3"
                 strokeOpacity={0.6}
                 dot={false}
+                isAnimationActive={false}
                 name="Lower bound"
               />
             </AreaChart>
@@ -334,6 +350,7 @@ function ForecastPage() {
                 stroke="var(--color-chart-3)"
                 strokeWidth={2}
                 dot={false}
+                isAnimationActive={false}
                 name="Historical"
               />
               <Line
@@ -343,6 +360,7 @@ function ForecastPage() {
                 strokeWidth={2}
                 strokeDasharray="5 4"
                 dot={false}
+                isAnimationActive={false}
                 name="Expected forecast"
               />
               <Line
@@ -353,6 +371,7 @@ function ForecastPage() {
                 strokeDasharray="2 3"
                 strokeOpacity={0.6}
                 dot={false}
+                isAnimationActive={false}
                 name="Upper bound"
               />
               <Line
@@ -363,6 +382,7 @@ function ForecastPage() {
                 strokeDasharray="2 3"
                 strokeOpacity={0.6}
                 dot={false}
+                isAnimationActive={false}
                 name="Lower bound"
               />
             </AreaChart>
@@ -371,7 +391,10 @@ function ForecastPage() {
       </div>
 
       {diagnostics && (
-        <Card className="mt-6 bg-gradient-card border-border/60 p-5">
+        <Card
+          data-testid="model-diagnostics"
+          className="mt-6 bg-gradient-card border-border/60 p-5"
+        >
           <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
             <div>
               <h3 className="text-sm font-semibold">Model diagnostics</h3>
@@ -406,6 +429,78 @@ function ForecastPage() {
       )}
     </>
   );
+}
+
+function lightweightTrendForecast(
+  rows: CampaignRow[],
+  horizon: 30 | 60 | 90,
+  target: ForecastTarget,
+): ForecastPoint[] {
+  const daily = aggregateDaily(rows);
+  if (!daily.length) return [];
+
+  const values = daily.map((day) => (target === "revenue" ? day.revenue : day.roas));
+  const historical = daily.map((day, index) => ({
+    date: day.date,
+    value: values[index],
+    lower: values[index],
+    upper: values[index],
+    historical: true,
+  }));
+
+  const recentWindow = Math.min(30, values.length);
+  const previousWindow = Math.min(30, Math.max(0, values.length - recentWindow));
+  const recent = values.slice(-recentWindow);
+  const previous = previousWindow
+    ? values.slice(-(recentWindow + previousWindow), -recentWindow)
+    : [];
+  const recentAverage = mean(recent) || mean(values);
+  const previousAverage = previous.length ? mean(previous) : recentAverage;
+  const relativeTrend =
+    previousAverage > 0 ? (recentAverage - previousAverage) / previousAverage : 0;
+  const dailyTrend = clamp(relativeTrend / Math.max(1, recentWindow), -0.015, 0.015);
+  const stdDev = standardDeviation(recent, recentAverage);
+  const lastDate = new Date(`${daily[daily.length - 1].date}T00:00:00.000Z`);
+
+  let current = recentAverage;
+  const forecast: ForecastPoint[] = [];
+  for (let day = 1; day <= horizon; day++) {
+    const futureDate = new Date(lastDate);
+    futureDate.setUTCDate(lastDate.getUTCDate() + day);
+    current = Math.max(0, current * (1 + dailyTrend));
+
+    const margin = Math.max(
+      stdDev * 1.96 * Math.sqrt(1 + day / 30),
+      current * (target === "revenue" ? 0.08 : 0.04),
+    );
+    forecast.push({
+      date: futureDate.toISOString().slice(0, 10),
+      value: round2(current),
+      lower: round2(Math.max(0, current - margin)),
+      upper: round2(current + margin),
+    });
+  }
+
+  return [...historical, ...forecast];
+}
+
+function mean(values: number[]) {
+  return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
+}
+
+function standardDeviation(values: number[], avg: number) {
+  if (values.length < 2) return Math.abs(avg) * 0.1;
+  const variance =
+    values.reduce((sum, value) => sum + (value - avg) ** 2, 0) / Math.max(1, values.length - 1);
+  return Math.sqrt(variance);
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function round2(value: number) {
+  return Math.round(value * 100) / 100;
 }
 
 function DiagnosticStat({ label, value }: { label: string; value: string }) {

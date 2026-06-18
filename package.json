@@ -9,6 +9,7 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "check": "tsc --noEmit && eslint . && vite build",
+    "demo:e2e": "node scripts/e2e-demo-check.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",

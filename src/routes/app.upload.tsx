@@ -149,7 +149,9 @@ function UploadPage() {
           <div className="text-xs uppercase tracking-wider text-muted-foreground">
             Issues detected
           </div>
-          <div className="mt-1 text-2xl font-bold text-warning">{result?.issues.length ?? 0}</div>
+          <div data-testid="issues-detected-value" className="mt-1 text-2xl font-bold text-warning">
+            {result?.issues.length ?? 0}
+          </div>
           <div className="mt-1 flex flex-wrap gap-1 text-xs">
             {Object.entries(issueCounts).map(([t, c]) => (
               <Badge key={t} variant="secondary" className="capitalize">

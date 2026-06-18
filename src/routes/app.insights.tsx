@@ -20,7 +20,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useData } from "@/lib/data-store";
-import { aggregateDaily, forecastRevenue, forecastRoas } from "@/lib/forecasting";
+import { aggregateDaily, type DailyAgg } from "@/lib/forecasting";
 import { generateInsights, type InsightsResponse } from "@/lib/ai-insights.functions";
 import { fmtCurrency, fmtPct, fmtRoas } from "@/lib/format";
 import type { CampaignRow } from "@/lib/types";
@@ -29,8 +29,6 @@ export const Route = createFileRoute("/app/insights")({
   head: () => ({ meta: [{ title: "AI Insights · ForecastIQ" }] }),
   component: InsightsPage,
 });
-
-const CHANNELS = ["Google Ads", "Meta Ads", "Microsoft Ads"];
 
 function InsightsPage() {
   const { rows } = useData();
@@ -331,16 +329,13 @@ function buildSummary(rows: CampaignRow[]) {
     const prev30 = dailyCh.slice(-60, -30).reduce((s, d) => s + d.revenue, 0) || 1;
     const trend = Math.round(((last30 - prev30) / prev30) * 1000) / 10;
 
-    let fc30Rev = 0;
-    let fc30Roas = 0;
-    if (CHANNELS.includes(name) && dailyCh.length >= 35) {
-      const fcR = forecastRevenue(chRows, 30).filter((p) => !p.historical);
-      fc30Rev = Math.round(fcR.reduce((s, p) => s + p.value, 0));
-      const fcRoas = forecastRoas(chRows, 30).filter((p) => !p.historical);
-      fc30Roas = fcRoas.length
-        ? Math.round((fcRoas.reduce((s, p) => s + p.value, 0) / fcRoas.length) * 100) / 100
-        : 0;
-    }
+    const fc30Rev = Math.round(projectRevenue(dailyCh, 30));
+    const fc30Roas = round2(
+      projectAverage(
+        dailyCh.map((day) => day.roas),
+        30,
+      ),
+    );
 
     return {
       name,
@@ -417,10 +412,10 @@ function buildSummary(rows: CampaignRow[]) {
     prev30Roas > 0 ? Math.round(((last30Roas - prev30Roas) / prev30Roas) * 1000) / 10 : 0;
 
   // Forecast horizons
-  const fc90 = forecastRevenue(rows, 90).filter((p) => !p.historical);
-  const fc30Slice = fc90.slice(0, 30);
-  const fc60Slice = fc90.slice(0, 60);
-  const fcRoas30 = forecastRoas(rows, 30).filter((p) => !p.historical);
+  const forecast30dRevenue = Math.round(projectRevenue(daily, 30));
+  const forecast60dRevenue = Math.round(projectRevenue(daily, 60));
+  const forecast90dRevenue = Math.round(projectRevenue(daily, 90));
+  const forecast30dMargin = Math.round(projectRevenueMargin(daily, 30));
 
   return {
     totalRevenue: Math.round(totalRevenue),
@@ -430,19 +425,87 @@ function buildSummary(rows: CampaignRow[]) {
     revenueTrendPct,
     spendTrendPct,
     roasTrendPct,
-    forecast30dRevenue: Math.round(fc30Slice.reduce((s, p) => s + p.value, 0)),
-    forecast60dRevenue: Math.round(fc60Slice.reduce((s, p) => s + p.value, 0)),
-    forecast90dRevenue: Math.round(fc90.reduce((s, p) => s + p.value, 0)),
-    forecast30dRevenueLower: Math.round(fc30Slice.reduce((s, p) => s + p.lower, 0)),
-    forecast30dRevenueUpper: Math.round(fc30Slice.reduce((s, p) => s + p.upper, 0)),
-    forecast30dRoas: fcRoas30.length
-      ? Math.round((fcRoas30.reduce((s, p) => s + p.value, 0) / fcRoas30.length) * 100) / 100
-      : 0,
+    forecast30dRevenue,
+    forecast60dRevenue,
+    forecast90dRevenue,
+    forecast30dRevenueLower: Math.max(0, forecast30dRevenue - forecast30dMargin),
+    forecast30dRevenueUpper: forecast30dRevenue + forecast30dMargin,
+    forecast30dRoas: round2(
+      projectAverage(
+        daily.map((day) => day.roas),
+        30,
+      ),
+    ),
     channels,
     topCampaigns,
     bottomCampaigns,
     campaignTypeBreakdown,
   };
+}
+
+function projectRevenue(daily: DailyAgg[], horizon: number) {
+  return projectSeries(
+    daily.map((day) => day.revenue),
+    horizon,
+    "sum",
+  );
+}
+
+function projectRevenueMargin(daily: DailyAgg[], horizon: number) {
+  const values = daily.map((day) => day.revenue);
+  const recent = values.slice(-Math.min(30, values.length));
+  const projected = projectRevenue(daily, horizon);
+  const avg = mean(recent);
+  const stdDev = standardDeviation(recent, avg);
+  return Math.max(projected * 0.12, stdDev * 1.96 * Math.sqrt(Math.max(1, horizon)));
+}
+
+function projectAverage(values: number[], horizon: number) {
+  return projectSeries(values, horizon, "average");
+}
+
+function projectSeries(values: number[], horizon: number, mode: "sum" | "average") {
+  if (!values.length) return 0;
+  const recentWindow = Math.min(30, values.length);
+  const previousWindow = Math.min(30, Math.max(0, values.length - recentWindow));
+  const recent = values.slice(-recentWindow);
+  const previous = previousWindow
+    ? values.slice(-(recentWindow + previousWindow), -recentWindow)
+    : [];
+  const recentAverage = mean(recent) || mean(values);
+  const previousAverage = previous.length ? mean(previous) : recentAverage;
+  const relativeTrend =
+    previousAverage > 0 ? (recentAverage - previousAverage) / previousAverage : 0;
+  const dailyTrend = clamp(relativeTrend / Math.max(1, recentWindow), -0.015, 0.015);
+
+  let current = recentAverage;
+  const projected: number[] = [];
+  for (let day = 1; day <= horizon; day++) {
+    current = Math.max(0, current * (1 + dailyTrend));
+    projected.push(current);
+  }
+
+  if (mode === "average") return mean(projected);
+  return projected.reduce((sum, value) => sum + value, 0);
+}
+
+function mean(values: number[]) {
+  return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
+}
+
+function standardDeviation(values: number[], avg: number) {
+  if (values.length < 2) return Math.abs(avg) * 0.1;
+  const variance =
+    values.reduce((sum, value) => sum + (value - avg) ** 2, 0) / Math.max(1, values.length - 1);
+  return Math.sqrt(variance);
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function round2(value: number) {
+  return Math.round(value * 100) / 100;
 }
 
 function Stat({ label, value, delta }: { label: string; value: string; delta?: number }) {

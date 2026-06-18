@@ -14,7 +14,12 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from backend.gemini import _fallback_insights, generate_gemini_insights_with_source  # noqa: E402
+from backend.gemini import (  # noqa: E402
+    GeminiGenerationError,
+    _fallback_insights,
+    generate_gemini_insights_live,
+    generate_gemini_insights_with_source,
+)
 from backend.main import app  # noqa: E402
 
 
@@ -59,9 +64,16 @@ async def run_live_smoke() -> None:
     if not (os.getenv("GEMINI_API_KEY") or "").strip():
         raise RuntimeError("GEMINI_API_KEY is not configured in this runtime")
 
-    insights, source = await generate_gemini_insights_with_source(SUMMARY)
-    if source != "gemini":
-        raise RuntimeError("Gemini live call fell back; inspect backend logs for the sanitized failure reason")
+    model = os.getenv("GEMINI_MODEL") or "gemini-2.5-flash-lite"
+    timeout = os.getenv("GEMINI_TIMEOUT_SECONDS") or "45"
+    attempts = os.getenv("GEMINI_MAX_ATTEMPTS") or "3"
+    print(f"Gemini live smoke config: model={model} timeout_seconds={timeout} attempts={attempts}")
+
+    try:
+        insights = await generate_gemini_insights_live(SUMMARY)
+    except GeminiGenerationError as exc:
+        raise RuntimeError(f"Gemini live call failed before fallback: kind={exc.kind} reason={exc}") from exc
+
     if not insights.executiveSummary or len(insights.actionPlan) < 1:
         raise RuntimeError("Gemini response did not include required executive insight fields")
 
@@ -74,7 +86,6 @@ async def run_live_smoke() -> None:
     if response.json() == fallback_payload:
         raise RuntimeError("/api/insights returned fallback output even though live Gemini succeeded")
 
-    model = os.getenv("GEMINI_MODEL") or "gemini-3.5-flash"
     print(f"Gemini live smoke: PASS model={model} action_items={len(insights.actionPlan)}")
     print("/api/insights live path: PASS")
 

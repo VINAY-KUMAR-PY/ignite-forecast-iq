@@ -22,9 +22,12 @@ jobs:
     timeout-minutes: 10
     env:
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-      GEMINI_MODEL: gemini-3.5-flash
+      GEMINI_MODEL: gemini-2.5-flash-lite
       GEMINI_TEMPERATURE: "0.2"
-      GEMINI_TIMEOUT_SECONDS: "30"
+      GEMINI_TIMEOUT_SECONDS: "60"
+      GEMINI_MAX_ATTEMPTS: "3"
+      GEMINI_RETRY_BACKOFF_SECONDS: "2"
+      GEMINI_MAX_OUTPUT_TOKENS: "1600"
 
     steps:
       - name: Check out repository

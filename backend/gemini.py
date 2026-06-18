@@ -17,6 +17,23 @@ from .schemas import InsightsResponse
 logger = logging.getLogger(__name__)
 load_dotenv()
 InsightSource = Literal["gemini", "fallback"]
+GeminiFailureKind = Literal[
+    "authentication",
+    "timeout",
+    "rate_limit",
+    "sdk",
+    "validation",
+    "empty_response",
+    "unknown",
+]
+
+
+class GeminiGenerationError(RuntimeError):
+    """Sanitized Gemini failure that can be safely logged or printed."""
+
+    def __init__(self, kind: GeminiFailureKind, message: str):
+        self.kind = kind
+        super().__init__(message)
 
 
 def _money(value: float) -> str:
@@ -204,7 +221,7 @@ def _extract_json(text: str) -> dict:
 
 
 def _gemini_model_name() -> str:
-    return (os.getenv("GEMINI_MODEL") or "gemini-3.5-flash").strip() or "gemini-3.5-flash"
+    return (os.getenv("GEMINI_MODEL") or "gemini-2.5-flash-lite").strip() or "gemini-2.5-flash-lite"
 
 
 def _gemini_temperature() -> float:
@@ -217,10 +234,34 @@ def _gemini_temperature() -> float:
 
 def _gemini_timeout_seconds() -> float:
     try:
-        return max(1.0, float(os.getenv("GEMINI_TIMEOUT_SECONDS", "20")))
+        return min(120.0, max(5.0, float(os.getenv("GEMINI_TIMEOUT_SECONDS", "45"))))
     except ValueError:
-        logger.warning("Invalid GEMINI_TIMEOUT_SECONDS value; using 20")
-        return 20.0
+        logger.warning("Invalid GEMINI_TIMEOUT_SECONDS value; using 45")
+        return 45.0
+
+
+def _gemini_max_attempts() -> int:
+    try:
+        return min(5, max(1, int(os.getenv("GEMINI_MAX_ATTEMPTS", "3"))))
+    except ValueError:
+        logger.warning("Invalid GEMINI_MAX_ATTEMPTS value; using 3")
+        return 3
+
+
+def _gemini_retry_backoff_seconds() -> float:
+    try:
+        return min(10.0, max(0.0, float(os.getenv("GEMINI_RETRY_BACKOFF_SECONDS", "1.5"))))
+    except ValueError:
+        logger.warning("Invalid GEMINI_RETRY_BACKOFF_SECONDS value; using 1.5")
+        return 1.5
+
+
+def _gemini_max_output_tokens() -> int:
+    try:
+        return min(4096, max(512, int(os.getenv("GEMINI_MAX_OUTPUT_TOKENS", "1600"))))
+    except ValueError:
+        logger.warning("Invalid GEMINI_MAX_OUTPUT_TOKENS value; using 1600")
+        return 1600
 
 
 def _safe_exception_message(exc: Exception) -> str:
@@ -229,6 +270,45 @@ def _safe_exception_message(exc: Exception) -> str:
     if key:
         message = message.replace(key, "[redacted]")
     return message[:500]
+
+
+def _classify_exception(exc: Exception) -> GeminiFailureKind:
+    if isinstance(exc, asyncio.TimeoutError):
+        return "timeout"
+
+    message = _safe_exception_message(exc).lower()
+    if any(token in message for token in ("timeout", "timed out", "deadline exceeded")):
+        return "timeout"
+    if any(
+        token in message
+        for token in (
+            "api key",
+            "api_key",
+            "unauthenticated",
+            "unauthorized",
+            "permission denied",
+            "invalid credential",
+            "401",
+            "403",
+        )
+    ):
+        return "authentication"
+    if any(token in message for token in ("rate limit", "resource exhausted", "quota", "429")):
+        return "rate_limit"
+    if any(token in message for token in ("validationerror", "jsondecodeerror", "invalid json")):
+        return "validation"
+    if any(token in message for token in ("modulenotfounderror", "importerror", "generatecontentconfig")):
+        return "sdk"
+    return "unknown"
+
+
+def _generation_error(exc: Exception, context: str) -> GeminiGenerationError:
+    kind = _classify_exception(exc)
+    return GeminiGenerationError(kind, f"{context}: {_safe_exception_message(exc)}")
+
+
+def _is_retryable(kind: GeminiFailureKind) -> bool:
+    return kind in {"timeout", "rate_limit", "sdk", "validation", "empty_response", "unknown"}
 
 
 def _build_prompt(summary: Dict[str, Any]) -> str:
@@ -253,13 +333,22 @@ DATA:
 """
 
 
-async def _generate_with_google_genai(api_key: str, model_name: str, prompt: str) -> str:
+async def _generate_with_google_genai(
+    api_key: str,
+    model_name: str,
+    prompt: str,
+    timeout_seconds: float,
+) -> str:
     """Call the current Google Gen AI SDK in a worker thread."""
     from google import genai
     from google.genai import types
 
-    client = genai.Client(api_key=api_key)
+    client = genai.Client(
+        api_key=api_key,
+        http_options=types.HttpOptions(timeout=int(timeout_seconds * 1000)),
+    )
     config = types.GenerateContentConfig(
+        max_output_tokens=_gemini_max_output_tokens(),
         response_mime_type="application/json",
         response_schema=InsightsResponse,
         temperature=_gemini_temperature(),
@@ -274,7 +363,12 @@ async def _generate_with_google_genai(api_key: str, model_name: str, prompt: str
     return response.text or ""
 
 
-async def _generate_with_legacy_sdk(api_key: str, model_name: str, prompt: str) -> str:
+async def _generate_with_legacy_sdk(
+    api_key: str,
+    model_name: str,
+    prompt: str,
+    timeout_seconds: float,
+) -> str:
     """Call the legacy google-generativeai SDK retained for compatibility."""
     import google.generativeai as genai
 
@@ -286,22 +380,80 @@ async def _generate_with_legacy_sdk(api_key: str, model_name: str, prompt: str) 
             "temperature": _gemini_temperature(),
         },
     )
-    response = await model.generate_content_async(prompt)
+    response = await model.generate_content_async(
+        prompt,
+        request_options={"timeout": timeout_seconds},
+    )
     return response.text or ""
 
 
-async def _generate_content(api_key: str, model_name: str, prompt: str) -> str:
+async def _generate_content(api_key: str, model_name: str, prompt: str, timeout_seconds: float) -> str:
     try:
-        return await _generate_with_google_genai(api_key, model_name, prompt)
-    except (ImportError, ModuleNotFoundError):
+        return await _generate_with_google_genai(api_key, model_name, prompt, timeout_seconds)
+    except (ImportError, ModuleNotFoundError) as exc:
         logger.info("google-genai is not installed; trying legacy google-generativeai SDK")
-        return await _generate_with_legacy_sdk(api_key, model_name, prompt)
+        try:
+            return await _generate_with_legacy_sdk(api_key, model_name, prompt, timeout_seconds)
+        except Exception as legacy_exc:
+            raise _generation_error(legacy_exc, "legacy google-generativeai call failed") from exc
     except Exception as exc:
+        primary_error = _generation_error(exc, "google-genai call failed")
+        if primary_error.kind in {"authentication", "timeout", "rate_limit"}:
+            raise primary_error from exc
+
         logger.info(
             "google-genai call failed; trying legacy google-generativeai SDK: %s",
             _safe_exception_message(exc),
         )
-        return await _generate_with_legacy_sdk(api_key, model_name, prompt)
+        try:
+            return await _generate_with_legacy_sdk(api_key, model_name, prompt, timeout_seconds)
+        except Exception as legacy_exc:
+            raise _generation_error(legacy_exc, "legacy google-generativeai call failed") from exc
+
+
+async def generate_gemini_insights_live(summary: Dict[str, Any]) -> InsightsResponse:
+    """Generate insights from Gemini only; raise sanitized errors instead of falling back."""
+    key = (os.getenv("GEMINI_API_KEY") or "").strip()
+    if not key:
+        raise GeminiGenerationError("authentication", "GEMINI_API_KEY is not configured")
+
+    model_name = _gemini_model_name()
+    prompt = _build_prompt(summary)
+    timeout_seconds = _gemini_timeout_seconds()
+    attempts = _gemini_max_attempts()
+    backoff_seconds = _gemini_retry_backoff_seconds()
+
+    last_error: GeminiGenerationError | None = None
+    for attempt in range(1, attempts + 1):
+        try:
+            text = await asyncio.wait_for(
+                _generate_content(key, model_name, prompt, timeout_seconds),
+                timeout=timeout_seconds + 5,
+            )
+            if not text.strip():
+                raise GeminiGenerationError("empty_response", "Gemini returned an empty response")
+            return InsightsResponse.model_validate(_extract_json(text))
+        except GeminiGenerationError as exc:
+            error = exc
+        except Exception as exc:
+            error = _generation_error(exc, "Gemini insight generation failed")
+
+        last_error = error
+        if attempt >= attempts or not _is_retryable(error.kind):
+            raise error
+
+        delay = backoff_seconds * (2 ** (attempt - 1))
+        logger.warning(
+            "Gemini attempt %s/%s failed with %s; retrying in %.1fs: %s",
+            attempt,
+            attempts,
+            error.kind,
+            delay,
+            str(error),
+        )
+        await asyncio.sleep(delay)
+
+    raise last_error or GeminiGenerationError("unknown", "Gemini insight generation failed")
 
 
 async def generate_gemini_insights_with_source(summary: Dict[str, Any]) -> tuple[InsightsResponse, InsightSource]:
@@ -311,13 +463,14 @@ async def generate_gemini_insights_with_source(summary: Dict[str, Any]) -> tuple
         return _fallback_insights(summary), "fallback"
 
     try:
-        model_name = _gemini_model_name()
-        prompt = _build_prompt(summary)
-        text = await asyncio.wait_for(
-            _generate_content(key, model_name, prompt),
-            timeout=_gemini_timeout_seconds(),
+        return await generate_gemini_insights_live(summary), "gemini"
+    except GeminiGenerationError as exc:
+        logger.warning(
+            "Gemini insight generation failed; using fallback insights: kind=%s reason=%s",
+            exc.kind,
+            str(exc),
         )
-        return InsightsResponse.model_validate(_extract_json(text)), "gemini"
+        return _fallback_insights(summary), "fallback"
     except Exception as exc:
         logger.warning(
             "Gemini insight generation failed; using fallback insights: %s",

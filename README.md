@@ -265,9 +265,12 @@ Optional Gemini configuration:
 
 ```bash
 export GEMINI_API_KEY="your-key"
-export GEMINI_MODEL="gemini-3.5-flash"
+export GEMINI_MODEL="gemini-2.5-flash-lite"
 export GEMINI_TEMPERATURE="0.2"
-export GEMINI_TIMEOUT_SECONDS="20"
+export GEMINI_TIMEOUT_SECONDS="45"
+export GEMINI_MAX_ATTEMPTS="3"
+export GEMINI_RETRY_BACKOFF_SECONDS="1.5"
+export GEMINI_MAX_OUTPUT_TOKENS="1600"
 ```
 
 You can also copy `.env.example` to `.env` for local backend runs. Keep `GEMINI_API_KEY` backend-only; never expose it through a `VITE_` variable.

@@ -256,17 +256,14 @@ DATA:
 async def _generate_with_google_genai(api_key: str, model_name: str, prompt: str) -> str:
     """Call the current Google Gen AI SDK in a worker thread."""
     from google import genai
+    from google.genai import types
 
     client = genai.Client(api_key=api_key)
-    config = {
-        "response_format": {
-            "text": {
-                "mime_type": "application/json",
-                "schema": InsightsResponse.model_json_schema(),
-            }
-        },
-        "temperature": _gemini_temperature(),
-    }
+    config = types.GenerateContentConfig(
+        response_mime_type="application/json",
+        response_schema=InsightsResponse,
+        temperature=_gemini_temperature(),
+    )
 
     response = await asyncio.to_thread(
         client.models.generate_content,

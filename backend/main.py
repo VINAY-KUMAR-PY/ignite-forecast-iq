@@ -5,6 +5,7 @@ import os
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 
 from .data_preprocessing import validate_records
 from .decision_support import build_decision_support
@@ -26,6 +27,8 @@ from .schemas import (
 )
 from .utils import load_json_env
 
+
+load_dotenv()
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(

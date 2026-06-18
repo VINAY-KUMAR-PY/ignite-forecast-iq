@@ -2,16 +2,20 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
 import re
 from typing import Any, Dict, List
 
+from dotenv import load_dotenv
+
 from .schemas import InsightsResponse
 
 
 logger = logging.getLogger(__name__)
+load_dotenv()
 
 
 def _money(value: float) -> str:
@@ -198,19 +202,28 @@ def _extract_json(text: str) -> dict:
     return json.loads(cleaned)
 
 
-async def generate_gemini_insights(summary: Dict[str, Any]) -> InsightsResponse:
-    """Generate structured CMO-ready insights from Gemini or fallback rules."""
-    key = os.getenv("GEMINI_API_KEY")
-    if not key:
-        return _fallback_insights(summary)
+def _gemini_model_name() -> str:
+    return os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
 
+
+def _gemini_temperature() -> float:
     try:
-        import google.generativeai as genai
+        return float(os.getenv("GEMINI_TEMPERATURE", "0.2"))
+    except ValueError:
+        logger.warning("Invalid GEMINI_TEMPERATURE value; using 0.2")
+        return 0.2
 
-        genai.configure(api_key=key)
-        model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
-        model = genai.GenerativeModel(model_name)
-        prompt = f"""
+
+def _gemini_timeout_seconds() -> float:
+    try:
+        return max(1.0, float(os.getenv("GEMINI_TIMEOUT_SECONDS", "20")))
+    except ValueError:
+        logger.warning("Invalid GEMINI_TIMEOUT_SECONDS value; using 20")
+        return 20.0
+
+
+def _build_prompt(summary: Dict[str, Any]) -> str:
+    return f"""
 You are a CMO-level ecommerce marketing strategist.
 Use only the supplied JSON data. Produce strict JSON matching this schema:
 {{
@@ -224,12 +237,78 @@ Use only the supplied JSON data. Produce strict JSON matching this schema:
   "actionPlan": [{{"priority": "high|medium|low", "timeline": "...", "owner": "...", "action": "...", "kpi": "..."}}]
 }}
 Recommended budget shares must sum to 100. Cite specific revenue, ROAS, forecast and campaign numbers.
+Return JSON only, with no Markdown.
 
 DATA:
 {json.dumps(summary, indent=2)}
 """
-        response = await model.generate_content_async(prompt)
-        return InsightsResponse.model_validate(_extract_json(response.text or "{}"))
+
+
+async def _generate_with_google_genai(api_key: str, model_name: str, prompt: str) -> str:
+    """Call the current Google Gen AI SDK in a worker thread."""
+    from google import genai
+
+    client = genai.Client(api_key=api_key)
+    config = {
+        "response_format": {
+            "text": {
+                "mime_type": "application/json",
+                "schema": InsightsResponse.model_json_schema(),
+            }
+        },
+        "temperature": _gemini_temperature(),
+    }
+
+    response = await asyncio.to_thread(
+        client.models.generate_content,
+        model=model_name,
+        contents=prompt,
+        config=config,
+    )
+    return response.text or ""
+
+
+async def _generate_with_legacy_sdk(api_key: str, model_name: str, prompt: str) -> str:
+    """Call the legacy google-generativeai SDK retained for compatibility."""
+    import google.generativeai as genai
+
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel(
+        model_name,
+        generation_config={
+            "response_mime_type": "application/json",
+            "temperature": _gemini_temperature(),
+        },
+    )
+    response = await model.generate_content_async(prompt)
+    return response.text or ""
+
+
+async def _generate_content(api_key: str, model_name: str, prompt: str) -> str:
+    try:
+        return await _generate_with_google_genai(api_key, model_name, prompt)
+    except (ImportError, ModuleNotFoundError):
+        logger.info("google-genai is not installed; trying legacy google-generativeai SDK")
+        return await _generate_with_legacy_sdk(api_key, model_name, prompt)
+    except Exception as exc:
+        logger.info("google-genai call failed; trying legacy google-generativeai SDK: %s", exc)
+        return await _generate_with_legacy_sdk(api_key, model_name, prompt)
+
+
+async def generate_gemini_insights(summary: Dict[str, Any]) -> InsightsResponse:
+    """Generate structured CMO-ready insights from Gemini or fallback rules."""
+    key = os.getenv("GEMINI_API_KEY")
+    if not key:
+        return _fallback_insights(summary)
+
+    try:
+        model_name = _gemini_model_name()
+        prompt = _build_prompt(summary)
+        text = await asyncio.wait_for(
+            _generate_content(key, model_name, prompt),
+            timeout=_gemini_timeout_seconds(),
+        )
+        return InsightsResponse.model_validate(_extract_json(text))
     except Exception as exc:
         logger.warning("Gemini insight generation failed; using fallback insights: %s", exc)
         return _fallback_insights(summary)

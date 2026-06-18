@@ -186,7 +186,7 @@ When `GEMINI_API_KEY` is configured, Gemini generates the structured response. W
 - Frontend: React 19, TypeScript, Vite, TanStack Router, Recharts, Tailwind CSS, Radix UI, shadcn-style components.
 - Backend: Python, FastAPI, Pydantic, Uvicorn.
 - Machine learning: XGBoost, scikit-learn, pandas, NumPy, joblib.
-- AI insights: Google Gemini via `google-generativeai`.
+- AI insights: Google Gemini via the Google Gen AI SDK, with legacy SDK compatibility.
 - Tooling: ESLint, Prettier, TypeScript, shell-based offline runner.
 
 ## Installation Guide
@@ -265,8 +265,12 @@ Optional Gemini configuration:
 
 ```bash
 export GEMINI_API_KEY="your-key"
-export GEMINI_MODEL="gemini-1.5-flash"
+export GEMINI_MODEL="gemini-3.5-flash"
+export GEMINI_TEMPERATURE="0.2"
+export GEMINI_TIMEOUT_SECONDS="20"
 ```
+
+You can also copy `.env.example` to `.env` for local backend runs. Keep `GEMINI_API_KEY` backend-only; never expose it through a `VITE_` variable.
 
 ## Screenshots Section
 

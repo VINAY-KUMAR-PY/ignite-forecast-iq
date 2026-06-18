@@ -11,6 +11,8 @@ from typing import Any, Dict, List, Literal
 
 from dotenv import load_dotenv
 
+from pydantic import ValidationError
+
 from .schemas import InsightsResponse
 
 
@@ -212,12 +214,152 @@ def _fallback_insights(summary: Dict[str, Any]) -> InsightsResponse:
 
 
 def _extract_json(text: str) -> dict:
-    cleaned = re.sub(r"^```(?:json)?|```$", "", text.strip(), flags=re.MULTILINE).strip()
-    start = cleaned.find("{")
-    end = cleaned.rfind("}")
-    if start >= 0 and end >= start:
-        cleaned = cleaned[start : end + 1]
-    return json.loads(cleaned)
+    """Extract and repair a JSON object from model text."""
+    errors: list[str] = []
+    for candidate in _json_candidates(text):
+        for repaired in _json_repair_candidates(candidate):
+            try:
+                parsed = json.loads(repaired)
+            except json.JSONDecodeError as exc:
+                errors.append(str(exc))
+                continue
+            if isinstance(parsed, dict):
+                return parsed
+            errors.append(f"parsed {type(parsed).__name__}, expected object")
+
+    detail = "; ".join(errors[-3:]) or "no JSON object found"
+    raise json.JSONDecodeError(f"Unable to parse Gemini JSON: {detail}", text, 0)
+
+
+def _json_candidates(text: str) -> list[str]:
+    cleaned = (text or "").strip().replace("\ufeff", "")
+    candidates: list[str] = []
+
+    for match in re.finditer(r"```(?:json)?\s*([\s\S]*?)```", cleaned, flags=re.IGNORECASE):
+        candidates.append(match.group(1).strip())
+
+    candidates.append(cleaned)
+
+    extracted: list[str] = []
+    for candidate in candidates:
+        for index, char in enumerate(candidate):
+            if char != "{":
+                continue
+            balanced = _balanced_json_object(candidate, index)
+            if balanced:
+                extracted.append(balanced)
+            else:
+                end = candidate.rfind("}")
+                extracted.append(candidate[index : end + 1] if end > index else candidate[index:])
+
+    deduped: list[str] = []
+    for candidate in candidates + extracted:
+        candidate = candidate.strip()
+        if candidate and candidate not in deduped:
+            deduped.append(candidate)
+    return deduped
+
+
+def _balanced_json_object(text: str, start: int) -> str | None:
+    stack: list[str] = []
+    in_string = False
+    escaped = False
+
+    for index in range(start, len(text)):
+        char = text[index]
+        if in_string:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == '"':
+                in_string = False
+            continue
+
+        if char == '"':
+            in_string = True
+        elif char in "{[":
+            stack.append(char)
+        elif char in "}]":
+            if not stack:
+                return None
+            opener = stack.pop()
+            if (opener == "{" and char != "}") or (opener == "[" and char != "]"):
+                return None
+            if not stack:
+                return text[start : index + 1]
+
+    return None
+
+
+def _json_repair_candidates(text: str) -> list[str]:
+    repaired = _normalize_json_text(text)
+    candidates = [
+        text.strip(),
+        repaired,
+        _close_partial_json(repaired),
+    ]
+    deduped: list[str] = []
+    for candidate in candidates:
+        candidate = candidate.strip()
+        if candidate and candidate not in deduped:
+            deduped.append(candidate)
+    return deduped
+
+
+def _normalize_json_text(text: str) -> str:
+    cleaned = text.strip().replace("\ufeff", "")
+    cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\s*```$", "", cleaned)
+    cleaned = cleaned.replace("\u201c", '"').replace("\u201d", '"')
+    cleaned = cleaned.replace("\u2018", "'").replace("\u2019", "'")
+
+    previous = None
+    while previous != cleaned:
+        previous = cleaned
+        cleaned = re.sub(r",\s*([}\]])", r"\1", cleaned)
+
+    cleaned = re.sub(
+        r'("(?:\\.|[^"\\])*"|[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?|true|false|null|\]|\})\s+(?="[^"]+"\s*:)',
+        r"\1, ",
+        cleaned,
+    )
+    return cleaned
+
+
+def _close_partial_json(text: str) -> str:
+    stack: list[str] = []
+    in_string = False
+    escaped = False
+    closed = text.rstrip()
+
+    for char in closed:
+        if in_string:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == '"':
+                in_string = False
+            continue
+
+        if char == '"':
+            in_string = True
+        elif char in "{[":
+            stack.append(char)
+        elif char in "}]":
+            if stack:
+                stack.pop()
+
+    if in_string:
+        closed += '"'
+
+    closed = re.sub(r":\s*$", ": null", closed)
+    closed = re.sub(r",\s*$", "", closed)
+
+    for opener in reversed(stack):
+        closed += "}" if opener == "{" else "]"
+    return _normalize_json_text(closed)
 
 
 def _gemini_model_name() -> str:
@@ -258,10 +400,10 @@ def _gemini_retry_backoff_seconds() -> float:
 
 def _gemini_max_output_tokens() -> int:
     try:
-        return min(4096, max(512, int(os.getenv("GEMINI_MAX_OUTPUT_TOKENS", "1600"))))
+        return min(8192, max(1024, int(os.getenv("GEMINI_MAX_OUTPUT_TOKENS", "3072"))))
     except ValueError:
-        logger.warning("Invalid GEMINI_MAX_OUTPUT_TOKENS value; using 1600")
-        return 1600
+        logger.warning("Invalid GEMINI_MAX_OUTPUT_TOKENS value; using 3072")
+        return 3072
 
 
 def _safe_exception_message(exc: Exception) -> str:
@@ -333,6 +475,231 @@ DATA:
 """
 
 
+def _string(value: Any, default: str) -> str:
+    if value is None:
+        return default
+    text = str(value).strip()
+    return text if text else default
+
+
+def _number(value: Any, default: float) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _enum(value: Any, allowed: set[str], default: str) -> str:
+    normalized = str(value or "").strip().lower().replace(" ", "_").replace("-", "_")
+    return normalized if normalized in allowed else default
+
+
+def _list(value: Any) -> list[Any]:
+    return value if isinstance(value, list) else []
+
+
+def _dict(value: Any) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
+
+
+def _fallback_item(items: list[dict[str, Any]], index: int, default: dict[str, Any]) -> dict[str, Any]:
+    return items[min(index, len(items) - 1)] if items else default
+
+
+def _merge_with_fallback(payload: dict[str, Any], summary: Dict[str, Any]) -> dict[str, Any]:
+    fallback = _fallback_insights(summary).model_dump(mode="json")
+
+    repaired = dict(fallback)
+    repaired["executiveSummary"] = _string(payload.get("executiveSummary"), fallback["executiveSummary"])
+
+    revenue_drivers = []
+    for index, item in enumerate(_list(payload.get("revenueDrivers"))):
+        data = _dict(item)
+        default = _fallback_item(
+            fallback["revenueDrivers"],
+            index,
+            {"title": "Revenue driver", "detail": "Revenue is influenced by current media mix.", "metric": ""},
+        )
+        revenue_drivers.append(
+            {
+                "title": _string(data.get("title"), default["title"]),
+                "detail": _string(data.get("detail"), default["detail"]),
+                "metric": _string(data.get("metric"), default.get("metric") or ""),
+            }
+        )
+    if revenue_drivers:
+        repaired["revenueDrivers"] = revenue_drivers
+
+    channel_performance = []
+    for index, item in enumerate(_list(payload.get("channelPerformance"))):
+        data = _dict(item)
+        default = _fallback_item(
+            fallback["channelPerformance"],
+            index,
+            {
+                "channel": "Channel",
+                "verdict": "on_track",
+                "insight": "Channel performance should be monitored.",
+                "recommendation": "Review budget and ROAS weekly.",
+            },
+        )
+        channel_performance.append(
+            {
+                "channel": _string(data.get("channel"), default["channel"]),
+                "verdict": _enum(
+                    data.get("verdict"),
+                    {"outperforming", "on_track", "underperforming"},
+                    default["verdict"],
+                ),
+                "insight": _string(data.get("insight"), default["insight"]),
+                "recommendation": _string(data.get("recommendation"), default["recommendation"]),
+            }
+        )
+    if channel_performance:
+        repaired["channelPerformance"] = channel_performance
+
+    campaign_payload = _dict(payload.get("campaignPerformance"))
+    campaign_default = fallback["campaignPerformance"]
+    top_campaigns = []
+    for index, item in enumerate(_list(campaign_payload.get("top"))):
+        data = _dict(item)
+        default = _fallback_item(campaign_default["top"], index, {})
+        top_campaigns.append(
+            {
+                "name": _string(data.get("name"), default.get("name", "Campaign")),
+                "channel": _string(data.get("channel"), default.get("channel", "Channel")),
+                "insight": _string(data.get("insight"), default.get("insight", "Campaign is a revenue contributor.")),
+            }
+        )
+    bottom_campaigns = []
+    for index, item in enumerate(_list(campaign_payload.get("bottom"))):
+        data = _dict(item)
+        default = _fallback_item(campaign_default["bottom"], index, {})
+        bottom_campaigns.append(
+            {
+                "name": _string(data.get("name"), default.get("name", "Campaign")),
+                "channel": _string(data.get("channel"), default.get("channel", "Channel")),
+                "issue": _string(data.get("issue"), default.get("issue", "Requires efficiency review.")),
+                "action": _string(data.get("action"), default.get("action", "Review bids, audiences and creative.")),
+            }
+        )
+    if top_campaigns or bottom_campaigns:
+        repaired["campaignPerformance"] = {
+            "top": top_campaigns or campaign_default["top"],
+            "bottom": bottom_campaigns or campaign_default["bottom"],
+        }
+
+    budget_allocation = []
+    for index, item in enumerate(_list(payload.get("budgetAllocation"))):
+        data = _dict(item)
+        default = _fallback_item(
+            fallback["budgetAllocation"],
+            index,
+            {
+                "channel": "Channel",
+                "currentSharePct": 0,
+                "recommendedSharePct": 0,
+                "rationale": "Budget should follow marginal efficiency.",
+                "expectedImpact": "Improve revenue efficiency.",
+            },
+        )
+        budget_allocation.append(
+            {
+                "channel": _string(data.get("channel"), default["channel"]),
+                "currentSharePct": _number(data.get("currentSharePct"), default["currentSharePct"]),
+                "recommendedSharePct": _number(data.get("recommendedSharePct"), default["recommendedSharePct"]),
+                "rationale": _string(data.get("rationale"), default["rationale"]),
+                "expectedImpact": _string(data.get("expectedImpact"), default["expectedImpact"]),
+            }
+        )
+    if budget_allocation:
+        repaired["budgetAllocation"] = budget_allocation
+
+    risks = []
+    for index, item in enumerate(_list(payload.get("risks"))):
+        data = _dict(item)
+        default = _fallback_item(
+            fallback["risks"],
+            index,
+            {
+                "title": "Execution risk",
+                "severity": "medium",
+                "description": "Forecast assumptions can drift as campaigns change.",
+                "mitigation": "Monitor forecast error weekly.",
+            },
+        )
+        risks.append(
+            {
+                "title": _string(data.get("title"), default["title"]),
+                "severity": _enum(data.get("severity"), {"low", "medium", "high"}, default["severity"]),
+                "description": _string(data.get("description"), default["description"]),
+                "mitigation": _string(data.get("mitigation"), default["mitigation"]),
+            }
+        )
+    if risks:
+        repaired["risks"] = risks
+
+    opportunities = []
+    for index, item in enumerate(_list(payload.get("growthOpportunities"))):
+        data = _dict(item)
+        default = _fallback_item(
+            fallback["growthOpportunities"],
+            index,
+            {
+                "title": "Optimization opportunity",
+                "description": "Reallocate spend toward efficient channels.",
+                "expectedImpact": "Improve revenue and ROAS.",
+                "effort": "medium",
+            },
+        )
+        opportunities.append(
+            {
+                "title": _string(data.get("title"), default["title"]),
+                "description": _string(data.get("description"), default["description"]),
+                "expectedImpact": _string(data.get("expectedImpact"), default["expectedImpact"]),
+                "effort": _enum(data.get("effort"), {"low", "medium", "high"}, default["effort"]),
+            }
+        )
+    if opportunities:
+        repaired["growthOpportunities"] = opportunities
+
+    actions = []
+    for index, item in enumerate(_list(payload.get("actionPlan"))):
+        data = _dict(item)
+        default = _fallback_item(
+            fallback["actionPlan"],
+            index,
+            {
+                "priority": "medium",
+                "timeline": "This week",
+                "owner": "Marketing team",
+                "action": "Review forecast and budget recommendations.",
+                "kpi": "Revenue and ROAS",
+            },
+        )
+        actions.append(
+            {
+                "priority": _enum(data.get("priority"), {"high", "medium", "low"}, default["priority"]),
+                "timeline": _string(data.get("timeline"), default["timeline"]),
+                "owner": _string(data.get("owner"), default["owner"]),
+                "action": _string(data.get("action"), default["action"]),
+                "kpi": _string(data.get("kpi"), default["kpi"]),
+            }
+        )
+    if actions:
+        repaired["actionPlan"] = actions
+
+    return repaired
+
+
+def _validate_insights_payload(payload: dict[str, Any], summary: Dict[str, Any]) -> InsightsResponse:
+    try:
+        return InsightsResponse.model_validate(payload)
+    except ValidationError as exc:
+        logger.info("Gemini schema validation needed repair: %s", _safe_exception_message(exc))
+        return InsightsResponse.model_validate(_merge_with_fallback(payload, summary))
+
+
 async def _generate_with_google_genai(
     api_key: str,
     model_name: str,
@@ -360,6 +727,15 @@ async def _generate_with_google_genai(
         contents=prompt,
         config=config,
     )
+    try:
+        parsed = getattr(response, "parsed", None)
+    except Exception as exc:
+        logger.info("google-genai parsed response unavailable; using raw text: %s", _safe_exception_message(exc))
+        parsed = None
+    if isinstance(parsed, InsightsResponse):
+        return parsed.model_dump_json()
+    if isinstance(parsed, dict):
+        return json.dumps(parsed)
     return response.text or ""
 
 
@@ -432,7 +808,7 @@ async def generate_gemini_insights_live(summary: Dict[str, Any]) -> InsightsResp
             )
             if not text.strip():
                 raise GeminiGenerationError("empty_response", "Gemini returned an empty response")
-            return InsightsResponse.model_validate(_extract_json(text))
+            return _validate_insights_payload(_extract_json(text), summary)
         except GeminiGenerationError as exc:
             error = exc
         except Exception as exc:

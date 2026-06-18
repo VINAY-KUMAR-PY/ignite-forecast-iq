@@ -38,6 +38,10 @@ function InsightsPage() {
   const [loading, setLoading] = useState(false);
 
   const summary = useMemo(() => buildSummary(rows), [rows]);
+  const managerBrief = useMemo(
+    () => (summary && insights ? buildManagerBrief(summary, insights) : null),
+    [summary, insights],
+  );
 
   if (!rows.length || !summary)
     return (
@@ -129,6 +133,16 @@ function InsightsPage() {
             </div>
             <p className="mt-3 text-base leading-relaxed">{insights.executiveSummary}</p>
           </Card>
+
+          {managerBrief && (
+            <SectionCard icon={Target} title="Marketing manager brief" accent="primary">
+              <div className="grid gap-3 md:grid-cols-2">
+                {managerBrief.map((item) => (
+                  <BriefCard key={item.title} title={item.title} detail={item.detail} />
+                ))}
+              </div>
+            </SectionCard>
+          )}
 
           {/* Revenue drivers */}
           <SectionCard icon={TrendingUp} title="Revenue drivers" accent="success">
@@ -326,6 +340,8 @@ function InsightsPage() {
 }
 
 // ---------- helpers ----------
+
+type Summary = NonNullable<ReturnType<typeof buildSummary>>;
 
 function buildSummary(rows: CampaignRow[]) {
   if (!rows.length) return null;
@@ -528,6 +544,50 @@ function round2(value: number) {
   return Math.round(value * 100) / 100;
 }
 
+function buildManagerBrief(summary: Summary, insights: InsightsResponse) {
+  const bestChannel = [...summary.channels].sort((a, b) => b.roas - a.roas)[0];
+  const riskyCampaign = summary.bottomCampaigns[0];
+  const budgetMove = [...(insights.budgetAllocation ?? [])].sort(
+    (a, b) =>
+      b.recommendedSharePct - b.currentSharePct - (a.recommendedSharePct - a.currentSharePct),
+  )[0];
+  const topAction = insights.actionPlan?.[0];
+  const revenueDirection = summary.revenueTrendPct >= 0 ? "increase" : "decrease";
+  const revenueDriver =
+    bestChannel && bestChannel.name !== "N/A"
+      ? `${bestChannel.name} is carrying the strongest efficiency at ${fmtRoas(bestChannel.roas)}.`
+      : "Channel efficiency is balanced, so budget changes should stay gradual.";
+
+  return [
+    {
+      title: `Why revenue may ${revenueDirection}`,
+      detail: `The recent revenue trend is ${summary.revenueTrendPct.toFixed(1)}% versus the prior window. ${revenueDriver}`,
+    },
+    {
+      title: "Where budget should move",
+      detail: budgetMove
+        ? `${budgetMove.channel} should move from ${fmtPct(
+            budgetMove.currentSharePct / 100,
+          )} to ${fmtPct(budgetMove.recommendedSharePct / 100)} because ${budgetMove.rationale}`
+        : "Keep the current budget mix until one channel shows a durable ROAS advantage.",
+    },
+    {
+      title: "Campaign to watch",
+      detail: riskyCampaign
+        ? `${riskyCampaign.name} on ${riskyCampaign.channel} has weak efficiency at ${fmtRoas(
+            riskyCampaign.roas,
+          )}. Review targeting, bids, and landing-page quality before adding budget.`
+        : "No high-spend campaign is currently flagged as a clear risk.",
+    },
+    {
+      title: "Next action for the manager",
+      detail: topAction
+        ? `${topAction.action} Track ${topAction.kpi} and review progress ${topAction.timeline.toLowerCase()}.`
+        : "Run the budget simulator, approve the highest-confidence reallocation, and monitor ROAS daily.",
+    },
+  ];
+}
+
 function Stat({ label, value, delta }: { label: string; value: string; delta?: number }) {
   return (
     <Card className="bg-gradient-card border-border/60 p-4">
@@ -544,6 +604,15 @@ function Stat({ label, value, delta }: { label: string; value: string; delta?: n
         )}
       </div>
     </Card>
+  );
+}
+
+function BriefCard({ title, detail }: { title: string; detail: string }) {
+  return (
+    <div className="rounded-lg border border-border/40 bg-background/40 p-4">
+      <h4 className="text-sm font-semibold">{title}</h4>
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{detail}</p>
+    </div>
   );
 }
 

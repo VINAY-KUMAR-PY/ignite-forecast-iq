@@ -14,7 +14,18 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Activity, ArrowUpRight, DollarSign, Target, TrendingUp } from "lucide-react";
+import {
+  Activity,
+  AlertTriangle,
+  ArrowUpRight,
+  CheckCircle2,
+  DollarSign,
+  Gauge,
+  Lightbulb,
+  Target,
+  TrendingUp,
+  type LucideIcon,
+} from "lucide-react";
 import { useData } from "@/lib/data-store";
 import { aggregateDaily } from "@/lib/forecasting";
 import { fmtCompact, fmtCurrency, fmtDate, fmtRoas } from "@/lib/format";
@@ -88,6 +99,76 @@ function Dashboard() {
       strongestChannel && weakestChannel
         ? Math.max(0, weakestChannel.spend * 0.1 * (strongestChannel.roas - weakestChannel.roas))
         : 0;
+    const last30AverageRevenue =
+      last30.length > 0 ? last30Revenue / last30.length : totalRevenue / Math.max(1, daily.length);
+    const forecast30Revenue = Math.max(
+      0,
+      last30AverageRevenue * 30 * clampNumber(1 + revDelta / 100, 0.75, 1.25),
+    );
+    const expectedRoas = lastRoas || avgRoas;
+    const confidenceScore = Math.round(
+      clampNumber(
+        64 +
+          Math.min(18, daily.length / 6) +
+          Math.min(8, campaigns.size / 4) -
+          Math.min(14, Math.abs(roasDelta) / 2),
+        55,
+        94,
+      ),
+    );
+    const roasLiftPotential =
+      strongestChannel && weakestChannel
+        ? Math.max(0, strongestChannel.roas - weakestChannel.roas)
+        : 0;
+    const riskAlerts = [
+      ...(roasDelta < -5
+        ? [`ROAS has moved ${Math.abs(roasDelta).toFixed(1)}% below the prior 30 days.`]
+        : []),
+      ...(spendDelta > revDelta + 8
+        ? ["Spend is growing faster than revenue, which can pressure contribution margin."]
+        : []),
+      ...(weakestChannel && weakestChannel.roas < avgRoas * 0.75
+        ? [`${weakestChannel.name} is materially below blended ROAS.`]
+        : []),
+    ].slice(0, 3);
+    const opportunityAlerts = [
+      ...(strongestChannel
+        ? [`${strongestChannel.name} is the best channel to test incremental budget.`]
+        : []),
+      ...(reallocationOpportunity > 0 && weakestChannel && strongestChannel
+        ? [
+            `Moving 10% from ${weakestChannel.name} to ${strongestChannel.name} shows ${fmtCurrency(
+              reallocationOpportunity,
+            )} upside.`,
+          ]
+        : []),
+      ...(revDelta > 0
+        ? [`Revenue momentum is positive at +${revDelta.toFixed(1)}% vs the prior 30 days.`]
+        : ["Stabilize high-spend campaigns before scaling new budget."]),
+    ].slice(0, 3);
+    const riskLevel =
+      riskAlerts.length >= 3 || roasDelta < -12
+        ? "High"
+        : riskAlerts.length > 0 || roasDelta < -5
+          ? "Medium"
+          : "Low";
+    const recommendedAction =
+      strongestChannel && weakestChannel && reallocationOpportunity > 0
+        ? `Shift 10% of ${weakestChannel.name} budget into ${strongestChannel.name}.`
+        : revDelta >= 0
+          ? "Maintain current channel mix and scale winners carefully."
+          : "Pause aggressive scaling and fix low-efficiency campaigns first.";
+    const expectedRevenueImpact =
+      Math.max(0, forecast30Revenue - last30Revenue) + reallocationOpportunity;
+    const topActions = [
+      recommendedAction,
+      strongestChannel
+        ? `Protect ${strongestChannel.name} budgets while monitoring marginal ROAS.`
+        : "Keep channel budgets close to baseline until more data is available.",
+      weakestChannel
+        ? `Review ${weakestChannel.name} campaigns for wasted spend and weak conversion paths.`
+        : "Recheck underperforming campaigns before the next budget cycle.",
+    ];
 
     return {
       totalRevenue,
@@ -99,6 +180,20 @@ function Dashboard() {
       revDelta,
       spendDelta,
       roasDelta,
+      executive: {
+        forecast30Revenue,
+        expectedRoas,
+        confidenceScore,
+        bestChannel: strongestChannel?.name ?? "N/A",
+        worstChannel: weakestChannel?.name ?? "N/A",
+        riskAlerts,
+        opportunityAlerts,
+        recommendedAction,
+        expectedRevenueImpact,
+        roasImpact: roasLiftPotential,
+        riskLevel,
+        topActions,
+      },
       businessImpact: {
         last30Revenue,
         incrementalRevenue,
@@ -162,6 +257,114 @@ function Dashboard() {
           hint={`${stats.channels.length} channels`}
         />
       </div>
+
+      <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <ExecutiveMetric
+          label="30d forecasted revenue"
+          value={fmtCurrency(stats.executive.forecast30Revenue)}
+          hint="near-term planning view"
+          icon={DollarSign}
+        />
+        <ExecutiveMetric
+          label="Expected ROAS"
+          value={fmtRoas(stats.executive.expectedRoas)}
+          hint="recent blended efficiency"
+          icon={Target}
+        />
+        <ExecutiveMetric
+          label="Best channel"
+          value={stats.executive.bestChannel}
+          hint="highest observed ROAS"
+          icon={TrendingUp}
+        />
+        <ExecutiveMetric
+          label="Worst channel"
+          value={stats.executive.worstChannel}
+          hint="reallocation candidate"
+          icon={AlertTriangle}
+        />
+        <ExecutiveMetric
+          label="Confidence score"
+          value={`${stats.executive.confidenceScore}/100`}
+          hint="data depth and volatility"
+          icon={Gauge}
+        />
+      </div>
+
+      <Card
+        data-testid="executive-decision-center"
+        className="mt-6 bg-gradient-card border-border/60 p-5"
+      >
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold">Executive Decision Center</h3>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              One-screen recommendation for the next marketing budget review.
+            </p>
+          </div>
+          <span
+            className={`rounded-full border px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider ${riskBadgeClass(
+              stats.executive.riskLevel,
+            )}`}
+          >
+            {stats.executive.riskLevel} risk
+          </span>
+        </div>
+        <div className="grid gap-4 lg:grid-cols-4">
+          <ImpactMetric
+            label="Recommended action"
+            value={stats.executive.recommendedAction}
+            hint="budget move"
+          />
+          <ImpactMetric
+            label="Revenue impact"
+            value={fmtCurrency(stats.executive.expectedRevenueImpact)}
+            hint="forecast lift plus reallocation upside"
+          />
+          <ImpactMetric
+            label="ROAS impact"
+            value={`+${stats.executive.roasImpact.toFixed(2)}x`}
+            hint="best vs weakest channel gap"
+          />
+          <ImpactMetric
+            label="Confidence"
+            value={`${stats.executive.confidenceScore}/100`}
+            hint="based on history and trend stability"
+          />
+        </div>
+        <div className="mt-5 grid gap-4 lg:grid-cols-3">
+          <div className="rounded-lg border border-border/40 bg-background/40 p-4 lg:col-span-1">
+            <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
+              <CheckCircle2 className="h-3.5 w-3.5" /> Top next actions
+            </div>
+            <ol className="space-y-2 text-sm">
+              {stats.executive.topActions.map((action, index) => (
+                <li key={action} className="flex gap-2">
+                  <span className="text-xs font-semibold text-muted-foreground">{index + 1}.</span>
+                  <span>{action}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+          <AlertList
+            title="Risk alerts"
+            icon={AlertTriangle}
+            items={stats.executive.riskAlerts}
+            empty="No major risk alerts in the current readout."
+            tone="risk"
+          />
+          <AlertList
+            title="Opportunity alerts"
+            icon={Lightbulb}
+            items={stats.executive.opportunityAlerts}
+            empty="No clear scaling opportunity yet."
+            tone="opportunity"
+          />
+        </div>
+      </Card>
 
       <Card
         data-testid="business-impact-dashboard"
@@ -347,18 +550,87 @@ function Dashboard() {
   );
 }
 
+function ExecutiveMetric({
+  label,
+  value,
+  hint,
+  icon: Icon,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+  icon: LucideIcon;
+}) {
+  return (
+    <Card className="bg-gradient-card border-border/60 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
+          <div className="mt-1 text-lg font-semibold leading-tight">{value}</div>
+          <div className="mt-1 text-xs text-muted-foreground">{hint}</div>
+        </div>
+        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+          <Icon className="h-4 w-4" />
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 function ImpactMetric({ label, value, hint }: { label: string; value: string; hint: string }) {
   return (
     <div className="rounded-lg border border-border/40 bg-background/40 p-4">
       <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className="mt-1 text-xl font-semibold">{value}</div>
+      <div className="mt-1 text-lg font-semibold leading-tight">{value}</div>
       <div className="mt-1 text-xs text-muted-foreground">{hint}</div>
+    </div>
+  );
+}
+
+function AlertList({
+  title,
+  icon: Icon,
+  items,
+  empty,
+  tone,
+}: {
+  title: string;
+  icon: LucideIcon;
+  items: string[];
+  empty: string;
+  tone: "risk" | "opportunity";
+}) {
+  const color = tone === "risk" ? "text-warning" : "text-success";
+  return (
+    <div className="rounded-lg border border-border/40 bg-background/40 p-4">
+      <div
+        className={`mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider ${color}`}
+      >
+        <Icon className="h-3.5 w-3.5" /> {title}
+      </div>
+      <div className="space-y-2">
+        {(items.length ? items : [empty]).map((item) => (
+          <div key={item} className="text-sm text-muted-foreground">
+            {item}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 
 function formatSignedCurrency(value: number) {
   return `${value >= 0 ? "+" : ""}${fmtCurrency(value)}`;
+}
+
+function riskBadgeClass(level: string) {
+  if (level === "High") return "border-destructive/30 bg-destructive/15 text-destructive";
+  if (level === "Medium") return "border-warning/30 bg-warning/15 text-warning";
+  return "border-success/30 bg-success/15 text-success";
+}
+
+function clampNumber(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
 }
 
 function ChartCard({

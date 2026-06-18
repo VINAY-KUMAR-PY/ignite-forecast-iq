@@ -250,6 +250,18 @@ function SimulatorPage() {
     });
   }
 
+  function applyBudgetScenario(multiplier: number) {
+    if (!baselines) return;
+    setBudgets(
+      Object.fromEntries(
+        CHANNELS.map((ch) => [
+          ch,
+          Math.max(0, Math.round((baselines[ch]?.dailySpend ?? 0) * horizon * multiplier)),
+        ]),
+      ),
+    );
+  }
+
   return (
     <>
       <PageHeader
@@ -350,6 +362,54 @@ function SimulatorPage() {
                 </div>
               );
             })}
+          </div>
+
+          <div className="mt-6 rounded-lg border border-border/40 bg-background/40 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Quick scenarios
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Apply common budget changes across all channels.
+                </p>
+              </div>
+              <Sparkles className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-8 text-xs"
+                onClick={() => applyBudgetScenario(0.9)}
+              >
+                -10%
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-8 text-xs"
+                onClick={() => applyBudgetScenario(1.1)}
+              >
+                +10%
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-8 text-xs"
+                onClick={() => applyBudgetScenario(1.2)}
+              >
+                +20%
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-8 text-xs"
+                onClick={() => applyBudgetScenario(1.5)}
+              >
+                +50%
+              </Button>
+            </div>
           </div>
 
           <button
@@ -662,6 +722,52 @@ function SimulatorPage() {
               />
             </div>
 
+            <div className="mt-4 rounded-lg border border-border/40 bg-background/40 p-4">
+              <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Recommended allocation
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Channel-level action plan for the next {horizon} days.
+                  </p>
+                </div>
+                <div className="text-right text-xs">
+                  <div className="font-medium text-success">
+                    {formatMoneyDelta(decisionSupport.optimizer.expectedRevenue - totalProjRev)}
+                  </div>
+                  <div className="text-muted-foreground">
+                    Revenue lift,{" "}
+                    {formatRoasDelta(decisionSupport.optimizer.expectedRoas - projRoas)} ROAS
+                  </div>
+                </div>
+              </div>
+              <div className="grid gap-3 md:grid-cols-3">
+                {decisionSupport.optimizer.recommendations.map((recommendation) => (
+                  <div
+                    key={recommendation.channel}
+                    className="rounded-md border border-border/40 bg-background/50 p-3"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-sm font-medium">{recommendation.channel}</div>
+                      <span
+                        className={`text-xs font-semibold ${deltaClass(recommendation.deltaBudget)}`}
+                      >
+                        {formatMoneyDelta(recommendation.deltaBudget)}
+                      </span>
+                    </div>
+                    <div className="mt-2 text-lg font-semibold">
+                      {fmtCurrency(recommendation.recommendedBudget)}
+                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      Expected ROAS {fmtRoas(recommendation.expectedRoas)}
+                    </div>
+                    <p className="mt-2 text-xs text-muted-foreground">{recommendation.rationale}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div className="mt-4 overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="text-xs uppercase tracking-wider text-muted-foreground">
@@ -871,6 +977,10 @@ function formatMoneyDelta(value: number) {
 
 function formatPctDelta(value: number) {
   return `${value >= 0 ? "+" : ""}${value.toFixed(1)}%`;
+}
+
+function formatRoasDelta(value: number) {
+  return `${value >= 0 ? "+" : ""}${value.toFixed(2)}x`;
 }
 
 function formatTargetGap(value: number, type: "revenue" | "roas") {

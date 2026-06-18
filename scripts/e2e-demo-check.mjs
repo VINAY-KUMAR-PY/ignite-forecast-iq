@@ -298,8 +298,12 @@ try {
       return {
         title: document.title,
         hasBusinessImpact: Boolean(document.querySelector('[data-testid="business-impact-dashboard"]')),
+        hasExecutiveDecisionCenter: Boolean(document.querySelector('[data-testid="executive-decision-center"]')),
         hasRevenueImpact: normalized.includes("30d revenue impact"),
-        hasReallocationUpside: normalized.includes("reallocation upside")
+        hasReallocationUpside: normalized.includes("reallocation upside"),
+        hasConfidenceScore: normalized.includes("confidence score"),
+        hasRiskAlerts: normalized.includes("risk alerts"),
+        hasOpportunityAlerts: normalized.includes("opportunity alerts")
       };
     })()`,
   );
@@ -354,11 +358,14 @@ try {
     sessionId,
     `(() => {
       const text = document.body.innerText || "";
+      const normalized = text.toLowerCase();
       return {
         title: document.title,
         hasChannelBudgets: text.includes("Channel budgets"),
         hasProjectedRevenue: text.includes("Projected revenue"),
         hasChannels: ["Google Ads", "Meta Ads", "Microsoft Ads"].every((name) => text.includes(name)),
+        hasQuickScenarios: normalized.includes("quick scenarios") && text.includes("+50%"),
+        hasRecommendedAllocation: normalized.includes("recommended allocation"),
         hasBreakdown: Boolean(document.querySelector('[data-testid="channel-breakdown"]')),
         hasOptimizer: Boolean(document.querySelector('[data-testid="ai-budget-optimizer"]')),
         hasWhatIf: Boolean(document.querySelector('[data-testid="what-if-engine"]')),
@@ -406,6 +413,7 @@ try {
         title: document.title,
         hasExecutiveSummary: normalized.includes("executive summary"),
         hasRevenueDrivers: normalized.includes("revenue drivers"),
+        hasMarketingManagerBrief: normalized.includes("marketing manager brief"),
         hasRiskAnalysis: normalized.includes("risk analysis"),
         hasActionPlan: normalized.includes("action plan"),
         hasPdfExport: normalized.includes("export pdf")

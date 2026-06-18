@@ -2,6 +2,10 @@
 
 AIgnition ForecastIQ is an AI-powered ecommerce forecasting platform built for NetElixir AIgnition 3.0. It preserves the original Lovable React experience and adds a production-style FastAPI backend for data validation, XGBoost revenue and ROAS forecasting, budget simulation, model persistence, and Gemini-assisted executive insights.
 
+## 30-Second Product Summary
+
+ForecastIQ helps ecommerce marketing teams decide where the next budget dollar should go. Upload campaign history or load the built-in demo data, review 30/60/90-day revenue and ROAS forecasts, compare budget scenarios, and generate a plain-language executive brief. The offline evaluator path remains fast and deterministic, while the live app gives judges a polished product experience for planning Google Ads, Meta Ads, and Microsoft Ads investments.
+
 ## Problem Statement
 
 Ecommerce marketing teams need to understand how paid media spend across Google Ads, Meta Ads, and Microsoft Ads will affect revenue and ROAS over the next 30, 60, and 90 days. Static dashboards show what happened, but they do not reliably answer planning questions such as:
@@ -30,6 +34,14 @@ The application contains four core flows:
 
 The frontend keeps the existing pages, routes, components, and styling. Backend APIs replace the mock forecast and insight paths while frontend fallbacks remain available for local resilience.
 
+## Dashboard Features
+
+- Executive summary cards for forecasted revenue, expected ROAS, best channel, weakest channel, and confidence score.
+- Executive Decision Center with recommended budget action, expected revenue impact, ROAS impact, risk level, and top next actions.
+- Risk and opportunity alerts written in business language.
+- Revenue, spend, ROAS, channel contribution, and campaign performance charts.
+- Empty, loading, and fallback states so the demo remains usable even when backend AI services are unavailable.
+
 ## Feature Highlights
 
 - Production-style FastAPI backend with CORS and typed API contracts.
@@ -53,6 +65,14 @@ ForecastIQ is designed for weekly and monthly marketing planning. It helps teams
 - Find high-growth or underinvested channels.
 - Convert technical forecast output into executive-ready actions.
 - Export a PDF-ready business report for leadership review.
+
+## Why This Solution Stands Out
+
+- It is evaluator-safe: `run.sh` produces predictions offline without starting servers or using external APIs.
+- It is product-ready: the React app turns forecasts into decisions, not just charts.
+- It is business-aware: every technical output is tied to a marketing action, budget move, risk, or opportunity.
+- It is resilient: Gemini insights are supported, but deterministic fallback insights keep demos reliable.
+- It is explainable: forecast metrics, confidence intervals, feature importance, and executive summaries are all visible to the user.
 
 ## Architecture
 
@@ -294,11 +314,22 @@ Open the Vite URL and use the existing app routes:
 
 ## Demo Workflow
 
-1. Open `/app` and show the Business Impact Dashboard.
-2. Open `/app/upload`, upload `data/sample_campaigns.csv`, and confirm validation results.
-3. Open `/app/forecast` and show forecast, confidence intervals, accuracy metrics, explainability, and executive business brief.
-4. Open `/app/simulator`, adjust channel budgets, and review decision intelligence.
-5. Open `/app/insights`, generate insights, and export the executive PDF report.
+1. Open `/app/upload` and click the sample/demo data action if no CSV is ready.
+2. Open `/app` and show the Executive Decision Center, forecasted revenue, expected ROAS, confidence score, risk alerts, and opportunity alerts.
+3. Open `/app/forecast` and show the 30/60/90-day forecast, confidence intervals, accuracy metrics, explainability, and executive business brief.
+4. Open `/app/simulator`, apply the -10%, +10%, +20%, and +50% quick scenarios, then review recommended allocation and channel health.
+5. Open `/app/insights`, generate insights, explain the Marketing Manager Brief, and export the executive PDF report.
+
+## Judge Demo Walkthrough
+
+Use this sequence for a short live demo:
+
+1. "Here is the problem: marketers need budget decisions, not just historical charts."
+2. "The upload flow validates messy CSV data and can load sample data instantly."
+3. "The dashboard summarizes forecasted revenue, expected ROAS, risk, opportunity, and the recommended action."
+4. "The forecast page shows model quality, confidence intervals, and explainability."
+5. "The simulator compares budget changes and recommends allocation across Google, Meta, and Microsoft."
+6. "The insights page converts the analysis into an executive brief and a PDF-ready report."
 
 Optional Gemini configuration:
 
@@ -445,6 +476,19 @@ Backend compile check:
 
 ```bash
 python -m compileall backend
+```
+
+Browser demo smoke check:
+
+```bash
+# In one terminal
+python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+
+# In another terminal
+pnpm run dev
+
+# Then run
+pnpm run demo:e2e
 ```
 
 Train model:

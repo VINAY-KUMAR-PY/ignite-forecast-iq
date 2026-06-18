@@ -227,6 +227,45 @@ cp .env.example .env
 
 ## Usage Guide
 
+### Automated Evaluation Command
+
+For NetElixir AIgnition automated evaluation, use the offline runner only:
+
+```bash
+pip install -r requirements.txt
+chmod +x run.sh
+./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
+```
+
+The runner:
+
+- reads every `.csv` file from the provided data directory;
+- creates the output directory automatically;
+- writes `predictions.csv` at the requested output path;
+- does not start the frontend, backend, Vite, FastAPI, or any long-running server;
+- uses a lightweight joblib metadata artifact plus a deterministic evaluator-safe baseline.
+
+Expected output columns:
+
+| Column             | Meaning                                                              |
+| ------------------ | -------------------------------------------------------------------- |
+| `level`            | Forecast grain: `overall`, `channel`, `campaign_type`, or `campaign` |
+| `segment`          | Segment name, or `all` for the overall forecast                      |
+| `horizon_days`     | Forecast horizon: `30`, `60`, or `90`                                |
+| `expected_revenue` | Point estimate for revenue                                           |
+| `lower_revenue`    | Conservative revenue interval bound                                  |
+| `upper_revenue`    | Upside revenue interval bound                                        |
+| `expected_roas`    | Expected revenue divided by projected spend                          |
+| `model_type`       | Offline model identifier                                             |
+
+Assumptions and fallback behavior:
+
+- Hidden evaluator data may use common marketing aliases such as `cost`, `sales`, `source`, `platform`, or `campaign`; these are normalized automatically.
+- Optional columns such as clicks, impressions, conversions, campaign type, campaign name, and ROAS are filled safely when absent.
+- Rows with negative spend or negative revenue are removed; malformed dates are logged and repaired when possible.
+- If the model artifact is missing or cannot be loaded safely, the runner uses the built-in `safe_evaluator_baseline_v1` logic instead of retraining.
+- The output file is always non-empty and numeric fields are cleaned to avoid `NaN` or infinite values.
+
 Start the backend:
 
 ```bash

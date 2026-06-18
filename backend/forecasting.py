@@ -14,7 +14,9 @@ import pandas as pd
 
 from .data_preprocessing import aggregate_daily, feature_frame, filter_frame, future_features
 from .schemas import (
+    AccuracyMetrics,
     FeatureImportance,
+    ForecastBusinessBrief,
     ForecastDiagnostics,
     ForecastPoint,
     ForecastSummary,
@@ -93,20 +95,38 @@ def _fit_target(daily: pd.DataFrame, target: str) -> Optional[TargetModel]:
     )
 
 
-def _target_quality(daily: pd.DataFrame, target: str, trained: Optional[TargetModel]) -> tuple[float, float]:
+def _target_quality(daily: pd.DataFrame, target: str, trained: Optional[TargetModel]) -> tuple[AccuracyMetrics, float]:
     if trained is None:
-        return 0.0, 0.0
+        return _empty_accuracy(), 0.0
     X, y = feature_frame(daily, target)
     if X.empty:
-        return 0.0, 0.0
+        return _empty_accuracy(), 0.0
     preds = np.asarray(trained.model.predict(X[trained.feature_columns]), dtype=float)
     actual = y.to_numpy(dtype=float)
+    errors = actual - preds
     denom = np.maximum(np.abs(actual), 1.0)
-    mape = float(np.mean(np.abs(actual - preds) / denom) * 100)
+    mae = float(np.mean(np.abs(errors)))
+    rmse = float(np.sqrt(np.mean(errors**2)))
+    mape = float(np.mean(np.abs(errors) / denom) * 100)
+    ss_res = float(np.sum(errors**2))
+    ss_tot = float(np.sum((actual - np.mean(actual)) ** 2))
+    r2 = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0.0
     lower = preds - (1.96 * trained.residual_std)
     upper = preds + (1.96 * trained.residual_std)
     coverage = float(np.mean((actual >= lower) & (actual <= upper)) * 100)
-    return round_money(mape), round_money(coverage)
+    return (
+        AccuracyMetrics(
+            mae=round_money(mae),
+            rmse=round_money(rmse),
+            mapePct=round_money(mape),
+            r2Score=round_money(r2),
+        ),
+        round_money(coverage),
+    )
+
+
+def _empty_accuracy() -> AccuracyMetrics:
+    return AccuracyMetrics(mae=0.0, rmse=0.0, mapePct=0.0, r2Score=0.0)
 
 
 def _feature_importance(trained: Optional[TargetModel], limit: int = 6) -> List[FeatureImportance]:
@@ -119,27 +139,145 @@ def _feature_importance(trained: Optional[TargetModel], limit: int = 6) -> List[
         key=lambda item: item[1],
         reverse=True,
     )[:limit]
-    return [FeatureImportance(feature=name, importance=round_money(score * 100)) for name, score in ranked]
+    return [
+        FeatureImportance(feature=name, label=_feature_label(name), importance=round_money(score * 100))
+        for name, score in ranked
+    ]
+
+
+def _feature_label(feature: str) -> str:
+    labels = {
+        "spend": "current spend",
+        "clicks": "click volume",
+        "impressions": "impression volume",
+        "conversions": "conversion volume",
+        "dow": "day-of-week pattern",
+        "month": "monthly seasonality",
+        "sin_year": "annual seasonality",
+        "cos_year": "annual seasonality",
+        "trend": "time trend",
+        "spend_roll_7": "7-day average spend",
+        "spend_roll_28": "28-day average spend",
+        "spend_lag_1": "prior-day spend",
+        "spend_lag_7": "same weekday spend",
+        "spend_lag_14": "two-week spend lag",
+    }
+    if feature in labels:
+        return labels[feature]
+    if "_lag_" in feature:
+        target, lag = feature.split("_lag_")
+        return f"{target.upper()} {lag}-day lag"
+    if "_roll_" in feature:
+        target, window = feature.split("_roll_")
+        return f"{window}-day average {target.upper()}"
+    return feature.replace("_", " ")
+
+
+def _explain_features(target: str, features: List[FeatureImportance]) -> str:
+    if not features:
+        return f"The {target} model did not expose reliable feature importance for this segment."
+    top = features[:3]
+    driver_text = ", ".join(f"{item.label or item.feature} ({item.importance:.1f}%)" for item in top)
+    return (
+        f"The {target} forecast is primarily shaped by {driver_text}. "
+        "These drivers combine current media intensity, lagged performance and seasonal signals."
+    )
+
+
+def _business_brief(
+    daily: pd.DataFrame,
+    future_revenue: List[ForecastPoint],
+    future_roas: List[ForecastPoint],
+    revenue_accuracy: AccuracyMetrics,
+    roas_accuracy: AccuracyMetrics,
+) -> ForecastBusinessBrief:
+    recent = daily.tail(min(30, len(daily)))
+    previous = daily.iloc[max(0, len(daily) - 60) : max(0, len(daily) - 30)]
+    recent_revenue = float(recent["revenue"].sum()) if not recent.empty else 0.0
+    previous_revenue = float(previous["revenue"].sum()) if not previous.empty else 0.0
+    recent_spend = float(recent["spend"].sum()) if not recent.empty else 0.0
+    previous_spend = float(previous["spend"].sum()) if not previous.empty else 0.0
+    recent_roas = recent_revenue / recent_spend if recent_spend > 0 else 0.0
+    previous_roas = previous_revenue / previous_spend if previous_spend > 0 else 0.0
+    revenue_trend = pct_change(recent_revenue, previous_revenue)
+    roas_trend = pct_change(recent_roas, previous_roas)
+    expected_revenue = sum(point.value for point in future_revenue)
+    lower_revenue = sum(point.lower for point in future_revenue)
+    upper_revenue = sum(point.upper for point in future_revenue)
+    avg_roas = sum(point.value for point in future_roas) / len(future_roas) if future_roas else 0.0
+    interval_width_pct = ((upper_revenue - lower_revenue) / expected_revenue * 100) if expected_revenue > 0 else 0.0
+
+    risks: List[str] = []
+    opportunities: List[str] = []
+    actions: List[str] = []
+
+    if revenue_trend < -5:
+        risks.append(f"Recent revenue is down {abs(revenue_trend):.1f}% versus the prior period.")
+        actions.append("Audit declining campaigns before approving incremental media spend.")
+    if roas_trend < -5:
+        risks.append(f"Recent ROAS is down {abs(roas_trend):.1f}%, indicating possible efficiency pressure.")
+        actions.append("Shift budget toward campaigns with stable conversion quality and stronger marginal ROAS.")
+    if interval_width_pct > 35:
+        risks.append("The confidence interval is wide, so leadership should plan with conservative and upside cases.")
+        actions.append("Use the lower confidence bound for committed targets and the midpoint for stretch planning.")
+    if revenue_accuracy.mapePct > 20 or roas_accuracy.mapePct > 20:
+        risks.append("Model error is elevated for this segment; monitor actuals closely after launch.")
+
+    if revenue_trend > 5:
+        opportunities.append(f"Recent revenue is up {revenue_trend:.1f}%, creating a scaling opportunity.")
+        actions.append("Test controlled budget expansion while tracking daily ROAS movement.")
+    if roas_trend > 5:
+        opportunities.append(f"Recent ROAS is up {roas_trend:.1f}%, suggesting improving media efficiency.")
+    if interval_width_pct <= 25 and revenue_accuracy.mapePct <= 15:
+        opportunities.append("Forecast uncertainty is contained enough for confident short-term planning.")
+
+    if not risks:
+        risks.append("No severe revenue or ROAS degradation is visible in the current forecast segment.")
+    if not opportunities:
+        opportunities.append("Use channel-level forecasts to find the strongest budget reallocation candidate.")
+    if not actions:
+        actions.append("Review forecast actuals weekly and re-run the simulator before budget approval.")
+
+    summary = (
+        f"The model projects {round_money(expected_revenue):,.0f} revenue with average ROAS of "
+        f"{round_money(avg_roas):.2f}x. Recent revenue trend is {round_money(revenue_trend):.1f}% "
+        f"and recent ROAS trend is {round_money(roas_trend):.1f}%."
+    )
+    return ForecastBusinessBrief(
+        summary=summary,
+        risks=risks[:4],
+        opportunities=opportunities[:4],
+        recommendedActions=actions[:4],
+    )
 
 
 def forecast_diagnostics(
     daily: pd.DataFrame,
     revenue_model: Optional[TargetModel],
     roas_model: Optional[TargetModel],
+    future_revenue: List[ForecastPoint],
+    future_roas: List[ForecastPoint],
 ) -> Optional[ForecastDiagnostics]:
     """Summarize in-sample model fit and feature drivers for explainability."""
     if daily.empty:
         return None
-    revenue_mape, revenue_coverage = _target_quality(daily, "revenue", revenue_model)
-    roas_mape, roas_coverage = _target_quality(daily, "roas", roas_model)
+    revenue_accuracy, revenue_coverage = _target_quality(daily, "revenue", revenue_model)
+    roas_accuracy, roas_coverage = _target_quality(daily, "roas", roas_model)
+    revenue_features = _feature_importance(revenue_model)
+    roas_features = _feature_importance(roas_model)
     return ForecastDiagnostics(
-        revenueFitMapePct=revenue_mape,
-        roasFitMapePct=roas_mape,
+        revenueFitMapePct=revenue_accuracy.mapePct,
+        roasFitMapePct=roas_accuracy.mapePct,
         revenueIntervalCoveragePct=revenue_coverage,
         roasIntervalCoveragePct=roas_coverage,
         trainingDays=int(len(daily)),
-        topRevenueFeatures=_feature_importance(revenue_model),
-        topRoasFeatures=_feature_importance(roas_model),
+        topRevenueFeatures=revenue_features,
+        topRoasFeatures=roas_features,
+        revenueAccuracy=revenue_accuracy,
+        roasAccuracy=roas_accuracy,
+        revenueExplanation=_explain_features("revenue", revenue_features),
+        roasExplanation=_explain_features("ROAS", roas_features),
+        businessBrief=_business_brief(daily, future_revenue, future_roas, revenue_accuracy, roas_accuracy),
     )
 
 
@@ -359,7 +497,7 @@ def forecast_frame(
             level=level,
             value=value,
             modelType=model_type,
-            diagnostics=forecast_diagnostics(daily, revenue_model, roas_model),
+            diagnostics=forecast_diagnostics(daily, revenue_model, roas_model, future_revenue, future_roas),
         ),
     }
 

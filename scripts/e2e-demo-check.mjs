@@ -294,6 +294,7 @@ try {
     cdp,
     sessionId,
     `document.querySelector('[data-testid="model-diagnostics"]') ||
+      document.querySelector('[data-testid="accuracy-dashboard"]') ||
       (document.body.innerText || "").includes("Backend unavailable")`,
     60000,
   );
@@ -308,6 +309,10 @@ try {
         hasRoasForecast: text.includes("ROAS forecast"),
         hasConfidenceIntervals: text.includes("95% CI") || text.includes("confidence"),
         hasDiagnostics: Boolean(document.querySelector('[data-testid="model-diagnostics"]')),
+        hasAccuracyDashboard: Boolean(document.querySelector('[data-testid="accuracy-dashboard"]')),
+        hasExplainabilityCenter: Boolean(document.querySelector('[data-testid="explainability-center"]')),
+        hasConfidenceOverview: Boolean(document.querySelector('[data-testid="confidence-intervals"]')),
+        hasExecutiveBrief: Boolean(document.querySelector('[data-testid="executive-business-brief"]')),
         backendFallbackWarning: text.includes("Backend unavailable")
       };
     })()`,
@@ -396,6 +401,10 @@ try {
     result.forecast.hasRoasForecast &&
     result.forecast.hasConfidenceIntervals &&
     result.forecast.hasDiagnostics &&
+    result.forecast.hasAccuracyDashboard &&
+    result.forecast.hasExplainabilityCenter &&
+    result.forecast.hasConfidenceOverview &&
+    result.forecast.hasExecutiveBrief &&
     !result.forecast.backendFallbackWarning &&
     Object.values(result.simulator).every(Boolean) &&
     result.insightsButtonClicked &&

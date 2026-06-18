@@ -11,7 +11,15 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { LineChart as LineIcon, Target } from "lucide-react";
+import {
+  AlertTriangle,
+  Brain,
+  Lightbulb,
+  LineChart as LineIcon,
+  ListChecks,
+  Target,
+  type LucideIcon,
+} from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { Card } from "@/components/ui/card";
@@ -24,7 +32,11 @@ import {
 } from "@/components/ui/select";
 import { useData } from "@/lib/data-store";
 import { aggregateDaily, filterRows } from "@/lib/forecasting";
-import { fetchForecastApi, type ForecastApiResponse } from "@/lib/backend-api";
+import {
+  fetchForecastApi,
+  type AccuracyMetrics,
+  type ForecastApiResponse,
+} from "@/lib/backend-api";
 import { fmtCompact, fmtCurrency, fmtDate, fmtRoas } from "@/lib/format";
 import { KpiCard } from "@/components/kpi-card";
 import type { CampaignRow, ForecastPoint } from "@/lib/types";
@@ -114,6 +126,15 @@ function ForecastPage() {
   const avgRoasFc = forecastRoasOnly.length
     ? forecastRoasOnly.reduce((s, p) => s + p.value, 0) / forecastRoasOnly.length
     : 0;
+  const revenueIntervalWidth = upperRev - lowerRev;
+  const revenueIntervalWidthPct = expectedRev > 0 ? (revenueIntervalWidth / expectedRev) * 100 : 0;
+  const avgRoasLower = forecastRoasOnly.length
+    ? forecastRoasOnly.reduce((s, p) => s + p.lower, 0) / forecastRoasOnly.length
+    : 0;
+  const avgRoasUpper = forecastRoasOnly.length
+    ? forecastRoasOnly.reduce((s, p) => s + p.upper, 0) / forecastRoasOnly.length
+    : 0;
+  const roasIntervalWidth = avgRoasUpper - avgRoasLower;
 
   // chart data — sample historicals
   const revData = sampleSeries(revFc, 180);
@@ -207,6 +228,32 @@ function ForecastPage() {
         <KpiCard label="Upper bound" value={fmtCurrency(upperRev)} icon={LineIcon} hint="95% CI" />
         <KpiCard label="Avg forecast ROAS" value={fmtRoas(avgRoasFc)} icon={Target} />
       </div>
+
+      <Card
+        data-testid="confidence-intervals"
+        className="mt-6 bg-gradient-card border-border/60 p-5"
+      >
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold">Confidence interval overview</h3>
+            <p className="text-xs text-muted-foreground">
+              Forecast spread shown as total revenue range and average ROAS uncertainty.
+            </p>
+          </div>
+          <span className="rounded-full border border-border/60 bg-background/60 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            {revenueIntervalWidthPct.toFixed(1)}% revenue spread
+          </span>
+        </div>
+        <div className="grid gap-4 md:grid-cols-4">
+          <DiagnosticStat
+            label="Revenue interval width"
+            value={fmtCurrency(revenueIntervalWidth)}
+          />
+          <DiagnosticStat label="Lower planning case" value={fmtCurrency(lowerRev)} />
+          <DiagnosticStat label="Upper upside case" value={fmtCurrency(upperRev)} />
+          <DiagnosticStat label="ROAS interval width" value={fmtRoas(roasIntervalWidth)} />
+        </div>
+      </Card>
 
       <div className="mt-6 grid gap-4">
         <Card className="bg-gradient-card border-border/60 p-5">
@@ -391,41 +438,121 @@ function ForecastPage() {
       </div>
 
       {diagnostics && (
-        <Card
-          data-testid="model-diagnostics"
-          className="mt-6 bg-gradient-card border-border/60 p-5"
-        >
-          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h3 className="text-sm font-semibold">Model diagnostics</h3>
-              <p className="text-xs text-muted-foreground">
-                Fit quality, interval coverage and top XGBoost drivers for this forecast segment.
-              </p>
+        <>
+          <Card
+            data-testid="accuracy-dashboard"
+            className="mt-6 bg-gradient-card border-border/60 p-5"
+          >
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold">Forecast accuracy dashboard</h3>
+                <p className="text-xs text-muted-foreground">
+                  In-sample model accuracy for revenue and ROAS using MAE, RMSE, MAPE and R2.
+                </p>
+              </div>
+              <span className="rounded-full border border-border/60 bg-background/60 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                {diagnostics.trainingDays} training days
+              </span>
             </div>
-            <span className="rounded-full border border-border/60 bg-background/60 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              {diagnostics.trainingDays} training days
-            </span>
-          </div>
-          <div className="grid gap-4 lg:grid-cols-4">
-            <DiagnosticStat
-              label="Revenue MAPE"
-              value={`${diagnostics.revenueFitMapePct.toFixed(1)}%`}
-            />
-            <DiagnosticStat label="ROAS MAPE" value={`${diagnostics.roasFitMapePct.toFixed(1)}%`} />
-            <DiagnosticStat
-              label="Revenue coverage"
-              value={`${diagnostics.revenueIntervalCoveragePct.toFixed(0)}%`}
-            />
-            <DiagnosticStat
-              label="ROAS coverage"
-              value={`${diagnostics.roasIntervalCoveragePct.toFixed(0)}%`}
-            />
-          </div>
-          <div className="mt-5 grid gap-4 lg:grid-cols-2">
-            <FeatureList title="Revenue drivers" features={diagnostics.topRevenueFeatures} />
-            <FeatureList title="ROAS drivers" features={diagnostics.topRoasFeatures} />
-          </div>
-        </Card>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <AccuracyPanel title="Revenue model" metrics={diagnostics.revenueAccuracy} money />
+              <AccuracyPanel title="ROAS model" metrics={diagnostics.roasAccuracy} />
+            </div>
+          </Card>
+
+          <Card
+            data-testid="explainability-center"
+            className="mt-6 bg-gradient-card border-border/60 p-5"
+          >
+            <div className="mb-4 flex items-center gap-2">
+              <Brain className="h-4 w-4 text-primary" />
+              <div>
+                <h3 className="text-sm font-semibold">Forecast explainability center</h3>
+                <p className="text-xs text-muted-foreground">
+                  XGBoost feature importance and plain-language driver explanations.
+                </p>
+              </div>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <ExplanationCard title="Revenue explanation" text={diagnostics.revenueExplanation} />
+              <ExplanationCard title="ROAS explanation" text={diagnostics.roasExplanation} />
+              <FeatureList title="Top revenue drivers" features={diagnostics.topRevenueFeatures} />
+              <FeatureList title="Top ROAS drivers" features={diagnostics.topRoasFeatures} />
+            </div>
+          </Card>
+
+          <Card
+            data-testid="executive-business-brief"
+            className="mt-6 bg-gradient-card border-border/60 p-5"
+          >
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold">Executive business brief</h3>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  {diagnostics.businessBrief.summary}
+                </p>
+              </div>
+              <span className="rounded-full border border-border/60 bg-background/60 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                model brief
+              </span>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-3">
+              <BriefList
+                title="Risks"
+                icon={AlertTriangle}
+                items={diagnostics.businessBrief.risks}
+                tone="destructive"
+              />
+              <BriefList
+                title="Opportunities"
+                icon={Lightbulb}
+                items={diagnostics.businessBrief.opportunities}
+                tone="success"
+              />
+              <BriefList
+                title="Recommended actions"
+                icon={ListChecks}
+                items={diagnostics.businessBrief.recommendedActions}
+                tone="primary"
+              />
+            </div>
+          </Card>
+
+          <Card
+            data-testid="model-diagnostics"
+            className="mt-6 bg-gradient-card border-border/60 p-5"
+          >
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold">Model diagnostics</h3>
+                <p className="text-xs text-muted-foreground">
+                  Fit quality, interval coverage and training depth for this forecast segment.
+                </p>
+              </div>
+              <span className="rounded-full border border-border/60 bg-background/60 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                XGBoost diagnostics
+              </span>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-4">
+              <DiagnosticStat
+                label="Revenue MAPE"
+                value={`${diagnostics.revenueFitMapePct.toFixed(1)}%`}
+              />
+              <DiagnosticStat
+                label="ROAS MAPE"
+                value={`${diagnostics.roasFitMapePct.toFixed(1)}%`}
+              />
+              <DiagnosticStat
+                label="Revenue coverage"
+                value={`${diagnostics.revenueIntervalCoveragePct.toFixed(0)}%`}
+              />
+              <DiagnosticStat
+                label="ROAS coverage"
+                value={`${diagnostics.roasIntervalCoveragePct.toFixed(0)}%`}
+              />
+            </div>
+          </Card>
+        </>
       )}
     </>
   );
@@ -503,6 +630,88 @@ function round2(value: number) {
   return Math.round(value * 100) / 100;
 }
 
+function AccuracyPanel({
+  title,
+  metrics,
+  money = false,
+}: {
+  title: string;
+  metrics: AccuracyMetrics;
+  money?: boolean;
+}) {
+  const formatValue = (value: number) => (money ? fmtCurrency(value) : value.toFixed(2));
+  return (
+    <div className="rounded-lg border border-border/40 bg-background/40 p-4">
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {title}
+      </h4>
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <MiniMetric label="MAE" value={formatValue(metrics.mae)} />
+        <MiniMetric label="RMSE" value={formatValue(metrics.rmse)} />
+        <MiniMetric label="MAPE" value={`${metrics.mapePct.toFixed(1)}%`} />
+        <MiniMetric label="R2 score" value={metrics.r2Score.toFixed(2)} />
+      </div>
+    </div>
+  );
+}
+
+function MiniMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="mt-0.5 text-base font-semibold">{value}</div>
+    </div>
+  );
+}
+
+function ExplanationCard({ title, text }: { title: string; text: string }) {
+  return (
+    <div className="rounded-lg border border-border/40 bg-background/40 p-4">
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {title}
+      </h4>
+      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{text}</p>
+    </div>
+  );
+}
+
+function BriefList({
+  title,
+  icon: Icon,
+  items,
+  tone,
+}: {
+  title: string;
+  icon: LucideIcon;
+  items: string[];
+  tone: "primary" | "success" | "destructive";
+}) {
+  const toneClass = {
+    primary: "bg-primary/15 text-primary",
+    success: "bg-success/15 text-success",
+    destructive: "bg-destructive/15 text-destructive",
+  }[tone];
+  return (
+    <div className="rounded-lg border border-border/40 bg-background/40 p-4">
+      <div className="flex items-center gap-2">
+        <span className={`grid h-8 w-8 place-items-center rounded-lg ${toneClass}`}>
+          <Icon className="h-4 w-4" />
+        </span>
+        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {title}
+        </h4>
+      </div>
+      <ul className="mt-3 space-y-2">
+        {items.map((item) => (
+          <li key={item} className="text-sm leading-relaxed text-muted-foreground">
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function DiagnosticStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-border/40 bg-background/40 p-3">
@@ -517,7 +726,7 @@ function FeatureList({
   features,
 }: {
   title: string;
-  features: Array<{ feature: string; importance: number }>;
+  features: Array<{ feature: string; importance: number; label?: string | null }>;
 }) {
   return (
     <div className="rounded-lg border border-border/40 bg-background/40 p-4">
@@ -528,7 +737,9 @@ function FeatureList({
         {features.map((feature) => (
           <div key={feature.feature}>
             <div className="mb-1 flex items-center justify-between gap-3 text-xs">
-              <span className="capitalize">{feature.feature.replaceAll("_", " ")}</span>
+              <span className="capitalize">
+                {(feature.label || feature.feature).replaceAll("_", " ")}
+              </span>
               <span className="font-medium">{feature.importance.toFixed(1)}%</span>
             </div>
             <div className="h-1.5 overflow-hidden rounded-full bg-muted">

@@ -20,11 +20,28 @@ export interface ForecastApiResponse {
       revenueIntervalCoveragePct: number;
       roasIntervalCoveragePct: number;
       trainingDays: number;
-      topRevenueFeatures: Array<{ feature: string; importance: number }>;
-      topRoasFeatures: Array<{ feature: string; importance: number }>;
+      topRevenueFeatures: Array<{ feature: string; importance: number; label?: string | null }>;
+      topRoasFeatures: Array<{ feature: string; importance: number; label?: string | null }>;
+      revenueAccuracy: AccuracyMetrics;
+      roasAccuracy: AccuracyMetrics;
+      revenueExplanation: string;
+      roasExplanation: string;
+      businessBrief: {
+        summary: string;
+        risks: string[];
+        opportunities: string[];
+        recommendedActions: string[];
+      };
     };
   };
   validation: ValidationResult;
+}
+
+export interface AccuracyMetrics {
+  mae: number;
+  rmse: number;
+  mapePct: number;
+  r2Score: number;
 }
 
 export interface SimChannelResult {

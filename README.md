@@ -74,7 +74,10 @@ Forecast outputs include:
 - Historical points for chart continuity.
 - Future predicted values.
 - Lower and upper confidence bounds derived from residual volatility.
-- Model diagnostics: fit MAPE, interval coverage, training days, and top feature drivers.
+- Forecast accuracy metrics: MAE, RMSE, MAPE, and R2 score for revenue and ROAS.
+- Model diagnostics: interval coverage, training days, XGBoost feature importance, and top feature drivers.
+- Natural-language explainability for revenue and ROAS drivers.
+- Executive business brief with summary, risks, opportunities, and recommended actions.
 
 Supported horizons are 30, 60, and 90 days. Supported levels are overall, channel, campaign type, and campaign.
 
@@ -220,6 +223,12 @@ Request body fields:
 - `horizon`: `30`, `60`, or `90`.
 - `level`: `overall`, `channel`, `campaign_type`, or `campaign`.
 - `value`: optional segment name.
+
+Response highlights:
+
+- `summary.diagnostics.revenueAccuracy` and `summary.diagnostics.roasAccuracy` include MAE, RMSE, MAPE, and R2.
+- `summary.diagnostics.topRevenueFeatures` and `summary.diagnostics.topRoasFeatures` expose XGBoost feature importance.
+- `summary.diagnostics.businessBrief` contains an executive summary, risks, opportunities, and recommended actions.
 
 Simulate budgets:
 

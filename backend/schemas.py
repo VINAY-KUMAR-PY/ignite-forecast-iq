@@ -60,6 +60,21 @@ class ForecastPoint(BaseModel):
 class FeatureImportance(BaseModel):
     feature: str
     importance: float
+    label: Optional[str] = None
+
+
+class AccuracyMetrics(BaseModel):
+    mae: float
+    rmse: float
+    mapePct: float
+    r2Score: float
+
+
+class ForecastBusinessBrief(BaseModel):
+    summary: str
+    risks: List[str]
+    opportunities: List[str]
+    recommendedActions: List[str]
 
 
 class ForecastDiagnostics(BaseModel):
@@ -70,6 +85,11 @@ class ForecastDiagnostics(BaseModel):
     trainingDays: int
     topRevenueFeatures: List[FeatureImportance]
     topRoasFeatures: List[FeatureImportance]
+    revenueAccuracy: AccuracyMetrics
+    roasAccuracy: AccuracyMetrics
+    revenueExplanation: str
+    roasExplanation: str
+    businessBrief: ForecastBusinessBrief
 
 
 class ForecastRequest(BaseModel):

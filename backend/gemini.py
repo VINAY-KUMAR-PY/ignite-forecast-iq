@@ -7,7 +7,7 @@ import json
 import logging
 import os
 import re
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Literal
 
 from dotenv import load_dotenv
 
@@ -16,6 +16,7 @@ from .schemas import InsightsResponse
 
 logger = logging.getLogger(__name__)
 load_dotenv()
+InsightSource = Literal["gemini", "fallback"]
 
 
 def _money(value: float) -> str:
@@ -203,7 +204,7 @@ def _extract_json(text: str) -> dict:
 
 
 def _gemini_model_name() -> str:
-    return os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
+    return (os.getenv("GEMINI_MODEL") or "gemini-3.5-flash").strip() or "gemini-3.5-flash"
 
 
 def _gemini_temperature() -> float:
@@ -220,6 +221,14 @@ def _gemini_timeout_seconds() -> float:
     except ValueError:
         logger.warning("Invalid GEMINI_TIMEOUT_SECONDS value; using 20")
         return 20.0
+
+
+def _safe_exception_message(exc: Exception) -> str:
+    message = f"{type(exc).__name__}: {exc}"
+    key = (os.getenv("GEMINI_API_KEY") or "").strip()
+    if key:
+        message = message.replace(key, "[redacted]")
+    return message[:500]
 
 
 def _build_prompt(summary: Dict[str, Any]) -> str:
@@ -291,15 +300,18 @@ async def _generate_content(api_key: str, model_name: str, prompt: str) -> str:
         logger.info("google-genai is not installed; trying legacy google-generativeai SDK")
         return await _generate_with_legacy_sdk(api_key, model_name, prompt)
     except Exception as exc:
-        logger.info("google-genai call failed; trying legacy google-generativeai SDK: %s", exc)
+        logger.info(
+            "google-genai call failed; trying legacy google-generativeai SDK: %s",
+            _safe_exception_message(exc),
+        )
         return await _generate_with_legacy_sdk(api_key, model_name, prompt)
 
 
-async def generate_gemini_insights(summary: Dict[str, Any]) -> InsightsResponse:
-    """Generate structured CMO-ready insights from Gemini or fallback rules."""
-    key = os.getenv("GEMINI_API_KEY")
+async def generate_gemini_insights_with_source(summary: Dict[str, Any]) -> tuple[InsightsResponse, InsightSource]:
+    """Generate insights and identify whether Gemini or deterministic fallback was used."""
+    key = (os.getenv("GEMINI_API_KEY") or "").strip()
     if not key:
-        return _fallback_insights(summary)
+        return _fallback_insights(summary), "fallback"
 
     try:
         model_name = _gemini_model_name()
@@ -308,7 +320,16 @@ async def generate_gemini_insights(summary: Dict[str, Any]) -> InsightsResponse:
             _generate_content(key, model_name, prompt),
             timeout=_gemini_timeout_seconds(),
         )
-        return InsightsResponse.model_validate(_extract_json(text))
+        return InsightsResponse.model_validate(_extract_json(text)), "gemini"
     except Exception as exc:
-        logger.warning("Gemini insight generation failed; using fallback insights: %s", exc)
-        return _fallback_insights(summary)
+        logger.warning(
+            "Gemini insight generation failed; using fallback insights: %s",
+            _safe_exception_message(exc),
+        )
+        return _fallback_insights(summary), "fallback"
+
+
+async def generate_gemini_insights(summary: Dict[str, Any]) -> InsightsResponse:
+    """Generate structured CMO-ready insights from Gemini or fallback rules."""
+    insights, _ = await generate_gemini_insights_with_source(summary)
+    return insights

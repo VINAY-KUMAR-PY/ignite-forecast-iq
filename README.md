@@ -25,6 +25,7 @@ The application contains four core flows:
 - CSV Upload: client-side parsing plus backend validation for missing values, invalid dates, duplicate records, negative spend, and invalid revenue.
 - Forecast: backend-powered 30, 60, and 90-day forecasts for overall, channel, campaign type, and campaign-level planning.
 - Budget Simulator: dynamic revenue and ROAS projections when Google Ads, Meta Ads, or Microsoft Ads budgets change.
+- Decision Intelligence: AI budget optimization, what-if scenario comparison, risk and opportunity detection, and channel health scoring.
 - AI Insights: Gemini-generated, or deterministic fallback, executive summaries, risks, opportunities, revenue drivers, budget recommendations, and action plans.
 
 The frontend keeps the existing pages, routes, components, and styling. Backend APIs replace the mock forecast and insight paths while frontend fallbacks remain available for local resilience.
@@ -40,6 +41,7 @@ FastAPI backend
   |
   +-- data_preprocessing.py: validation, aggregation, feature engineering
   +-- forecasting.py: XGBoost training, prediction, intervals, simulation
+  +-- decision_support.py: budget optimizer, what-if, risks, opportunities, health scores
   +-- gemini.py: Gemini insights with deterministic fallback
   +-- train.py / predict.py: offline model and submission workflows
   |
@@ -88,6 +90,15 @@ The simulator accepts planned budget totals by channel and reprojects future dai
 - Daily forecast points for charting.
 
 The simulator is dynamic: changing budgets in the UI triggers a backend forecast call and recalculates projected revenue, ROAS, and expected lift.
+
+The simulator also includes a decision intelligence layer:
+
+- AI budget optimizer with target revenue and target ROAS inputs.
+- Recommended Google Ads, Meta Ads, and Microsoft Ads budgets.
+- What-if scenario comparisons for revenue, ROAS, and profit impact.
+- Risk detection for revenue decline, ROAS decline, budget inefficiency, and overspending.
+- Opportunity detection for high-growth and underinvested channels.
+- Channel health scores out of 100 with score drivers.
 
 ## AI Insights
 
@@ -221,6 +232,20 @@ Request body fields:
 - `rows`: validated campaign rows.
 - `horizon`: `30`, `60`, or `90`.
 - `budgets`: channel-to-budget map.
+
+Generate decision-support analytics:
+
+```http
+POST /api/decision-support
+```
+
+Request body fields:
+
+- `rows`: validated campaign rows.
+- `horizon`: `30`, `60`, or `90`.
+- `budgets`: channel-to-budget map.
+- `targetRevenue`: optional target revenue.
+- `targetRoas`: optional target ROAS.
 
 Generate insights:
 

@@ -15,10 +15,23 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Activity, Brain, DollarSign, Target, TrendingUp } from "lucide-react";
+import {
+  Activity,
+  AlertTriangle,
+  ArrowRightLeft,
+  Brain,
+  DollarSign,
+  Gauge,
+  Lightbulb,
+  Sparkles,
+  Target,
+  TrendingUp,
+} from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,7 +45,15 @@ import {
 import { useData } from "@/lib/data-store";
 import { fmtCompact, fmtCurrency, fmtDate, fmtPct, fmtRoas } from "@/lib/format";
 import { KpiCard } from "@/components/kpi-card";
-import { simulateBudgetsApi, type SimChannelResult } from "@/lib/backend-api";
+import {
+  decisionSupportApi,
+  simulateBudgetsApi,
+  type ChannelHealthScore,
+  type DecisionSupportResponse,
+  type DetectionItem,
+  type SimChannelResult,
+  type WhatIfScenarioResult,
+} from "@/lib/backend-api";
 
 export const Route = createFileRoute("/app/simulator")({
   head: () => ({ meta: [{ title: "Budget simulator · ForecastIQ" }] }),
@@ -66,6 +87,11 @@ function SimulatorPage() {
   const [horizon, setHorizon] = useState<30 | 60 | 90>(30);
   const [budgets, setBudgets] = useState<Record<string, number>>({});
   const [apiSims, setApiSims] = useState<SimChannelResult[] | null>(null);
+  const [decisionSupport, setDecisionSupport] = useState<DecisionSupportResponse | null>(null);
+  const [decisionError, setDecisionError] = useState<string | null>(null);
+  const [targetRevenueDraft, setTargetRevenueDraft] = useState("");
+  const [targetRoasDraft, setTargetRoasDraft] = useState("");
+  const [targets, setTargets] = useState<{ targetRevenue?: number; targetRoas?: number }>({});
 
   // Baseline daily spend per channel (recent 30 days)
   const baselines = useMemo(() => {
@@ -145,6 +171,25 @@ function SimulatorPage() {
     };
   }, [rows, horizon, baselines, budgetPayload]);
 
+  useEffect(() => {
+    if (!rows.length || !baselines) return;
+    let active = true;
+    setDecisionError(null);
+    decisionSupportApi(rows, horizon, budgetPayload, targets)
+      .then((response) => {
+        if (!active) return;
+        setDecisionSupport(response);
+      })
+      .catch((error: Error) => {
+        if (!active) return;
+        setDecisionSupport(null);
+        setDecisionError(error.message);
+      });
+    return () => {
+      active = false;
+    };
+  }, [rows, horizon, baselines, budgetPayload, targets]);
+
   const sims = apiSims ?? baselineSims;
 
   if (!rows.length || !baselines) {
@@ -194,6 +239,16 @@ function SimulatorPage() {
     }
     return [...map.values()].sort((a, b) => (a.date < b.date ? -1 : 1));
   })();
+
+  function applyTargets() {
+    const targetRevenue = Number(targetRevenueDraft);
+    const targetRoas = Number(targetRoasDraft);
+    setTargets({
+      targetRevenue:
+        Number.isFinite(targetRevenue) && targetRevenue > 0 ? targetRevenue : undefined,
+      targetRoas: Number.isFinite(targetRoas) && targetRoas > 0 ? targetRoas : undefined,
+    });
+  }
 
   return (
     <>
@@ -538,8 +593,308 @@ function SimulatorPage() {
           </Card>
         </div>
       </div>
+
+      {decisionError && (
+        <Card className="mt-6 border-warning/40 bg-warning/5 p-4 text-sm text-warning">
+          Decision-support engine unavailable: {decisionError}
+        </Card>
+      )}
+
+      {decisionSupport && (
+        <div data-testid="decision-support" className="mt-6 grid gap-4">
+          <Card data-testid="ai-budget-optimizer" className="bg-gradient-card border-border/60 p-5">
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <h3 className="text-sm font-semibold">AI budget optimizer</h3>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Set target revenue and ROAS, then compare recommended Google, Meta and Microsoft
+                  budgets.
+                </p>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-[140px_120px_auto]">
+                <Input
+                  type="number"
+                  min={0}
+                  value={targetRevenueDraft}
+                  onChange={(event) => setTargetRevenueDraft(event.target.value)}
+                  placeholder={`${Math.round(totalProjRev * 1.1)}`}
+                  aria-label="Target revenue"
+                />
+                <Input
+                  type="number"
+                  min={0}
+                  step="0.1"
+                  value={targetRoasDraft}
+                  onChange={(event) => setTargetRoasDraft(event.target.value)}
+                  placeholder={`${Math.max(0, projRoas * 1.05).toFixed(1)}`}
+                  aria-label="Target ROAS"
+                />
+                <Button type="button" variant="hero" onClick={applyTargets}>
+                  <Target className="mr-2 h-4 w-4" />
+                  Optimize
+                </Button>
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-4">
+              <DecisionStat
+                label="Recommended budget"
+                value={fmtCurrency(decisionSupport.optimizer.recommendedBudget)}
+                hint={`current ${fmtCurrency(decisionSupport.optimizer.currentBudget)}`}
+              />
+              <DecisionStat
+                label="Expected revenue"
+                value={fmtCurrency(decisionSupport.optimizer.expectedRevenue)}
+                hint={formatTargetGap(decisionSupport.optimizer.targetGapRevenue, "revenue")}
+              />
+              <DecisionStat
+                label="Expected ROAS"
+                value={fmtRoas(decisionSupport.optimizer.expectedRoas)}
+                hint={formatTargetGap(decisionSupport.optimizer.targetGapRoas, "roas")}
+              />
+              <DecisionStat
+                label="Expected profit"
+                value={fmtCurrency(decisionSupport.optimizer.expectedProfit)}
+                hint="revenue minus media spend"
+              />
+            </div>
+
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="text-xs uppercase tracking-wider text-muted-foreground">
+                  <tr>
+                    <th className="px-2 py-2 text-left">Channel</th>
+                    <th className="px-2 py-2 text-right">Current</th>
+                    <th className="px-2 py-2 text-right">Recommended</th>
+                    <th className="px-2 py-2 text-right">Delta</th>
+                    <th className="px-2 py-2 text-right">Expected ROAS</th>
+                    <th className="px-2 py-2 text-left">Rationale</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {decisionSupport.optimizer.recommendations.map((recommendation) => (
+                    <tr key={recommendation.channel} className="border-t border-border/40">
+                      <td className="px-2 py-2 font-medium">{recommendation.channel}</td>
+                      <td className="px-2 py-2 text-right text-muted-foreground">
+                        {fmtCurrency(recommendation.currentBudget)}
+                      </td>
+                      <td className="px-2 py-2 text-right">
+                        {fmtCurrency(recommendation.recommendedBudget)}
+                      </td>
+                      <td
+                        className={`px-2 py-2 text-right font-medium ${deltaClass(
+                          recommendation.deltaBudget,
+                        )}`}
+                      >
+                        {formatMoneyDelta(recommendation.deltaBudget)}
+                      </td>
+                      <td className="px-2 py-2 text-right">
+                        {fmtRoas(recommendation.expectedRoas)}
+                      </td>
+                      <td className="max-w-[260px] px-2 py-2 text-xs text-muted-foreground">
+                        {recommendation.rationale}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
+          <div className="grid gap-4 xl:grid-cols-2">
+            <Card data-testid="what-if-engine" className="bg-gradient-card border-border/60 p-5">
+              <div className="mb-4 flex items-center gap-2">
+                <ArrowRightLeft className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-semibold">What-if scenario engine</h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="text-xs uppercase tracking-wider text-muted-foreground">
+                    <tr>
+                      <th className="px-2 py-2 text-left">Scenario</th>
+                      <th className="px-2 py-2 text-right">Revenue</th>
+                      <th className="px-2 py-2 text-right">ROAS</th>
+                      <th className="px-2 py-2 text-right">Profit</th>
+                      <th className="px-2 py-2 text-right">Revenue impact</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {decisionSupport.scenarios.slice(0, 7).map((scenario) => (
+                      <ScenarioRow key={scenario.name} scenario={scenario} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+
+            <Card data-testid="channel-health" className="bg-gradient-card border-border/60 p-5">
+              <div className="mb-4 flex items-center gap-2">
+                <Gauge className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-semibold">Channel health score</h3>
+              </div>
+              <div className="space-y-4">
+                {decisionSupport.channelHealth.map((item) => (
+                  <HealthRow key={item.channel} item={item} />
+                ))}
+              </div>
+            </Card>
+          </div>
+
+          <div className="grid gap-4 xl:grid-cols-2">
+            <DetectionPanel
+              title="Risk detection engine"
+              icon={AlertTriangle}
+              items={decisionSupport.risks}
+              testId="risk-detection"
+            />
+            <DetectionPanel
+              title="Opportunity detection engine"
+              icon={Lightbulb}
+              items={decisionSupport.opportunities}
+              testId="opportunity-detection"
+            />
+          </div>
+        </div>
+      )}
     </>
   );
+}
+
+function DecisionStat({ label, value, hint }: { label: string; value: string; hint: string }) {
+  return (
+    <div className="rounded-lg border border-border/40 bg-background/40 p-3">
+      <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="mt-1 text-lg font-semibold">{value}</div>
+      <div className="mt-1 text-xs text-muted-foreground">{hint}</div>
+    </div>
+  );
+}
+
+function ScenarioRow({ scenario }: { scenario: WhatIfScenarioResult }) {
+  return (
+    <tr className="border-t border-border/40">
+      <td className="px-2 py-2 font-medium">{scenario.name}</td>
+      <td className="px-2 py-2 text-right">{fmtCurrency(scenario.projectedRevenue)}</td>
+      <td className="px-2 py-2 text-right">{fmtRoas(scenario.projectedRoas)}</td>
+      <td className="px-2 py-2 text-right">{fmtCurrency(scenario.projectedProfit)}</td>
+      <td className={`px-2 py-2 text-right font-medium ${deltaClass(scenario.revenueDeltaPct)}`}>
+        {formatPctDelta(scenario.revenueDeltaPct)}
+      </td>
+    </tr>
+  );
+}
+
+function HealthRow({ item }: { item: ChannelHealthScore }) {
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between gap-3">
+        <div>
+          <div className="text-sm font-medium">{item.channel}</div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">
+            Revenue share {item.revenueSharePct.toFixed(1)}% · Spend share{" "}
+            {item.spendSharePct.toFixed(1)}%
+          </div>
+        </div>
+        <Badge variant="outline" className={healthBadgeClass(item.status)}>
+          {item.score.toFixed(0)}/100 · {item.status}
+        </Badge>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-muted">
+        <div
+          className="h-full bg-primary"
+          style={{ width: `${Math.min(100, Math.max(0, item.score))}%` }}
+        />
+      </div>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {item.drivers.map((driver) => (
+          <span
+            key={driver}
+            className="rounded-full border border-border/40 bg-background/40 px-2 py-0.5 text-[10px] text-muted-foreground"
+          >
+            {driver}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DetectionPanel({
+  title,
+  icon: Icon,
+  items,
+  testId,
+}: {
+  title: string;
+  icon: typeof AlertTriangle;
+  items: DetectionItem[];
+  testId: string;
+}) {
+  return (
+    <Card data-testid={testId} className="bg-gradient-card border-border/60 p-5">
+      <div className="mb-4 flex items-center gap-2">
+        <Icon className="h-4 w-4 text-primary" />
+        <h3 className="text-sm font-semibold">{title}</h3>
+      </div>
+      <div className="space-y-3">
+        {items.map((item, index) => (
+          <div
+            key={`${item.type}-${item.channel ?? index}`}
+            className="rounded-lg border border-border/40 bg-background/40 p-3"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="text-sm font-medium">
+                {item.channel ?? item.type.replaceAll("_", " ")}
+              </div>
+              <Badge variant="outline" className={severityBadgeClass(item.severity)}>
+                {item.severity} · {item.score.toFixed(0)}
+              </Badge>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">{item.message}</p>
+            <p className="mt-2 text-xs">
+              <span className="font-medium text-foreground">Action: </span>
+              <span className="text-muted-foreground">{item.recommendation}</span>
+            </p>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+function formatMoneyDelta(value: number) {
+  return `${value >= 0 ? "+" : ""}${fmtCurrency(value)}`;
+}
+
+function formatPctDelta(value: number) {
+  return `${value >= 0 ? "+" : ""}${value.toFixed(1)}%`;
+}
+
+function formatTargetGap(value: number, type: "revenue" | "roas") {
+  if (!value) return "target met or not set";
+  if (value <= 0) return "target met";
+  return type === "revenue" ? `${fmtCurrency(value)} gap` : `${value.toFixed(2)}x gap`;
+}
+
+function deltaClass(value: number) {
+  if (value > 0) return "text-success";
+  if (value < 0) return "text-destructive";
+  return "text-muted-foreground";
+}
+
+function severityBadgeClass(severity: DetectionItem["severity"]) {
+  if (severity === "high") return "border-destructive/30 bg-destructive/15 text-destructive";
+  if (severity === "medium") return "border-warning/30 bg-warning/15 text-warning";
+  return "border-border bg-muted text-muted-foreground";
+}
+
+function healthBadgeClass(status: ChannelHealthScore["status"]) {
+  if (status === "healthy") return "border-success/30 bg-success/15 text-success";
+  if (status === "watch") return "border-warning/30 bg-warning/15 text-warning";
+  return "border-destructive/30 bg-destructive/15 text-destructive";
 }
 
 function TT({

@@ -318,6 +318,7 @@ try {
     cdp,
     sessionId,
     `document.querySelector('[data-testid="channel-breakdown"]') &&
+      document.querySelector('[data-testid="decision-support"]') &&
       (document.body.innerText || "").includes("Projected revenue")`,
     60000,
   );
@@ -331,7 +332,12 @@ try {
         hasChannelBudgets: text.includes("Channel budgets"),
         hasProjectedRevenue: text.includes("Projected revenue"),
         hasChannels: ["Google Ads", "Meta Ads", "Microsoft Ads"].every((name) => text.includes(name)),
-        hasBreakdown: Boolean(document.querySelector('[data-testid="channel-breakdown"]'))
+        hasBreakdown: Boolean(document.querySelector('[data-testid="channel-breakdown"]')),
+        hasOptimizer: Boolean(document.querySelector('[data-testid="ai-budget-optimizer"]')),
+        hasWhatIf: Boolean(document.querySelector('[data-testid="what-if-engine"]')),
+        hasRiskEngine: Boolean(document.querySelector('[data-testid="risk-detection"]')),
+        hasOpportunityEngine: Boolean(document.querySelector('[data-testid="opportunity-detection"]')),
+        hasHealthScore: Boolean(document.querySelector('[data-testid="channel-health"]'))
       };
     })()`,
   );

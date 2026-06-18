@@ -60,6 +60,72 @@ export interface SimulationApiResponse {
   validation: ValidationResult;
 }
 
+export interface BudgetRecommendation {
+  channel: string;
+  currentBudget: number;
+  recommendedBudget: number;
+  deltaBudget: number;
+  currentSharePct: number;
+  recommendedSharePct: number;
+  expectedRevenue: number;
+  expectedRoas: number;
+  rationale: string;
+}
+
+export interface BudgetOptimizerResult {
+  targetRevenue?: number | null;
+  targetRoas?: number | null;
+  currentBudget: number;
+  recommendedBudget: number;
+  expectedRevenue: number;
+  expectedRoas: number;
+  expectedProfit: number;
+  targetGapRevenue: number;
+  targetGapRoas: number;
+  recommendations: BudgetRecommendation[];
+}
+
+export interface WhatIfScenarioResult {
+  name: string;
+  totalSpend: number;
+  projectedRevenue: number;
+  projectedRoas: number;
+  projectedProfit: number;
+  revenueDeltaPct: number;
+  roasDeltaPct: number;
+  profitDelta: number;
+  budgets: Record<string, number>;
+}
+
+export interface DetectionItem {
+  type: string;
+  channel?: string | null;
+  severity: "low" | "medium" | "high";
+  score: number;
+  message: string;
+  recommendation: string;
+}
+
+export interface ChannelHealthScore {
+  channel: string;
+  score: number;
+  status: "healthy" | "watch" | "critical";
+  revenueTrendPct: number;
+  roasTrendPct: number;
+  spendSharePct: number;
+  revenueSharePct: number;
+  drivers: string[];
+}
+
+export interface DecisionSupportResponse {
+  optimizer: BudgetOptimizerResult;
+  scenarios: WhatIfScenarioResult[];
+  risks: DetectionItem[];
+  opportunities: DetectionItem[];
+  channelHealth: ChannelHealthScore[];
+  validation: ValidationResult;
+}
+
 export interface InsightsResponse {
   executiveSummary: string;
   revenueDrivers: Array<{ title: string; detail: string; metric?: string }>;
@@ -133,6 +199,21 @@ export function simulateBudgetsApi(
   budgets: Record<string, number>,
 ) {
   return postJson<SimulationApiResponse>("/api/simulate", { rows, horizon, budgets });
+}
+
+export function decisionSupportApi(
+  rows: CampaignRow[],
+  horizon: 30 | 60 | 90,
+  budgets: Record<string, number>,
+  targets: { targetRevenue?: number; targetRoas?: number } = {},
+) {
+  return postJson<DecisionSupportResponse>("/api/decision-support", {
+    rows,
+    horizon,
+    budgets,
+    targetRevenue: targets.targetRevenue,
+    targetRoas: targets.targetRoas,
+  });
 }
 
 export function generateInsightsApi(summary: Record<string, unknown>) {

@@ -139,6 +139,86 @@ class SimulationResponse(BaseModel):
     validation: ValidationResponse
 
 
+class WhatIfScenarioInput(BaseModel):
+    name: str
+    budgetMultipliers: Dict[str, float] = Field(default_factory=dict)
+
+
+class DecisionSupportRequest(BaseModel):
+    rows: List[CampaignRow]
+    horizon: Horizon = 30
+    budgets: Dict[str, float] = Field(default_factory=dict)
+    targetRevenue: Optional[float] = Field(default=None, ge=0)
+    targetRoas: Optional[float] = Field(default=None, ge=0)
+    scenarios: List[WhatIfScenarioInput] = Field(default_factory=list)
+
+
+class BudgetRecommendation(BaseModel):
+    channel: str
+    currentBudget: float
+    recommendedBudget: float
+    deltaBudget: float
+    currentSharePct: float
+    recommendedSharePct: float
+    expectedRevenue: float
+    expectedRoas: float
+    rationale: str
+
+
+class BudgetOptimizerResult(BaseModel):
+    targetRevenue: Optional[float] = None
+    targetRoas: Optional[float] = None
+    currentBudget: float
+    recommendedBudget: float
+    expectedRevenue: float
+    expectedRoas: float
+    expectedProfit: float
+    targetGapRevenue: float
+    targetGapRoas: float
+    recommendations: List[BudgetRecommendation]
+
+
+class WhatIfScenarioResult(BaseModel):
+    name: str
+    totalSpend: float
+    projectedRevenue: float
+    projectedRoas: float
+    projectedProfit: float
+    revenueDeltaPct: float
+    roasDeltaPct: float
+    profitDelta: float
+    budgets: Dict[str, float]
+
+
+class DetectionItem(BaseModel):
+    type: str
+    channel: Optional[str] = None
+    severity: Literal["low", "medium", "high"]
+    score: float
+    message: str
+    recommendation: str
+
+
+class ChannelHealthScore(BaseModel):
+    channel: str
+    score: float
+    status: Literal["healthy", "watch", "critical"]
+    revenueTrendPct: float
+    roasTrendPct: float
+    spendSharePct: float
+    revenueSharePct: float
+    drivers: List[str]
+
+
+class DecisionSupportResponse(BaseModel):
+    optimizer: BudgetOptimizerResult
+    scenarios: List[WhatIfScenarioResult]
+    risks: List[DetectionItem]
+    opportunities: List[DetectionItem]
+    channelHealth: List[ChannelHealthScore]
+    validation: ValidationResponse
+
+
 class InsightsRequest(BaseModel):
     summary: Dict[str, Any]
 

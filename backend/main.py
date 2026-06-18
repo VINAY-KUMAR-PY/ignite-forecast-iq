@@ -7,9 +7,12 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from .data_preprocessing import validate_records
+from .decision_support import build_decision_support
 from .forecasting import forecast_frame, simulate_budgets, train_model_bundle
 from .gemini import generate_gemini_insights
 from .schemas import (
+    DecisionSupportRequest,
+    DecisionSupportResponse,
     ForecastRequest,
     ForecastResponse,
     InsightsRequest,
@@ -111,6 +114,21 @@ def simulate(request: SimulationRequest) -> SimulationResponse:
     frame, validation = _validated_frame([row.model_dump() for row in request.rows], "simulation")
     result = simulate_budgets(frame, request.horizon, request.budgets)
     return SimulationResponse(channels=result["channels"], totals=result["totals"], validation=validation)
+
+
+@app.post("/api/decision-support", response_model=DecisionSupportResponse)
+def decision_support(request: DecisionSupportRequest) -> DecisionSupportResponse:
+    """Return optimizer, what-if, risk, opportunity and health analytics."""
+    frame, validation = _validated_frame([row.model_dump() for row in request.rows], "decision support")
+    result = build_decision_support(
+        frame=frame,
+        horizon=request.horizon,
+        budgets=request.budgets,
+        target_revenue=request.targetRevenue,
+        target_roas=request.targetRoas,
+        scenarios=request.scenarios,
+    )
+    return DecisionSupportResponse(**result, validation=validation)
 
 
 @app.post("/api/insights", response_model=InsightsResponse)

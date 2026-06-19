@@ -6,14 +6,14 @@ Show that ForecastIQ turns ecommerce marketing data into validated forecasts, bu
 
 ## Recommended Demo Flow
 
-1. Start on `/app`
-   - Point out total revenue, spend, ROAS, campaigns, and the Business Impact Dashboard.
-   - Mention the reallocation upside metric as the business hook.
-
-2. Open `/app/upload`
-   - Upload `data/sample_campaigns.csv`.
+1. Start on `/app/upload`
+   - Click **Load sample data** for the fastest judge path, or upload `data/sample_campaigns.csv`.
    - Confirm 1,440 rows and zero validation issues.
    - Explain that backend validation protects the model from invalid inputs.
+
+2. Open `/app`
+   - Point out forecasted revenue, expected ROAS, confidence, risk, opportunity, and the Executive Decision Center.
+   - Mention wasted spend reduction and reallocation upside as the business hook.
 
 3. Open `/app/forecast`
    - Show the 30 day forecast first.
@@ -34,6 +34,14 @@ Show that ForecastIQ turns ecommerce marketing data into validated forecasts, bu
 ## Demo Script
 
 "ForecastIQ helps ecommerce marketing teams answer a practical question: if we change media spend across Google, Meta, and Microsoft, what happens to revenue, ROAS, risk, and action planning? We validate uploaded campaign data, train XGBoost revenue and ROAS forecasts, quantify uncertainty, explain the model drivers, simulate budget changes, and convert the result into an executive brief."
+
+## 30-Second Judge Path
+
+1. Load sample data on `/app/upload`.
+2. Show the Executive Decision Center on `/app`.
+3. Show exact budget shifts and expected lift on `/app/simulator`.
+4. Show confidence intervals and explainability on `/app/forecast`.
+5. Generate AI Insights and point to the PDF export on `/app/insights`.
 
 ## Backup Plan
 

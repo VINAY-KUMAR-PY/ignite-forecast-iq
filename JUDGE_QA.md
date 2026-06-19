@@ -28,6 +28,10 @@ ForecastIQ links upload validation, forecasting, confidence intervals, decision 
 
 The backend returns deterministic fallback insights based on the same performance summary. The application remains demo-ready without external AI availability.
 
+## How do you keep the automated evaluator safe?
+
+The root `run.sh` path is isolated from the live app. It reads CSV files from the provided data folder, loads a lightweight evaluator-safe model artifact, writes the required `predictions.csv`, and exits without starting frontend, backend, Gemini, or internet-dependent services.
+
 ## What are the main limitations?
 
 The current model does not include promotions, inventory, pricing, holidays, competitor actions, or product margin. It also uses residual-based intervals that should be recalibrated with production holdout data.

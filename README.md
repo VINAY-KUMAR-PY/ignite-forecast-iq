@@ -263,7 +263,7 @@ The runner:
 - creates the output directory automatically;
 - writes `predictions.csv` at the requested output path;
 - does not start the frontend, backend, Vite, FastAPI, or any long-running server;
-- uses a lightweight joblib metadata artifact plus a deterministic evaluator-safe baseline.
+- uses a lightweight joblib-trained sklearn artifact when compatible, with a deterministic evaluator-safe baseline as fallback.
 
 Expected output columns:
 
@@ -276,14 +276,14 @@ Expected output columns:
 | `lower_revenue`    | Conservative revenue interval bound                                  |
 | `upper_revenue`    | Upside revenue interval bound                                        |
 | `expected_roas`    | Expected revenue divided by projected spend                          |
-| `model_type`       | Offline model identifier                                             |
+| `model_type`       | `trained_model` for compatible artifact predictions, otherwise `safe_baseline_fallback` |
 
 Assumptions and fallback behavior:
 
 - Hidden evaluator data may use common marketing aliases such as `cost`, `sales`, `source`, `platform`, or `campaign`; these are normalized automatically.
 - Optional columns such as clicks, impressions, conversions, campaign type, campaign name, and ROAS are filled safely when absent.
 - Rows with negative spend or negative revenue are removed; malformed dates are logged and repaired when possible.
-- If the model artifact is missing or cannot be loaded safely, the runner uses the built-in `safe_evaluator_baseline_v1` logic instead of retraining.
+- If the model artifact is missing, corrupt, incompatible, or the hidden dataset is too small for model features, the runner uses `safe_baseline_fallback` instead of retraining.
 - The output file is always non-empty and numeric fields are cleaned to avoid `NaN` or infinite values.
 
 Start the backend:
@@ -521,29 +521,29 @@ python -m backend.predict --data-dir data --model pickle/model.pkl --output outp
 
 ```text
 .
-├── backend/
-│   ├── main.py
-│   ├── forecasting.py
-│   ├── train.py
-│   ├── predict.py
-│   ├── data_preprocessing.py
-│   ├── gemini.py
-│   ├── schemas.py
-│   └── utils.py
-├── data/
-│   └── sample_campaigns.csv
-├── pickle/
-│   └── model.pkl
-├── public/
-├── src/
-│   ├── components/
-│   ├── lib/
-│   └── routes/
-├── .env.example
-├── requirements.txt
-├── run.sh
-├── package.json
-└── README.md
+|-- backend/
+|   |-- main.py
+|   |-- forecasting.py
+|   |-- train.py
+|   |-- predict.py
+|   |-- data_preprocessing.py
+|   |-- gemini.py
+|   |-- schemas.py
+|   `-- utils.py
+|-- data/
+|   `-- sample_campaigns.csv
+|-- pickle/
+|   `-- model.pkl
+|-- public/
+|-- src/
+|   |-- components/
+|   |-- lib/
+|   `-- routes/
+|-- .env.example
+|-- requirements.txt
+|-- run.sh
+|-- package.json
+`-- README.md
 ```
 
 ## Deployment Instructions

@@ -10,6 +10,8 @@ import pandas as pd
 from backend.predict import (
     OUTPUT_COLUMNS,
     MODEL_TYPE,
+    SAFE_BASELINE_MODEL_TYPE,
+    TRAINED_MODEL_TYPE,
     build_predictions,
     canonicalize_frame,
     read_csv_folder,
@@ -19,6 +21,14 @@ from backend.predict import (
 
 
 class OfflinePredictionTests(unittest.TestCase):
+    def assert_valid_prediction_rows(self, rows: list[dict]) -> None:
+        self.assertTrue(rows)
+        self.assertEqual(list(rows[0].keys()), OUTPUT_COLUMNS)
+        self.assertEqual({row["horizon_days"] for row in rows}, {30, 60, 90})
+        for row in rows:
+            for column in ["expected_revenue", "lower_revenue", "upper_revenue", "expected_roas"]:
+                self.assertTrue(math.isfinite(float(row[column])), f"{column} is not finite in {row}")
+
     def test_alias_columns_and_missing_optional_values_generate_predictions(self) -> None:
         raw = pd.DataFrame(
             {
@@ -36,11 +46,7 @@ class OfflinePredictionTests(unittest.TestCase):
         rows = build_predictions(cleaned.frame, {"model_type": MODEL_TYPE})
 
         self.assertGreater(cleaned.valid_rows, 0)
-        self.assertTrue(rows)
-        self.assertEqual(list(rows[0].keys()), OUTPUT_COLUMNS)
-        for row in rows:
-            for column in ["expected_revenue", "lower_revenue", "upper_revenue", "expected_roas"]:
-                self.assertTrue(math.isfinite(float(row[column])))
+        self.assert_valid_prediction_rows(rows)
 
     def test_negative_spend_and_revenue_do_not_crash(self) -> None:
         raw = pd.DataFrame(
@@ -82,6 +88,39 @@ class OfflinePredictionTests(unittest.TestCase):
             self.assertEqual(list(written.columns), OUTPUT_COLUMNS)
             self.assertFalse(written.empty)
             self.assertFalse(written.isna().any().any())
+            self.assertEqual(set(written["model_type"]), {SAFE_BASELINE_MODEL_TYPE})
+
+    def test_trained_model_loads_and_generates_schema_clean_predictions(self) -> None:
+        raw = read_csv_folder("data")
+        cleaned = canonicalize_frame(raw)
+        model = safe_load_model("pickle/model.pkl")
+
+        self.assertEqual(model["model_type"], TRAINED_MODEL_TYPE)
+        rows = build_predictions(cleaned.frame, model)
+
+        self.assert_valid_prediction_rows(rows)
+        self.assertEqual({row["model_type"] for row in rows}, {TRAINED_MODEL_TYPE})
+
+    def test_corrupt_model_file_uses_safe_baseline_fallback(self) -> None:
+        raw = pd.DataFrame(
+            {
+                "date": ["2026-01-01", "2026-01-02", "2026-01-03", "2026-01-04"],
+                "channel": ["Google Ads", "Google Ads", "Meta Ads", "Meta Ads"],
+                "campaign": ["Brand", "Brand", "Prospecting", "Prospecting"],
+                "spend": [100, 120, 80, 90],
+                "revenue": [500, 620, 200, 240],
+            }
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            corrupt = Path(tmp) / "model.pkl"
+            corrupt.write_bytes(b"not a joblib model")
+
+            cleaned = canonicalize_frame(raw)
+            rows = build_predictions(cleaned.frame, safe_load_model(corrupt))
+
+            self.assert_valid_prediction_rows(rows)
+            self.assertEqual({row["model_type"] for row in rows}, {SAFE_BASELINE_MODEL_TYPE})
 
 
 if __name__ == "__main__":

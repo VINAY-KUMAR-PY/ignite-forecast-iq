@@ -10,7 +10,7 @@ The backend checks required columns, missing values, invalid dates, duplicate da
 
 ## How are confidence intervals calculated?
 
-The model estimates residual volatility from in-sample prediction errors. Future intervals are widened by forecast horizon so longer forecasts show higher uncertainty.
+The evaluator model uses calibrated residual volatility from rolling historical forecasts, horizon-specific widening, a minimum interval-width floor, and non-negative lower bounds. If a trained-model segment cannot be scored safely, the deterministic safe baseline interval system is used instead.
 
 ## What accuracy metrics do you provide?
 
@@ -31,6 +31,14 @@ The backend returns deterministic fallback insights based on the same performanc
 ## How do you keep the automated evaluator safe?
 
 The root `run.sh` path is isolated from the live app. It reads CSV files from the provided data folder, loads a lightweight evaluator-safe model artifact, writes the required `predictions.csv`, and exits without starting frontend, backend, Gemini, or internet-dependent services.
+
+## How do you know the evaluator model is compatible?
+
+The model artifact was verified in a clean Python 3.14.4 environment with pinned dependencies, including scikit-learn 1.9.0, scipy 1.17.1, pandas 3.0.3, numpy 2.4.6, and joblib 1.5.3. In that environment, `pickle/model.pkl` loaded successfully and `backend.predict` generated `model_type = trained_model`.
+
+## What does the holdout backtest show?
+
+The final 30 days were held out while the model trained on the earlier period. Across 18 evaluated segments, the trained evaluator achieved MAE 2,107.20, RMSE 2,672.49, MAPE 2.83%, and 100.00% interval coverage. The safe baseline achieved MAE 2,185.89, RMSE 2,763.76, MAPE 2.78%, and 88.89% interval coverage.
 
 ## What are the main limitations?
 

@@ -621,6 +621,10 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
         },
         "confidence": {
             "confidence_z": 1.96,
+            "minimum_interval_pct": 0.12,
+            "horizon_interval_multiplier": {"30": 1.0, "60": 1.18, "90": 1.35},
+            "revenue_model_weight": 0.10,
+            "roas_model_weight": 0.25,
             "revenue_residual_std": clean_number(
                 max(safe_float(np.std(revenue_residuals, ddof=1), 0.0), safe_float(np.mean(np.abs(y_revenue)), 0.0) * 0.05)
             ),
@@ -729,14 +733,16 @@ def trained_forecast_segment(
 
     if baseline_revenue > 0:
         trained_revenue = min(max(trained_revenue, baseline_revenue * 0.35), baseline_revenue * 3.0)
-        expected_revenue = (trained_revenue * 0.78) + (baseline_revenue * 0.22)
+        revenue_weight = min(0.8, max(0.0, safe_float(model.get("confidence", {}).get("revenue_model_weight"), 0.1)))
+        expected_revenue = (trained_revenue * revenue_weight) + (baseline_revenue * (1 - revenue_weight))
     else:
         expected_revenue = max(0.0, trained_revenue)
 
     roas_guard = max(20.0, baseline_roas * 3.0)
     expected_roas = min(max(trained_roas, 0.0), roas_guard)
     if baseline_roas > 0:
-        expected_roas = (expected_roas * 0.75) + (baseline_roas * 0.25)
+        roas_weight = min(0.8, max(0.0, safe_float(model.get("confidence", {}).get("roas_model_weight"), 0.25)))
+        expected_roas = (expected_roas * roas_weight) + (baseline_roas * (1 - roas_weight))
 
     confidence = model.get("confidence") or {}
     residual_by_horizon = confidence.get("revenue_residual_by_horizon") or {}
@@ -745,7 +751,23 @@ def trained_forecast_segment(
         safe_float(confidence.get("revenue_residual_std"), expected_revenue * 0.12),
     )
     z = safe_float(confidence.get("confidence_z"), 1.96)
-    interval = max(z * residual, expected_revenue * 0.08, confidence_interval_width(segment["revenue"], expected_revenue, horizon, fallback_model_config()))
+    horizon_multiplier = safe_float(
+        (confidence.get("horizon_interval_multiplier") or {}).get(str(horizon)),
+        math.sqrt(max(horizon, 1) / 30),
+    )
+    minimum_interval_pct = safe_float(confidence.get("minimum_interval_pct"), 0.12)
+    recent_daily = aggregate_segment_daily(segment)["revenue"]
+    recent_volatility = confidence_interval_width(
+        recent_daily,
+        expected_revenue,
+        horizon,
+        fallback_model_config("trained model volatility guardrail"),
+    )
+    interval = max(
+        z * residual * max(1.0, horizon_multiplier),
+        expected_revenue * max(0.08, minimum_interval_pct),
+        recent_volatility,
+    )
     lower = max(0.0, expected_revenue - interval)
     upper = max(lower, expected_revenue + interval)
     return {

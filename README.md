@@ -1,6 +1,25 @@
 # AIgnition ForecastIQ
 
+[![Evaluator CI](https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq/actions/workflows/evaluator-ci.yml/badge.svg)](https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq/actions/workflows/evaluator-ci.yml)
+
 AIgnition ForecastIQ is an AI-powered ecommerce forecasting platform built for NetElixir AIgnition 3.0. It preserves the original Lovable React experience and adds a production-style FastAPI backend for data validation, XGBoost revenue and ROAS forecasting, budget simulation, model persistence, and Gemini-assisted executive insights.
+
+## Evaluator Reliability Snapshot
+
+The offline evaluator path is intentionally isolated from the web app. `run.sh` reads CSV files, loads the packaged model when compatible, writes `predictions.csv`, and exits without starting frontend/backend servers or calling Gemini.
+
+| Item | Value |
+| --- | --- |
+| Python version used for verification | 3.14.4 |
+| scikit-learn version | 1.9.0 |
+| Model artifact | `pickle/model.pkl` |
+| Model artifact size | 56,475 bytes |
+| Model artifact version | 2 |
+| Training rows | 1,440 |
+| Rolling training samples | 414 |
+| Feature count | 26 |
+| Normal evaluator mode | `trained_model` |
+| Safe fallback mode | `safe_baseline_fallback` for missing/corrupt/incompatible model or unsupported hidden data |
 
 ## 30-Second Product Summary
 
@@ -196,6 +215,10 @@ The offline evaluator artifact at `pickle/model.pkl` is a compact joblib artifac
 | Artifact type | `forecastiq_evaluator_model` |
 | Artifact version | 2 |
 | Evaluator model type | `trained_model` |
+| Artifact size | 56,475 bytes |
+| Training rows | 1,440 |
+| Feature count | 26 |
+| Revenue blend weight | 0.10 |
 
 The evaluator model trains on rolling historical samples from `data/sample_campaigns.csv` and predicts 30, 60, and 90 day revenue and ROAS at overall, channel, campaign type, and campaign levels. The safe baseline remains available for missing, corrupt, incompatible, tiny, or malformed hidden evaluator data.
 
@@ -213,6 +236,26 @@ python -m backend.backtest
 ```
 
 Reports are written to `reports/backtest_report.json` and `reports/backtest_summary.md`.
+
+Blend-weight validation tested revenue model weights of 0.10, 0.25, 0.40, 0.50, and 0.60. The current 0.10 blend had the best RMSE/MAE balance, so the packaged artifact keeps the lower trained-model weight instead of over-trusting the model on limited sample history.
+
+| Revenue model weight | MAE | RMSE | MAPE | Interval coverage |
+| ---: | ---: | ---: | ---: | ---: |
+| 0.10 | 2,107.20 | 2,672.49 | 2.83% | 100.00% |
+| 0.25 | 2,208.04 | 2,800.71 | 3.22% | 100.00% |
+| 0.40 | 2,463.50 | 3,206.38 | 3.80% | 100.00% |
+| 0.50 | 2,808.06 | 3,587.39 | 4.22% | 100.00% |
+| 0.60 | 3,187.48 | 4,028.53 | 4.71% | 100.00% |
+
+Per-horizon backtesting is included for transparency:
+
+| Horizon | Trained MAE | Trained RMSE | Trained MAPE | Trained coverage | Baseline MAE | Baseline RMSE |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 30 days | 2,107.20 | 2,672.49 | 2.83% | 100.00% | 2,185.89 | 2,763.76 |
+| 60 days | 5,144.93 | 8,652.28 | 1.96% | 100.00% | 4,728.39 | 6,906.01 |
+| 90 days | 21,917.54 | 34,288.82 | 6.90% | 100.00% | 13,145.11 | 18,642.51 |
+
+This is why ForecastIQ keeps both systems: the trained model improves the primary evaluator-style 30-day holdout, while the deterministic baseline remains a reliability guardrail for longer or incompatible cases.
 
 ## Budget Simulator
 

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-19T15:57:41.021285+00:00",
+  "generated_at": "2026-06-19T16:27:02.180972+00:00",
   "data_dir": "data",
   "holdout_days": 30,
   "train_rows": 1200,
@@ -65,10 +65,127 @@
     "rmse_delta": 91.27,
     "mape_delta": -0.05
   },
+  "blend_weight_comparison": [
+    {
+      "revenue_model_weight": 0.1,
+      "mae": 2107.2,
+      "rmse": 2672.49,
+      "mape": 2.83,
+      "interval_coverage": 100.0
+    },
+    {
+      "revenue_model_weight": 0.25,
+      "mae": 2208.04,
+      "rmse": 2800.71,
+      "mape": 3.22,
+      "interval_coverage": 100.0
+    },
+    {
+      "revenue_model_weight": 0.4,
+      "mae": 2463.5,
+      "rmse": 3206.38,
+      "mape": 3.8,
+      "interval_coverage": 100.0
+    },
+    {
+      "revenue_model_weight": 0.5,
+      "mae": 2808.06,
+      "rmse": 3587.39,
+      "mape": 4.22,
+      "interval_coverage": 100.0
+    },
+    {
+      "revenue_model_weight": 0.6,
+      "mae": 3187.48,
+      "rmse": 4028.53,
+      "mape": 4.71,
+      "interval_coverage": 100.0
+    }
+  ],
+  "blend_weight_recommendation": {
+    "current_revenue_model_weight": 0.1,
+    "recommended_revenue_model_weight": 0.1,
+    "decision": "keep_current",
+    "recommendation": "Keep revenue_model_weight=0.10; it has the best RMSE/MAE balance in the holdout comparison.",
+    "selection_metric": "lowest RMSE, then MAE, then MAPE"
+  },
+  "per_horizon_performance": [
+    {
+      "horizon_days": 30,
+      "train_rows": 1200,
+      "test_rows": 240,
+      "segments_evaluated": 18,
+      "trained_model_metrics": {
+        "mae": 2107.2,
+        "rmse": 2672.49,
+        "mape": 2.83,
+        "interval_coverage": 100.0
+      },
+      "safe_baseline_metrics": {
+        "mae": 2185.89,
+        "rmse": 2763.76,
+        "mape": 2.78,
+        "interval_coverage": 88.89
+      },
+      "trained_vs_safe_baseline": {
+        "mae_delta": 78.69,
+        "rmse_delta": 91.27,
+        "mape_delta": -0.05
+      }
+    },
+    {
+      "horizon_days": 60,
+      "train_rows": 960,
+      "test_rows": 480,
+      "segments_evaluated": 18,
+      "trained_model_metrics": {
+        "mae": 5144.93,
+        "rmse": 8652.28,
+        "mape": 1.96,
+        "interval_coverage": 100.0
+      },
+      "safe_baseline_metrics": {
+        "mae": 4728.39,
+        "rmse": 6906.01,
+        "mape": 2.24,
+        "interval_coverage": 100.0
+      },
+      "trained_vs_safe_baseline": {
+        "mae_delta": -416.54,
+        "rmse_delta": -1746.27,
+        "mape_delta": 0.28
+      }
+    },
+    {
+      "horizon_days": 90,
+      "train_rows": 720,
+      "test_rows": 720,
+      "segments_evaluated": 18,
+      "trained_model_metrics": {
+        "mae": 21917.54,
+        "rmse": 34288.82,
+        "mape": 6.9,
+        "interval_coverage": 100.0
+      },
+      "safe_baseline_metrics": {
+        "mae": 13145.11,
+        "rmse": 18642.51,
+        "mape": 4.4,
+        "interval_coverage": 100.0
+      },
+      "trained_vs_safe_baseline": {
+        "mae_delta": -8772.43,
+        "rmse_delta": -15646.31,
+        "mape_delta": -2.5
+      }
+    }
+  ],
+  "recommendation": "Keep revenue_model_weight=0.10; it has the best RMSE/MAE balance in the holdout comparison.",
   "rows": [
     {
       "level": "overall",
       "segment": "all",
+      "horizon_days": 30,
       "actual_revenue": 476116.68,
       "actual_roas": 4.0445,
       "trained_expected_revenue": 480819.34,
@@ -84,6 +201,7 @@
     {
       "level": "channel",
       "segment": "Google Ads",
+      "horizon_days": 30,
       "actual_revenue": 264801.33,
       "actual_roas": 4.586,
       "trained_expected_revenue": 270270.95,
@@ -99,6 +217,7 @@
     {
       "level": "channel",
       "segment": "Meta Ads",
+      "horizon_days": 30,
       "actual_revenue": 139555.62,
       "actual_roas": 2.9754,
       "trained_expected_revenue": 139780.81,
@@ -114,6 +233,7 @@
     {
       "level": "channel",
       "segment": "Microsoft Ads",
+      "horizon_days": 30,
       "actual_revenue": 71759.73,
       "actual_roas": 5.488,
       "trained_expected_revenue": 72178.8,
@@ -129,6 +249,7 @@
     {
       "level": "campaign_type",
       "segment": "Advantage+",
+      "horizon_days": 30,
       "actual_revenue": 53922.02,
       "actual_roas": 2.9848,
       "trained_expected_revenue": 52191.74,
@@ -144,6 +265,7 @@
     {
       "level": "campaign_type",
       "segment": "Performance Max",
+      "horizon_days": 30,
       "actual_revenue": 93907.13,
       "actual_roas": 4.2731,
       "trained_expected_revenue": 97087.88,
@@ -159,6 +281,7 @@
     {
       "level": "campaign_type",
       "segment": "Prospecting",
+      "horizon_days": 30,
       "actual_revenue": 38705.24,
       "actual_roas": 2.9226,
       "trained_expected_revenue": 42957.16,
@@ -174,6 +297,7 @@
     {
       "level": "campaign_type",
       "segment": "Retargeting",
+      "horizon_days": 30,
       "actual_revenue": 46928.36,
       "actual_roas": 3.0094,
       "trained_expected_revenue": 46184.19,
@@ -189,6 +313,7 @@
     {
       "level": "campaign_type",
       "segment": "Search",
+      "horizon_days": 30,
       "actual_revenue": 123975.04,
       "actual_roas": 5.5512,
       "trained_expected_revenue": 124921.04,
@@ -204,6 +329,7 @@
     {
       "level": "campaign_type",
       "segment": "Shopping",
+      "horizon_days": 30,
       "actual_revenue": 118678.89,
       "actual_roas": 4.4772,
       "trained_expected_revenue": 120107.49,
@@ -219,6 +345,7 @@
     {
       "level": "campaign",
       "segment": "Advantage Shopping",
+      "horizon_days": 30,
       "actual_revenue": 53922.02,
       "actual_roas": 2.9848,
       "trained_expected_revenue": 52191.74,
@@ -234,6 +361,7 @@
     {
       "level": "campaign",
       "segment": "Bing Brand",
+      "horizon_days": 30,
       "actual_revenue": 36728.84,
       "actual_roas": 6.0193,
       "trained_expected_revenue": 37079.44,
@@ -249,6 +377,7 @@
     {
       "level": "campaign",
       "segment": "Bing Generic",
+      "horizon_days": 30,
       "actual_revenue": 35030.89,
       "actual_roas": 5.0231,
       "trained_expected_revenue": 34717.37,
@@ -264,6 +393,7 @@
     {
       "level": "campaign",
       "segment": "Brand Search",
+      "horizon_days": 30,
       "actual_revenue": 87246.2,
       "actual_roas": 5.3752,
       "trained_expected_revenue": 88836.1,
@@ -279,6 +409,7 @@
     {
       "level": "campaign",
       "segment": "Cart Retargeting",
+      "horizon_days": 30,
       "actual_revenue": 46928.36,
       "actual_roas": 3.0094,
       "trained_expected_revenue": 46184.19,
@@ -294,6 +425,7 @@
     {
       "level": "campaign",
       "segment": "Generic Search",
+      "horizon_days": 30,
       "actual_revenue": 83648.0,
       "actual_roas": 4.2823,
       "trained_expected_revenue": 86318.15,
@@ -309,6 +441,7 @@
     {
       "level": "campaign",
       "segment": "Lookalike Prospecting",
+      "horizon_days": 30,
       "actual_revenue": 38705.24,
       "actual_roas": 2.9226,
       "trained_expected_revenue": 42957.16,
@@ -324,6 +457,7 @@
     {
       "level": "campaign",
       "segment": "Shopping Best Sellers",
+      "horizon_days": 30,
       "actual_revenue": 93907.13,
       "actual_roas": 4.2731,
       "trained_expected_revenue": 97087.88,

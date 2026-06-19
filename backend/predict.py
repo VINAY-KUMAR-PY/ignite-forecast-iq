@@ -74,6 +74,7 @@ FEATURE_COLUMNS = [
 
 LEVEL_CODES = {"overall": 0, "channel": 1, "campaign_type": 2, "campaign": 3}
 
+
 @dataclass
 class CleanResult:
     frame: pd.DataFrame
@@ -493,14 +494,23 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
     revenue_residuals = y_revenue - np.asarray(revenue_model.predict(X), dtype=float)
     roas_residuals = y_roas - np.asarray(roas_model.predict(X), dtype=float)
     revenue_by_horizon: dict[str, float] = {}
+    overall_revenue_residual_std = safe_float(np.std(revenue_residuals, ddof=1), 0.0)
+    overall_revenue_floor = safe_float(np.mean(np.abs(y_revenue)), 0.0) * 0.05
     for horizon in HORIZONS:
         mask = np.asarray(horizon_labels) == horizon
         horizon_residuals = revenue_residuals[mask]
         horizon_targets = y_revenue[mask]
+        if len(horizon_residuals) >= 2:
+            horizon_std = safe_float(np.std(horizon_residuals, ddof=1), overall_revenue_residual_std)
+        elif len(horizon_residuals) == 1:
+            horizon_std = safe_float(abs(horizon_residuals[0]), overall_revenue_residual_std)
+        else:
+            horizon_std = overall_revenue_residual_std
+        horizon_floor = safe_float(np.mean(np.abs(horizon_targets)), overall_revenue_floor) * 0.05 if len(horizon_targets) else overall_revenue_floor
         revenue_by_horizon[str(horizon)] = clean_number(
             max(
-                safe_float(np.std(horizon_residuals, ddof=1), 0.0),
-                safe_float(np.mean(np.abs(horizon_targets)), 0.0) * 0.05,
+                horizon_std,
+                horizon_floor,
                 1.0,
             )
         )

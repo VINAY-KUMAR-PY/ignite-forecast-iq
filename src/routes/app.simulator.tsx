@@ -54,6 +54,7 @@ import {
   type SimChannelResult,
   type WhatIfScenarioResult,
 } from "@/lib/backend-api";
+import type { CampaignRow } from "@/lib/types";
 
 export const Route = createFileRoute("/app/simulator")({
   head: () => ({ meta: [{ title: "Budget simulator · ForecastIQ" }] }),
@@ -80,6 +81,25 @@ type TooltipPayload = {
   name?: string;
   color: string;
   value: number;
+};
+
+type CampaignBudgetMove = {
+  fromCampaign: string;
+  fromChannel: string;
+  toCampaign: string;
+  toChannel: string;
+  shiftBudget: number;
+  rationale: string;
+};
+
+type OptimizerBrief = {
+  channelMove: string;
+  campaignMove: string;
+  revenueLift: number;
+  roasLift: number;
+  confidenceScore: number;
+  riskLevel: "Low" | "Medium" | "High";
+  explanation: string;
 };
 
 function SimulatorPage() {
@@ -211,6 +231,10 @@ function SimulatorPage() {
   const baseRoas = totalBaseSpend > 0 ? totalBaseRev / totalBaseSpend : 0;
   const revChangePct = totalBaseRev > 0 ? ((totalProjRev - totalBaseRev) / totalBaseRev) * 100 : 0;
   const roasChangePct = baseRoas > 0 ? ((projRoas - baseRoas) / baseRoas) * 100 : 0;
+  const campaignBudgetMove = buildCampaignBudgetMove(rows, totalNewSpend);
+  const optimizerBrief = decisionSupport
+    ? buildOptimizerBrief(decisionSupport, totalProjRev, projRoas, campaignBudgetMove)
+    : null;
 
   const chartData = sims.map((p) => ({
     name: p.channel,
@@ -722,6 +746,60 @@ function SimulatorPage() {
               />
             </div>
 
+            {optimizerBrief && (
+              <div
+                data-testid="optimizer-executive-brief"
+                className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-4"
+              >
+                <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-wider text-primary">
+                      Optimizer recommendation
+                    </div>
+                    <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                      {optimizerBrief.explanation}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge
+                      variant="outline"
+                      className={optimizerConfidenceBadgeClass(optimizerBrief.confidenceScore)}
+                    >
+                      {optimizerBrief.confidenceScore}/100 confidence
+                    </Badge>
+                    <Badge
+                      variant="outline"
+                      className={optimizerRiskBadgeClass(optimizerBrief.riskLevel)}
+                    >
+                      {optimizerBrief.riskLevel} risk
+                    </Badge>
+                  </div>
+                </div>
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                  <DecisionStat
+                    label="Channel shift"
+                    value={optimizerBrief.channelMove}
+                    hint="exact media move"
+                  />
+                  <DecisionStat
+                    label="Campaign shift"
+                    value={optimizerBrief.campaignMove}
+                    hint="campaign-level action"
+                  />
+                  <DecisionStat
+                    label="Revenue lift"
+                    value={formatMoneyDelta(optimizerBrief.revenueLift)}
+                    hint="vs current plan"
+                  />
+                  <DecisionStat
+                    label="ROAS improvement"
+                    value={formatRoasDelta(optimizerBrief.roasLift)}
+                    hint="expected blended lift"
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="mt-4 rounded-lg border border-border/40 bg-background/40 p-4">
               <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -879,6 +957,116 @@ function DecisionStat({ label, value, hint }: { label: string; value: string; hi
   );
 }
 
+function buildCampaignBudgetMove(rows: CampaignRow[], totalBudget: number) {
+  const campaignMap = new Map<
+    string,
+    { channel: string; campaign: string; spend: number; revenue: number }
+  >();
+  for (const row of rows) {
+    const key = `${row.channel}|${row.campaign_name}`;
+    const item = campaignMap.get(key) ?? {
+      channel: row.channel,
+      campaign: row.campaign_name,
+      spend: 0,
+      revenue: 0,
+    };
+    item.spend += row.spend;
+    item.revenue += row.revenue;
+    campaignMap.set(key, item);
+  }
+
+  const campaigns = [...campaignMap.values()]
+    .filter((item) => item.spend > 0)
+    .map((item) => ({ ...item, roas: item.revenue / item.spend }));
+  if (campaigns.length < 2) return null;
+
+  const totalSpend = campaigns.reduce((sum, item) => sum + item.spend, 0);
+  const averageRoas =
+    totalSpend > 0 ? campaigns.reduce((sum, item) => sum + item.revenue, 0) / totalSpend : 0;
+  const best = [...campaigns].sort((a, b) => b.roas - a.roas || b.revenue - a.revenue)[0];
+  const weakest =
+    [...campaigns]
+      .filter((item) => item.campaign !== best.campaign || item.channel !== best.channel)
+      .filter((item) => item.spend >= totalSpend * 0.015 || item.roas < averageRoas)
+      .sort((a, b) => a.roas - b.roas || b.spend - a.spend)[0] ??
+    [...campaigns]
+      .filter((item) => item.campaign !== best.campaign || item.channel !== best.channel)
+      .sort((a, b) => a.roas - b.roas)[0];
+
+  if (!best || !weakest) return null;
+  const shiftBudget = Math.max(
+    100,
+    Math.round(Math.min(weakest.spend * 0.08, Math.max(100, totalBudget * 0.08))),
+  );
+
+  return {
+    fromCampaign: weakest.campaign,
+    fromChannel: weakest.channel,
+    toCampaign: best.campaign,
+    toChannel: best.channel,
+    shiftBudget,
+    rationale: `${best.campaign} is outperforming at ${fmtRoas(best.roas)} while ${weakest.campaign} trails at ${fmtRoas(weakest.roas)}.`,
+  } satisfies CampaignBudgetMove;
+}
+
+function buildOptimizerBrief(
+  decisionSupport: DecisionSupportResponse,
+  currentRevenue: number,
+  currentRoas: number,
+  campaignMove: CampaignBudgetMove | null,
+): OptimizerBrief {
+  const recommendations = decisionSupport.optimizer.recommendations;
+  const increase = [...recommendations].sort((a, b) => b.deltaBudget - a.deltaBudget)[0];
+  const decrease = [...recommendations].sort((a, b) => a.deltaBudget - b.deltaBudget)[0];
+  const hasChannelShift =
+    increase && decrease && increase.deltaBudget > 0 && decrease.deltaBudget < 0;
+  const channelShift = hasChannelShift
+    ? Math.min(increase.deltaBudget, Math.abs(decrease.deltaBudget))
+    : Math.max(0, increase?.deltaBudget ?? 0);
+  const channelMove =
+    hasChannelShift && channelShift > 0
+      ? `${fmtCurrency(channelShift)} ${decrease.channel} -> ${increase.channel}`
+      : increase && channelShift > 0
+        ? `Add ${fmtCurrency(channelShift)} to ${increase.channel}`
+        : "Hold current channel mix";
+  const campaignMoveText = campaignMove
+    ? `${fmtCurrency(campaignMove.shiftBudget)} ${campaignMove.fromCampaign} -> ${campaignMove.toCampaign}`
+    : "No campaign cut required";
+  const revenueLift = decisionSupport.optimizer.expectedRevenue - currentRevenue;
+  const roasLift = decisionSupport.optimizer.expectedRoas - currentRoas;
+  const highRisks = decisionSupport.risks.filter((item) => item.severity === "high").length;
+  const mediumRisks = decisionSupport.risks.filter((item) => item.severity === "medium").length;
+  const averageHealth = decisionSupport.channelHealth.length
+    ? decisionSupport.channelHealth.reduce((sum, item) => sum + item.score, 0) /
+      decisionSupport.channelHealth.length
+    : 74;
+  const confidenceScore = Math.round(
+    clampNumber(
+      averageHealth - highRisks * 8 - mediumRisks * 4 + Math.min(8, Math.max(0, roasLift) * 12),
+      55,
+      96,
+    ),
+  );
+  const riskLevel: OptimizerBrief["riskLevel"] =
+    highRisks > 0 ? "High" : mediumRisks > 0 || confidenceScore < 72 ? "Medium" : "Low";
+  const explanation =
+    hasChannelShift && campaignMove
+      ? `Recycle inefficient spend from ${decrease.channel} and ${campaignMove.fromCampaign} into the highest-return areas. The plan protects ROAS while still funding growth. ${campaignMove.rationale}`
+      : increase
+        ? `The safest next move is to fund ${increase.channel} while keeping the rest of the plan close to baseline. This keeps the simulator in a controlled growth posture.`
+        : "The current plan is already balanced; keep budgets steady and monitor marginal ROAS before scaling.";
+
+  return {
+    channelMove,
+    campaignMove: campaignMoveText,
+    revenueLift,
+    roasLift,
+    confidenceScore,
+    riskLevel,
+    explanation,
+  };
+}
+
 function ScenarioRow({ scenario }: { scenario: WhatIfScenarioResult }) {
   return (
     <tr className="border-t border-border/40">
@@ -1005,6 +1193,22 @@ function healthBadgeClass(status: ChannelHealthScore["status"]) {
   if (status === "healthy") return "border-success/30 bg-success/15 text-success";
   if (status === "watch") return "border-warning/30 bg-warning/15 text-warning";
   return "border-destructive/30 bg-destructive/15 text-destructive";
+}
+
+function optimizerConfidenceBadgeClass(score: number) {
+  if (score >= 85) return "border-success/30 bg-success/15 text-success";
+  if (score >= 70) return "border-primary/30 bg-primary/15 text-primary";
+  return "border-warning/30 bg-warning/15 text-warning";
+}
+
+function optimizerRiskBadgeClass(level: OptimizerBrief["riskLevel"]) {
+  if (level === "High") return "border-destructive/30 bg-destructive/15 text-destructive";
+  if (level === "Medium") return "border-warning/30 bg-warning/15 text-warning";
+  return "border-success/30 bg-success/15 text-success";
+}
+
+function clampNumber(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
 }
 
 function TT({

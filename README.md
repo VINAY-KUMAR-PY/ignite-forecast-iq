@@ -331,6 +331,18 @@ Use this sequence for a short live demo:
 5. "The simulator compares budget changes and recommends allocation across Google, Meta, and Microsoft."
 6. "The insights page converts the analysis into an executive brief and a PDF-ready report."
 
+## Judge Demo Path (30 Seconds)
+
+Use this if a judge asks, "Show me the product quickly."
+
+1. Start at `/app/upload` and click **Load sample data**.
+2. Go to `/app` and point to the Executive Decision Center: best budget action, business impact, wasted spend reduction, growth opportunity, confidence, and risk.
+3. Go to `/app/simulator` and show the AI Budget Optimizer: exact channel shift, campaign shift, revenue lift, ROAS improvement, confidence score, and risk level.
+4. Go to `/app/forecast` and show confidence intervals, accuracy metrics, and explainability.
+5. Go to `/app/insights`, generate insights, and show the Marketing Manager Brief plus PDF export.
+
+The first 30 seconds should communicate: "ForecastIQ turns campaign history into an executive budget decision."
+
 Optional Gemini configuration:
 
 ```bash
@@ -349,13 +361,15 @@ You can also copy `.env.example` to `.env` for local backend runs. Keep `GEMINI_
 
 Recommended screenshots for the final submission:
 
-| Screen    | What to show                                                          |
-| --------- | --------------------------------------------------------------------- |
-| Dashboard | Business Impact Dashboard and top KPI cards                           |
-| Upload    | Validated sample dataset with zero issues                             |
-| Forecast  | Accuracy Dashboard, confidence intervals, and Explainability Center   |
-| Simulator | AI Budget Optimizer, What-if Scenario Engine, risk/opportunity panels |
-| Insights  | Executive summary, action plan, and Export PDF button                 |
+| Screen    | Screenshot placeholder / what to show                                                                      |
+| --------- | ---------------------------------------------------------------------------------------------------------- |
+| Upload    | `screenshots/01-upload-demo.png` - Judge Demo Path card and sample data loaded with zero validation issues |
+| Dashboard | `screenshots/02-dashboard-decision-center.png` - Executive Decision Center in the first viewport           |
+| Forecast  | `screenshots/03-forecast-explainability.png` - Accuracy Dashboard, confidence intervals, Explainability    |
+| Simulator | `screenshots/04-budget-optimizer.png` - exact channel/campaign shifts, lift, ROAS, confidence, risk        |
+| Insights  | `screenshots/05-ai-insights.png` - Marketing Manager Brief, action plan, and Export PDF button             |
+
+If screenshots are not attached separately, use the browser demo flow above during the live presentation.
 
 ## Submission Guides
 

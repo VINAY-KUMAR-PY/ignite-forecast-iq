@@ -78,7 +78,7 @@ function InsightsPage() {
     <>
       <PageHeader
         title="AI executive insights"
-        description="Board-ready briefing combining historical performance with the XGBoost forecasting model."
+        description="Board-ready briefing with Gemini when available and deterministic fallback insights when live AI is unavailable."
         actions={
           <div className="flex flex-wrap gap-2">
             {insights && (
@@ -112,6 +112,10 @@ function InsightsPage() {
             Click <em>Generate insights</em> to produce a CMO-level briefing with revenue drivers,
             channel &amp; campaign analysis, budget allocation, risks and growth opportunities.
           </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            If Gemini is not configured, times out, or returns invalid output, ForecastIQ still
+            generates a complete fallback briefing from your campaign data.
+          </p>
         </Card>
       )}
 
@@ -121,6 +125,9 @@ function InsightsPage() {
           <p className="mt-4 text-sm text-muted-foreground">
             Analyzing {rows.length.toLocaleString()} rows across {summary.channels.length} channels
             and {summary.totalCampaigns} campaigns…
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Live AI is protected with backend timeout, retry, and fallback handling.
           </p>
         </Card>
       )}

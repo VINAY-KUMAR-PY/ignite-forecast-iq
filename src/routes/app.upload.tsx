@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useRef, useState } from "react";
-import { AlertCircle, CheckCircle2, Download, FileUp, RotateCcw } from "lucide-react";
+import { AlertCircle, CheckCircle2, Download, FileUp, PlayCircle, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
@@ -83,11 +83,40 @@ function UploadPage() {
                 toast.success("Demo data reloaded");
               }}
             >
-              <RotateCcw className="mr-2 h-4 w-4" /> Reload demo
+              <RotateCcw className="mr-2 h-4 w-4" /> Load sample data
             </Button>
           </>
         }
       />
+
+      <Card data-testid="judge-demo-path" className="mb-6 border-primary/20 bg-primary/5 p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <PlayCircle className="h-4 w-4 text-primary" /> Judge demo path
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Load sample data, open the dashboard, show the Executive Decision Center, then run the
+              Budget Simulator and AI Insights. This gives judges the full story in under two
+              minutes.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="hero"
+              onClick={() => {
+                loadDemo();
+                toast.success("Sample data loaded for judge demo");
+              }}
+            >
+              <RotateCcw className="mr-2 h-4 w-4" /> Load sample data
+            </Button>
+            <Button variant="outline" onClick={downloadDemo}>
+              <Download className="mr-2 h-4 w-4" /> Download CSV
+            </Button>
+          </div>
+        </div>
+      </Card>
 
       <Card
         className={`bg-gradient-card border-2 border-dashed p-10 text-center transition ${

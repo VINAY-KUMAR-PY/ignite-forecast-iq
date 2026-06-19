@@ -154,19 +154,28 @@ function Dashboard() {
           : "Low";
     const recommendedAction =
       strongestChannel && weakestChannel && reallocationOpportunity > 0
-        ? `Shift 10% of ${weakestChannel.name} budget into ${strongestChannel.name}.`
+        ? `Move ${fmtCurrency(weakestChannel.spend * 0.1)} from ${weakestChannel.name} into ${strongestChannel.name}.`
         : revDelta >= 0
           ? "Maintain current channel mix and scale winners carefully."
           : "Pause aggressive scaling and fix low-efficiency campaigns first.";
     const expectedRevenueImpact =
       Math.max(0, forecast30Revenue - last30Revenue) + reallocationOpportunity;
+    const wastedSpendReduction = weakestChannel ? Math.max(0, weakestChannel.spend * 0.1) : 0;
+    const growthOpportunity = strongestChannel
+      ? Math.max(0, strongestChannel.spend * 0.15 * strongestChannel.roas * 0.85)
+      : 0;
+    const expectedBusinessImpact = expectedRevenueImpact + growthOpportunity;
+    const bestBudgetAction =
+      strongestChannel && weakestChannel && reallocationOpportunity > 0
+        ? `${fmtCurrency(wastedSpendReduction)} shift: ${weakestChannel.name} -> ${strongestChannel.name}`
+        : recommendedAction;
     const topActions = [
-      recommendedAction,
+      bestBudgetAction,
       strongestChannel
-        ? `Protect ${strongestChannel.name} budgets while monitoring marginal ROAS.`
+        ? `Scale ${strongestChannel.name} by 10-15% only while marginal ROAS stays above ${fmtRoas(avgRoas)}.`
         : "Keep channel budgets close to baseline until more data is available.",
       weakestChannel
-        ? `Review ${weakestChannel.name} campaigns for wasted spend and weak conversion paths.`
+        ? `Cut weak ${weakestChannel.name} campaigns first; recycle savings into proven high-intent demand.`
         : "Recheck underperforming campaigns before the next budget cycle.",
     ];
 
@@ -189,7 +198,11 @@ function Dashboard() {
         riskAlerts,
         opportunityAlerts,
         recommendedAction,
+        bestBudgetAction,
         expectedRevenueImpact,
+        expectedBusinessImpact,
+        wastedSpendReduction,
+        growthOpportunity,
         roasImpact: roasLiftPotential,
         riskLevel,
         topActions,
@@ -305,24 +318,43 @@ function Dashboard() {
               One-screen recommendation for the next marketing budget review.
             </p>
           </div>
-          <span
-            className={`rounded-full border px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider ${riskBadgeClass(
-              stats.executive.riskLevel,
-            )}`}
-          >
-            {stats.executive.riskLevel} risk
-          </span>
+          <div className="flex flex-wrap gap-2">
+            <span
+              className={`rounded-full border px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider ${confidenceBadgeClass(
+                stats.executive.confidenceScore,
+              )}`}
+            >
+              {stats.executive.confidenceScore}/100 confidence
+            </span>
+            <span
+              className={`rounded-full border px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider ${riskBadgeClass(
+                stats.executive.riskLevel,
+              )}`}
+            >
+              {stats.executive.riskLevel} risk
+            </span>
+          </div>
         </div>
-        <div className="grid gap-4 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
           <ImpactMetric
-            label="Recommended action"
-            value={stats.executive.recommendedAction}
-            hint="budget move"
+            label="Best budget action"
+            value={stats.executive.bestBudgetAction}
+            hint="exact channel move"
           />
           <ImpactMetric
-            label="Revenue impact"
-            value={fmtCurrency(stats.executive.expectedRevenueImpact)}
-            hint="forecast lift plus reallocation upside"
+            label="Business impact"
+            value={fmtCurrency(stats.executive.expectedBusinessImpact)}
+            hint="lift plus growth upside"
+          />
+          <ImpactMetric
+            label="Waste reduction"
+            value={fmtCurrency(stats.executive.wastedSpendReduction)}
+            hint="budget to recycle"
+          />
+          <ImpactMetric
+            label="Growth opportunity"
+            value={fmtCurrency(stats.executive.growthOpportunity)}
+            hint="controlled winner scaling"
           />
           <ImpactMetric
             label="ROAS impact"
@@ -627,6 +659,12 @@ function riskBadgeClass(level: string) {
   if (level === "High") return "border-destructive/30 bg-destructive/15 text-destructive";
   if (level === "Medium") return "border-warning/30 bg-warning/15 text-warning";
   return "border-success/30 bg-success/15 text-success";
+}
+
+function confidenceBadgeClass(score: number) {
+  if (score >= 85) return "border-success/30 bg-success/15 text-success";
+  if (score >= 70) return "border-primary/30 bg-primary/15 text-primary";
+  return "border-warning/30 bg-warning/15 text-warning";
 }
 
 function clampNumber(value: number, min: number, max: number) {

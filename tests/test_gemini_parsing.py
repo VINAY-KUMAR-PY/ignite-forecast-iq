@@ -1,9 +1,18 @@
 from __future__ import annotations
 
+import asyncio
 import json
+import os
 import unittest
+from unittest.mock import AsyncMock, patch
 
-from backend.gemini import _extract_json, _fallback_insights, _validate_insights_payload
+from backend.gemini import (
+    _extract_json,
+    _fallback_insights,
+    _safe_exception_message,
+    _validate_insights_payload,
+    generate_gemini_insights_with_source,
+)
 
 
 SUMMARY = {
@@ -81,6 +90,53 @@ class GeminiParsingTests(unittest.TestCase):
         self.assertEqual(insights.executiveSummary, fallback["executiveSummary"])
         self.assertEqual(insights.channelPerformance[0].channel, "Unknown")
         self.assertEqual(insights.channelPerformance[0].verdict, "on_track")
+
+    def test_missing_api_key_returns_fallback(self) -> None:
+        previous_key = os.environ.pop("GEMINI_API_KEY", None)
+        try:
+            insights, source = asyncio.run(generate_gemini_insights_with_source(SUMMARY))
+        finally:
+            if previous_key is not None:
+                os.environ["GEMINI_API_KEY"] = previous_key
+
+        self.assertEqual(source, "fallback")
+        self.assertTrue(insights.executiveSummary)
+        self.assertTrue(insights.actionPlan)
+
+    def test_invalid_api_key_is_redacted_and_falls_back(self) -> None:
+        with patch.dict(
+            os.environ,
+            {"GEMINI_API_KEY": "test-secret-key", "GEMINI_MAX_ATTEMPTS": "1"},
+            clear=False,
+        ):
+            with patch(
+                "backend.gemini._generate_content",
+                new=AsyncMock(side_effect=RuntimeError("401 invalid API key test-secret-key")),
+            ):
+                insights, source = asyncio.run(generate_gemini_insights_with_source(SUMMARY))
+            self.assertNotIn("test-secret-key", _safe_exception_message(RuntimeError("test-secret-key failed")))
+
+            self.assertEqual(source, "fallback")
+            self.assertTrue(insights.executiveSummary)
+
+    def test_timeout_and_server_errors_fall_back_without_crashing(self) -> None:
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "configured", "GEMINI_MAX_ATTEMPTS": "1"}, clear=False):
+            for error in (asyncio.TimeoutError(), RuntimeError("503 server unavailable")):
+                with self.subTest(error=type(error).__name__):
+                    with patch("backend.gemini._generate_content", new=AsyncMock(side_effect=error)):
+                        insights, source = asyncio.run(generate_gemini_insights_with_source(SUMMARY))
+                    self.assertEqual(source, "fallback")
+                    self.assertTrue(insights.risks)
+                    self.assertTrue(insights.growthOpportunities)
+
+    def test_malformed_gemini_response_falls_back_to_valid_insights(self) -> None:
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "configured", "GEMINI_MAX_ATTEMPTS": "1"}, clear=False):
+            with patch("backend.gemini._generate_content", new=AsyncMock(return_value="{not valid json")):
+                insights, source = asyncio.run(generate_gemini_insights_with_source(SUMMARY))
+
+            self.assertEqual(source, "fallback")
+            self.assertTrue(insights.executiveSummary)
+            self.assertTrue(insights.budgetAllocation)
 
 
 if __name__ == "__main__":

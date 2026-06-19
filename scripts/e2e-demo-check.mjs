@@ -274,6 +274,7 @@ try {
         ?.textContent?.trim();
       return {
         title: document.title,
+        hasJudgeDemoPath: Boolean(document.querySelector('[data-testid="judge-demo-path"]')),
         loadedSampleRows: text.includes("1,440") || text.includes("1440"),
         uploadedDataset: text.includes("Uploaded dataset"),
         issuesDetectedZero: issueValue === "0",
@@ -303,7 +304,9 @@ try {
         hasReallocationUpside: normalized.includes("reallocation upside"),
         hasConfidenceScore: normalized.includes("confidence score"),
         hasRiskAlerts: normalized.includes("risk alerts"),
-        hasOpportunityAlerts: normalized.includes("opportunity alerts")
+        hasOpportunityAlerts: normalized.includes("opportunity alerts"),
+        hasWastedSpendReduction: normalized.includes("waste reduction"),
+        hasGrowthOpportunity: normalized.includes("growth opportunity")
       };
     })()`,
   );
@@ -366,6 +369,7 @@ try {
         hasChannels: ["Google Ads", "Meta Ads", "Microsoft Ads"].every((name) => text.includes(name)),
         hasQuickScenarios: normalized.includes("quick scenarios") && text.includes("+50%"),
         hasRecommendedAllocation: normalized.includes("recommended allocation"),
+        hasOptimizerExecutiveBrief: Boolean(document.querySelector('[data-testid="optimizer-executive-brief"]')),
         hasBreakdown: Boolean(document.querySelector('[data-testid="channel-breakdown"]')),
         hasOptimizer: Boolean(document.querySelector('[data-testid="ai-budget-optimizer"]')),
         hasWhatIf: Boolean(document.querySelector('[data-testid="what-if-engine"]')),

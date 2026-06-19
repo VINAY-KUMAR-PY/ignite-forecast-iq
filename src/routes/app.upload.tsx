@@ -70,7 +70,7 @@ function UploadPage() {
     <>
       <PageHeader
         title="Data upload"
-        description="Upload a CSV of campaign performance. We'll validate and load it into the workspace."
+        description="Upload campaign, GA4, Shopify, or ads CSV data. ForecastIQ normalizes common ecommerce exports before validation."
         actions={
           <>
             <Button variant="outline" onClick={downloadDemo}>
@@ -139,8 +139,8 @@ function UploadPage() {
         </div>
         <h3 className="mt-4 text-lg font-semibold">Drop your CSV here</h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          Expected columns: date, channel, campaign_type, campaign_name, spend, clicks, impressions,
-          conversions, revenue, roas
+          Supports ForecastIQ format plus GA4 sessionSource/sessionMedium/purchaseRevenue, Shopify
+          created_at/total_price/orders, and Ads spend/clicks/impressions/conversion_value.
         </p>
         <input
           ref={inputRef}

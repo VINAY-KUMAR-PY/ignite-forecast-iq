@@ -11,15 +11,16 @@ from __future__ import annotations
 import argparse
 import csv
 import math
-import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 import joblib
 import numpy as np
 import pandas as pd
+
+from .schema_adapters import CANONICAL_COLUMNS, COLUMN_ALIASES, alias_index, normalize_marketing_frame
 
 
 OUTPUT_COLUMNS = [
@@ -73,81 +74,6 @@ FEATURE_COLUMNS = [
 
 LEVEL_CODES = {"overall": 0, "channel": 1, "campaign_type": 2, "campaign": 3}
 
-COLUMN_ALIASES = {
-    "date": [
-        "date",
-        "day",
-        "dt",
-        "ds",
-        "report_date",
-        "reporting_date",
-        "order_date",
-        "transaction_date",
-        "created_at",
-    ],
-    "channel": [
-        "channel",
-        "platform",
-        "source",
-        "traffic_source",
-        "marketing_channel",
-        "media_channel",
-        "ad_channel",
-        "network",
-        "publisher",
-    ],
-    "campaign_type": [
-        "campaign_type",
-        "campaign category",
-        "campaign_category",
-        "type",
-        "objective",
-        "campaign_objective",
-        "funnel_stage",
-    ],
-    "campaign_name": [
-        "campaign",
-        "campaign_name",
-        "campaign name",
-        "campaignname",
-        "campaign_id",
-        "campaign id",
-        "ad_campaign",
-    ],
-    "spend": [
-        "spend",
-        "cost",
-        "amount_spent",
-        "amount spent",
-        "ad_spend",
-        "media_spend",
-        "investment",
-    ],
-    "clicks": ["clicks", "click", "link_clicks", "link clicks", "ad_clicks"],
-    "impressions": ["impressions", "impression", "impr", "views", "ad_impressions"],
-    "conversions": [
-        "conversions",
-        "conversion",
-        "purchases",
-        "orders",
-        "transactions",
-        "leads",
-    ],
-    "revenue": [
-        "revenue",
-        "sales",
-        "conversion_value",
-        "conversion value",
-        "purchase_value",
-        "purchase value",
-        "total_revenue",
-        "gross_revenue",
-        "value",
-    ],
-    "roas": ["roas", "return_on_ad_spend", "return on ad spend"],
-}
-
-
 @dataclass
 class CleanResult:
     frame: pd.DataFrame
@@ -173,22 +99,6 @@ def clean_number(value: float, digits: int = 2) -> float:
     if abs(value) < 0.005:
         value = 0.0
     return round(value, digits)
-
-
-def normalize_column(name: Any) -> str:
-    return re.sub(r"[^a-z0-9]+", "_", str(name).strip().lower()).strip("_")
-
-
-def alias_index(columns: Iterable[str]) -> dict[str, str]:
-    normalized = {normalize_column(column): column for column in columns}
-    mapped: dict[str, str] = {}
-    for canonical, aliases in COLUMN_ALIASES.items():
-        for alias in aliases:
-            key = normalize_column(alias)
-            if key in normalized:
-                mapped[canonical] = normalized[key]
-                break
-    return mapped
 
 
 def read_csv_folder(data_dir: str | Path) -> pd.DataFrame:
@@ -217,9 +127,12 @@ def read_csv_folder(data_dir: str | Path) -> pd.DataFrame:
             log(f"Skipping CSV with no rows: {file.name}")
             continue
 
-        frame["__source_file"] = file.name
-        frames.append(frame)
-        log(f"Loaded {len(frame)} rows from {file.name}")
+        adapted = normalize_marketing_frame(frame)
+        for issue in adapted.issues[:3]:
+            log(f"{file.name}: {issue}")
+        adapted.frame["__source_file"] = file.name
+        frames.append(adapted.frame)
+        log(f"Loaded {len(adapted.frame)} rows from {file.name} as {adapted.schema_type} schema")
 
     if not frames:
         return pd.DataFrame()
@@ -230,8 +143,10 @@ def canonicalize_frame(raw: pd.DataFrame) -> CleanResult:
     if raw.empty:
         return CleanResult(frame=empty_frame(), total_rows=0, valid_rows=0, issues=["empty input"])
 
-    issues: list[str] = []
     total_rows = len(raw)
+    adapted = normalize_marketing_frame(raw)
+    raw = adapted.frame
+    issues: list[str] = list(adapted.issues)
     mapping = alias_index(raw.columns)
 
     def series_for(column: str, default: Any) -> pd.Series:
@@ -316,20 +231,7 @@ def canonicalize_frame(raw: pd.DataFrame) -> CleanResult:
 
 
 def empty_frame() -> pd.DataFrame:
-    return pd.DataFrame(
-        columns=[
-            "date",
-            "channel",
-            "campaign_type",
-            "campaign_name",
-            "spend",
-            "clicks",
-            "impressions",
-            "conversions",
-            "revenue",
-            "roas",
-        ]
-    )
+    return pd.DataFrame(columns=CANONICAL_COLUMNS)
 
 
 def fallback_model_config(reason: str = "fallback") -> dict[str, Any]:

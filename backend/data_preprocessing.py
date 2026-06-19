@@ -7,22 +7,10 @@ from typing import Iterable, List, Tuple
 import numpy as np
 import pandas as pd
 
+from .schema_adapters import CANONICAL_COLUMNS, NUMERIC_COLUMNS, normalize_marketing_frame
 from .schemas import CampaignRow, ValidationIssue, ValidationResponse
 
-REQUIRED_COLUMNS = [
-    "date",
-    "channel",
-    "campaign_type",
-    "campaign_name",
-    "spend",
-    "clicks",
-    "impressions",
-    "conversions",
-    "revenue",
-    "roas",
-]
-
-NUMERIC_COLUMNS = ["spend", "clicks", "impressions", "conversions", "revenue", "roas"]
+REQUIRED_COLUMNS = CANONICAL_COLUMNS
 
 
 def rows_to_frame(rows: Iterable[CampaignRow]) -> pd.DataFrame:
@@ -46,11 +34,10 @@ def validate_records(records: Iterable[dict]) -> Tuple[pd.DataFrame, ValidationR
         )
         return pd.DataFrame(columns=REQUIRED_COLUMNS), response
 
-    raw.columns = [str(col).strip().lower() for col in raw.columns]
-    for column in REQUIRED_COLUMNS:
-        if column not in raw.columns:
-            issues.append(ValidationIssue(type="missing", row=0, message=f"Missing column: {column}"))
-            raw[column] = np.nan
+    adapted = normalize_marketing_frame(raw)
+    for issue in adapted.issues:
+        issues.append(ValidationIssue(type="schema_adapter", row=0, message=f"{adapted.schema_type}: {issue}"))
+    raw = adapted.frame
 
     frame = raw[REQUIRED_COLUMNS].copy()
     valid_mask = pd.Series(True, index=frame.index)

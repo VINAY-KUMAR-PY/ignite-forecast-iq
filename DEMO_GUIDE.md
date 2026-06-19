@@ -8,6 +8,7 @@ Show that ForecastIQ turns ecommerce marketing data into validated forecasts, bu
 
 1. Start on `/app/upload`
    - Click **Load sample data** for the fastest judge path, or upload `data/sample_campaigns.csv`.
+   - Mention that GA4, Shopify, and Ads exports are also supported through schema adapters.
    - Confirm 1,440 rows and zero validation issues.
    - Explain that backend validation protects the model from invalid inputs.
 
@@ -46,3 +47,20 @@ Show that ForecastIQ turns ecommerce marketing data into validated forecasts, bu
 ## Backup Plan
 
 If Gemini is unavailable, the backend returns deterministic fallback insights. The demo remains complete without an API key.
+
+## Real-World Data Talking Point
+
+If a judge asks whether this works beyond the sample file, explain:
+
+- GA4 exports can use `sessionSource`, `sessionMedium`, `purchaseRevenue`, `eventValue`, `sessions`, and `conversions`.
+- Shopify exports can use `created_at`, `total_price`, `sales`, `orders`, and `product_type`.
+- Ads exports can use `spend`, `cost`, `clicks`, `impressions`, `conversions`, `conversion_value`, and `revenue`.
+- ForecastIQ normalizes these into the same modeling schema before validation, forecasting, simulation, and insights.
+
+## Screenshots to Capture
+
+- Upload page with the Judge Demo Path card.
+- Dashboard first viewport with Executive Decision Center.
+- Forecast page showing confidence interval bands and accuracy metrics.
+- Simulator page showing budget optimizer and channel health score formula.
+- Insights page showing executive summary and Export PDF action.

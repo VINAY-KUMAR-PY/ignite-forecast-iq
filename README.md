@@ -66,6 +66,22 @@ ForecastIQ is designed for weekly and monthly marketing planning. It helps teams
 - Convert technical forecast output into executive-ready actions.
 - Export a PDF-ready business report for leadership review.
 
+## GA4, Shopify, and Ads Compatibility
+
+ForecastIQ accepts canonical campaign CSVs and common ecommerce exports. The schema adapter layer auto-detects source columns, normalizes each CSV before merging, and produces the required modeling shape:
+
+`date, channel, campaign_type, campaign_name, spend, clicks, impressions, conversions, revenue, roas`
+
+Supported examples:
+
+| Source | Supported fields | Normalization behavior |
+| --- | --- | --- |
+| GA4 | `sessionSource`, `sessionMedium`, `purchaseRevenue`, `eventValue`, `sessions`, `conversions` | Maps source/medium to channel and campaign context, uses sessions as traffic volume, defaults missing spend to 0 |
+| Shopify | `created_at`, `total_price`, `sales`, `orders`, `product_type` | Maps order revenue and product type into ecommerce campaign rows, defaults missing media spend to 0 |
+| Ads platforms | `spend`, `cost`, `clicks`, `impressions`, `conversions`, `conversion_value`, `revenue`, `campaign` | Maps platform exports into paid media rows and calculates ROAS when absent |
+
+Multiple CSV files can be placed in the same `data/` folder. Each file is adapted independently before safe merging, so a GA4 traffic file, Shopify orders file, and paid ads file can be evaluated together without hardcoded filenames.
+
 ## Why This Solution Stands Out
 
 - It is evaluator-safe: `run.sh` produces predictions offline without starting servers or using external APIs.
@@ -95,6 +111,7 @@ React + TypeScript frontend
   v
 FastAPI backend
   |
+  +-- schema_adapters.py: GA4, Shopify, Ads, and canonical CSV normalization
   +-- data_preprocessing.py: validation, aggregation, feature engineering
   +-- forecasting.py: XGBoost training, prediction, intervals, simulation
   +-- decision_support.py: budget optimizer, what-if, risks, opportunities, health scores
@@ -314,6 +331,7 @@ Expected output columns:
 Assumptions and fallback behavior:
 
 - Hidden evaluator data may use common marketing aliases such as `cost`, `sales`, `source`, `platform`, or `campaign`; these are normalized automatically.
+- GA4, Shopify, and Ads exports are auto-detected and normalized per file before merging.
 - Optional columns such as clicks, impressions, conversions, campaign type, campaign name, and ROAS are filled safely when absent.
 - Rows with negative spend or negative revenue are removed; malformed dates are logged and repaired when possible.
 - If the model artifact is missing, corrupt, incompatible, or the hidden dataset is too small for model features, the runner uses `safe_baseline_fallback` instead of retraining.
@@ -562,6 +580,7 @@ python -m backend.backtest
 .
 |-- backend/
 |   |-- backtest.py
+|   |-- schema_adapters.py
 |   |-- main.py
 |   |-- forecasting.py
 |   |-- train.py
@@ -591,24 +610,41 @@ python -m backend.backtest
 
 ## Deployment Instructions
 
-Backend:
+### Backend on Render or Railway
+
+Use a Python web service with this start command:
 
 ```bash
 pip install -r requirements.txt
 python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
 ```
 
-Frontend:
+Recommended backend environment variables:
+
+- `CORS_ORIGINS=["https://your-frontend-domain.vercel.app"]`
+- `GEMINI_API_KEY=...` only if live Gemini insights are required
+- `GEMINI_MODEL=gemini-2.5-flash-lite`
+- `LOG_LEVEL=INFO`
+
+Keep `pickle/model.pkl` packaged with the backend build so evaluator and API model paths remain available.
+
+### Frontend on Vercel
 
 ```bash
 VITE_API_BASE_URL=https://your-api-domain.example pnpm run build
 ```
 
-Deploy `dist/` to a static host and deploy the FastAPI app to a Python-capable service. Configure:
+Deploy `dist/` to Vercel or any static host. Configure `VITE_API_BASE_URL` to point to the hosted FastAPI backend.
 
-- `CORS_ORIGINS` with the production frontend URL.
-- `GEMINI_API_KEY` only in the backend environment.
-- Persistent storage or artifact packaging for `pickle/model.pkl`.
+### Production Checklist
+
+- Confirm `./run.sh ./data ./pickle/model.pkl ./output/predictions.csv` still works offline.
+- Confirm `/health` returns `{ "status": "ok" }`.
+- Confirm `CORS_ORIGINS` includes the production frontend URL.
+- Store Gemini keys only in backend environment variables.
+- Do not expose secrets with `VITE_` prefixes.
+- Package or mount `pickle/model.pkl` with the backend.
+- Run `pnpm run build`, `pnpm run lint`, and `python -m pytest` before release.
 
 ## Limitations
 

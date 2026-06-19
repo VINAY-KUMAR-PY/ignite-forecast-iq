@@ -919,6 +919,10 @@ function SimulatorPage() {
                 <Gauge className="h-4 w-4 text-primary" />
                 <h3 className="text-sm font-semibold">Channel health score</h3>
               </div>
+              <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
+                Score blends projected ROAS, revenue trend, efficiency risk, and budget share fit
+                into a 0-100 decision signal.
+              </p>
               <div className="space-y-4">
                 {decisionSupport.channelHealth.map((item) => (
                   <HealthRow key={item.channel} item={item} />

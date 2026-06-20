@@ -10,6 +10,9 @@ export interface ForecastApiResponse {
     lowerRevenue: number;
     upperRevenue: number;
     avgRoas: number;
+    lowerRoas: number;
+    upperRoas: number;
+    roasStatus: "computable" | "not_computable" | string;
     horizonDays: number;
     level: "overall" | "channel" | "campaign_type" | "campaign";
     value?: string;
@@ -212,7 +215,12 @@ export interface AnomalyItem {
 
 export interface AnomalyResponse {
   anomalies: AnomalyItem[];
-  trendBreaks: Array<{ date: string; channel: string; direction: "up" | "down"; magnitude_pct: number }>;
+  trendBreaks: Array<{
+    date: string;
+    channel: string;
+    direction: "up" | "down";
+    magnitude_pct: number;
+  }>;
 }
 
 async function postJson<T>(path: string, body: unknown): Promise<T> {

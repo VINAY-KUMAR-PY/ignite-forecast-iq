@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useData } from "@/lib/data-store";
 import { aggregateDaily, type DailyAgg } from "@/lib/forecasting";
+import { fetchAnomaliesApi } from "@/lib/backend-api";
 import { generateInsights, type InsightsResponse } from "@/lib/ai-insights.functions";
 import { exportExecutivePdfReport } from "@/lib/report-export";
 import { fmtCurrency, fmtPct, fmtRoas } from "@/lib/format";
@@ -54,7 +55,13 @@ function InsightsPage() {
   async function run() {
     setLoading(true);
     try {
-      const res = await generateInsights(summary!);
+      let anomalyContext = {};
+      try {
+        anomalyContext = await fetchAnomaliesApi(rows);
+      } catch {
+        anomalyContext = {};
+      }
+      const res = await generateInsights({ ...summary!, ...anomalyContext });
       setInsights(res);
       toast.success("Executive briefing generated");
     } catch (error: unknown) {

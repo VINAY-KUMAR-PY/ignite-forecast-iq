@@ -104,6 +104,9 @@ class ForecastSummary(BaseModel):
     lowerRevenue: float
     upperRevenue: float
     avgRoas: float
+    lowerRoas: float = 0.0
+    upperRoas: float = 0.0
+    roasStatus: str = "computable"
     horizonDays: int
     level: ForecastLevel
     value: Optional[str] = None

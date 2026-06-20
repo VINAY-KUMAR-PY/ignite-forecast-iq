@@ -21,6 +21,9 @@ SUMMARY = {
     "avgRoas": 4.09,
     "forecast30dRevenue": 141250.0,
     "revenueTrendPct": 7.8,
+    "spendTrendPct": 4.1,
+    "roasTrendPct": 2.3,
+    "anomalies": [{"date": "2026-06-01", "channel": "Meta Ads", "metric": "roas"}],
     "channels": [
         {"name": "Google Ads", "revenue": 76200.0, "spend": 15800.0, "roas": 4.82, "sharePct": 50.3},
         {"name": "Meta Ads", "revenue": 36400.0, "spend": 10400.0, "roas": 3.5, "sharePct": 33.1},
@@ -102,6 +105,20 @@ class GeminiParsingTests(unittest.TestCase):
         self.assertEqual(source, "fallback")
         self.assertTrue(insights.executiveSummary)
         self.assertTrue(insights.actionPlan)
+
+    def test_fallback_insights_use_causal_metric_language(self) -> None:
+        insights = _fallback_insights(SUMMARY)
+        combined = " ".join(
+            [
+                *(driver.detail for driver in insights.revenueDrivers),
+                *(risk.description for risk in insights.risks),
+                *(opportunity.description for opportunity in insights.growthOpportunities),
+            ]
+        ).lower()
+
+        self.assertRegex(combined, r"\b(because|likely due to|consistent with)\b")
+        self.assertIn("roas", combined)
+        self.assertTrue(any(metric in combined for metric in ["spend", "conversion", "revenue"]))
 
     def test_invalid_api_key_is_redacted_and_falls_back(self) -> None:
         with patch.dict(

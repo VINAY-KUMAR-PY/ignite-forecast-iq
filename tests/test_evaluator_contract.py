@@ -22,9 +22,11 @@ class EvaluatorContractTests(unittest.TestCase):
         self.assertEqual(list(frame.columns), OUTPUT_COLUMNS)
         self.assertFalse(frame.isna().any().any())
         self.assertEqual(set(frame["horizon_days"]), {30, 60, 90})
-        for column in ["expected_revenue", "lower_revenue", "upper_revenue", "expected_roas"]:
+        for column in ["expected_revenue", "lower_revenue", "upper_revenue", "expected_roas", "lower_roas", "upper_roas"]:
             values = pd.to_numeric(frame[column], errors="raise")
             self.assertTrue(values.map(math.isfinite).all(), f"{column} contains non-finite values")
+        self.assertTrue((frame["lower_roas"] <= frame["expected_roas"]).all())
+        self.assertTrue((frame["expected_roas"] <= frame["upper_roas"]).all())
         if expected_model_type is not None:
             self.assertEqual(set(frame["model_type"]), {expected_model_type})
         return frame

@@ -12,6 +12,7 @@ const REQUIRED = [
   "revenue",
   "roas",
 ] as const;
+export const MAX_UPLOAD_ROWS = 20000;
 
 type CanonicalColumn = (typeof REQUIRED)[number];
 
@@ -155,6 +156,20 @@ export function parseCSV(text: string): ValidationResult {
       rows: [],
       issues: [{ type: "missing", row: 0, message: "Empty file" }],
       totalRows: 0,
+      validRows: 0,
+    };
+  }
+  if (lines.length - 1 > MAX_UPLOAD_ROWS) {
+    return {
+      rows: [],
+      issues: [
+        {
+          type: "too_many_rows",
+          row: 0,
+          message: `File has ${(lines.length - 1).toLocaleString()} rows; maximum supported upload is ${MAX_UPLOAD_ROWS.toLocaleString()} rows`,
+        },
+      ],
+      totalRows: lines.length - 1,
       validRows: 0,
     };
   }

@@ -22,6 +22,9 @@ InsightSource = Literal["gemini", "fallback"]
 SYSTEM_PROMPT = """You are a senior ecommerce growth strategist at a top digital marketing agency.
 You have 15 years of experience managing Google Ads, Meta Ads, and Microsoft Ads for DTC brands.
 You think in terms of ROAS efficiency, budget allocation, seasonal timing, and risk-adjusted revenue targets.
+Frame every recommendation as a causal hypothesis grounded in the provided metrics: what likely changed,
+why it would affect revenue or ROAS, and what action would test or mitigate that mechanism.
+Do not present feature importance, correlation, or trend movement as proven causality.
 You are precise, direct, and data-driven. Never use filler phrases like "certainly" or "great question".
 Always cite the specific numbers from the data provided."""
 GeminiFailureKind = Literal[
@@ -57,6 +60,10 @@ def _fallback_insights(summary: Dict[str, Any]) -> InsightsResponse:
     avg_roas = float(summary.get("avgRoas") or 0)
     forecast30 = float(summary.get("forecast30dRevenue") or 0)
     revenue_trend = float(summary.get("revenueTrendPct") or 0)
+    spend_trend = float(summary.get("spendTrendPct") or 0)
+    roas_trend = float(summary.get("roasTrendPct") or 0)
+    anomalies = summary.get("anomalies") or []
+    trend_breaks = summary.get("trendBreaks") or []
 
     ranked_channels = sorted(channels, key=lambda c: float(c.get("roas") or 0), reverse=True)
     under_channels = sorted(channels, key=lambda c: float(c.get("roas") or 0))
@@ -78,8 +85,8 @@ def _fallback_insights(summary: Dict[str, Any]) -> InsightsResponse:
                 "channel": channel.get("name", "Channel"),
                 "currentSharePct": round(current * 100 / current_total_share, 1),
                 "recommendedSharePct": max(0.0, round(recommended * 100 / current_total_share, 1)),
-                "rationale": f"ROAS is {roas:.2f}x versus blended {avg_roas:.2f}x, so budget should follow marginal efficiency.",
-                "expectedImpact": "Improve blended ROAS while protecting forecast revenue.",
+                "rationale": f"ROAS is {roas:.2f}x versus blended {avg_roas:.2f}x, so the likely causal test is whether incremental spend keeps conversion quality above the blended benchmark.",
+                "expectedImpact": "Improve blended ROAS while protecting forecast revenue because spend shifts toward channels with stronger observed conversion economics.",
             }
         )
 
@@ -91,23 +98,23 @@ def _fallback_insights(summary: Dict[str, Any]) -> InsightsResponse:
     payload = {
         "executiveSummary": (
             f"Revenue is {_money(total_revenue)} on {_money(total_spend)} spend with blended ROAS of {avg_roas:.2f}x. "
-            f"The next 30-day forecast is {_money(forecast30)}, with recent revenue trend at {revenue_trend:.1f}%. "
+            f"The next 30-day forecast is {_money(forecast30)}, with revenue trend at {revenue_trend:.1f}%, spend trend at {spend_trend:.1f}%, and ROAS trend at {roas_trend:.1f}%. "
             f"The main decision is to protect {best.get('name')} while correcting spend in {weakest.get('name')}."
         ),
         "revenueDrivers": [
             {
                 "title": f"{best.get('name')} efficiency",
-                "detail": f"{best.get('name')} is the strongest channel by ROAS and should remain funded while budgets are simulated.",
+                "detail": f"{best.get('name')} is the strongest channel by ROAS, likely because its revenue per dollar is above the blended {avg_roas:.2f}x benchmark; use the simulator to test whether that efficiency holds after incremental spend.",
                 "metric": f"{float(best.get('roas') or 0):.2f}x ROAS",
             },
             {
                 "title": "Forecast momentum",
-                "detail": f"The model projects {_money(forecast30)} over the next 30 days based on current history and media mix.",
+                "detail": f"The model projects {_money(forecast30)} over the next 30 days because recent revenue trend is {revenue_trend:.1f}% while spend trend is {spend_trend:.1f}%, indicating whether growth is volume-led or efficiency-led.",
                 "metric": _money(forecast30),
             },
             {
                 "title": "Campaign concentration",
-                "detail": "Top campaigns explain a meaningful share of revenue, so changes should be tested before broad budget moves.",
+                "detail": f"Top campaigns explain a meaningful share of revenue, so changes should be tested before broad budget moves because campaign-level concentration can amplify any anomaly or trend break ({len(anomalies)} anomalies, {len(trend_breaks)} trend breaks flagged).",
                 "metric": f"{len(top_campaigns)} top campaigns reviewed",
             },
         ],
@@ -119,8 +126,8 @@ def _fallback_insights(summary: Dict[str, Any]) -> InsightsResponse:
                 else "underperforming"
                 if float(ch.get("roas") or 0) < avg_roas * 0.9
                 else "on_track",
-                "insight": f"Revenue {_money(float(ch.get('revenue') or 0))}, spend {_money(float(ch.get('spend') or 0))}, ROAS {float(ch.get('roas') or 0):.2f}x.",
-                "recommendation": "Scale gradually if forecast intervals remain stable; otherwise hold budget and optimize targeting.",
+                "insight": f"Revenue {_money(float(ch.get('revenue') or 0))}, spend {_money(float(ch.get('spend') or 0))}, ROAS {float(ch.get('roas') or 0):.2f}x; performance is consistent with spend quality and conversion rate jointly driving revenue.",
+                "recommendation": "Scale gradually because the causal risk is that higher spend worsens CPC or conversion quality; hold budget if intervals widen.",
             }
             for ch in channels
         ],
@@ -129,7 +136,7 @@ def _fallback_insights(summary: Dict[str, Any]) -> InsightsResponse:
                 {
                     "name": c.get("name", "Campaign"),
                     "channel": c.get("channel", "Channel"),
-                    "insight": f"Generated {_money(float(c.get('revenue') or 0))} at {float(c.get('roas') or 0):.2f}x ROAS.",
+                    "insight": f"Generated {_money(float(c.get('revenue') or 0))} at {float(c.get('roas') or 0):.2f}x ROAS, likely due to stronger conversion quality relative to spend.",
                 }
                 for c in top_campaigns[:3]
             ],
@@ -137,8 +144,8 @@ def _fallback_insights(summary: Dict[str, Any]) -> InsightsResponse:
                 {
                     "name": c.get("name", "Campaign"),
                     "channel": c.get("channel", "Channel"),
-                    "issue": f"Low relative efficiency at {float(c.get('roas') or 0):.2f}x ROAS.",
-                    "action": "Review bids, audiences and creative before adding budget.",
+                    "issue": f"Low relative efficiency at {float(c.get('roas') or 0):.2f}x ROAS, consistent with spend not converting into revenue at the blended benchmark.",
+                    "action": "Review bids, audiences and creative because the causal failure point is likely click quality, conversion rate, or offer fit before adding budget.",
                 }
                 for c in bottom_campaigns[:3]
             ],
@@ -148,38 +155,38 @@ def _fallback_insights(summary: Dict[str, Any]) -> InsightsResponse:
             {
                 "title": "Forecast uncertainty",
                 "severity": "medium",
-                "description": "Revenue intervals widen with longer horizons and budget changes.",
+                "description": "Revenue intervals widen with longer horizons and budget changes because compounding spend, conversion-rate, and seasonality assumptions have more time to drift.",
                 "mitigation": "Use 30-day checks before committing to larger 60 or 90-day reallocations.",
             },
             {
                 "title": "Attribution dependency",
                 "severity": "medium",
-                "description": "The model treats provided attribution as source of truth.",
+                "description": "The model treats provided attribution as source of truth, so missing campaign or tracking rows can cause revenue and ROAS to be assigned to the wrong driver.",
                 "mitigation": "Monitor tracking gaps and campaign naming consistency before each forecast run.",
             },
             {
                 "title": "Spend efficiency drift",
                 "severity": "high" if avg_roas < 2 else "low",
-                "description": "Marginal ROAS may decline when spend is scaled too quickly.",
+                "description": f"Marginal ROAS may decline when spend is scaled too quickly because ROAS trend is {roas_trend:.1f}% against spend trend {spend_trend:.1f}%.",
                 "mitigation": "Increase budgets in staged increments and compare forecast vs actual weekly.",
             },
         ],
         "growthOpportunities": [
             {
                 "title": f"Scale {best.get('name')}",
-                "description": "The strongest ROAS channel is the first candidate for controlled spend increases.",
-                "expectedImpact": "Potential revenue lift with lower downside than weaker channels.",
+                "description": f"The strongest ROAS channel is the first candidate for controlled spend increases because it is above blended ROAS at {avg_roas:.2f}x.",
+                "expectedImpact": "Potential revenue lift with lower downside because incremental dollars start from the strongest observed efficiency base.",
                 "effort": "low",
             },
             {
                 "title": "Repair underperformers",
-                "description": f"{weakest.get('name')} should be optimized before additional spend.",
-                "expectedImpact": "ROAS recovery and lower wasted spend.",
+                "description": f"{weakest.get('name')} should be optimized before additional spend because weak ROAS points to conversion quality or CPC pressure rather than a budget shortage.",
+                "expectedImpact": "ROAS recovery and lower wasted spend if the underlying click-to-revenue mechanism improves.",
                 "effort": "medium",
             },
             {
                 "title": "Use budget simulator weekly",
-                "description": "Re-run 30, 60 and 90-day scenarios as campaign data refreshes.",
+                "description": "Re-run 30, 60 and 90-day scenarios as campaign data refreshes because anomaly and trend-break signals can change the causal hypothesis behind each budget move.",
                 "expectedImpact": "Better media planning discipline and faster risk detection.",
                 "effort": "low",
             },
@@ -473,10 +480,15 @@ def _build_prompt(summary: Dict[str, Any]) -> str:
 
 Think step by step internally:
 STEP 1 - DIAGNOSE: Identify the 3 most important performance signals, strongest channel by ROAS, weakest channel by ROAS, and most significant trend. Cite exact numbers.
-STEP 2 - FORECAST INTERPRETATION: Interpret the 30/60/90-day forecasts and what could cause a 15%+ miss.
-STEP 3 - BUDGET DECISION: Decide where the next $10,000 should go, expected return, and which channel is nearing diminishing returns.
-STEP 4 - RISK ASSESSMENT: Identify the top 2 forecast risks across seasonality, channel concentration, and ROAS trend.
-STEP 5 - ACTION PLAN: Write specific budget actions with expected impact, time horizon, and confidence.
+STEP 2 - CAUSAL HYPOTHESES: Explain the most plausible cause-and-effect chain behind each major movement. Use causal language such as "because", "likely due to", or "consistent with", and tie each claim to at least two named metrics.
+Example weak framing: "ROAS is down 12%."
+Example causal framing: "ROAS is down 12% likely because CPC rose 9% while conversion rate stayed flat, consistent with rising auction competition rather than deteriorating landing-page quality."
+Example weak framing: "Revenue is up in Google Ads."
+Example causal framing: "Google Ads revenue is up because spend rose 8% while ROAS held above blended average, suggesting incremental demand capture rather than only price inflation."
+STEP 3 - FORECAST INTERPRETATION: Interpret the 30/60/90-day forecasts and what could cause a 15%+ miss.
+STEP 4 - BUDGET DECISION: Decide where the next $10,000 should go, expected return, and which channel is nearing diminishing returns.
+STEP 5 - RISK ASSESSMENT: Identify the top 2 forecast risks across seasonality, channel concentration, anomaly/trend-break output, and ROAS trend.
+STEP 6 - ACTION PLAN: Write specific budget actions with expected impact, time horizon, and confidence.
 
 Return strict JSON matching this ForecastIQ app schema:
 {{
@@ -490,6 +502,7 @@ Return strict JSON matching this ForecastIQ app schema:
   "actionPlan": [{{"priority": "high|medium|low", "timeline": "...", "owner": "...", "action": "...", "kpi": "..."}}]
 }}
 Recommended budget shares must sum to 100. Cite specific revenue, ROAS, forecast and campaign numbers.
+Every risk, growth opportunity, and revenue driver must contain a causal connective tied to named metrics.
 Return JSON only, with no Markdown.
 """
 

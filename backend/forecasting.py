@@ -510,7 +510,18 @@ def forecast_frame(
     expected_revenue = sum(point.value for point in future_revenue)
     lower_revenue = sum(point.lower for point in future_revenue)
     upper_revenue = sum(point.upper for point in future_revenue)
-    avg_roas = sum(point.value for point in future_roas) / len(future_roas) if future_roas else 0.0
+    projected_spend = (
+        sum(
+            _project_exog(daily, pd.to_datetime(daily["date"].iloc[-1]) + pd.Timedelta(days=step))["spend"]
+            for step in range(1, horizon + 1)
+        )
+        if not daily.empty
+        else 0.0
+    )
+    roas_not_computable = projected_spend <= 1e-9
+    avg_roas = 0.0 if roas_not_computable else expected_revenue / projected_spend
+    lower_roas = 0.0 if roas_not_computable else lower_revenue / projected_spend
+    upper_roas = 0.0 if roas_not_computable else max(avg_roas, upper_revenue / projected_spend)
     model_type = (model_bundle or {}).get("model_type") or _model_type()
 
     return {
@@ -521,6 +532,9 @@ def forecast_frame(
             lowerRevenue=round_money(lower_revenue),
             upperRevenue=round_money(upper_revenue),
             avgRoas=round_money(avg_roas),
+            lowerRoas=round_money(lower_roas),
+            upperRoas=round_money(upper_roas),
+            roasStatus="not_computable" if roas_not_computable else "computable",
             horizonDays=horizon,
             level=level,
             value=value,
@@ -718,6 +732,8 @@ def aggregate_prediction_rows(frame: pd.DataFrame, model_bundle: Optional[Dict[s
             lower_revenue = sum(point.lower for point in horizon_revenue)
             upper_revenue = sum(point.upper for point in horizon_revenue)
             avg_roas = sum(point.value for point in horizon_roas) / len(horizon_roas) if horizon_roas else 0.0
+            lower_roas = sum(point.lower for point in horizon_roas) / len(horizon_roas) if horizon_roas else 0.0
+            upper_roas = sum(point.upper for point in horizon_roas) / len(horizon_roas) if horizon_roas else 0.0
             output.append(
                 {
                     "level": level,
@@ -727,6 +743,8 @@ def aggregate_prediction_rows(frame: pd.DataFrame, model_bundle: Optional[Dict[s
                     "lower_revenue": round_money(lower_revenue),
                     "upper_revenue": round_money(upper_revenue),
                     "expected_roas": round_money(avg_roas),
+                    "lower_roas": round_money(min(avg_roas, lower_roas)),
+                    "upper_roas": round_money(max(avg_roas, upper_roas)),
                     "model_type": summary.modelType,
                 }
             )

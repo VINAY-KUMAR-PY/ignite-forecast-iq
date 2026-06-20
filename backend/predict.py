@@ -31,6 +31,8 @@ OUTPUT_COLUMNS = [
     "lower_revenue",
     "upper_revenue",
     "expected_roas",
+    "lower_roas",
+    "upper_roas",
     "model_type",
     "interval_width_pct",
     "forecast_confidence",
@@ -40,6 +42,7 @@ HORIZONS = (30, 60, 90)
 TRAINED_MODEL_TYPE = "trained_model"
 SAFE_BASELINE_MODEL_TYPE = "safe_baseline_fallback"
 MODEL_TYPE = SAFE_BASELINE_MODEL_TYPE
+ROAS_NOT_COMPUTABLE_CONFIDENCE = "not_computable"
 ARTIFACT_TYPE = "forecastiq_evaluator_model"
 ARTIFACT_VERSION = 3
 MAX_MODEL_ARTIFACT_BYTES = 2_000_000
@@ -343,6 +346,22 @@ def safe_ratio(numerator: float, denominator: float) -> float:
     return float(numerator) / float(denominator) if float(denominator) else 0.0
 
 
+def roas_interval_from_revenue(
+    lower_revenue: float,
+    expected_revenue: float,
+    upper_revenue: float,
+    expected_spend: float,
+) -> tuple[float, float, float, str | None]:
+    """Convert a revenue interval into a ROAS interval when spend is present."""
+    spend = safe_float(expected_spend)
+    if spend <= 1e-9:
+        return 0.0, 0.0, 0.0, ROAS_NOT_COMPUTABLE_CONFIDENCE
+    lower_roas = max(0.0, safe_float(lower_revenue) / spend)
+    expected_roas = max(lower_roas, safe_float(expected_revenue) / spend)
+    upper_roas = max(expected_roas, safe_float(upper_revenue) / spend)
+    return lower_roas, expected_roas, upper_roas, None
+
+
 def category_maps(frame: pd.DataFrame) -> dict[str, dict[str, int]]:
     return {
         "channel": {
@@ -569,6 +588,9 @@ def forecast_segment(segment: pd.DataFrame, horizon: int, model: dict[str, Any])
             "lower_revenue": 0.0,
             "upper_revenue": 0.0,
             "expected_roas": 0.0,
+            "lower_roas": 0.0,
+            "upper_roas": 0.0,
+            "forecast_confidence": ROAS_NOT_COMPUTABLE_CONFIDENCE,
         }
 
     daily = (
@@ -592,16 +614,23 @@ def forecast_segment(segment: pd.DataFrame, horizon: int, model: dict[str, Any])
 
     expected_revenue = max(0.0, daily_revenue * horizon * trend_multiplier)
     expected_spend = max(0.0, daily_spend * horizon)
-    expected_roas = expected_revenue / expected_spend if expected_spend > 0 else safe_float(recent["roas"].mean())
-
     interval = confidence_interval_width(daily["revenue"], expected_revenue, horizon, model)
     lower = max(0.0, expected_revenue - interval)
     upper = max(lower, expected_revenue + interval)
+    lower_roas, expected_roas, upper_roas, roas_confidence = roas_interval_from_revenue(
+        lower,
+        expected_revenue,
+        upper,
+        expected_spend,
+    )
     return {
         "expected_revenue": clean_number(expected_revenue),
         "lower_revenue": clean_number(lower),
         "upper_revenue": clean_number(upper),
         "expected_roas": clean_number(expected_roas),
+        "lower_roas": clean_number(lower_roas),
+        "upper_roas": clean_number(upper_roas),
+        "forecast_confidence": roas_confidence,
     }
 
 
@@ -698,11 +727,27 @@ def trained_forecast_segment(
     )
     lower = max(0.0, expected_revenue - interval)
     upper = max(lower, expected_revenue + interval)
+    daily = aggregate_segment_daily(segment)
+    lookback = min(28, len(daily))
+    expected_spend = safe_float(daily["spend"].tail(lookback).sum()) / max(lookback, 1) * horizon
+    lower_roas, spend_based_roas, upper_roas, roas_confidence = roas_interval_from_revenue(
+        lower,
+        expected_revenue,
+        upper,
+        expected_spend,
+    )
+    if roas_confidence:
+        expected_roas = spend_based_roas
+    else:
+        expected_roas = min(max(expected_roas, lower_roas), upper_roas)
     return {
         "expected_revenue": clean_number(expected_revenue),
         "lower_revenue": clean_number(lower),
         "upper_revenue": clean_number(upper),
         "expected_roas": clean_number(expected_roas),
+        "lower_roas": clean_number(lower_roas),
+        "upper_roas": clean_number(upper_roas),
+        "forecast_confidence": roas_confidence,
     }
 
 
@@ -732,7 +777,10 @@ def build_trained_predictions(frame: pd.DataFrame, model: dict[str, Any]) -> tup
                     "lower_revenue": forecast["lower_revenue"],
                     "upper_revenue": forecast["upper_revenue"],
                     "expected_roas": forecast["expected_roas"],
+                    "lower_roas": forecast["lower_roas"],
+                    "upper_roas": forecast["upper_roas"],
                     "model_type": model_type,
+                    "forecast_confidence": forecast.get("forecast_confidence"),
                 }
             )
 
@@ -770,7 +818,10 @@ def build_predictions(frame: pd.DataFrame, model: dict[str, Any]) -> list[dict[s
                     "lower_revenue": forecast["lower_revenue"],
                     "upper_revenue": forecast["upper_revenue"],
                     "expected_roas": forecast["expected_roas"],
+                    "lower_roas": forecast["lower_roas"],
+                    "upper_roas": forecast["upper_roas"],
                     "model_type": model_type,
+                    "forecast_confidence": forecast.get("forecast_confidence"),
                 }
             )
     return sanitize_rows(rows)
@@ -787,7 +838,10 @@ def sanitize_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "lower_revenue": 0.0,
                 "upper_revenue": 0.0,
                 "expected_roas": 0.0,
+                "lower_roas": 0.0,
+                "upper_roas": 0.0,
                 "model_type": MODEL_TYPE,
+                "forecast_confidence": ROAS_NOT_COMPUTABLE_CONFIDENCE,
             }
             for horizon in HORIZONS
         ]
@@ -797,8 +851,17 @@ def sanitize_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         expected = clean_number(row.get("expected_revenue"))
         lower = clean_number(row.get("lower_revenue"))
         upper = clean_number(row.get("upper_revenue"))
+        expected_roas = clean_number(row.get("expected_roas"))
+        lower_roas = clean_number(row.get("lower_roas"))
+        upper_roas = clean_number(row.get("upper_roas"))
+        if lower_roas > expected_roas:
+            lower_roas = expected_roas
+        if upper_roas < expected_roas:
+            upper_roas = expected_roas
         width_pct = clean_number(((upper - lower) / expected) * 100 if expected > 0 else 0.0)
-        confidence = "high" if width_pct < 30 else "medium" if width_pct <= 60 else "low"
+        confidence = str(row.get("forecast_confidence") or "")
+        if confidence != ROAS_NOT_COMPUTABLE_CONFIDENCE:
+            confidence = "high" if width_pct < 30 else "medium" if width_pct <= 60 else "low"
         clean_rows.append(
             {
                 "level": str(row.get("level") or "overall"),
@@ -807,7 +870,9 @@ def sanitize_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "expected_revenue": expected,
                 "lower_revenue": lower,
                 "upper_revenue": upper,
-                "expected_roas": clean_number(row.get("expected_roas")),
+                "expected_roas": expected_roas,
+                "lower_roas": lower_roas,
+                "upper_roas": upper_roas,
                 "model_type": str(row.get("model_type") or MODEL_TYPE),
                 "interval_width_pct": width_pct,
                 "forecast_confidence": confidence,

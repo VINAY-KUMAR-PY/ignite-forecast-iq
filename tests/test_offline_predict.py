@@ -26,8 +26,10 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertEqual(list(rows[0].keys()), OUTPUT_COLUMNS)
         self.assertEqual({row["horizon_days"] for row in rows}, {30, 60, 90})
         for row in rows:
-            for column in ["expected_revenue", "lower_revenue", "upper_revenue", "expected_roas"]:
+            for column in ["expected_revenue", "lower_revenue", "upper_revenue", "expected_roas", "lower_roas", "upper_roas"]:
                 self.assertTrue(math.isfinite(float(row[column])), f"{column} is not finite in {row}")
+            self.assertLessEqual(row["lower_roas"], row["expected_roas"])
+            self.assertLessEqual(row["expected_roas"], row["upper_roas"])
 
     def test_alias_columns_and_missing_optional_values_generate_predictions(self) -> None:
         raw = pd.DataFrame(
@@ -121,6 +123,38 @@ class OfflinePredictionTests(unittest.TestCase):
 
             self.assert_valid_prediction_rows(rows)
             self.assertEqual({row["model_type"] for row in rows}, {SAFE_BASELINE_MODEL_TYPE})
+
+    def test_zero_spend_ga4_shopify_shapes_mark_roas_not_computable(self) -> None:
+        dates = pd.date_range("2026-01-01", periods=70, freq="D").strftime("%Y-%m-%d")
+        for raw in [
+            pd.DataFrame(
+                {
+                    "event_date": dates,
+                    "sessionSource": ["google"] * len(dates),
+                    "sessionMedium": ["organic"] * len(dates),
+                    "sessions": [100] * len(dates),
+                    "conversions": [4] * len(dates),
+                    "purchaseRevenue": [250] * len(dates),
+                }
+            ),
+            pd.DataFrame(
+                {
+                    "created_at": dates,
+                    "product_type": ["Accessories"] * len(dates),
+                    "orders": [3] * len(dates),
+                    "total_price": [180] * len(dates),
+                }
+            ),
+        ]:
+            with self.subTest(columns=list(raw.columns)):
+                cleaned = canonicalize_frame(raw)
+                rows = build_predictions(cleaned.frame, safe_load_model("pickle/model.pkl"))
+
+                self.assert_valid_prediction_rows(rows)
+                self.assertEqual({row["forecast_confidence"] for row in rows}, {"not_computable"})
+                self.assertEqual({row["expected_roas"] for row in rows}, {0.0})
+                self.assertEqual({row["lower_roas"] for row in rows}, {0.0})
+                self.assertEqual({row["upper_roas"] for row in rows}, {0.0})
 
 
 if __name__ == "__main__":

@@ -53,7 +53,7 @@ The application contains four core flows:
 - Forecast: backend-powered 30, 60, and 90-day forecasts for overall, channel, campaign type, and campaign-level planning.
 - Budget Simulator: dynamic revenue and ROAS projections when Google Ads, Meta Ads, or Microsoft Ads budgets change.
 - Decision Intelligence: AI budget optimization, what-if scenario comparison, risk and opportunity detection, and channel health scoring.
-- AI Insights: Gemini-generated, or deterministic fallback, executive summaries, risks, opportunities, revenue drivers, budget recommendations, and action plans.
+- AI Insights: Gemini-generated, or deterministic fallback, causal-hypothesis executive summaries, risks, opportunities, revenue drivers, budget recommendations, and action plans.
 
 The frontend keeps the existing pages, routes, components, and styling. Backend APIs replace the mock forecast and insight paths while frontend fallbacks remain available for local resilience.
 
@@ -78,7 +78,7 @@ The frontend keeps the existing pages, routes, components, and styling. Backend 
 - Confidence interval visualization and planning-case summaries.
 - Budget Simulator for Google Ads, Meta Ads, and Microsoft Ads with spend response curves and diminishing-returns markers.
 - Decision intelligence: AI budget optimizer, what-if scenarios, risk detection, opportunity detection, and channel health scoring.
-- Gemini-backed AI insights with deterministic fallback output.
+- Gemini-backed AI insights with deterministic fallback output and anomaly-aware causal-hypothesis framing.
 - Executive PDF report export from the AI Insights workflow, with a jsPDF path when dependencies are installed and a browser-safe fallback.
 
 ## Business Impact
@@ -229,6 +229,8 @@ The offline evaluator artifact at `pickle/model.pkl` is a compact joblib artifac
 
 The evaluator model trains on rolling historical samples from `data/sample_campaigns.csv` and predicts 30, 60, and 90 day revenue and ROAS at overall, channel, campaign type, and campaign levels. The safe baseline remains available for missing, corrupt, incompatible, tiny, or malformed hidden evaluator data.
 
+The offline predictions file includes revenue and ROAS ranges. `expected_roas`, `lower_roas`, and `upper_roas` are derived from the same projected-spend denominator used for revenue planning. When GA4 or Shopify-style exports do not contain spend, ForecastIQ keeps the CSV numeric and NaN-safe by emitting `expected_roas = lower_roas = upper_roas = 0` with `forecast_confidence = not_computable` instead of fabricating a confident ROAS from unrelated spend-bearing training data.
+
 Backtesting uses the final 30 days as a holdout and trains on the earlier period. Current holdout metrics are:
 
 | Model         |      MAE |     RMSE |  MAPE | Interval coverage |
@@ -299,7 +301,7 @@ The `/api/insights` endpoint converts performance summaries into structured exec
 - Growth opportunities.
 - Prioritized action plan with owners, timelines, and KPIs.
 
-When `GEMINI_API_KEY` is configured, Gemini generates the structured response. Without a key, the backend returns deterministic data-grounded insights so the application remains demo-ready and offline-safe.
+When `GEMINI_API_KEY` is configured, Gemini generates the structured response. Without a key, the backend returns deterministic data-grounded insights so the application remains demo-ready and offline-safe. Both paths frame recommendations as causal hypotheses grounded in metrics such as spend trend, revenue trend, ROAS trend, channel ROAS, anomalies, and trend breaks. This is not a formal media-mix or incrementality model; it is an executive reasoning layer that explains plausible mechanisms to test.
 
 ## Technology Stack
 
@@ -566,6 +568,8 @@ Train model:
 POST /api/train
 ```
 
+Training is admin-only. Set `TRAINING_ADMIN_TOKEN` on the backend and send it as the `X-Training-Admin-Token` header. The endpoint only writes `.pkl` artifacts inside the project `pickle/` directory and uses the evaluator-safe v3 artifact format expected by `run.sh`.
+
 Interactive OpenAPI docs are available at:
 
 ```text
@@ -709,12 +713,14 @@ Backend on Railway:
 
 Deployment environment variables:
 
-| Variable            | Surface      | Purpose                                                     |
-| ------------------- | ------------ | ----------------------------------------------------------- |
-| `VITE_API_BASE_URL` | Frontend     | Public API base URL used by the browser app.                |
-| `GEMINI_API_KEY`    | Backend only | Enables live Gemini insights; never expose through `VITE_`. |
-| `GEMINI_MODEL`      | Backend only | Optional model override, defaulting to a fast Gemini model. |
-| `CORS_ORIGINS`      | Backend only | Restricts browser access to the deployed frontend URL.      |
+| Variable               | Surface      | Purpose                                                     |
+| ---------------------- | ------------ | ----------------------------------------------------------- |
+| `VITE_API_BASE_URL`    | Frontend     | Public API base URL used by the browser app.                |
+| `GEMINI_API_KEY`       | Backend only | Enables live Gemini insights; never expose through `VITE_`. |
+| `GEMINI_MODEL`         | Backend only | Optional model override, defaulting to a fast Gemini model. |
+| `CORS_ORIGINS`         | Backend only | Restricts browser access to the deployed frontend URL.      |
+| `TRAINING_ADMIN_TOKEN` | Backend only | Required token for `POST /api/train`.                       |
+| `MAX_UPLOAD_ROWS`      | Backend only | Optional max rows accepted by data-ingesting endpoints.     |
 
 ### Backend on Render or Railway
 
@@ -730,6 +736,7 @@ Recommended backend environment variables:
 - `CORS_ORIGINS=["https://your-frontend-domain.vercel.app"]`
 - `GEMINI_API_KEY=...` only if live Gemini insights are required
 - `GEMINI_MODEL=gemini-2.5-flash-lite`
+- `TRAINING_ADMIN_TOKEN=...` for admin retraining
 - `LOG_LEVEL=INFO`
 
 Keep `pickle/model.pkl` packaged with the backend build so evaluator and API model paths remain available.

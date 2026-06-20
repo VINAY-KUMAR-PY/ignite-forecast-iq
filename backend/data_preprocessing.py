@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from typing import Iterable, List, Tuple
 
 import numpy as np
@@ -21,6 +22,7 @@ HOLIDAY_WEEKS = [
     "2024-09-02", "2025-09-01", "2026-09-07",
 ]
 BLACK_FRIDAY_DATES = ["2024-11-29", "2025-11-28", "2026-11-27"]
+MAX_UPLOAD_ROWS = int(os.getenv("MAX_UPLOAD_ROWS", "20000"))
 
 
 def rows_to_frame(rows: Iterable[CampaignRow]) -> pd.DataFrame:
@@ -40,6 +42,21 @@ def validate_records(records: Iterable[dict]) -> Tuple[pd.DataFrame, ValidationR
             rows=[],
             issues=[ValidationIssue(type="missing", row=0, message="Empty dataset")],
             totalRows=0,
+            validRows=0,
+        )
+        return pd.DataFrame(columns=REQUIRED_COLUMNS), response
+
+    if total_rows > MAX_UPLOAD_ROWS:
+        response = ValidationResponse(
+            rows=[],
+            issues=[
+                ValidationIssue(
+                    type="too_many_rows",
+                    row=0,
+                    message=f"Dataset has {total_rows} rows; maximum supported upload is {MAX_UPLOAD_ROWS} rows",
+                )
+            ],
+            totalRows=total_rows,
             validRows=0,
         )
         return pd.DataFrame(columns=REQUIRED_COLUMNS), response

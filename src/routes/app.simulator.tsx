@@ -475,7 +475,10 @@ function SimulatorPage() {
                   Revenue response and diminishing returns curve.
                 </p>
               </div>
-              <Select value={curveChannel} onValueChange={(value) => setCurveChannel(value as (typeof CHANNELS)[number])}>
+              <Select
+                value={curveChannel}
+                onValueChange={(value) => setCurveChannel(value as (typeof CHANNELS)[number])}
+              >
                 <SelectTrigger className="h-8 w-[150px] text-xs">
                   <SelectValue />
                 </SelectTrigger>
@@ -531,11 +534,15 @@ function SimulatorPage() {
                 </div>
                 <p className="mt-3 text-xs text-muted-foreground">
                   Estimated marginal ROAS at current spend:{" "}
-                  <span className="font-semibold text-foreground">{fmtRoas(spendCurve.marginal_roas)}</span>
+                  <span className="font-semibold text-foreground">
+                    {fmtRoas(spendCurve.marginal_roas)}
+                  </span>
                 </p>
               </>
             ) : (
-              <p className="mt-4 text-xs text-muted-foreground">Move a budget slider to calculate a spend response curve.</p>
+              <p className="mt-4 text-xs text-muted-foreground">
+                Move a budget slider to calculate a spend response curve.
+              </p>
             )}
           </div>
         </Card>

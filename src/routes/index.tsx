@@ -176,7 +176,10 @@ function HowItWorks() {
         <SectionHeader eyebrow="How it works" title="From CSV to budget decision in minutes" />
         <div className="mt-10 grid gap-4 md:grid-cols-4">
           {steps.map((step, index) => (
-            <div key={step.title} className="rounded-2xl border border-border/60 bg-gradient-card p-5">
+            <div
+              key={step.title}
+              className="rounded-2xl border border-border/60 bg-gradient-card p-5"
+            >
               <div className="flex items-center justify-between">
                 <div className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-brand shadow-glow">
                   <step.icon className="h-5 w-5 text-primary-foreground" />

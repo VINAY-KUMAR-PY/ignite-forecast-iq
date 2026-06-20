@@ -14,7 +14,7 @@ Yes. The schema adapter supports GA4 fields like `sessionSource`, `sessionMedium
 
 ## How are confidence intervals calculated?
 
-The evaluator model uses calibrated residual volatility from rolling historical forecasts, horizon-specific widening, a minimum interval-width floor, and non-negative lower bounds. If a trained-model segment cannot be scored safely, the deterministic safe baseline interval system is used instead.
+The evaluator model uses calibrated residual volatility from rolling historical forecasts, horizon-specific widening, a minimum interval-width floor, and non-negative lower bounds. It emits both revenue ranges and ROAS ranges. If spend is absent, ROAS is marked `not_computable` with numeric zero bounds instead of a fabricated confident ratio. If a trained-model segment cannot be scored safely, the deterministic safe baseline interval system is used instead.
 
 ## What accuracy metrics do you provide?
 
@@ -22,7 +22,7 @@ The Forecast Accuracy Dashboard shows MAE, RMSE, MAPE, and R2 for revenue and RO
 
 ## How do you explain the model?
 
-The Explainability Center exposes XGBoost feature importance for revenue and ROAS models, then translates the top drivers into natural-language explanations.
+The Explainability Center exposes XGBoost feature importance for revenue and ROAS models, then translates the top drivers into natural-language explanations. The AI Insights page goes one step further by generating causal hypotheses grounded in spend, revenue, ROAS, anomaly, and trend-break signals. It does not claim formal causal inference or media-mix incrementality.
 
 ## What makes this more than a dashboard?
 
@@ -30,7 +30,7 @@ ForecastIQ links upload validation, forecasting, confidence intervals, decision 
 
 ## What happens if Gemini is unavailable?
 
-The backend returns deterministic fallback insights based on the same performance summary. The application remains demo-ready without external AI availability.
+The backend returns deterministic fallback insights based on the same performance summary. The fallback uses the same causal-hypothesis framing as Gemini, so the application remains demo-ready without external AI availability.
 
 ## Is fallback mode a weakness?
 
@@ -66,7 +66,7 @@ The final 30 days were held out while the model trained on the earlier period. A
 
 ## What is the model verification process?
 
-CI installs the pinned Python dependencies, compiles backend and test code, runs pytest, executes `backend.predict`, and validates that `predictions.csv` exists, has the exact required schema, contains horizons 30/60/90, has no NaN or infinite values, and includes `trained_model` in `model_type`.
+CI installs the pinned Python dependencies, compiles backend and test code, runs pytest, executes `backend.predict`, and validates that `predictions.csv` exists, has the exact required schema including `lower_roas` and `upper_roas`, contains horizons 30/60/90, has no NaN or infinite values, has ordered ROAS ranges, and includes `trained_model` in `model_type`.
 
 ## How would you deploy this?
 

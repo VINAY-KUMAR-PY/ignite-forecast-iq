@@ -298,7 +298,10 @@ function Dashboard() {
                 </thead>
                 <tbody>
                   {anomalyResponse.anomalies.slice(0, 12).map((item) => (
-                    <tr key={`${item.date}-${item.channel}-${item.metric}-${item.z_score}`} className="border-t border-border/40">
+                    <tr
+                      key={`${item.date}-${item.channel}-${item.metric}-${item.z_score}`}
+                      className="border-t border-border/40"
+                    >
                       <td className="px-2 py-2">{item.date}</td>
                       <td className="px-2 py-2">{item.channel}</td>
                       <td className="px-2 py-2 uppercase">{item.metric}</td>

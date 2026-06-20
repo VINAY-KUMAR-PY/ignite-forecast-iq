@@ -47,7 +47,11 @@ jobs:
               "lower_revenue",
               "upper_revenue",
               "expected_roas",
+              "lower_roas",
+              "upper_roas",
               "model_type",
+              "interval_width_pct",
+              "forecast_confidence",
           ]
 
           if not output.exists():
@@ -62,10 +66,14 @@ jobs:
               raise SystemExit(f"Unexpected horizons: {sorted(frame['horizon_days'].unique().tolist())}")
           if frame.isna().any().any():
               raise SystemExit("predictions.csv contains NaN values")
-          for column in ["expected_revenue", "lower_revenue", "upper_revenue", "expected_roas"]:
+          for column in ["expected_revenue", "lower_revenue", "upper_revenue", "expected_roas", "lower_roas", "upper_roas"]:
               values = pd.to_numeric(frame[column], errors="raise")
               if not values.map(math.isfinite).all():
                   raise SystemExit(f"{column} contains infinite or non-finite values")
+          if not (frame["lower_roas"] <= frame["expected_roas"]).all():
+              raise SystemExit("lower_roas exceeds expected_roas")
+          if not (frame["expected_roas"] <= frame["upper_roas"]).all():
+              raise SystemExit("expected_roas exceeds upper_roas")
           if "trained_model" not in set(frame["model_type"].astype(str)):
               raise SystemExit(f"trained_model missing from model_type values: {frame['model_type'].unique().tolist()}")
 

@@ -126,6 +126,7 @@ function ForecastPage() {
   const avgRoasFc = forecastRoasOnly.length
     ? forecastRoasOnly.reduce((s, p) => s + p.value, 0) / forecastRoasOnly.length
     : 0;
+  const summaryRoas = apiForecast?.summary.avgRoas ?? avgRoasFc;
   const revenueIntervalWidth = upperRev - lowerRev;
   const revenueIntervalWidthPct = expectedRev > 0 ? (revenueIntervalWidth / expectedRev) * 100 : 0;
   const avgRoasLower = forecastRoasOnly.length
@@ -134,7 +135,6 @@ function ForecastPage() {
   const avgRoasUpper = forecastRoasOnly.length
     ? forecastRoasOnly.reduce((s, p) => s + p.upper, 0) / forecastRoasOnly.length
     : 0;
-  const roasIntervalWidth = avgRoasUpper - avgRoasLower;
 
   // chart data — sample historicals
   const revData = sampleSeries(revFc, 180);
@@ -226,7 +226,18 @@ function ForecastPage() {
         />
         <KpiCard label="Lower bound" value={fmtCurrency(lowerRev)} icon={LineIcon} hint="95% CI" />
         <KpiCard label="Upper bound" value={fmtCurrency(upperRev)} icon={LineIcon} hint="95% CI" />
-        <KpiCard label="Avg forecast ROAS" value={fmtRoas(avgRoasFc)} icon={Target} />
+        <KpiCard
+          label="Avg forecast ROAS"
+          value={
+            apiForecast?.summary.roasStatus === "not_computable" ? "N/A" : fmtRoas(summaryRoas)
+          }
+          icon={Target}
+          hint={
+            apiForecast?.summary.roasStatus === "not_computable"
+              ? "Spend absent"
+              : `${fmtRoas(apiForecast?.summary.lowerRoas ?? avgRoasLower)} - ${fmtRoas(apiForecast?.summary.upperRoas ?? avgRoasUpper)}`
+          }
+        />
       </div>
 
       <Card
@@ -251,7 +262,14 @@ function ForecastPage() {
           />
           <DiagnosticStat label="Lower planning case" value={fmtCurrency(lowerRev)} />
           <DiagnosticStat label="Upper upside case" value={fmtCurrency(upperRev)} />
-          <DiagnosticStat label="ROAS interval width" value={fmtRoas(roasIntervalWidth)} />
+          <DiagnosticStat
+            label="ROAS interval"
+            value={
+              apiForecast?.summary.roasStatus === "not_computable"
+                ? "Not computable"
+                : `${fmtRoas(apiForecast?.summary.lowerRoas ?? avgRoasLower)} - ${fmtRoas(apiForecast?.summary.upperRoas ?? avgRoasUpper)}`
+            }
+          />
         </div>
       </Card>
 

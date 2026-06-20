@@ -89,10 +89,12 @@ export function exportExecutivePdfReport(
   doc.text("Budget Recommendations", 18, 24);
   writeBullets(
     doc,
-    insights.budgetAllocation.slice(0, 3).map(
-      (item) =>
-        `${item.channel}: move from ${item.currentSharePct.toFixed(1)}% to ${item.recommendedSharePct.toFixed(1)}%. ${item.expectedImpact}. ${item.rationale}`,
-    ),
+    insights.budgetAllocation
+      .slice(0, 3)
+      .map(
+        (item) =>
+          `${item.channel}: move from ${item.currentSharePct.toFixed(1)}% to ${item.recommendedSharePct.toFixed(1)}%. ${item.expectedImpact}. ${item.rationale}`,
+      ),
     36,
   );
 
@@ -104,14 +106,18 @@ export function exportExecutivePdfReport(
   doc.text("Risks", 18, 38);
   writeBullets(
     doc,
-    insights.risks.slice(0, 4).map((item) => `${item.title}: ${item.description} Mitigation: ${item.mitigation}`),
+    insights.risks
+      .slice(0, 4)
+      .map((item) => `${item.title}: ${item.description} Mitigation: ${item.mitigation}`),
     48,
   );
   doc.setFontSize(12);
   doc.text("Opportunities", 18, 118);
   writeBullets(
     doc,
-    insights.growthOpportunities.slice(0, 4).map((item) => `${item.title}: ${item.description} Upside: ${item.expectedImpact}`),
+    insights.growthOpportunities
+      .slice(0, 4)
+      .map((item) => `${item.title}: ${item.description} Upside: ${item.expectedImpact}`),
     128,
   );
 

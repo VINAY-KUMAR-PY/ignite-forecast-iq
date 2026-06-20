@@ -37,7 +37,7 @@ flowchart LR
 - Produce 30, 60, and 90 day forecasts with confidence intervals.
 - Generate model diagnostics, feature importance, natural-language explanations, and executive forecast briefs.
 - Simulate budget changes and run decision intelligence.
-- Generate Gemini insights or deterministic fallback insights.
+- Generate Gemini insights or deterministic fallback insights that produce causal hypotheses grounded in forecast, anomaly, trend-break, spend, revenue, and ROAS signals.
 
 ## API Surface
 
@@ -88,9 +88,15 @@ Each CSV file is normalized before merging. This prevents mixed folders from los
 
 ## Model Design
 
-The forecasting layer trains separate models for revenue and ROAS. Feature engineering includes media inputs, seasonality, trend, target lags, rolling target averages, and rolling spend. Confidence intervals are derived from residual volatility and widen over the forecast horizon.
+The forecasting layer trains separate models for revenue and ROAS. Feature engineering includes media inputs, seasonality, trend, target lags, rolling target averages, and rolling spend. Confidence intervals are derived from residual volatility and widen over the forecast horizon. Revenue intervals and ROAS intervals are emitted together in the offline evaluator output and live API summary. If spend is absent, ROAS is marked `not_computable` with numeric zero bounds so the evaluator contract remains NaN-safe without inventing a confident efficiency metric.
 
 The offline evaluator model uses a compact joblib sklearn artifact at `pickle/model.pkl`. If loading or feature generation fails, the deterministic safe baseline remains active and still produces the required prediction schema.
+
+The `/api/train` endpoint is deliberately separate from public forecasting. It requires `TRAINING_ADMIN_TOKEN`, rejects path traversal, and persists only evaluator-safe `.pkl` files under `pickle/`.
+
+## Causal Insight Layer
+
+ForecastIQ's AI layer performs causal-hypothesis generation, not formal causal inference. The frontend enriches the performance summary with anomaly and trend-break output before calling `/api/insights`. Gemini and the deterministic fallback are both instructed to explain likely mechanisms such as spend changes, conversion quality, ROAS trend, CPC or auction pressure, and channel concentration. The response language is intentionally framed as "likely because" or "consistent with" so judges can see the reasoning without mistaking it for a randomized incrementality study.
 
 ## Reliability Layers
 
@@ -101,7 +107,7 @@ ForecastIQ is designed to degrade gracefully instead of failing during a judge d
 - Schema adapters: GA4, Shopify, Ads, and canonical CSV files are normalized before validation and modeling.
 - Confidence intervals: residual calibration, horizon widening, and non-negative lower bounds keep forecast ranges business-safe.
 - Gemini resilience: live Gemini output is optional; fallback executive insights use the same campaign summary when the API key, network, model, or response format fails.
-- CI verification: the evaluator workflow compiles Python, runs tests, generates predictions, and checks schema, horizons, numeric output, and `trained_model` usage.
+- CI verification: the evaluator workflow compiles Python, runs tests, generates predictions, and checks schema, horizons, numeric output, ROAS range ordering, and `trained_model` usage.
 
 ## Backtesting Snapshot
 
@@ -122,7 +128,7 @@ Frontend and backend can deploy independently:
 - Backend: Python service running FastAPI and Uvicorn.
 - Model bundle: `pickle/model.pkl` packaged with the backend or generated through `backend.train`.
 - Suggested hosting: Vercel for the frontend, Render or Railway for the backend.
-- Required production safeguards: backend-only Gemini keys, configured CORS origins, packaged model artifact, and an offline evaluator smoke test before submission.
+- Required production safeguards: backend-only Gemini keys, configured CORS origins, `TRAINING_ADMIN_TOKEN`, packaged model artifact, and an offline evaluator smoke test before submission.
 
 Recommended deployment commands:
 

@@ -19,6 +19,11 @@ from .schemas import InsightsResponse
 logger = logging.getLogger(__name__)
 load_dotenv()
 InsightSource = Literal["gemini", "fallback"]
+SYSTEM_PROMPT = """You are a senior ecommerce growth strategist at a top digital marketing agency.
+You have 15 years of experience managing Google Ads, Meta Ads, and Microsoft Ads for DTC brands.
+You think in terms of ROAS efficiency, budget allocation, seasonal timing, and risk-adjusted revenue targets.
+You are precise, direct, and data-driven. Never use filler phrases like "certainly" or "great question".
+Always cite the specific numbers from the data provided."""
 GeminiFailureKind = Literal[
     "authentication",
     "timeout",
@@ -454,9 +459,26 @@ def _is_retryable(kind: GeminiFailureKind) -> bool:
 
 
 def _build_prompt(summary: Dict[str, Any]) -> str:
+    anomalies = summary.get("anomalies") or summary.get("trendBreaks") or []
     return f"""
-You are a CMO-level ecommerce marketing strategist.
-Use only the supplied JSON data. Produce strict JSON matching this schema:
+{SYSTEM_PROMPT}
+
+<performance_data>
+{json.dumps(summary, indent=2)}
+</performance_data>
+
+<anomalies>
+{json.dumps(anomalies, indent=2)}
+</anomalies>
+
+Think step by step internally:
+STEP 1 - DIAGNOSE: Identify the 3 most important performance signals, strongest channel by ROAS, weakest channel by ROAS, and most significant trend. Cite exact numbers.
+STEP 2 - FORECAST INTERPRETATION: Interpret the 30/60/90-day forecasts and what could cause a 15%+ miss.
+STEP 3 - BUDGET DECISION: Decide where the next $10,000 should go, expected return, and which channel is nearing diminishing returns.
+STEP 4 - RISK ASSESSMENT: Identify the top 2 forecast risks across seasonality, channel concentration, and ROAS trend.
+STEP 5 - ACTION PLAN: Write specific budget actions with expected impact, time horizon, and confidence.
+
+Return strict JSON matching this ForecastIQ app schema:
 {{
   "executiveSummary": "3-4 sentences",
   "revenueDrivers": [{{"title": "...", "detail": "...", "metric": "..."}}],
@@ -469,9 +491,6 @@ Use only the supplied JSON data. Produce strict JSON matching this schema:
 }}
 Recommended budget shares must sum to 100. Cite specific revenue, ROAS, forecast and campaign numbers.
 Return JSON only, with no Markdown.
-
-DATA:
-{json.dumps(summary, indent=2)}
 """
 
 

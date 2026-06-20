@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -33,6 +33,8 @@ import { KpiCard } from "@/components/kpi-card";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { fetchAnomaliesApi, type AnomalyResponse } from "@/lib/backend-api";
 
 export const Route = createFileRoute("/app/")({
   head: () => ({ meta: [{ title: "Executive Decision Center - ForecastIQ" }] }),
@@ -49,6 +51,24 @@ const COLORS = [
 
 function Dashboard() {
   const { rows } = useData();
+  const [anomalyResponse, setAnomalyResponse] = useState<AnomalyResponse | null>(null);
+  const [showAnomalies, setShowAnomalies] = useState(false);
+  const [dismissedAnomalies, setDismissedAnomalies] = useState(false);
+
+  useEffect(() => {
+    if (!rows.length) return;
+    let active = true;
+    fetchAnomaliesApi(rows)
+      .then((response) => {
+        if (active) setAnomalyResponse(response);
+      })
+      .catch(() => {
+        if (active) setAnomalyResponse(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [rows]);
 
   const stats = useMemo(() => {
     if (!rows.length) return null;
@@ -240,6 +260,58 @@ function Dashboard() {
         title="Executive Decision Center"
         description="Start here for forecasted revenue, expected ROAS, risk, opportunity, and the next budget move."
       />
+
+      {anomalyResponse && anomalyResponse.anomalies.length > 0 && !dismissedAnomalies && (
+        <Card
+          className={`mb-6 border p-4 ${
+            anomalyResponse.anomalies.some((item) => item.severity === "critical")
+              ? "border-destructive/40 bg-destructive/10"
+              : "border-warning/40 bg-warning/10"
+          }`}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => setShowAnomalies((value) => !value)}
+              className="flex items-center gap-2 text-left text-sm font-semibold"
+            >
+              <AlertTriangle className="h-4 w-4" />
+              {anomalyResponse.anomalies.filter((item) => item.severity === "critical").length
+                ? `${anomalyResponse.anomalies.filter((item) => item.severity === "critical").length} critical anomalies detected - review before forecasting`
+                : `${anomalyResponse.anomalies.length} anomaly warnings detected - review before forecasting`}
+            </button>
+            <Button variant="ghost" size="sm" onClick={() => setDismissedAnomalies(true)}>
+              Dismiss
+            </Button>
+          </div>
+          {showAnomalies && (
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="text-xs uppercase tracking-wider text-muted-foreground">
+                  <tr>
+                    <th className="px-2 py-2 text-left">Date</th>
+                    <th className="px-2 py-2 text-left">Channel</th>
+                    <th className="px-2 py-2 text-left">Metric</th>
+                    <th className="px-2 py-2 text-right">Z-score</th>
+                    <th className="px-2 py-2 text-left">Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {anomalyResponse.anomalies.slice(0, 12).map((item) => (
+                    <tr key={`${item.date}-${item.channel}-${item.metric}-${item.z_score}`} className="border-t border-border/40">
+                      <td className="px-2 py-2">{item.date}</td>
+                      <td className="px-2 py-2">{item.channel}</td>
+                      <td className="px-2 py-2 uppercase">{item.metric}</td>
+                      <td className="px-2 py-2 text-right">{item.z_score.toFixed(2)}</td>
+                      <td className="px-2 py-2 text-muted-foreground">{item.description}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard

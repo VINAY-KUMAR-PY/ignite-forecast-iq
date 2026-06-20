@@ -32,6 +32,8 @@ OUTPUT_COLUMNS = [
     "upper_revenue",
     "expected_roas",
     "model_type",
+    "interval_width_pct",
+    "forecast_confidence",
 ]
 
 HORIZONS = (30, 60, 90)
@@ -39,7 +41,7 @@ TRAINED_MODEL_TYPE = "trained_model"
 SAFE_BASELINE_MODEL_TYPE = "safe_baseline_fallback"
 MODEL_TYPE = SAFE_BASELINE_MODEL_TYPE
 ARTIFACT_TYPE = "forecastiq_evaluator_model"
-ARTIFACT_VERSION = 2
+ARTIFACT_VERSION = 3
 MAX_MODEL_ARTIFACT_BYTES = 2_000_000
 MIN_TRAINED_MODEL_ROWS = 8
 
@@ -252,8 +254,13 @@ def is_trained_model_artifact(model: dict[str, Any]) -> bool:
         and model.get("artifact_type") == ARTIFACT_TYPE
         and model.get("artifact_version") == ARTIFACT_VERSION
         and model.get("model_type") == TRAINED_MODEL_TYPE
-        and hasattr(model.get("revenue_model"), "predict")
-        and hasattr(model.get("roas_model"), "predict")
+        and isinstance(model.get("models"), dict)
+        and all(
+            isinstance(model["models"].get(horizon), dict)
+            and hasattr(model["models"][horizon].get("revenue_model"), "predict")
+            and hasattr(model["models"][horizon].get("roas_model"), "predict")
+            for horizon in HORIZONS
+        )
         and list(model.get("feature_columns") or []) == FEATURE_COLUMNS
     )
 
@@ -290,7 +297,10 @@ def safe_load_model(model_path: str | Path) -> dict[str, Any]:
         log(f"Loaded trained evaluator model artifact: {TRAINED_MODEL_TYPE}")
         return loaded
 
-    log("Model artifact schema is unsupported for trained predictions; using safe baseline")
+    if int(safe_float(loaded.get("artifact_version"), 0)) < ARTIFACT_VERSION:
+        log("Legacy trained artifact detected; using safe baseline for backward compatibility")
+    else:
+        log("Model artifact schema is unsupported for trained predictions; using safe baseline")
     legacy_fallback = fallback_model_config("unsupported model artifact")
     for key in ("confidence_z", "trend_weight"):
         if key in loaded:
@@ -476,55 +486,58 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
     if len(np.unique(y_revenue)) <= 1 or len(np.unique(y_roas)) <= 1:
         raise ValueError("training targets are not variable enough")
 
-    revenue_model = GradientBoostingRegressor(
-        n_estimators=90,
-        learning_rate=0.05,
-        max_depth=3,
-        random_state=42,
-    )
-    roas_model = GradientBoostingRegressor(
-        n_estimators=70,
-        learning_rate=0.05,
-        max_depth=2,
-        random_state=43,
-    )
-    revenue_model.fit(X, y_revenue)
-    roas_model.fit(X, y_roas)
-
-    revenue_residuals = y_revenue - np.asarray(revenue_model.predict(X), dtype=float)
-    roas_residuals = y_roas - np.asarray(roas_model.predict(X), dtype=float)
+    models: dict[int, dict[str, Any]] = {}
     revenue_by_horizon: dict[str, float] = {}
-    overall_revenue_residual_std = safe_float(np.std(revenue_residuals, ddof=1), 0.0)
-    overall_revenue_floor = safe_float(np.mean(np.abs(y_revenue)), 0.0) * 0.05
+    revenue_residuals_all: list[float] = []
+    roas_residuals_all: list[float] = []
+    horizon_array = np.asarray(horizon_labels)
     for horizon in HORIZONS:
-        mask = np.asarray(horizon_labels) == horizon
-        horizon_residuals = revenue_residuals[mask]
-        horizon_targets = y_revenue[mask]
-        if len(horizon_residuals) >= 2:
-            horizon_std = safe_float(np.std(horizon_residuals, ddof=1), overall_revenue_residual_std)
-        elif len(horizon_residuals) == 1:
-            horizon_std = safe_float(abs(horizon_residuals[0]), overall_revenue_residual_std)
-        else:
-            horizon_std = overall_revenue_residual_std
-        horizon_floor = safe_float(np.mean(np.abs(horizon_targets)), overall_revenue_floor) * 0.05 if len(horizon_targets) else overall_revenue_floor
-        revenue_by_horizon[str(horizon)] = clean_number(
-            max(
-                horizon_std,
-                horizon_floor,
-                1.0,
-            )
+        mask = horizon_array == horizon
+        if int(mask.sum()) < 8:
+            mask = np.ones(len(X), dtype=bool)
+        X_h = X.loc[mask]
+        y_rev_h = y_revenue[mask]
+        y_roas_h = y_roas[mask]
+        revenue_model = GradientBoostingRegressor(
+            n_estimators={30: 100, 60: 85, 90: 75}[horizon],
+            learning_rate={30: 0.05, 60: 0.045, 90: 0.04}[horizon],
+            max_depth=3,
+            random_state=42 + horizon,
         )
+        roas_model = GradientBoostingRegressor(
+            n_estimators={30: 80, 60: 70, 90: 60}[horizon],
+            learning_rate=0.05,
+            max_depth=2,
+            random_state=142 + horizon,
+        )
+        revenue_model.fit(X_h, y_rev_h)
+        roas_model.fit(X_h, y_roas_h)
+        revenue_residuals_h = y_rev_h - np.asarray(revenue_model.predict(X_h), dtype=float)
+        roas_residuals_h = y_roas_h - np.asarray(roas_model.predict(X_h), dtype=float)
+        revenue_residuals_all.extend(revenue_residuals_h.tolist())
+        roas_residuals_all.extend(roas_residuals_h.tolist())
+        horizon_std = safe_float(np.std(revenue_residuals_h, ddof=1), 0.0) if len(revenue_residuals_h) >= 2 else 0.0
+        horizon_floor = safe_float(np.mean(np.abs(y_rev_h)), 0.0) * 0.05
+        revenue_by_horizon[str(horizon)] = clean_number(max(horizon_std, horizon_floor, 1.0))
+        models[horizon] = {
+            "revenue_model": revenue_model,
+            "roas_model": roas_model,
+            "training_samples": int(len(X_h)),
+        }
+
+    revenue_residuals = np.asarray(revenue_residuals_all, dtype=float)
+    roas_residuals = np.asarray(roas_residuals_all, dtype=float)
 
     return {
         "artifact_type": ARTIFACT_TYPE,
         "artifact_version": ARTIFACT_VERSION,
         "model_type": TRAINED_MODEL_TYPE,
+        "models": models,
         "trained_at": datetime.now(timezone.utc).isoformat(),
         "training_rows": int(len(frame)),
         "training_samples": int(len(X)),
-        "revenue_model": revenue_model,
-        "roas_model": roas_model,
         "feature_columns": FEATURE_COLUMNS,
+        "revenue_blend_weight": 0.10,
         "preprocessing": {
             "column_aliases": COLUMN_ALIASES,
             "category_maps": maps,
@@ -634,8 +647,11 @@ def trained_forecast_segment(
     if list(features.columns) != FEATURE_COLUMNS:
         raise ValueError("trained-model feature schema mismatch")
 
-    trained_revenue = safe_float(model["revenue_model"].predict(features)[0])
-    trained_roas = safe_float(model["roas_model"].predict(features)[0])
+    horizon_model = (model.get("models") or {}).get(horizon) or (model.get("models") or {}).get(str(horizon))
+    if not horizon_model:
+        raise ValueError(f"missing trained sub-model for {horizon}d horizon")
+    trained_revenue = safe_float(horizon_model["revenue_model"].predict(features)[0])
+    trained_roas = safe_float(horizon_model["roas_model"].predict(features)[0])
     if trained_revenue < 0 or trained_roas < 0 or not np.isfinite(trained_revenue) or not np.isfinite(trained_roas):
         raise ValueError("trained model produced invalid prediction")
 
@@ -778,16 +794,23 @@ def sanitize_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
     clean_rows: list[dict[str, Any]] = []
     for row in rows:
+        expected = clean_number(row.get("expected_revenue"))
+        lower = clean_number(row.get("lower_revenue"))
+        upper = clean_number(row.get("upper_revenue"))
+        width_pct = clean_number(((upper - lower) / expected) * 100 if expected > 0 else 0.0)
+        confidence = "high" if width_pct < 30 else "medium" if width_pct <= 60 else "low"
         clean_rows.append(
             {
                 "level": str(row.get("level") or "overall"),
                 "segment": str(row.get("segment") or "all"),
                 "horizon_days": int(safe_float(row.get("horizon_days"), 30)),
-                "expected_revenue": clean_number(row.get("expected_revenue")),
-                "lower_revenue": clean_number(row.get("lower_revenue")),
-                "upper_revenue": clean_number(row.get("upper_revenue")),
+                "expected_revenue": expected,
+                "lower_revenue": lower,
+                "upper_revenue": upper,
                 "expected_roas": clean_number(row.get("expected_roas")),
                 "model_type": str(row.get("model_type") or MODEL_TYPE),
+                "interval_width_pct": width_pct,
+                "forecast_confidence": confidence,
             }
         )
     return clean_rows

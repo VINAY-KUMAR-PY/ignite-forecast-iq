@@ -153,10 +153,21 @@ class SimulationTotals(BaseModel):
     roasChangePct: float
 
 
+class RoasDecompositionItem(BaseModel):
+    channel: str
+    spend: float
+    revenue: float
+    roas: float
+    roas_vs_blend: float
+    marginal_roas_estimate: float
+    efficiency_score: int
+
+
 class SimulationResponse(BaseModel):
     channels: List[SimChannelResult]
     totals: SimulationTotals
     validation: ValidationResponse
+    roas_decomposition: List[RoasDecompositionItem] = Field(default_factory=list)
 
 
 class WhatIfScenarioInput(BaseModel):

@@ -8,6 +8,7 @@ import {
   Legend,
   Line,
   LineChart,
+  ReferenceLine,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -47,11 +48,13 @@ import { fmtCompact, fmtCurrency, fmtDate, fmtPct, fmtRoas } from "@/lib/format"
 import { KpiCard } from "@/components/kpi-card";
 import {
   decisionSupportApi,
+  fetchSpendCurveApi,
   simulateBudgetsApi,
   type ChannelHealthScore,
   type DecisionSupportResponse,
   type DetectionItem,
   type SimChannelResult,
+  type SpendCurveResponse,
   type WhatIfScenarioResult,
 } from "@/lib/backend-api";
 import type { CampaignRow } from "@/lib/types";
@@ -112,6 +115,8 @@ function SimulatorPage() {
   const [targetRevenueDraft, setTargetRevenueDraft] = useState("");
   const [targetRoasDraft, setTargetRoasDraft] = useState("");
   const [targets, setTargets] = useState<{ targetRevenue?: number; targetRoas?: number }>({});
+  const [curveChannel, setCurveChannel] = useState<(typeof CHANNELS)[number]>("Google Ads");
+  const [spendCurve, setSpendCurve] = useState<SpendCurveResponse | null>(null);
 
   // Baseline daily spend per channel (recent 30 days)
   const baselines = useMemo(() => {
@@ -209,6 +214,22 @@ function SimulatorPage() {
       active = false;
     };
   }, [rows, horizon, baselines, budgetPayload, targets]);
+
+  useEffect(() => {
+    if (!rows.length || !baselines) return;
+    let active = true;
+    fetchSpendCurveApi(rows, curveChannel, horizon, totalBudget(curveChannel))
+      .then((response) => {
+        if (active) setSpendCurve(response);
+      })
+      .catch(() => {
+        if (active) setSpendCurve(null);
+      });
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, horizon, curveChannel, baselines, JSON.stringify(budgets)]);
 
   const sims = apiSims ?? baselineSims;
 
@@ -443,6 +464,80 @@ function SimulatorPage() {
           >
             Reset to baseline
           </button>
+
+          <div className="mt-6 rounded-lg border border-border/40 bg-background/40 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Spend Efficiency Analysis
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Revenue response and diminishing returns curve.
+                </p>
+              </div>
+              <Select value={curveChannel} onValueChange={(value) => setCurveChannel(value as (typeof CHANNELS)[number])}>
+                <SelectTrigger className="h-8 w-[150px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CHANNELS.map((channel) => (
+                    <SelectItem key={channel} value={channel}>
+                      {channel}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {spendCurve?.curve.length ? (
+              <>
+                <div className="mt-4 h-56">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={spendCurve.curve} margin={{ left: -12, right: 8, top: 8 }}>
+                      <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" />
+                      <XAxis
+                        dataKey="spend"
+                        tickFormatter={(value) => fmtCompact(value as number)}
+                        stroke="var(--color-muted-foreground)"
+                        fontSize={10}
+                      />
+                      <YAxis
+                        tickFormatter={(value) => fmtCompact(value as number)}
+                        stroke="var(--color-muted-foreground)"
+                        fontSize={10}
+                      />
+                      <Tooltip content={<TT formatter={fmtCurrency} />} />
+                      <ReferenceLine
+                        x={totalBudget(curveChannel)}
+                        stroke="var(--color-primary)"
+                        strokeDasharray="4 4"
+                        label="Current"
+                      />
+                      <ReferenceLine
+                        x={spendCurve.saturation_spend}
+                        stroke="var(--color-destructive)"
+                        strokeDasharray="4 4"
+                        label="Diminishing returns"
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="revenue"
+                        name="Revenue"
+                        stroke="var(--color-chart-1)"
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Estimated marginal ROAS at current spend:{" "}
+                  <span className="font-semibold text-foreground">{fmtRoas(spendCurve.marginal_roas)}</span>
+                </p>
+              </>
+            ) : (
+              <p className="mt-4 text-xs text-muted-foreground">Move a budget slider to calculate a spend response curve.</p>
+            )}
+          </div>
         </Card>
 
         <div className="space-y-4 lg:col-span-3">

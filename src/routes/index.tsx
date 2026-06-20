@@ -32,6 +32,7 @@ function Landing() {
     <div className="min-h-screen bg-background text-foreground">
       <Nav />
       <Hero />
+      <HowItWorks />
       <Features />
       <ForecastingSection />
       <Benefits />
@@ -140,6 +141,58 @@ function Hero() {
               ))}
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function HowItWorks() {
+  const steps = [
+    {
+      icon: Upload,
+      title: "Upload campaign CSV",
+      desc: "GA4, Shopify, Ads export, or the instant demo sample.",
+    },
+    {
+      icon: Database,
+      title: "Normalize automatically",
+      desc: "AI-ready schema adapters validate dates, spend, revenue, ROAS, and campaigns.",
+    },
+    {
+      icon: LineChart,
+      title: "Forecast revenue and ROAS",
+      desc: "XGBoost models generate 30/60/90-day forecasts with confidence intervals.",
+    },
+    {
+      icon: Brain,
+      title: "Generate executive actions",
+      desc: "Gemini turns forecasts, anomalies, and budget curves into leadership recommendations.",
+    },
+  ];
+  return (
+    <section className="border-t border-border/60 bg-muted/20 py-16">
+      <div className="container mx-auto px-6">
+        <SectionHeader eyebrow="How it works" title="From CSV to budget decision in minutes" />
+        <div className="mt-10 grid gap-4 md:grid-cols-4">
+          {steps.map((step, index) => (
+            <div key={step.title} className="rounded-2xl border border-border/60 bg-gradient-card p-5">
+              <div className="flex items-center justify-between">
+                <div className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-brand shadow-glow">
+                  <step.icon className="h-5 w-5 text-primary-foreground" />
+                </div>
+                <span className="text-xs font-semibold text-muted-foreground">0{index + 1}</span>
+              </div>
+              <h3 className="mt-4 text-base font-semibold">{step.title}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">{step.desc}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-8 grid gap-3 rounded-2xl border border-border/60 bg-background/60 p-4 text-center text-sm font-semibold md:grid-cols-4">
+          <span>2.83% MAPE</span>
+          <span>100% interval coverage</span>
+          <span>3 channels</span>
+          <span>30/60/90-day horizons</span>
         </div>
       </div>
     </section>

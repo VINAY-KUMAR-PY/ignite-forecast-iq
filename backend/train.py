@@ -3,10 +3,28 @@
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
+
+import joblib
 
 from .data_preprocessing import validate_records
 from .forecasting import train_model_bundle
+from .predict import canonicalize_frame, train_evaluator_model
 from .utils import DEFAULT_MODEL_PATH, read_csv_folder
+
+
+def train_and_save(csv_path: str, model_path: str) -> dict:
+    """Train the offline evaluator v3 model artifact from one CSV file."""
+    raw = read_csv_folder(Path(csv_path).parent)
+    if raw.empty:
+        raise ValueError(f"No CSV data found at {csv_path}")
+    cleaned = canonicalize_frame(raw)
+    if cleaned.frame.empty:
+        raise ValueError("No valid rows after evaluator canonicalization")
+    artifact = train_evaluator_model(cleaned.frame)
+    Path(model_path).parent.mkdir(parents=True, exist_ok=True)
+    joblib.dump(artifact, model_path)
+    return artifact
 
 
 def main() -> None:

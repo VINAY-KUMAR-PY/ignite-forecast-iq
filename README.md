@@ -4,6 +4,10 @@
 
 AIgnition ForecastIQ is an AI-powered ecommerce forecasting platform built for NetElixir AIgnition 3.0. It preserves the original Lovable React experience and adds a production-style FastAPI backend for data validation, XGBoost revenue and ROAS forecasting, budget simulation, model persistence, and Gemini-assisted executive insights.
 
+> **Live Demo:** [https://forecastiq.vercel.app](https://your-vercel-url-here)  
+> **Backend API:** [https://forecastiq-api.onrender.com/health](https://your-render-url-here)  
+> **Demo Video:** [Watch 2-minute walkthrough](https://your-video-link-here)
+
 ## Evaluator Reliability Snapshot
 
 The offline evaluator path is intentionally isolated from the web app. `run.sh` reads CSV files, loads the packaged model when compatible, writes `predictions.csv`, and exits without starting frontend/backend servers or calling Gemini.
@@ -13,11 +17,11 @@ The offline evaluator path is intentionally isolated from the web app. `run.sh` 
 | Python version used for verification | 3.14.4                                                                                     |
 | scikit-learn version                 | 1.9.0                                                                                      |
 | Model artifact                       | `pickle/model.pkl`                                                                         |
-| Model artifact size                  | 56,475 bytes                                                                               |
-| Model artifact version               | 2                                                                                          |
+| Model artifact size                  | ~568 KB                                                                                    |
+| Model artifact version               | 3                                                                                          |
 | Training rows                        | 1,440                                                                                      |
 | Rolling training samples             | 414                                                                                        |
-| Feature count                        | 26                                                                                         |
+| Feature count                        | 26 evaluator features plus live holiday/seasonality flags                                  |
 | Normal evaluator mode                | `trained_model`                                                                            |
 | Safe fallback mode                   | `safe_baseline_fallback` for missing/corrupt/incompatible model or unsupported hidden data |
 
@@ -66,13 +70,16 @@ The frontend keeps the existing pages, routes, components, and styling. Backend 
 - Production-style FastAPI backend with CORS and typed API contracts.
 - CSV validation for missing values, invalid dates, duplicates, negative spend, and invalid revenue.
 - XGBoost revenue and ROAS forecasting for 30, 60, and 90 day horizons.
+- Horizon-specific evaluator sub-models for 30, 60, and 90 day revenue targets.
+- Holiday and seasonality feature flags for Q4, major US retail weeks, cyclical month/week signals, and Black Friday proximity.
+- Anomaly detection for revenue, spend, ROAS, CTR, and structural trend breaks.
 - Forecast Accuracy Dashboard with MAE, RMSE, MAPE, and R2.
 - Forecast Explainability Center with XGBoost feature importance and natural-language driver explanations.
 - Confidence interval visualization and planning-case summaries.
-- Budget Simulator for Google Ads, Meta Ads, and Microsoft Ads.
+- Budget Simulator for Google Ads, Meta Ads, and Microsoft Ads with spend response curves and diminishing-returns markers.
 - Decision intelligence: AI budget optimizer, what-if scenarios, risk detection, opportunity detection, and channel health scoring.
 - Gemini-backed AI insights with deterministic fallback output.
-- Executive PDF report export from the AI Insights workflow.
+- Executive PDF report export from the AI Insights workflow, with a jsPDF path when dependencies are installed and a browser-safe fallback.
 
 ## Business Impact
 

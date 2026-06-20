@@ -62,6 +62,15 @@ export interface SimChannelResult {
 
 export interface SimulationApiResponse {
   channels: SimChannelResult[];
+  roas_decomposition?: Array<{
+    channel: string;
+    spend: number;
+    revenue: number;
+    roas: number;
+    roas_vs_blend: number;
+    marginal_roas_estimate: number;
+    efficiency_score: number;
+  }>;
   totals: {
     totalNewSpend: number;
     totalBaseSpend: number;
@@ -184,6 +193,28 @@ export interface InsightsResponse {
   }>;
 }
 
+export interface SpendCurveResponse {
+  curve: Array<{ spend: number; revenue: number; roas: number }>;
+  saturation_spend: number;
+  marginal_roas: number;
+}
+
+export interface AnomalyItem {
+  date: string;
+  channel: string;
+  metric: string;
+  actual: number;
+  expected: number;
+  z_score: number;
+  severity: "warning" | "critical";
+  description: string;
+}
+
+export interface AnomalyResponse {
+  anomalies: AnomalyItem[];
+  trendBreaks: Array<{ date: string; channel: string; direction: "up" | "down"; magnitude_pct: number }>;
+}
+
 async function postJson<T>(path: string, body: unknown): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     method: "POST",
@@ -235,4 +266,22 @@ export function decisionSupportApi(
 
 export function generateInsightsApi(summary: Record<string, unknown>) {
   return postJson<InsightsResponse>("/api/insights", { summary });
+}
+
+export function fetchSpendCurveApi(
+  rows: CampaignRow[],
+  channel: string,
+  horizon: 30 | 60 | 90,
+  currentBudget: number,
+) {
+  return postJson<SpendCurveResponse>("/api/spend-curve", {
+    rows,
+    channel,
+    horizon,
+    current_budget: currentBudget,
+  });
+}
+
+export function fetchAnomaliesApi(rows: CampaignRow[]) {
+  return postJson<AnomalyResponse>("/api/anomalies", { rows });
 }

@@ -9,7 +9,8 @@ from dotenv import load_dotenv
 
 from .data_preprocessing import validate_records
 from .decision_support import build_decision_support
-from .forecasting import forecast_frame, simulate_budgets, train_model_bundle
+from .anomaly import compute_trend_breaks, detect_anomalies
+from .forecasting import compute_spend_response_curve, forecast_frame, simulate_budgets, train_model_bundle
 from .gemini import generate_gemini_insights
 from .schemas import (
     DecisionSupportRequest,
@@ -116,7 +117,33 @@ def simulate(request: SimulationRequest) -> SimulationResponse:
     """Reforecast channel revenue after planned media budget changes."""
     frame, validation = _validated_frame([row.model_dump() for row in request.rows], "simulation")
     result = simulate_budgets(frame, request.horizon, request.budgets)
-    return SimulationResponse(channels=result["channels"], totals=result["totals"], validation=validation)
+    return SimulationResponse(
+        channels=result["channels"],
+        totals=result["totals"],
+        validation=validation,
+        roas_decomposition=result.get("roas_decomposition", []),
+    )
+
+
+@app.post("/api/spend-curve")
+def spend_curve(request: dict) -> dict:
+    """Return channel-level spend response curve and saturation estimate."""
+    rows = request.get("rows") or []
+    frame, _ = _validated_frame(rows, "spend curve")
+    channel = str(request.get("channel") or "Google Ads")
+    horizon = int(request.get("horizon") or 30)
+    current_budget = float(request.get("current_budget") or request.get("currentBudget") or 0)
+    return compute_spend_response_curve(frame, channel, horizon, current_budget)
+
+
+@app.post("/api/anomalies")
+def get_anomalies(request: dict) -> dict:
+    """Detect performance anomalies and structural trend breaks."""
+    rows = request.get("rows") or []
+    frame, _ = _validated_frame(rows, "anomaly detection")
+    anomalies = [item.to_dict() for item in detect_anomalies(frame)]
+    trend_breaks = compute_trend_breaks(frame)
+    return {"anomalies": anomalies, "trendBreaks": trend_breaks}
 
 
 @app.post("/api/decision-support", response_model=DecisionSupportResponse)

@@ -11,6 +11,16 @@ from .schema_adapters import CANONICAL_COLUMNS, NUMERIC_COLUMNS, normalize_marke
 from .schemas import CampaignRow, ValidationIssue, ValidationResponse
 
 REQUIRED_COLUMNS = CANONICAL_COLUMNS
+HOLIDAY_WEEKS = [
+    "2024-11-25", "2025-11-24", "2026-11-23",
+    "2024-12-23", "2025-12-22", "2026-12-21",
+    "2024-11-25", "2025-11-24",
+    "2024-07-01", "2025-06-30", "2026-06-29",
+    "2024-02-12", "2025-02-10", "2026-02-09",
+    "2024-05-27", "2025-05-26", "2026-05-25",
+    "2024-09-02", "2025-09-01", "2026-09-07",
+]
+BLACK_FRIDAY_DATES = ["2024-11-29", "2025-11-28", "2026-11-27"]
 
 
 def rows_to_frame(rows: Iterable[CampaignRow]) -> pd.DataFrame:
@@ -134,9 +144,45 @@ def filter_frame(frame: pd.DataFrame, level: str, value: str | None = None) -> p
     return frame[frame[key] == value].copy()
 
 
+def add_holiday_features(frame: pd.DataFrame) -> pd.DataFrame:
+    """Add ecommerce holiday and cyclical seasonality flags."""
+    data = frame.copy()
+    if "date_dt" in data:
+        dates = pd.to_datetime(data["date_dt"], errors="coerce")
+    else:
+        dates = pd.to_datetime(data["date"], errors="coerce")
+
+    holiday_starts = pd.to_datetime(pd.Series(HOLIDAY_WEEKS), errors="coerce").dropna()
+    holiday_windows = [(start.normalize(), (start + pd.Timedelta(days=6)).normalize()) for start in holiday_starts]
+    normalized_dates = dates.dt.normalize()
+    holiday_mask = pd.Series(False, index=data.index)
+    for start, end in holiday_windows:
+        holiday_mask |= normalized_dates.between(start, end)
+
+    black_fridays = pd.to_datetime(pd.Series(BLACK_FRIDAY_DATES), errors="coerce").dropna()
+
+    def days_to_nearest_black_friday(date: pd.Timestamp) -> int:
+        if pd.isna(date) or black_fridays.empty:
+            return 0
+        distances = [(date.normalize() - bf.normalize()).days for bf in black_fridays]
+        return int(min(distances, key=lambda value: abs(value)))
+
+    month = dates.dt.month.fillna(1).astype(int)
+    week = dates.dt.isocalendar().week.astype(float).fillna(1)
+    data["is_holiday_week"] = holiday_mask.astype(int)
+    data["is_q4"] = month.isin([10, 11, 12]).astype(int)
+    data["month_sin"] = np.sin(2 * np.pi * month / 12)
+    data["month_cos"] = np.cos(2 * np.pi * month / 12)
+    data["week_of_year_sin"] = np.sin(2 * np.pi * week / 52.18)
+    data["week_of_year_cos"] = np.cos(2 * np.pi * week / 52.18)
+    data["days_to_black_friday"] = dates.apply(days_to_nearest_black_friday)
+    return data
+
+
 def feature_frame(daily: pd.DataFrame, target: str) -> tuple[pd.DataFrame, pd.Series]:
     """Build supervised learning features for revenue or ROAS targets."""
     data = daily.copy().sort_values("date").reset_index(drop=True)
+    lag_target = "revenue" if target.startswith("revenue_horizon_") else target
     data["date_dt"] = pd.to_datetime(data["date"])
     data["dow"] = data["date_dt"].dt.dayofweek
     data["month"] = data["date_dt"].dt.month
@@ -144,12 +190,13 @@ def feature_frame(daily: pd.DataFrame, target: str) -> tuple[pd.DataFrame, pd.Se
     data["sin_year"] = np.sin(2 * np.pi * data["day_of_year"] / 365.25)
     data["cos_year"] = np.cos(2 * np.pi * data["day_of_year"] / 365.25)
     data["trend"] = np.arange(len(data))
+    data = add_holiday_features(data)
 
     for lag in (1, 7, 14):
-        data[f"{target}_lag_{lag}"] = data[target].shift(lag)
+        data[f"{lag_target}_lag_{lag}"] = data[lag_target].shift(lag)
         data[f"spend_lag_{lag}"] = data["spend"].shift(lag)
     for window in (7, 28):
-        data[f"{target}_roll_{window}"] = data[target].shift(1).rolling(window, min_periods=1).mean()
+        data[f"{lag_target}_roll_{window}"] = data[lag_target].shift(1).rolling(window, min_periods=1).mean()
         data[f"spend_roll_{window}"] = data["spend"].shift(1).rolling(window, min_periods=1).mean()
 
     feature_cols = [
@@ -161,12 +208,19 @@ def feature_frame(daily: pd.DataFrame, target: str) -> tuple[pd.DataFrame, pd.Se
         "month",
         "sin_year",
         "cos_year",
+        "is_holiday_week",
+        "is_q4",
+        "month_sin",
+        "month_cos",
+        "week_of_year_sin",
+        "week_of_year_cos",
+        "days_to_black_friday",
         "trend",
-        f"{target}_lag_1",
-        f"{target}_lag_7",
-        f"{target}_lag_14",
-        f"{target}_roll_7",
-        f"{target}_roll_28",
+        f"{lag_target}_lag_1",
+        f"{lag_target}_lag_7",
+        f"{lag_target}_lag_14",
+        f"{lag_target}_roll_7",
+        f"{lag_target}_roll_28",
         "spend_lag_1",
         "spend_lag_7",
         "spend_lag_14",
@@ -196,6 +250,7 @@ def future_features(
         return float(np.mean(slice_)) if slice_ else 0.0
 
     day_of_year = future_date.dayofyear
+    holiday = add_holiday_features(pd.DataFrame([{"date": future_date.strftime("%Y-%m-%d")}])).iloc[0]
     row = {
         "spend": float(exog.get("spend", 0)),
         "clicks": float(exog.get("clicks", 0)),
@@ -205,6 +260,13 @@ def future_features(
         "month": int(future_date.month),
         "sin_year": float(np.sin(2 * np.pi * day_of_year / 365.25)),
         "cos_year": float(np.cos(2 * np.pi * day_of_year / 365.25)),
+        "is_holiday_week": float(holiday["is_holiday_week"]),
+        "is_q4": float(holiday["is_q4"]),
+        "month_sin": float(holiday["month_sin"]),
+        "month_cos": float(holiday["month_cos"]),
+        "week_of_year_sin": float(holiday["week_of_year_sin"]),
+        "week_of_year_cos": float(holiday["week_of_year_cos"]),
+        "days_to_black_friday": float(holiday["days_to_black_friday"]),
         "trend": len(hist),
         f"{target}_lag_1": lag(target_values, 1),
         f"{target}_lag_7": lag(target_values, 7),

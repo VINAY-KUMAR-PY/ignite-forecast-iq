@@ -39,6 +39,11 @@ except Exception:  # pragma: no cover - exercised only when dependency is unavai
 
 CHANNELS = ["Google Ads", "Meta Ads", "Microsoft Ads"]
 logger = logging.getLogger(__name__)
+HORIZON_CONFIGS = {
+    30: {"n_estimators": 140, "max_depth": 4, "learning_rate": 0.06},
+    60: {"n_estimators": 100, "max_depth": 3, "learning_rate": 0.05},
+    90: {"n_estimators": 80, "max_depth": 3, "learning_rate": 0.04},
+}
 
 
 @dataclass
@@ -53,13 +58,14 @@ def _model_type() -> str:
     return "xgboost" if XGBOOST_AVAILABLE else "sklearn_gradient_boosting_fallback"
 
 
-def _new_model() -> Any:
+def _new_model(horizon: int = 30) -> Any:
+    config = HORIZON_CONFIGS.get(int(horizon), HORIZON_CONFIGS[30])
     if XGBOOST_AVAILABLE:
         return XGBRegressor(
             objective="reg:squarederror",
-            n_estimators=140,
-            max_depth=4,
-            learning_rate=0.06,
+            n_estimators=config["n_estimators"],
+            max_depth=config["max_depth"],
+            learning_rate=config["learning_rate"],
             subsample=0.9,
             colsample_bytree=0.9,
             reg_lambda=1.0,
@@ -68,19 +74,30 @@ def _new_model() -> Any:
         )
 
     return GradientBoostingRegressor(
-        n_estimators=140,
-        learning_rate=0.06,
-        max_depth=3,
+        n_estimators=config["n_estimators"],
+        learning_rate=config["learning_rate"],
+        max_depth=config["max_depth"],
         random_state=42,
     )
 
 
-def _fit_target(daily: pd.DataFrame, target: str) -> Optional[TargetModel]:
-    X, y = feature_frame(daily, target)
+def _fit_target(daily: pd.DataFrame, target: str, horizon: int = 30) -> Optional[TargetModel]:
+    training_daily = daily.copy()
+    training_target = target
+    if target == "revenue" and horizon in {60, 90}:
+        training_target = f"revenue_horizon_{horizon}"
+        training_daily[training_target] = (
+            training_daily["revenue"]
+            .shift(-1)
+            .rolling(horizon, min_periods=max(14, horizon // 3))
+            .sum()
+            .shift(-(horizon - 1))
+        )
+    X, y = feature_frame(training_daily, training_target)
     if len(X) < 10 or y.nunique() <= 1:
         return None
 
-    model = _new_model()
+    model = _new_model(horizon)
     model.fit(X, y)
     preds = model.predict(X)
     residuals = y.to_numpy(dtype=float) - np.asarray(preds, dtype=float)
@@ -155,6 +172,13 @@ def _feature_label(feature: str) -> str:
         "month": "monthly seasonality",
         "sin_year": "annual seasonality",
         "cos_year": "annual seasonality",
+        "is_holiday_week": "major retail holiday week",
+        "is_q4": "Q4 retail season",
+        "month_sin": "monthly cycle",
+        "month_cos": "monthly cycle",
+        "week_of_year_sin": "weekly annual cycle",
+        "week_of_year_cos": "weekly annual cycle",
+        "days_to_black_friday": "Black Friday proximity",
         "trend": "time trend",
         "spend_roll_7": "7-day average spend",
         "spend_roll_28": "28-day average spend",
@@ -284,13 +308,14 @@ def forecast_diagnostics(
 def train_model_bundle(frame: pd.DataFrame, model_path: str | Path = DEFAULT_MODEL_PATH) -> Dict[str, Any]:
     """Train revenue and ROAS estimators and persist them as one bundle."""
     daily = aggregate_daily(frame)
-    revenue_model = _fit_target(daily, "revenue")
+    revenue_models = {horizon: _fit_target(daily, "revenue", horizon) for horizon in (30, 60, 90)}
     roas_model = _fit_target(daily, "roas")
     bundle = {
         "model_type": _model_type(),
         "trained_at": datetime.now(timezone.utc).isoformat(),
         "training_rows": int(len(frame)),
-        "revenue": revenue_model,
+        "revenue": revenue_models.get(30),
+        "revenue_by_horizon": revenue_models,
         "roas": roas_model,
     }
     path = Path(model_path)
@@ -468,10 +493,13 @@ def forecast_frame(
     """Forecast revenue and ROAS for the requested segment and horizon."""
     segment = filter_frame(frame, level, value)
     daily = aggregate_daily(segment)
-    revenue_model = model_bundle.get("revenue") if model_bundle else None
+    revenue_model = None
+    if model_bundle:
+        revenue_by_horizon = model_bundle.get("revenue_by_horizon") or {}
+        revenue_model = revenue_by_horizon.get(horizon) or revenue_by_horizon.get(str(horizon)) or model_bundle.get("revenue")
     roas_model = model_bundle.get("roas") if model_bundle else None
     if revenue_model is None:
-        revenue_model = _fit_target(daily, "revenue")
+        revenue_model = _fit_target(daily, "revenue", horizon)
     if roas_model is None:
         roas_model = _fit_target(daily, "roas")
     revenue = _forecast_target(daily, horizon, "revenue", target_model=revenue_model)
@@ -574,9 +602,30 @@ def simulate_budgets(frame: pd.DataFrame, horizon: int, budgets: Dict[str, float
     total_baseline = sum(item.baselineRevenue for item in results)
     projected_roas = total_projected / total_new_spend if total_new_spend > 0 else 0.0
     baseline_roas = total_baseline / total_base_spend if total_base_spend > 0 else 0.0
+    blended_roas = projected_roas
+    roas_decomposition = []
+    for item in results:
+        marginal_revenue = _estimate_marginal_revenue(frame, item.channel, horizon, item.newTotalSpend)
+        marginal_roas = marginal_revenue / 1000 if item.newTotalSpend > 0 else 0.0
+        efficiency = 50
+        if blended_roas > 0:
+            efficiency += min(35, max(-35, (item.projectedRoas - blended_roas) / blended_roas * 50))
+        efficiency += min(15, max(-15, (marginal_roas - 1.5) * 6))
+        roas_decomposition.append(
+            {
+                "channel": item.channel,
+                "spend": item.newTotalSpend,
+                "revenue": item.projectedRevenue,
+                "roas": item.projectedRoas,
+                "roas_vs_blend": round_money(item.projectedRoas - blended_roas),
+                "marginal_roas_estimate": round_money(marginal_roas),
+                "efficiency_score": int(max(0, min(100, round(efficiency)))),
+            }
+        )
 
     return {
         "channels": results,
+        "roas_decomposition": roas_decomposition,
         "totals": SimulationTotals(
             totalNewSpend=round_money(total_new_spend),
             totalBaseSpend=round_money(total_base_spend),
@@ -589,6 +638,52 @@ def simulate_budgets(frame: pd.DataFrame, horizon: int, budgets: Dict[str, float
             revenueChangePct=round_money(pct_change(total_projected, total_baseline)),
             roasChangePct=round_money(pct_change(projected_roas, baseline_roas)),
         ),
+    }
+
+
+def _estimate_marginal_revenue(frame: pd.DataFrame, channel: str, horizon: int, current_total_spend: float) -> float:
+    channel_frame = frame[frame["channel"] == channel].copy()
+    daily = aggregate_daily(channel_frame)
+    if daily.empty or horizon <= 0:
+        return 0.0
+    current_daily = current_total_spend / horizon
+    next_daily = (current_total_spend + 1000) / horizon
+    current_points = [p for p in _forecast_target(daily, horizon, "revenue", forced_daily_spend=current_daily) if not p.historical]
+    next_points = [p for p in _forecast_target(daily, horizon, "revenue", forced_daily_spend=next_daily) if not p.historical]
+    return max(0.0, sum(p.value for p in next_points) - sum(p.value for p in current_points))
+
+
+def compute_spend_response_curve(frame: pd.DataFrame, channel: str, horizon: int, current_budget: float) -> Dict[str, Any]:
+    """Estimate diminishing returns for a channel at common spend multipliers."""
+    channel_frame = frame[frame["channel"] == channel].copy()
+    daily = aggregate_daily(channel_frame)
+    if daily.empty:
+        return {"curve": [], "saturation_spend": 0.0, "marginal_roas": 0.0}
+
+    curve = []
+    previous = None
+    saturation_spend = 0.0
+    multipliers = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0]
+    for multiplier in multipliers:
+        spend = max(0.0, float(current_budget) * multiplier)
+        daily_spend = spend / horizon if horizon else 0.0
+        future = [p for p in _forecast_target(daily, horizon, "revenue", forced_daily_spend=daily_spend) if not p.historical]
+        revenue = sum(p.value for p in future)
+        roas = revenue / spend if spend > 0 else 0.0
+        if previous is not None:
+            delta_spend = spend - previous["spend"]
+            delta_revenue = revenue - previous["revenue"]
+            marginal = delta_revenue / delta_spend if delta_spend > 0 else 0.0
+            if saturation_spend == 0.0 and marginal < 1.5:
+                saturation_spend = spend
+        curve.append({"spend": round_money(spend), "revenue": round_money(revenue), "roas": round_money(roas)})
+        previous = {"spend": spend, "revenue": revenue}
+
+    marginal_roas = _estimate_marginal_revenue(frame, channel, horizon, float(current_budget)) / 1000 if current_budget else 0.0
+    return {
+        "curve": curve,
+        "saturation_spend": round_money(saturation_spend or curve[-1]["spend"]),
+        "marginal_roas": round_money(marginal_roas),
     }
 
 

@@ -16,11 +16,11 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "AIgnition ForecastIQ — AI-Powered Ecommerce Revenue Forecasting" },
+      { title: "AIgnition ForecastIQ - Ecommerce Forecasting and Budget Decisions" },
       {
         name: "description",
         content:
-          "Forecast revenue and blended ROAS with AI. Upload campaign data, simulate budget changes across Google, Meta and Microsoft Ads, and get executive insights instantly.",
+          "Upload GA4, Shopify, or Ads CSV data, forecast revenue and ROAS, simulate budget moves, and generate an executive decision brief.",
       },
     ],
   }),
@@ -85,21 +85,21 @@ function Hero() {
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
             <Zap className="h-3 w-3 text-primary-glow" />
-            Built for AI & ML hackathon · Marketing forecasting
+            Evaluator-safe AI forecasting for ecommerce marketing
           </div>
           <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">
-            Forecast revenue &<br />
-            <span className="text-gradient-brand">scale ROAS with AI</span>
+            Turn campaign history into
+            <br />
+            <span className="text-gradient-brand">budget decisions</span>
           </h1>
           <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-            Upload your campaign data from Google, Meta and Microsoft Ads. ForecastIQ predicts
-            revenue and blended ROAS for the next 30, 60 or 90 days — and tells you exactly where to
-            spend next.
+            ForecastIQ converts GA4, Shopify, and Ads exports into 30, 60, and 90 day revenue
+            forecasts, ROAS projections, confidence intervals, and an executive next-budget action.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link to="/app">
               <Button variant="hero" size="lg">
-                Open dashboard <ArrowRight className="ml-1 h-4 w-4" />
+                Open Decision Center <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </Link>
             <a href="#features">
@@ -110,8 +110,8 @@ function Hero() {
           </div>
           <dl className="mt-12 grid grid-cols-3 gap-6 border-t border-border/60 pt-6">
             <Stat label="Forecast horizon" value="90d" />
-            <Stat label="Channels" value="3+" />
-            <Stat label="History generated" value="365d" />
+            <Stat label="Data sources" value="3+" />
+            <Stat label="Evaluator mode" value="Offline" />
           </dl>
         </div>
         <div className="relative">
@@ -193,13 +193,13 @@ function Features() {
   const items = [
     {
       icon: BarChart3,
-      title: "Executive dashboard",
-      desc: "Revenue, spend, ROAS and campaign KPIs with trend charts and channel breakdowns.",
+      title: "Executive Decision Center",
+      desc: "Best budget action, expected impact, confidence, risk, and next steps in one judge-ready view.",
     },
     {
       icon: Upload,
-      title: "CSV upload & validation",
-      desc: "Drag-and-drop ingestion with duplicate, missing-value and invalid-date detection.",
+      title: "GA4 / Shopify / Ads upload",
+      desc: "Schema adapters normalize ecommerce exports before duplicate, date, spend, and revenue validation.",
     },
     {
       icon: LineChart,
@@ -209,17 +209,17 @@ function Features() {
     {
       icon: Calculator,
       title: "Budget simulator",
-      desc: "Slide budgets across Google, Meta and Microsoft Ads — see revenue & ROAS update live.",
+      desc: "Slide budgets across Google, Meta and Microsoft Ads and see revenue and ROAS update live.",
     },
     {
       icon: Brain,
       title: "AI executive insights",
-      desc: "Drivers, risks, opportunities and budget allocation recommendations written for stakeholders.",
+      desc: "Gemini-backed or deterministic fallback briefs with drivers, risks, opportunities, and action plans.",
     },
     {
       icon: Database,
-      title: "Instant demo mode",
-      desc: "365 days of realistic multi-channel data, ready for you to explore in one click.",
+      title: "Evaluator-safe mode",
+      desc: "The offline runner loads a trained model, writes predictions.csv, and never starts a server.",
     },
   ];
   return (
@@ -257,10 +257,10 @@ function ForecastingSection() {
           />
           <ul className="mt-8 space-y-4 text-sm">
             {[
-              "Trend + weekly seasonality model with confidence intervals",
+              "Trained evaluator model with calibrated confidence intervals",
               "Forecast at overall, channel, campaign-type or campaign level",
               "Lower / Expected / Upper bounds visualised on every chart",
-              "Re-runs instantly on uploaded data — no training pipelines",
+              "Offline-safe predictions with safe baseline fallback for hidden datasets",
             ].map((t) => (
               <li key={t} className="flex items-start gap-3">
                 <TrendingUp className="mt-0.5 h-4 w-4 shrink-0 text-primary-glow" />
@@ -270,7 +270,7 @@ function ForecastingSection() {
           </ul>
         </div>
         <div className="rounded-2xl border border-border/60 bg-gradient-card p-6 shadow-elevated">
-          <div className="text-sm text-muted-foreground">Revenue · 90-day forecast</div>
+          <div className="text-sm text-muted-foreground">Revenue - 90-day forecast</div>
           <MiniChart />
           <div className="grid grid-cols-3 gap-3 text-center text-xs">
             {[
@@ -333,14 +333,14 @@ function AIInsightsSection() {
           <h4 className="mt-3 text-lg font-semibold">Q4 outlook</h4>
           <p className="mt-2 text-sm text-muted-foreground">
             Revenue is trending +18% QoQ driven by Performance Max and branded search. Meta
-            retargeting ROAS slipped to 1.9x — reallocating 15% of its spend to Google PMax projects
+            retargeting ROAS slipped to 1.9x; reallocating 15% of its spend to Google PMax projects
             an additional $142K in the next 30 days.
           </p>
           <div className="mt-4 grid gap-2 text-xs">
             {[
-              "↗ Shift 15% Meta retargeting → Google PMax",
-              "⚠ Bing Generic CPC up 22% MoM — bid cap recommended",
-              "✓ Brand Search ROAS 6.8x — protect budget",
+              "Action: Shift 15% Meta retargeting to Google PMax",
+              "Risk: Bing Generic CPC up 22% MoM; bid cap recommended",
+              "Protect: Brand Search ROAS 6.8x; protect budget",
             ].map((l) => (
               <div key={l} className="rounded-md bg-card/40 px-3 py-2">
                 {l}
@@ -378,11 +378,11 @@ function CTA() {
             Ready to forecast your next quarter?
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-            Launch the demo workspace — 365 days of multi-channel data is already loaded.
+            Launch the judge demo workspace with 365 days of multi-channel data already loaded.
           </p>
           <Link to="/app" className="mt-8 inline-block">
             <Button variant="hero" size="lg">
-              Open the dashboard <ArrowRight className="ml-1 h-4 w-4" />
+              Open the Decision Center <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </Link>
         </div>
@@ -414,7 +414,7 @@ function Footer() {
   return (
     <footer className="border-t border-border/60 py-10">
       <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-6 text-sm text-muted-foreground md:flex-row">
-        <div>© {new Date().getFullYear()} AIgnition ForecastIQ. Built for hackathon demos.</div>
+        <div>(c) {new Date().getFullYear()} AIgnition ForecastIQ. Built for hackathon demos.</div>
         <div className="flex gap-6">
           <Link to="/app">App</Link>
           <a href="#features">Features</a>

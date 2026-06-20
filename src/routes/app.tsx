@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 export const Route = createFileRoute("/app")({
   head: () => ({
     meta: [
-      { title: "Dashboard · AIgnition ForecastIQ" },
+      { title: "Decision Center - AIgnition ForecastIQ" },
       { name: "description", content: "Forecasting workspace for ecommerce marketing teams." },
     ],
   }),
@@ -16,7 +16,7 @@ export const Route = createFileRoute("/app")({
 
 type NavItem = { to: string; label: string; icon: typeof BarChart3; exact?: boolean };
 const NAV: NavItem[] = [
-  { to: "/app", label: "Dashboard", icon: BarChart3, exact: true },
+  { to: "/app", label: "Decision Center", icon: BarChart3, exact: true },
   { to: "/app/upload", label: "Data Upload", icon: Upload },
   { to: "/app/forecast", label: "Forecasting", icon: LineChart },
   { to: "/app/simulator", label: "Budget Simulator", icon: Calculator },

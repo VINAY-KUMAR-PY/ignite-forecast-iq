@@ -12,7 +12,8 @@ export function EmptyState() {
       </div>
       <h2 className="mt-4 text-xl font-semibold">No campaign data yet</h2>
       <p className="mt-2 max-w-md text-sm text-muted-foreground">
-        Load demo data to explore ForecastIQ or upload your own CSV with campaign performance.
+        Load demo data to see the full judge flow, or upload GA4, Shopify, Ads, or ForecastIQ CSV
+        data.
       </p>
       <div className="mt-6 flex gap-3">
         <Button variant="hero" onClick={loadDemo}>

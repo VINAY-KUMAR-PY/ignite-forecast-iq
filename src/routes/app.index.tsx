@@ -35,7 +35,7 @@ import { EmptyState } from "@/components/empty-state";
 import { Card } from "@/components/ui/card";
 
 export const Route = createFileRoute("/app/")({
-  head: () => ({ meta: [{ title: "Dashboard · ForecastIQ" }] }),
+  head: () => ({ meta: [{ title: "Executive Decision Center - ForecastIQ" }] }),
   component: Dashboard,
 });
 
@@ -223,7 +223,7 @@ function Dashboard() {
   if (!stats)
     return (
       <>
-        <PageHeader title="Dashboard" />
+        <PageHeader title="Executive Decision Center" />
         <EmptyState />
       </>
     );
@@ -237,8 +237,8 @@ function Dashboard() {
   return (
     <>
       <PageHeader
-        title="Marketing performance"
-        description="Live snapshot of revenue, spend, ROAS and channel performance."
+        title="Executive Decision Center"
+        description="Start here for forecasted revenue, expected ROAS, risk, opportunity, and the next budget move."
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -315,7 +315,8 @@ function Dashboard() {
               <h3 className="text-sm font-semibold">Executive Decision Center</h3>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              One-screen recommendation for the next marketing budget review.
+              Judge starting point: best budget action, expected impact, risk level, and next three
+              actions.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">

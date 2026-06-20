@@ -32,6 +32,10 @@ ForecastIQ links upload validation, forecasting, confidence intervals, decision 
 
 The backend returns deterministic fallback insights based on the same performance summary. The application remains demo-ready without external AI availability.
 
+## Is fallback mode a weakness?
+
+No. The fallback is a deliberate production reliability layer. Gemini improves the language quality of the executive brief, but the product still creates a complete, data-grounded recommendation if the API key is missing, the provider rate limits, the network times out, or the response is malformed.
+
 ## How do you keep the automated evaluator safe?
 
 The root `run.sh` path is isolated from the live app. It reads CSV files from the provided data folder, loads a lightweight evaluator-safe model artifact, writes the required `predictions.csv`, and exits without starting frontend, backend, Gemini, or internet-dependent services.
@@ -66,7 +70,19 @@ CI installs the pinned Python dependencies, compiles backend and test code, runs
 
 ## How would you deploy this?
 
-The frontend can deploy as a static Vite app on Vercel with `VITE_API_BASE_URL` pointing to the backend. The FastAPI backend can deploy on Render or Railway with `python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000`. Gemini keys stay backend-only, CORS is restricted to the production frontend, and `pickle/model.pkl` is packaged with the backend.
+The frontend can deploy as a static Vite app on Vercel with `VITE_API_BASE_URL` pointing to the backend. The FastAPI backend can deploy on Render or Railway with `python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT`. Gemini keys stay backend-only, CORS is restricted to the production frontend, and `pickle/model.pkl` is packaged with the backend.
+
+## Where is the live demo link?
+
+The repository is deployment-ready but does not commit a live URL because Vercel, Render, Railway, and Gemini secrets must be configured in the owner's accounts. The README includes placeholders and exact deployment steps. Once deployed, the submission should include the Vercel frontend URL, backend health URL, and demo video URL.
+
+## What should judges watch in the 2-minute demo?
+
+The fastest story is: upload or load sample data, validate it, open the Executive Decision Center, inspect forecasts and confidence intervals, run a budget scenario, generate AI insights, and close with the top three budget actions. That path shows data ingestion, ML, decision intelligence, and business value without making judges hunt through the app.
+
+## Why is ForecastIQ reliable?
+
+The automated evaluator path is offline and deterministic, the model artifact is lightweight and pinned to exact dependencies, hidden-data schema adapters handle common ecommerce exports, fallback prediction protects edge cases, and CI verifies the exact `predictions.csv` contract on every push.
 
 ## Why is ForecastIQ Top-5 ready?
 

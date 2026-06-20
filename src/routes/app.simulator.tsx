@@ -920,8 +920,8 @@ function SimulatorPage() {
                 <h3 className="text-sm font-semibold">Channel health score</h3>
               </div>
               <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
-                Score blends projected ROAS, revenue trend, efficiency risk, and budget share fit
-                into a 0-100 decision signal.
+                Formula: projected ROAS plus revenue trend plus budget-share fit, minus efficiency
+                risk penalties. 80+ is healthy, 60-79 needs watch, below 60 is critical.
               </p>
               <div className="space-y-4">
                 {decisionSupport.channelHealth.map((item) => (

@@ -70,17 +70,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "AIgnition ForecastIQ — AI-Powered Ecommerce Revenue Forecasting" },
+      { title: "AIgnition ForecastIQ - Ecommerce Forecasting and Budget Decisions" },
       {
         name: "description",
         content:
-          "Forecast revenue and blended ROAS across Google, Meta, and Microsoft Ads with AI-powered insights and a real-time budget simulator.",
+          "Forecast revenue and ROAS from GA4, Shopify, and Ads data with AI insights, budget simulation, and evaluator-safe offline predictions.",
       },
       { name: "author", content: "AIgnition" },
       { property: "og:title", content: "AIgnition ForecastIQ" },
       {
         property: "og:description",
-        content: "AI-powered revenue & ROAS forecasting for ecommerce marketing teams.",
+        content: "AI-powered revenue and ROAS forecasting for ecommerce marketing teams.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

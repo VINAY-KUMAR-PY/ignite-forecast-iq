@@ -8,18 +8,18 @@ AIgnition ForecastIQ is an AI-powered ecommerce forecasting platform built for N
 
 The offline evaluator path is intentionally isolated from the web app. `run.sh` reads CSV files, loads the packaged model when compatible, writes `predictions.csv`, and exits without starting frontend/backend servers or calling Gemini.
 
-| Item | Value |
-| --- | --- |
-| Python version used for verification | 3.14.4 |
-| scikit-learn version | 1.9.0 |
-| Model artifact | `pickle/model.pkl` |
-| Model artifact size | 56,475 bytes |
-| Model artifact version | 2 |
-| Training rows | 1,440 |
-| Rolling training samples | 414 |
-| Feature count | 26 |
-| Normal evaluator mode | `trained_model` |
-| Safe fallback mode | `safe_baseline_fallback` for missing/corrupt/incompatible model or unsupported hidden data |
+| Item                                 | Value                                                                                      |
+| ------------------------------------ | ------------------------------------------------------------------------------------------ |
+| Python version used for verification | 3.14.4                                                                                     |
+| scikit-learn version                 | 1.9.0                                                                                      |
+| Model artifact                       | `pickle/model.pkl`                                                                         |
+| Model artifact size                  | 56,475 bytes                                                                               |
+| Model artifact version               | 2                                                                                          |
+| Training rows                        | 1,440                                                                                      |
+| Rolling training samples             | 414                                                                                        |
+| Feature count                        | 26                                                                                         |
+| Normal evaluator mode                | `trained_model`                                                                            |
+| Safe fallback mode                   | `safe_baseline_fallback` for missing/corrupt/incompatible model or unsupported hidden data |
 
 ## 30-Second Product Summary
 
@@ -93,11 +93,11 @@ ForecastIQ accepts canonical campaign CSVs and common ecommerce exports. The sch
 
 Supported examples:
 
-| Source | Supported fields | Normalization behavior |
-| --- | --- | --- |
-| GA4 | `sessionSource`, `sessionMedium`, `purchaseRevenue`, `eventValue`, `sessions`, `conversions` | Maps source/medium to channel and campaign context, uses sessions as traffic volume, defaults missing spend to 0 |
-| Shopify | `created_at`, `total_price`, `sales`, `orders`, `product_type` | Maps order revenue and product type into ecommerce campaign rows, defaults missing media spend to 0 |
-| Ads platforms | `spend`, `cost`, `clicks`, `impressions`, `conversions`, `conversion_value`, `revenue`, `campaign` | Maps platform exports into paid media rows and calculates ROAS when absent |
+| Source        | Supported fields                                                                                   | Normalization behavior                                                                                           |
+| ------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| GA4           | `sessionSource`, `sessionMedium`, `purchaseRevenue`, `eventValue`, `sessions`, `conversions`       | Maps source/medium to channel and campaign context, uses sessions as traffic volume, defaults missing spend to 0 |
+| Shopify       | `created_at`, `total_price`, `sales`, `orders`, `product_type`                                     | Maps order revenue and product type into ecommerce campaign rows, defaults missing media spend to 0              |
+| Ads platforms | `spend`, `cost`, `clicks`, `impressions`, `conversions`, `conversion_value`, `revenue`, `campaign` | Maps platform exports into paid media rows and calculates ROAS when absent                                       |
 
 Multiple CSV files can be placed in the same `data/` folder. Each file is adapted independently before safe merging, so a GA4 traffic file, Shopify orders file, and paid ads file can be evaluated together without hardcoded filenames.
 
@@ -204,30 +204,30 @@ Supported horizons are 30, 60, and 90 days. Supported levels are overall, channe
 
 The offline evaluator artifact at `pickle/model.pkl` is a compact joblib artifact trained with the pinned environment below:
 
-| Item | Value |
-| --- | --- |
-| Python | 3.14.4 |
-| scikit-learn | 1.9.0 |
-| scipy | 1.17.1 |
-| pandas | 3.0.3 |
-| numpy | 2.4.6 |
-| joblib | 1.5.3 |
-| Artifact type | `forecastiq_evaluator_model` |
-| Artifact version | 2 |
-| Evaluator model type | `trained_model` |
-| Artifact size | 56,475 bytes |
-| Training rows | 1,440 |
-| Feature count | 26 |
-| Revenue blend weight | 0.10 |
+| Item                 | Value                        |
+| -------------------- | ---------------------------- |
+| Python               | 3.14.4                       |
+| scikit-learn         | 1.9.0                        |
+| scipy                | 1.17.1                       |
+| pandas               | 3.0.3                        |
+| numpy                | 2.4.6                        |
+| joblib               | 1.5.3                        |
+| Artifact type        | `forecastiq_evaluator_model` |
+| Artifact version     | 2                            |
+| Evaluator model type | `trained_model`              |
+| Artifact size        | 56,475 bytes                 |
+| Training rows        | 1,440                        |
+| Feature count        | 26                           |
+| Revenue blend weight | 0.10                         |
 
 The evaluator model trains on rolling historical samples from `data/sample_campaigns.csv` and predicts 30, 60, and 90 day revenue and ROAS at overall, channel, campaign type, and campaign levels. The safe baseline remains available for missing, corrupt, incompatible, tiny, or malformed hidden evaluator data.
 
 Backtesting uses the final 30 days as a holdout and trains on the earlier period. Current holdout metrics are:
 
-| Model | MAE | RMSE | MAPE | Interval coverage |
-| --- | ---: | ---: | ---: | ---: |
-| Trained model | 2,107.20 | 2,672.49 | 2.83% | 100.00% |
-| Safe baseline | 2,185.89 | 2,763.76 | 2.78% | 88.89% |
+| Model         |      MAE |     RMSE |  MAPE | Interval coverage |
+| ------------- | -------: | -------: | ----: | ----------------: |
+| Trained model | 2,107.20 | 2,672.49 | 2.83% |           100.00% |
+| Safe baseline | 2,185.89 | 2,763.76 | 2.78% |            88.89% |
 
 The trained evaluator improves MAE by 78.69 and RMSE by 91.27 versus the safe baseline while preserving full holdout interval coverage. The summary is generated by:
 
@@ -239,21 +239,21 @@ Reports are written to `reports/backtest_report.json` and `reports/backtest_summ
 
 Blend-weight validation tested revenue model weights of 0.10, 0.25, 0.40, 0.50, and 0.60. The current 0.10 blend had the best RMSE/MAE balance, so the packaged artifact keeps the lower trained-model weight instead of over-trusting the model on limited sample history.
 
-| Revenue model weight | MAE | RMSE | MAPE | Interval coverage |
-| ---: | ---: | ---: | ---: | ---: |
-| 0.10 | 2,107.20 | 2,672.49 | 2.83% | 100.00% |
-| 0.25 | 2,208.04 | 2,800.71 | 3.22% | 100.00% |
-| 0.40 | 2,463.50 | 3,206.38 | 3.80% | 100.00% |
-| 0.50 | 2,808.06 | 3,587.39 | 4.22% | 100.00% |
-| 0.60 | 3,187.48 | 4,028.53 | 4.71% | 100.00% |
+| Revenue model weight |      MAE |     RMSE |  MAPE | Interval coverage |
+| -------------------: | -------: | -------: | ----: | ----------------: |
+|                 0.10 | 2,107.20 | 2,672.49 | 2.83% |           100.00% |
+|                 0.25 | 2,208.04 | 2,800.71 | 3.22% |           100.00% |
+|                 0.40 | 2,463.50 | 3,206.38 | 3.80% |           100.00% |
+|                 0.50 | 2,808.06 | 3,587.39 | 4.22% |           100.00% |
+|                 0.60 | 3,187.48 | 4,028.53 | 4.71% |           100.00% |
 
 Per-horizon backtesting is included for transparency:
 
 | Horizon | Trained MAE | Trained RMSE | Trained MAPE | Trained coverage | Baseline MAE | Baseline RMSE |
-| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 30 days | 2,107.20 | 2,672.49 | 2.83% | 100.00% | 2,185.89 | 2,763.76 |
-| 60 days | 5,144.93 | 8,652.28 | 1.96% | 100.00% | 4,728.39 | 6,906.01 |
-| 90 days | 21,917.54 | 34,288.82 | 6.90% | 100.00% | 13,145.11 | 18,642.51 |
+| ------: | ----------: | -----------: | -----------: | ---------------: | -----------: | ------------: |
+| 30 days |    2,107.20 |     2,672.49 |        2.83% |          100.00% |     2,185.89 |      2,763.76 |
+| 60 days |    5,144.93 |     8,652.28 |        1.96% |          100.00% |     4,728.39 |      6,906.01 |
+| 90 days |   21,917.54 |    34,288.82 |        6.90% |          100.00% |    13,145.11 |     18,642.51 |
 
 This is why ForecastIQ keeps both systems: the trained model improves the primary evaluator-style 30-day holdout, while the deterministic baseline remains a reliability guardrail for longer or incompatible cases.
 
@@ -360,15 +360,15 @@ The runner:
 
 Expected output columns:
 
-| Column             | Meaning                                                              |
-| ------------------ | -------------------------------------------------------------------- |
-| `level`            | Forecast grain: `overall`, `channel`, `campaign_type`, or `campaign` |
-| `segment`          | Segment name, or `all` for the overall forecast                      |
-| `horizon_days`     | Forecast horizon: `30`, `60`, or `90`                                |
-| `expected_revenue` | Point estimate for revenue                                           |
-| `lower_revenue`    | Conservative revenue interval bound                                  |
-| `upper_revenue`    | Upside revenue interval bound                                        |
-| `expected_roas`    | Expected revenue divided by projected spend                          |
+| Column             | Meaning                                                                                 |
+| ------------------ | --------------------------------------------------------------------------------------- |
+| `level`            | Forecast grain: `overall`, `channel`, `campaign_type`, or `campaign`                    |
+| `segment`          | Segment name, or `all` for the overall forecast                                         |
+| `horizon_days`     | Forecast horizon: `30`, `60`, or `90`                                                   |
+| `expected_revenue` | Point estimate for revenue                                                              |
+| `lower_revenue`    | Conservative revenue interval bound                                                     |
+| `upper_revenue`    | Upside revenue interval bound                                                           |
+| `expected_roas`    | Expected revenue divided by projected spend                                             |
 | `model_type`       | `trained_model` for compatible artifact predictions, otherwise `safe_baseline_fallback` |
 
 Assumptions and fallback behavior:
@@ -413,6 +413,22 @@ Open the Vite URL and use the existing app routes:
 3. Open `/app/forecast` and show the 30/60/90-day forecast, confidence intervals, accuracy metrics, explainability, and executive business brief.
 4. Open `/app/simulator`, apply the -10%, +10%, +20%, and +50% quick scenarios, then review recommended allocation and channel health.
 5. Open `/app/insights`, generate insights, explain the Marketing Manager Brief, and export the executive PDF report.
+
+## Demo Video
+
+Demo Video: `TBD - add final YouTube, Loom, or Drive link before submission`.
+
+Recommended 2-minute video path:
+
+| Time      | Screen                    | Message                                                                                 |
+| --------- | ------------------------- | --------------------------------------------------------------------------------------- |
+| 0:00-0:15 | Upload CSV                | Load sample data and mention GA4, Shopify, Ads, and canonical CSV compatibility.        |
+| 0:15-0:25 | Validation                | Show valid rows and explain missing value, date, duplicate, spend, and revenue checks.  |
+| 0:25-0:45 | Dashboard                 | Open the Executive Decision Center and show the recommended budget action.              |
+| 0:45-1:10 | Forecast                  | Show 30/60/90 day forecasts, confidence intervals, accuracy, and explainability.        |
+| 1:10-1:35 | Budget Simulator          | Apply a quick scenario and show expected revenue lift, ROAS impact, and channel health. |
+| 1:35-1:50 | AI Insights               | Generate the executive brief and call out Gemini plus fallback resilience.              |
+| 1:50-2:00 | Executive Decision Center | Close on the top three actions and the business impact for a marketing manager.         |
 
 ## Judge Demo Walkthrough
 
@@ -651,7 +667,47 @@ python -m backend.backtest
 `-- README.md
 ```
 
-## Deployment Instructions
+## Live Demo Deployment
+
+No live production URLs are committed in this repository because deployment requires the owner's Vercel, Render, or Railway account and secret configuration. Use these placeholders in the submission form once deployed:
+
+| Surface    | Placeholder                                                 |
+| ---------- | ----------------------------------------------------------- |
+| Frontend   | `https://forecastiq-demo.vercel.app`                        |
+| Backend    | `https://forecastiq-api.onrender.com` or Railway equivalent |
+| Demo video | `TBD - final public video link`                             |
+
+Frontend on Vercel:
+
+1. Import `VINAY-KUMAR-PY/ignite-forecast-iq`.
+2. Set the build command to `pnpm run build` or `npm run build`.
+3. Set the output directory to `dist`.
+4. Add `VITE_API_BASE_URL=https://your-backend-domain`.
+5. Redeploy after backend CORS is configured.
+
+Backend on Render:
+
+1. Create a Python web service from this repository.
+2. Build command: `pip install -r requirements.txt`.
+3. Start command: `python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT`.
+4. Add `CORS_ORIGINS=["https://your-frontend-domain.vercel.app"]`.
+5. Add `GEMINI_API_KEY` only on the backend if live Gemini is required.
+
+Backend on Railway:
+
+1. Create a Python service from this repository.
+2. Use the same build and start commands as Render.
+3. Configure `PORT`, `CORS_ORIGINS`, and optional Gemini variables in Railway environment settings.
+4. Confirm `/health` returns `{"status":"ok"}`.
+
+Deployment environment variables:
+
+| Variable            | Surface      | Purpose                                                     |
+| ------------------- | ------------ | ----------------------------------------------------------- |
+| `VITE_API_BASE_URL` | Frontend     | Public API base URL used by the browser app.                |
+| `GEMINI_API_KEY`    | Backend only | Enables live Gemini insights; never expose through `VITE_`. |
+| `GEMINI_MODEL`      | Backend only | Optional model override, defaulting to a fast Gemini model. |
+| `CORS_ORIGINS`      | Backend only | Restricts browser access to the deployed frontend URL.      |
 
 ### Backend on Render or Railway
 
@@ -659,7 +715,7 @@ Use a Python web service with this start command:
 
 ```bash
 pip install -r requirements.txt
-python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
+python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT
 ```
 
 Recommended backend environment variables:

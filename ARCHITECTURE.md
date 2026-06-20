@@ -92,6 +92,28 @@ The forecasting layer trains separate models for revenue and ROAS. Feature engin
 
 The offline evaluator model uses a compact joblib sklearn artifact at `pickle/model.pkl`. If loading or feature generation fails, the deterministic safe baseline remains active and still produces the required prediction schema.
 
+## Reliability Layers
+
+ForecastIQ is designed to degrade gracefully instead of failing during a judge demo or automated evaluation:
+
+- Evaluator isolation: `run.sh` only loads CSV data, loads `pickle/model.pkl` when compatible, writes `predictions.csv`, and exits.
+- Trained model plus fallback: the packaged model is used for normal evaluator data, while `safe_baseline_fallback` covers corrupt models, unsupported schemas, tiny datasets, and malformed hidden files.
+- Schema adapters: GA4, Shopify, Ads, and canonical CSV files are normalized before validation and modeling.
+- Confidence intervals: residual calibration, horizon widening, and non-negative lower bounds keep forecast ranges business-safe.
+- Gemini resilience: live Gemini output is optional; fallback executive insights use the same campaign summary when the API key, network, model, or response format fails.
+- CI verification: the evaluator workflow compiles Python, runs tests, generates predictions, and checks schema, horizons, numeric output, and `trained_model` usage.
+
+## Backtesting Snapshot
+
+The latest holdout backtest trains on the earlier period and evaluates the final 30 days. The trained evaluator model improves MAE and RMSE versus the safe baseline on the primary 30-day holdout while preserving full interval coverage:
+
+| Model         |      MAE |     RMSE |  MAPE | Interval coverage |
+| ------------- | -------: | -------: | ----: | ----------------: |
+| Trained model | 2,107.20 | 2,672.49 | 2.83% |           100.00% |
+| Safe baseline | 2,185.89 | 2,763.76 | 2.78% |            88.89% |
+
+This is why both modes coexist: the trained model improves credibility and normal-case quality, while the fallback protects hidden-dataset reliability.
+
 ## Deployment Model
 
 Frontend and backend can deploy independently:
@@ -101,3 +123,9 @@ Frontend and backend can deploy independently:
 - Model bundle: `pickle/model.pkl` packaged with the backend or generated through `backend.train`.
 - Suggested hosting: Vercel for the frontend, Render or Railway for the backend.
 - Required production safeguards: backend-only Gemini keys, configured CORS origins, packaged model artifact, and an offline evaluator smoke test before submission.
+
+Recommended deployment commands:
+
+- Vercel frontend: build with `pnpm run build` or `npm run build`, output `dist`, set `VITE_API_BASE_URL` to the hosted backend.
+- Render/Railway backend: build with `pip install -r requirements.txt`, start with `python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT`.
+- Environment: keep `GEMINI_API_KEY` backend-only and restrict `CORS_ORIGINS` to the production frontend URL.

@@ -78,7 +78,7 @@ function InsightsPage() {
     <>
       <PageHeader
         title="AI executive insights"
-        description="Board-ready briefing with Gemini when available and deterministic fallback insights when live AI is unavailable."
+        description="Board-ready briefing with Gemini when available, plus a deterministic executive fallback for live demos."
         actions={
           <div className="flex flex-wrap gap-2">
             {insights && (
@@ -89,7 +89,7 @@ function InsightsPage() {
             )}
             <Button variant="hero" onClick={run} disabled={loading}>
               <Sparkles className="mr-2 h-4 w-4" />
-              {loading ? "Analyzing…" : insights ? "Regenerate" : "Generate insights"}
+              {loading ? "Analyzing..." : insights ? "Regenerate" : "Generate insights"}
             </Button>
           </div>
         }
@@ -113,8 +113,8 @@ function InsightsPage() {
             channel &amp; campaign analysis, budget allocation, risks and growth opportunities.
           </p>
           <p className="mt-2 text-xs text-muted-foreground">
-            If Gemini is not configured, times out, or returns invalid output, ForecastIQ still
-            generates a complete fallback briefing from your campaign data.
+            Fallback mode is intentional: if Gemini is missing, slow, rate-limited, or invalid,
+            ForecastIQ still generates a complete executive briefing from the campaign summary.
           </p>
         </Card>
       )}
@@ -124,7 +124,7 @@ function InsightsPage() {
           <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           <p className="mt-4 text-sm text-muted-foreground">
             Analyzing {rows.length.toLocaleString()} rows across {summary.channels.length} channels
-            and {summary.totalCampaigns} campaigns…
+            and {summary.totalCampaigns} campaigns...
           </p>
           <p className="mt-2 text-xs text-muted-foreground">
             Live AI is protected with backend timeout, retry, and fallback handling.

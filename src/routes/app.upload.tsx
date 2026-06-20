@@ -96,9 +96,8 @@ function UploadPage() {
               <PlayCircle className="h-4 w-4 text-primary" /> Judge demo path
             </div>
             <p className="mt-2 text-sm text-muted-foreground">
-              Load sample data, open the dashboard, show the Executive Decision Center, then run the
-              Budget Simulator and AI Insights. This gives judges the full story in under two
-              minutes.
+              Load sample data, open the Executive Decision Center, then run the Forecast, Budget
+              Simulator, and AI Insights. This gives judges the full story in under two minutes.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -139,8 +138,9 @@ function UploadPage() {
         </div>
         <h3 className="mt-4 text-lg font-semibold">Drop your CSV here</h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          Supports ForecastIQ format plus GA4 sessionSource/sessionMedium/purchaseRevenue, Shopify
-          created_at/total_price/orders, and Ads spend/clicks/impressions/conversion_value.
+          Drop one or more ecommerce exports: GA4 sessionSource/sessionMedium/purchaseRevenue,
+          Shopify created_at/total_price/orders, Ads spend/clicks/impressions/conversion_value, or
+          the ForecastIQ sample format.
         </p>
         <input
           ref={inputRef}

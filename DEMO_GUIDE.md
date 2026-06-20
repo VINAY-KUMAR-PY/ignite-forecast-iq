@@ -4,6 +4,22 @@
 
 Show that ForecastIQ turns ecommerce marketing data into validated forecasts, budget recommendations, risk detection, and executive actions.
 
+## Demo Video
+
+Demo Video: `TBD - add final YouTube, Loom, or Drive link before submission`.
+
+Use a tight 2-minute recording so judges see product value before technical detail:
+
+| Time      | Step                      | What to show                                                                         |
+| --------- | ------------------------- | ------------------------------------------------------------------------------------ |
+| 0:00-0:15 | Upload CSV                | Click **Load sample data** and mention GA4, Shopify, Ads, and canonical CSV support. |
+| 0:15-0:25 | Validation                | Show valid rows and validation coverage for dates, duplicates, spend, and revenue.   |
+| 0:25-0:45 | Dashboard                 | Open the Executive Decision Center and explain the recommended budget action.        |
+| 0:45-1:10 | Forecast                  | Show forecast horizon, confidence interval, accuracy metrics, and explainability.    |
+| 1:10-1:35 | Budget Simulator          | Apply +20% or recommended allocation and show revenue lift plus ROAS impact.         |
+| 1:35-1:50 | AI Insights               | Generate the executive brief and call out Gemini plus fallback resilience.           |
+| 1:50-2:00 | Executive Decision Center | Close with the top three next actions and business impact.                           |
+
 ## Recommended Demo Flow
 
 1. Start on `/app/upload`
@@ -48,6 +64,8 @@ Show that ForecastIQ turns ecommerce marketing data into validated forecasts, bu
 
 If Gemini is unavailable, the backend returns deterministic fallback insights. The demo remains complete without an API key.
 
+Recommended wording: "Gemini makes the brief more conversational, but the product never depends on it for a live demo. ForecastIQ still produces a professional executive brief from the same campaign summary."
+
 ## Real-World Data Talking Point
 
 If a judge asks whether this works beyond the sample file, explain:
@@ -62,5 +80,5 @@ If a judge asks whether this works beyond the sample file, explain:
 - Upload page with the Judge Demo Path card.
 - Dashboard first viewport with Executive Decision Center.
 - Forecast page showing confidence interval bands and accuracy metrics.
-- Simulator page showing budget optimizer and channel health score formula.
+- Simulator page showing budget optimizer and the channel health score formula.
 - Insights page showing executive summary and Export PDF action.

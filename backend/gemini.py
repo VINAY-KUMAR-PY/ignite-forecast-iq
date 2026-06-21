@@ -64,11 +64,13 @@ def _fallback_insights(summary: Dict[str, Any]) -> InsightsResponse:
     roas_trend = float(summary.get("roasTrendPct") or 0)
     anomalies = summary.get("anomalies") or []
     trend_breaks = summary.get("trendBreaks") or []
+    driver_evidence = summary.get("driverEvidence") or []
 
     ranked_channels = sorted(channels, key=lambda c: float(c.get("roas") or 0), reverse=True)
     under_channels = sorted(channels, key=lambda c: float(c.get("roas") or 0))
     best = ranked_channels[0] if ranked_channels else {"name": "Primary channel", "roas": 0, "revenue": 0}
     weakest = under_channels[0] if under_channels else best
+    strongest_evidence = driver_evidence[0] if driver_evidence else None
 
     current_total_share = sum(float(c.get("sharePct") or 0) for c in channels) or 100
     allocation = []
@@ -113,9 +115,20 @@ def _fallback_insights(summary: Dict[str, Any]) -> InsightsResponse:
                 "metric": _money(forecast30),
             },
             {
-                "title": "Campaign concentration",
-                "detail": f"Top campaigns explain a meaningful share of revenue, so changes should be tested before broad budget moves because campaign-level concentration can amplify any anomaly or trend break ({len(anomalies)} anomalies, {len(trend_breaks)} trend breaks flagged).",
-                "metric": f"{len(top_campaigns)} top campaigns reviewed",
+                "title": "Measured spend association" if strongest_evidence else "Campaign concentration",
+                "detail": (
+                    f"{strongest_evidence.get('channel', 'Leading channel')} has a "
+                    f"{strongest_evidence.get('strength', 'measured')} {strongest_evidence.get('direction', 'mixed')} "
+                    f"spend-to-revenue association of {float(strongest_evidence.get('spendRevenueDeltaCorrelation') or 0):.2f} "
+                    f"across {int(strongest_evidence.get('observations') or 0)} observations; this supports a budget test because association is evidence for a hypothesis, not proof of incrementality."
+                    if strongest_evidence
+                    else f"Top campaigns explain a meaningful share of revenue, so changes should be tested before broad budget moves because campaign-level concentration can amplify any anomaly or trend break ({len(anomalies)} anomalies, {len(trend_breaks)} trend breaks flagged)."
+                ),
+                "metric": (
+                    f"r={float(strongest_evidence.get('spendRevenueDeltaCorrelation') or 0):.2f} association"
+                    if strongest_evidence
+                    else f"{len(top_campaigns)} top campaigns reviewed"
+                ),
             },
         ],
         "channelPerformance": [
@@ -467,6 +480,7 @@ def _is_retryable(kind: GeminiFailureKind) -> bool:
 
 def _build_prompt(summary: Dict[str, Any]) -> str:
     anomalies = summary.get("anomalies") or summary.get("trendBreaks") or []
+    driver_evidence = summary.get("driverEvidence") or []
     return f"""
 {SYSTEM_PROMPT}
 
@@ -478,9 +492,13 @@ def _build_prompt(summary: Dict[str, Any]) -> str:
 {json.dumps(anomalies, indent=2)}
 </anomalies>
 
+<statistical_driver_evidence>
+{json.dumps(driver_evidence, indent=2)}
+</statistical_driver_evidence>
+
 Think step by step internally:
 STEP 1 - DIAGNOSE: Identify the 3 most important performance signals, strongest channel by ROAS, weakest channel by ROAS, and most significant trend. Cite exact numbers.
-STEP 2 - CAUSAL HYPOTHESES: Explain the most plausible cause-and-effect chain behind each major movement. Use causal language such as "because", "likely due to", or "consistent with", and tie each claim to at least two named metrics.
+STEP 2 - CAUSAL HYPOTHESES: Explain the most plausible cause-and-effect chain behind each major movement. Use causal language such as "because", "likely due to", or "consistent with", and tie each claim to at least two named metrics. Use statistical_driver_evidence when available, explicitly describing correlations as associations rather than proof of incrementality.
 Example weak framing: "ROAS is down 12%."
 Example causal framing: "ROAS is down 12% likely because CPC rose 9% while conversion rate stayed flat, consistent with rising auction competition rather than deteriorating landing-page quality."
 Example weak framing: "Revenue is up in Google Ads."

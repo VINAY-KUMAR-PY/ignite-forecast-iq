@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, patch
 from backend.gemini import (
     _extract_json,
     _fallback_insights,
+    _build_prompt,
     _safe_exception_message,
     _validate_insights_payload,
     generate_gemini_insights_with_source,
@@ -24,6 +25,15 @@ SUMMARY = {
     "spendTrendPct": 4.1,
     "roasTrendPct": 2.3,
     "anomalies": [{"date": "2026-06-01", "channel": "Meta Ads", "metric": "roas"}],
+    "driverEvidence": [
+        {
+            "channel": "Google Ads",
+            "observations": 28,
+            "spendRevenueDeltaCorrelation": 0.62,
+            "direction": "positive",
+            "strength": "strong",
+        }
+    ],
     "channels": [
         {"name": "Google Ads", "revenue": 76200.0, "spend": 15800.0, "roas": 4.82, "sharePct": 50.3},
         {"name": "Meta Ads", "revenue": 36400.0, "spend": 10400.0, "roas": 3.5, "sharePct": 33.1},
@@ -119,6 +129,14 @@ class GeminiParsingTests(unittest.TestCase):
         self.assertRegex(combined, r"\b(because|likely due to|consistent with)\b")
         self.assertIn("roas", combined)
         self.assertTrue(any(metric in combined for metric in ["spend", "conversion", "revenue"]))
+        self.assertIn("association", combined)
+
+    def test_prompt_includes_statistical_driver_evidence_with_causal_guardrail(self) -> None:
+        prompt = _build_prompt(SUMMARY)
+
+        self.assertIn("statistical_driver_evidence", prompt)
+        self.assertIn('"spendRevenueDeltaCorrelation": 0.62', prompt)
+        self.assertIn("rather than proof of incrementality", prompt)
 
     def test_invalid_api_key_is_redacted_and_falls_back(self) -> None:
         with patch.dict(

@@ -26,7 +26,7 @@ The Forecast Accuracy Dashboard shows MAE, RMSE, MAPE, and R2 for revenue and RO
 
 ## How do you explain the model?
 
-The Explainability Center exposes XGBoost feature importance for revenue and ROAS models, then translates the top drivers into natural-language explanations. The AI Insights page goes one step further by generating causal hypotheses grounded in spend, revenue, ROAS, anomaly, and trend-break signals. It does not claim formal causal inference or media-mix incrementality.
+The Explainability Center exposes XGBoost feature importance for revenue and ROAS models, then translates the top drivers into natural-language explanations. The AI Insights page adds anomaly/trend-break signals and computed channel spend-delta/revenue-delta correlations. Those associations strengthen testable causal hypotheses, but the product does not claim formal causal inference, media-mix incrementality, or experimental lift.
 
 ## What makes this more than a dashboard?
 
@@ -44,6 +44,10 @@ No. The fallback is a deliberate production reliability layer. Gemini improves t
 
 The root `run.sh` path is isolated from the live app. It reads CSV files from the provided data folder, loads a lightweight evaluator-safe model artifact, writes the required `predictions.csv`, and exits without starting frontend, backend, Gemini, or internet-dependent services.
 
+## Why are the live and offline estimators different?
+
+The live XGBoost path is optimized for interactive daily charts, feature importance, and simulations. The offline sklearn artifact is optimized for a fast, deterministic, dependency-minimal evaluator contract. Both use the same normalized marketing data concepts, horizons, uncertainty safeguards, and fallback philosophy, but exact point-for-point parity is not claimed because their estimators and output grains serve different operational constraints.
+
 ## Why does a trained evaluator model exist?
 
 The trained evaluator model gives the offline scoring path real ML behavior instead of only a deterministic baseline. It is a compact joblib sklearn artifact with 26 engineered features, trained on 1,440 rows and 414 rolling forecast samples. The artifact includes dedicated horizon sample counts, residual calibration, revenue and ROAS weights, and fallback metadata while preserving the required output schema.
@@ -58,7 +62,7 @@ The fallback improves reliability. Backtesting shows the trained model improves 
 
 ## How do you know the evaluator model is compatible?
 
-The model artifact was verified in a clean Python 3.14.4 environment with pinned dependencies, including scikit-learn 1.9.0, scipy 1.17.1, pandas 3.0.3, numpy 2.4.6, and joblib 1.5.3. In that environment, `pickle/model.pkl` loaded successfully and `backend.predict` generated `model_type = trained_model`.
+The model artifact was verified in a clean Python 3.14.4 environment with pinned dependencies, including scikit-learn 1.9.0, scipy 1.17.1, pandas 3.0.3, numpy 2.4.6, and joblib 1.5.3. CI also exercises the evaluator on Python 3.10-3.14. Python 3.11-3.14 must load the trained artifact; Python 3.10 verifies the safe baseline because sklearn does not guarantee cross-generation pickle compatibility.
 
 ## How did you validate the trained-model blend weight?
 
@@ -72,7 +76,7 @@ The backtest report also includes revenue and ROAS blend-weight comparisons plus
 
 ## What is the model verification process?
 
-CI installs the pinned Python dependencies, compiles backend and test code, runs pytest, executes `backend.predict`, and validates that `predictions.csv` exists, has the exact required schema including `lower_roas` and `upper_roas`, contains horizons 30/60/90, has no NaN or infinite values, has ordered ROAS ranges, and includes `trained_model` in `model_type`.
+CI installs the minimal pinned evaluator dependencies and executes `run.sh` on Python 3.10, 3.11, 3.12, 3.13, and 3.14. A separate Python 3.14 job installs `requirements-app.txt`, compiles the backend, runs pytest, verifies the committed trained artifact, and validates that `predictions.csv` has the exact schema, horizons 30/60/90, finite values, ordered ROAS ranges, and the expected model mode.
 
 ## How would you deploy this?
 
@@ -80,7 +84,7 @@ The frontend can deploy as a static Vite app on Vercel with `VITE_API_BASE_URL` 
 
 ## Where is the live demo link?
 
-The repository is deployment-ready but does not commit a live URL because Vercel, Render, Railway, and Gemini secrets must be configured in the owner's accounts. The README includes placeholders and exact deployment steps. Once deployed, the submission should include the Vercel frontend URL, backend health URL, and demo video URL.
+The repository is deployment-ready but does not claim an unverified live URL. Vercel, Render, Railway, and Gemini secrets must be configured in the owner's accounts. Once deployed and smoke-tested, the submission should include the verified frontend URL, backend health URL, and demo video URL.
 
 ## What should judges watch in the 2-minute demo?
 
@@ -88,7 +92,7 @@ The fastest story is: upload or load sample data, validate it, open the Executiv
 
 ## Why is ForecastIQ reliable?
 
-The automated evaluator path is offline and deterministic, the model artifact is lightweight and pinned to exact dependencies, hidden-data schema adapters handle common ecommerce exports, fallback prediction protects edge cases, and CI verifies the exact `predictions.csv` contract on every push.
+The automated evaluator path is offline and deterministic, the model artifact is lightweight and pinned to exact dependencies, hidden-data schema adapters handle common ecommerce exports, fallback prediction protects edge cases, unseen categories are logged, and CI verifies the exact `predictions.csv` contract across five Python versions on every push.
 
 ## Why is ForecastIQ Top-5 ready?
 
@@ -100,4 +104,4 @@ The current model does not include promotions, inventory, pricing, holidays, com
 
 ## What would you build next?
 
-Production CI/CD, authentication, persistent storage, scheduled retraining, holdout backtesting, model monitoring, promotion/holiday features, and deployment to a cloud backend.
+Authentication, persistent storage, scheduled retraining, production model monitoring, promotion/inventory/price features, incrementality experiments, and deployment to a cloud backend.

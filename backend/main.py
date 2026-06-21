@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 from .data_preprocessing import validate_records
-from .decision_support import build_decision_support
+from .decision_support import build_decision_support, compute_driver_evidence
 from .anomaly import compute_trend_breaks, detect_anomalies
 from .forecasting import compute_spend_response_curve, forecast_frame, simulate_budgets
 from .gemini import generate_gemini_insights
@@ -171,7 +171,8 @@ def get_anomalies(request: dict) -> dict:
     frame, _ = _validated_frame(rows, "anomaly detection")
     anomalies = [item.to_dict() for item in detect_anomalies(frame)]
     trend_breaks = compute_trend_breaks(frame)
-    return {"anomalies": anomalies, "trendBreaks": trend_breaks}
+    driver_evidence = compute_driver_evidence(frame)
+    return {"anomalies": anomalies, "trendBreaks": trend_breaks, "driverEvidence": driver_evidence}
 
 
 @app.post("/api/decision-support", response_model=DecisionSupportResponse)

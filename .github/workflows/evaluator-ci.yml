@@ -6,7 +6,78 @@ on:
 
 jobs:
   evaluator:
-    name: Offline evaluator contract
+    name: Offline evaluator / Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install evaluator dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Generate predictions through the evaluator contract
+        run: |
+          chmod +x run.sh
+          ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
+
+      - name: Validate evaluator output contract
+        run: |
+          python - <<'PY'
+          import math
+          import sys
+          from pathlib import Path
+
+          import pandas as pd
+
+          output = Path("output/predictions.csv")
+          required = [
+              "level", "segment", "horizon_days", "expected_revenue",
+              "lower_revenue", "upper_revenue", "expected_roas",
+              "lower_roas", "upper_roas", "model_type",
+              "interval_width_pct", "forecast_confidence",
+          ]
+          if not output.exists():
+              raise SystemExit("predictions.csv was not created")
+          frame = pd.read_csv(output)
+          if frame.empty or list(frame.columns) != required:
+              raise SystemExit(f"Invalid output shape/schema: {frame.shape}, {list(frame.columns)}")
+          if set(frame["horizon_days"].astype(int)) != {30, 60, 90}:
+              raise SystemExit(f"Unexpected horizons: {sorted(frame['horizon_days'].unique().tolist())}")
+          if frame.isna().any().any():
+              raise SystemExit("predictions.csv contains NaN values")
+          numeric = [
+              "expected_revenue", "lower_revenue", "upper_revenue",
+              "expected_roas", "lower_roas", "upper_roas",
+          ]
+          for column in numeric:
+              values = pd.to_numeric(frame[column], errors="raise")
+              if not values.map(math.isfinite).all():
+                  raise SystemExit(f"{column} contains non-finite values")
+          if not (frame["lower_roas"] <= frame["expected_roas"]).all():
+              raise SystemExit("lower_roas exceeds expected_roas")
+          if not (frame["expected_roas"] <= frame["upper_roas"]).all():
+              raise SystemExit("expected_roas exceeds upper_roas")
+
+          modes = set(frame["model_type"].astype(str))
+          if sys.version_info >= (3, 11) and "trained_model" not in modes:
+              raise SystemExit(f"trained_model missing on supported artifact runtime: {sorted(modes)}")
+          if not modes <= {"trained_model", "safe_baseline_fallback"}:
+              raise SystemExit(f"Unexpected model_type values: {sorted(modes)}")
+          print(f"Validated {len(frame)} rows on Python {sys.version.split()[0]} using {sorted(modes)}")
+          PY
+
+  app-tests:
+    name: Backend application and trained artifact
     runs-on: ubuntu-latest
 
     steps:
@@ -18,64 +89,45 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install Python dependencies
-        run: python -m pip install -r requirements.txt
+      - name: Install application dependencies
+        run: python -m pip install -r requirements-app.txt
 
-      - name: Compile Python sources
-        run: python -m compileall backend scripts tests -q
-
-      - name: Run Python tests
-        run: python -m pytest
-
-      - name: Generate evaluator predictions
-        run: python -m backend.predict --data-dir ./data --model ./pickle/model.pkl --output ./output/predictions.csv
-
-      - name: Validate evaluator output contract
+      - name: Compile and test backend
         run: |
+          python -m compileall backend scripts tests -q
+          python -m pytest
+          python -m backend.backtest
+
+      - name: Verify committed trained artifact
+        run: |
+          python -m backend.predict --data-dir ./data --model ./pickle/model.pkl --output ./output/predictions.csv
           python - <<'PY'
-          import math
-          from pathlib import Path
-
           import pandas as pd
-
-          output = Path("output/predictions.csv")
-          required = [
-              "level",
-              "segment",
-              "horizon_days",
-              "expected_revenue",
-              "lower_revenue",
-              "upper_revenue",
-              "expected_roas",
-              "lower_roas",
-              "upper_roas",
-              "model_type",
-              "interval_width_pct",
-              "forecast_confidence",
-          ]
-
-          if not output.exists():
-              raise SystemExit("predictions.csv was not created")
-
-          frame = pd.read_csv(output)
-          if frame.empty:
-              raise SystemExit("predictions.csv is empty")
-          if list(frame.columns) != required:
-              raise SystemExit(f"Unexpected schema: {list(frame.columns)}")
-          if set(frame["horizon_days"].astype(int)) != {30, 60, 90}:
-              raise SystemExit(f"Unexpected horizons: {sorted(frame['horizon_days'].unique().tolist())}")
-          if frame.isna().any().any():
-              raise SystemExit("predictions.csv contains NaN values")
-          for column in ["expected_revenue", "lower_revenue", "upper_revenue", "expected_roas", "lower_roas", "upper_roas"]:
-              values = pd.to_numeric(frame[column], errors="raise")
-              if not values.map(math.isfinite).all():
-                  raise SystemExit(f"{column} contains infinite or non-finite values")
-          if not (frame["lower_roas"] <= frame["expected_roas"]).all():
-              raise SystemExit("lower_roas exceeds expected_roas")
-          if not (frame["expected_roas"] <= frame["upper_roas"]).all():
-              raise SystemExit("expected_roas exceeds upper_roas")
+          frame = pd.read_csv("output/predictions.csv")
           if "trained_model" not in set(frame["model_type"].astype(str)):
-              raise SystemExit(f"trained_model missing from model_type values: {frame['model_type'].unique().tolist()}")
-
-          print(f"Validated {len(frame)} prediction rows with trained_model present.")
+              raise SystemExit("The committed artifact did not produce trained_model output")
+          print("Committed trained artifact verified.")
           PY
+
+  frontend:
+    name: Frontend typecheck, lint, and production build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Check frontend
+        run: npm run check
+
+      - name: Reject high-severity production advisories
+        run: npm audit --omit=dev --audit-level=high

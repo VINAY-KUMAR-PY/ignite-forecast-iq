@@ -20,6 +20,83 @@ from .schemas import (
 from .utils import pct_change, round_money
 
 
+def compute_driver_evidence(frame: pd.DataFrame) -> List[dict]:
+    """Measure channel spend-delta associations for insight grounding.
+
+    These statistics support testable causal hypotheses; they are deliberately
+    labelled as associations because observational attribution data cannot prove
+    incrementality on its own.
+    """
+    required = {"date", "channel", "spend", "revenue"}
+    if frame.empty or not required.issubset(frame.columns):
+        return []
+
+    working = frame.copy()
+    working["date"] = pd.to_datetime(working["date"], errors="coerce")
+    working = working.dropna(subset=["date", "channel"])
+    if working.empty:
+        return []
+
+    blended = (
+        working.groupby("date", as_index=False)[["spend", "revenue"]]
+        .sum()
+        .rename(columns={"spend": "blended_spend", "revenue": "blended_revenue"})
+    )
+    blended["blended_revenue_delta"] = blended["blended_revenue"].diff()
+    evidence: List[dict] = []
+
+    for channel, channel_frame in working.groupby("channel"):
+        daily = channel_frame.groupby("date", as_index=False)[["spend", "revenue"]].sum()
+        daily = daily.merge(blended[["date", "blended_revenue_delta"]], on="date", how="inner").sort_values("date")
+        daily["spend_delta"] = daily["spend"].diff()
+        daily["channel_revenue_delta"] = daily["revenue"].diff()
+        daily["lagged_spend_delta"] = daily["spend_delta"].shift(1)
+
+        contemporaneous = _safe_correlation(daily["spend_delta"], daily["channel_revenue_delta"])
+        blended_correlation = _safe_correlation(daily["spend_delta"], daily["blended_revenue_delta"])
+        lagged_correlation = _safe_correlation(daily["lagged_spend_delta"], daily["blended_revenue_delta"])
+        observations = int(
+            daily[["spend_delta", "channel_revenue_delta"]]
+            .replace([np.inf, -np.inf], np.nan)
+            .dropna()
+            .shape[0]
+        )
+        if observations < 6:
+            continue
+
+        reference = blended_correlation if blended_correlation is not None else contemporaneous
+        if reference is None:
+            continue
+        magnitude = abs(reference)
+        strength = "strong" if magnitude >= 0.6 else "moderate" if magnitude >= 0.3 else "weak"
+        direction = "positive" if reference >= 0.1 else "negative" if reference <= -0.1 else "mixed"
+        evidence.append(
+            {
+                "channel": str(channel),
+                "observations": observations,
+                "spendRevenueDeltaCorrelation": round(reference, 3),
+                "channelRevenueDeltaCorrelation": round(contemporaneous, 3) if contemporaneous is not None else None,
+                "laggedRevenueDeltaCorrelation": round(lagged_correlation, 3) if lagged_correlation is not None else None,
+                "direction": direction,
+                "strength": strength,
+                "interpretation": (
+                    f"{strength.title()} {direction} association between spend changes and revenue changes; "
+                    "use as hypothesis evidence, not proof of incrementality."
+                ),
+            }
+        )
+
+    return sorted(evidence, key=lambda item: abs(item["spendRevenueDeltaCorrelation"]), reverse=True)
+
+
+def _safe_correlation(left: pd.Series, right: pd.Series) -> Optional[float]:
+    paired = pd.concat([left, right], axis=1).replace([np.inf, -np.inf], np.nan).dropna()
+    if len(paired) < 6 or paired.iloc[:, 0].std(ddof=0) <= 1e-12 or paired.iloc[:, 1].std(ddof=0) <= 1e-12:
+        return None
+    value = float(paired.iloc[:, 0].corr(paired.iloc[:, 1]))
+    return value if np.isfinite(value) else None
+
+
 def build_decision_support(
     frame: pd.DataFrame,
     horizon: int,

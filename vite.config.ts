@@ -23,8 +23,49 @@ export default defineConfig({
           ) {
             return "charts-vendor";
           }
-          if (id.includes("@radix-ui")) return "radix-vendor";
+          if (
+            id.includes("@radix-ui") ||
+            id.includes("@floating-ui") ||
+            id.includes("react-remove-scroll") ||
+            id.includes("aria-hidden") ||
+            id.includes("use-callback-ref") ||
+            id.includes("use-sidecar")
+          ) {
+            return "radix-vendor";
+          }
           if (id.includes("lucide-react") || id.includes("lucide")) return "icons-vendor";
+          if (id.includes("jspdf") || id.includes("fflate")) return "pdf-core-vendor";
+          if (
+            id.includes("html2canvas") ||
+            id.includes("canvg") ||
+            id.includes("dompurify") ||
+            id.includes("pako") ||
+            id.includes("fast-png") ||
+            id.includes("iobuffer") ||
+            id.includes("svg-pathdata") ||
+            id.includes("stackblur-canvas") ||
+            id.includes("rgbcolor") ||
+            id.includes("core-js")
+          ) {
+            return "pdf-renderer-vendor";
+          }
+          if (id.includes("date-fns")) return "date-vendor";
+          if (id.includes("lodash")) return "utilities-vendor";
+          if (
+            id.includes("tailwind-merge") ||
+            id.includes("class-variance-authority") ||
+            id.includes("node_modules/clsx")
+          ) {
+            return "styles-vendor";
+          }
+          if (
+            id.includes("embla-carousel") ||
+            id.includes("cmdk") ||
+            id.includes("sonner") ||
+            id.includes("vaul")
+          ) {
+            return "ui-vendor";
+          }
           if (id.includes("react-hook-form") || id.includes("@hookform") || id.includes("zod")) {
             return "forms-vendor";
           }

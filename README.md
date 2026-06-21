@@ -12,7 +12,8 @@ The offline evaluator path is intentionally isolated from the web app. `run.sh` 
 
 | Item                                 | Value                                                                                      |
 | ------------------------------------ | ------------------------------------------------------------------------------------------ |
-| Python version used for verification | 3.14.4                                                                                     |
+| Trained-artifact runtime             | Python 3.11-3.14; artifact built and fully verified on 3.14.4                              |
+| Compatibility runtime                | Python 3.10, verified through the deterministic safe baseline                              |
 | scikit-learn version                 | 1.9.0                                                                                      |
 | Model artifact                       | `pickle/model.pkl`                                                                         |
 | Model artifact size                  | ~568 KB                                                                                    |
@@ -201,6 +202,7 @@ Forecast outputs include:
 - Forecast accuracy metrics: MAE, RMSE, MAPE, and R2 score for revenue and ROAS.
 - Model diagnostics: interval coverage, training days, XGBoost feature importance, and top feature drivers.
 - Natural-language explainability for revenue and ROAS drivers.
+- Channel-level spend/revenue delta correlations that ground causal hypotheses while explicitly avoiding incrementality claims.
 - Executive business brief with summary, risks, opportunities, and recommended actions.
 
 Confidence intervals are residual-based and widen over the forecast horizon. They are shown both as chart bands and as planning-case summaries so users can distinguish conservative, expected, and upside outcomes.
@@ -336,7 +338,7 @@ Prerequisites:
 
 - Node.js 20+.
 - pnpm, npm, or bun. The repository includes `bun.lock`, but Vite scripts also work through npm-compatible package managers.
-- Python 3.14 is the pinned evaluator environment used for the committed artifact and CI. Other Python versions may work for the app, but the automated evaluator path is verified against Python 3.14 to avoid model-serialization drift.
+- Python 3.11-3.14 for trained-artifact evaluation; Python 3.14 is the build environment for the committed artifact. Python 3.10 is CI-tested through the safe baseline because sklearn pickle compatibility is not promised across library generations.
 
 Install frontend dependencies:
 
@@ -349,7 +351,7 @@ Install backend dependencies:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-app.txt
 ```
 
 Windows PowerShell:
@@ -357,7 +359,7 @@ Windows PowerShell:
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+pip install -r requirements-app.txt
 ```
 
 Copy environment defaults if needed:
@@ -385,6 +387,8 @@ The runner:
 - writes `predictions.csv` at the requested output path;
 - does not start the frontend, backend, Vite, FastAPI, or any long-running server;
 - uses a lightweight joblib-trained sklearn artifact when compatible, with a deterministic evaluator-safe baseline as fallback.
+
+`requirements.txt` intentionally contains only the exact, evaluator-critical scientific dependencies. The live FastAPI/Gemini/test stack is isolated in `requirements-app.txt`, reducing install time and failure surface during automated scoring. CI runs the evaluator contract on Python 3.10, 3.11, 3.12, 3.13, and 3.14; trained-model output is required on 3.11-3.14 and the compatibility fallback is accepted on 3.10.
 
 Expected output columns:
 
@@ -695,6 +699,8 @@ python -m backend.backtest
 |   |-- lib/
 |   `-- routes/
 |-- .env.example
+|-- LICENSE
+|-- requirements-app.txt
 |-- requirements.txt
 |-- run.sh
 |-- package.json
@@ -703,13 +709,7 @@ python -m backend.backtest
 
 ## Live Demo Deployment
 
-No live production URLs are committed in this repository because deployment requires the owner's Vercel, Render, or Railway account and secret configuration. Use these placeholders in the submission form once deployed:
-
-| Surface    | Placeholder                                                 |
-| ---------- | ----------------------------------------------------------- |
-| Frontend   | `https://forecastiq-demo.vercel.app`                        |
-| Backend    | `https://forecastiq-api.onrender.com` or Railway equivalent |
-| Demo video | `TBD - final public video link`                             |
+No live production URLs are claimed in this repository. Deployment requires the owner's Vercel, Render, or Railway account and secret configuration; add only verified URLs to the submission form after the health check and judge demo path pass.
 
 Frontend on Vercel:
 
@@ -722,7 +722,7 @@ Frontend on Vercel:
 Backend on Render:
 
 1. Create a Python web service from this repository.
-2. Build command: `pip install -r requirements.txt`.
+2. Build command: `pip install -r requirements-app.txt`.
 3. Start command: `python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT`.
 4. Add `CORS_ORIGINS=["https://your-frontend-domain.vercel.app"]`.
 5. Add `GEMINI_API_KEY` only on the backend if live Gemini is required.
@@ -750,7 +750,7 @@ Deployment environment variables:
 Use a Python web service with this start command:
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements-app.txt
 python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT
 ```
 

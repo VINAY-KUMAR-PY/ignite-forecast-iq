@@ -221,6 +221,16 @@ export interface AnomalyResponse {
     direction: "up" | "down";
     magnitude_pct: number;
   }>;
+  driverEvidence: Array<{
+    channel: string;
+    observations: number;
+    spendRevenueDeltaCorrelation: number;
+    channelRevenueDeltaCorrelation: number | null;
+    laggedRevenueDeltaCorrelation: number | null;
+    direction: "positive" | "negative" | "mixed";
+    strength: "weak" | "moderate" | "strong";
+    interpretation: string;
+  }>;
 }
 
 async function postJson<T>(path: string, body: unknown): Promise<T> {

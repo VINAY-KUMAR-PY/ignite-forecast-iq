@@ -5,7 +5,7 @@ from datetime import date, timedelta
 
 import pandas as pd
 
-from backend.decision_support import build_decision_support
+from backend.decision_support import build_decision_support, compute_driver_evidence
 
 
 def decision_frame(days: int = 70) -> pd.DataFrame:
@@ -40,6 +40,16 @@ def decision_frame(days: int = 70) -> pd.DataFrame:
 
 
 class DecisionSupportTests(unittest.TestCase):
+    def test_driver_evidence_reports_association_without_causal_overclaim(self) -> None:
+        frame = decision_frame()
+
+        evidence = compute_driver_evidence(frame)
+
+        self.assertTrue(evidence)
+        self.assertIn("spendRevenueDeltaCorrelation", evidence[0])
+        self.assertGreaterEqual(evidence[0]["observations"], 6)
+        self.assertIn("not proof of incrementality", evidence[0]["interpretation"])
+
     def test_optimizer_handles_hidden_channel_and_zero_spend(self) -> None:
         rows = decision_frame()
         result = build_decision_support(

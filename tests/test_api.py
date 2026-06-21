@@ -154,6 +154,8 @@ class ApiSecurityTests(unittest.TestCase):
         self.assertEqual(anomalies.status_code, 200, anomalies.text)
         self.assertIn("anomalies", anomalies.json())
         self.assertIn("trendBreaks", anomalies.json())
+        self.assertIn("driverEvidence", anomalies.json())
+        self.assertTrue(anomalies.json()["driverEvidence"])
 
         spend_curve = self.client.post(
             "/api/spend-curve",

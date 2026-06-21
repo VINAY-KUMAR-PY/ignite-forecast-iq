@@ -90,6 +90,8 @@ Each CSV file is normalized with `source_schema` and `source_file` provenance be
 
 The forecasting layer trains separate models for revenue and ROAS. Feature engineering includes media inputs, seasonality, trend, target lags, rolling target averages, and rolling spend. Confidence intervals are derived from residual volatility and widen over the forecast horizon. Revenue intervals and ROAS intervals are emitted together in the offline evaluator output and live API summary. If spend is absent, ROAS is marked `not_computable` with numeric zero bounds so the evaluator contract remains NaN-safe without inventing a confident efficiency metric.
 
+The live and offline forecasting paths intentionally optimize for different constraints. The live API uses XGBoost-first daily forecasts for interactive charts, explainability, and budget simulation. The offline evaluator uses a compact pre-trained sklearn artifact so `run.sh` stays fast, deterministic, and independent of servers or optional AI services. They share schema normalization, 30/60/90-day horizons, non-negative outputs, uncertainty guardrails, and safe fallback principles, but exact numerical parity is neither promised nor presented because the estimators and output grains differ.
+
 The offline evaluator model uses a compact joblib sklearn artifact at `pickle/model.pkl`. The artifact stores dedicated training-sample counts by horizon plus horizon-aware revenue and ROAS blend weights. If a horizon has fewer than the minimum dedicated samples during training, that horizon is marked fallback-only instead of training on mismatched target scales. If loading or feature generation fails, the deterministic safe baseline remains active and still produces the required prediction schema.
 
 The `/api/train` endpoint is deliberately separate from public forecasting. It requires `TRAINING_ADMIN_TOKEN`, rejects path traversal, and persists only evaluator-safe `.pkl` files under `pickle/`.
@@ -143,5 +145,7 @@ Frontend and backend can deploy independently:
 Recommended deployment commands:
 
 - Vercel frontend: build with `pnpm run build` or `npm run build`, output `dist`, set `VITE_API_BASE_URL` to the hosted backend.
-- Render/Railway backend: build with `pip install -r requirements.txt`, start with `python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT`.
+- Render/Railway backend: build with `pip install -r requirements-app.txt`, start with `python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT`.
 - Environment: keep `GEMINI_API_KEY` backend-only and restrict `CORS_ORIGINS` to the production frontend URL.
+
+The dependency boundary is intentional: `requirements.txt` is the minimal offline-evaluator stack, while `requirements-app.txt` adds FastAPI, XGBoost, Gemini, and test dependencies. The anomaly endpoint also computes channel spend-delta/revenue-delta associations. Those statistics are passed to the insight layer as hypothesis evidence, never as proof of causality or incrementality.

@@ -411,6 +411,32 @@ def category_code(value: str, mapping: dict[str, int]) -> int:
     return int(mapping.get(str(value), 0))
 
 
+def unseen_category_diagnostics(frame: pd.DataFrame, model: dict[str, Any]) -> list[str]:
+    """Describe inference categories that were absent from model training."""
+    maps = (model.get("preprocessing") or {}).get("category_maps") or {}
+    diagnostics: list[str] = []
+    for column, map_name in (("channel", "channel"), ("campaign_type", "campaign_type")):
+        if column not in frame:
+            continue
+        observed = frame[column].fillna("").astype(str).str.strip()
+        observed = observed[observed != ""]
+        if observed.empty:
+            continue
+        known = set(str(value) for value in (maps.get(map_name) or {}))
+        unseen_mask = ~observed.isin(known)
+        if not unseen_mask.any():
+            continue
+        unseen_values = sorted(observed[unseen_mask].unique().tolist())
+        preview = ", ".join(unseen_values[:5])
+        if len(unseen_values) > 5:
+            preview += f", +{len(unseen_values) - 5} more"
+        diagnostics.append(
+            f"{column}: {int(unseen_mask.sum())}/{len(observed)} rows use "
+            f"{len(unseen_values)} unseen value(s) ({preview}); encoded as unknown"
+        )
+    return diagnostics
+
+
 def window_sum(daily: pd.DataFrame, column: str, window: int) -> float:
     if daily.empty or column not in daily:
         return 0.0
@@ -859,6 +885,8 @@ def build_predictions(frame: pd.DataFrame, model: dict[str, Any]) -> list[dict[s
     if is_trained_model_artifact(model) and len(frame) >= int(
         model.get("preprocessing", {}).get("min_prediction_rows", MIN_TRAINED_MODEL_ROWS)
     ):
+        for diagnostic in unseen_category_diagnostics(frame, model):
+            log(f"Category diagnostic: {diagnostic}")
         try:
             rows, trained_count = build_trained_predictions(frame, model)
             if trained_count > 0:

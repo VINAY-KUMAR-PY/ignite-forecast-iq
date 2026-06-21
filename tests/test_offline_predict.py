@@ -16,6 +16,7 @@ from backend.predict import (
     canonicalize_frame,
     read_csv_folder,
     safe_load_model,
+    unseen_category_diagnostics,
     write_predictions,
 )
 from backend.utils import read_csv_folder as read_training_csv_folder
@@ -139,6 +140,29 @@ class OfflinePredictionTests(unittest.TestCase):
 
             self.assert_valid_prediction_rows(rows)
             self.assertEqual({row["model_type"] for row in rows}, {SAFE_BASELINE_MODEL_TYPE})
+
+    def test_unseen_model_categories_are_reported_before_unknown_encoding(self) -> None:
+        frame = pd.DataFrame(
+            {
+                "channel": ["Google Ads", "Retail Media", "Retail Media"],
+                "campaign_type": ["Search", "Commerce", "Commerce"],
+            }
+        )
+        model = {
+            "preprocessing": {
+                "category_maps": {
+                    "channel": {"Google Ads": 1},
+                    "campaign_type": {"Search": 1},
+                }
+            }
+        }
+
+        diagnostics = unseen_category_diagnostics(frame, model)
+
+        self.assertEqual(len(diagnostics), 2)
+        self.assertIn("2/3 rows", diagnostics[0])
+        self.assertIn("Retail Media", diagnostics[0])
+        self.assertIn("Commerce", diagnostics[1])
 
     def test_zero_spend_ga4_shopify_shapes_mark_roas_not_computable(self) -> None:
         dates = pd.date_range("2026-01-01", periods=70, freq="D").strftime("%Y-%m-%d")

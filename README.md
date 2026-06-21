@@ -4,9 +4,7 @@
 
 AIgnition ForecastIQ is an AI-powered ecommerce forecasting platform built for NetElixir AIgnition 3.0. It preserves the original Lovable React experience and adds a production-style FastAPI backend for data validation, XGBoost revenue and ROAS forecasting, budget simulation, model persistence, and Gemini-assisted executive insights.
 
-> **Live Demo:** [https://forecastiq.vercel.app](https://your-vercel-url-here)  
-> **Backend API:** [https://forecastiq-api.onrender.com/health](https://your-render-url-here)  
-> **Demo Video:** [Watch 2-minute walkthrough](https://your-video-link-here)
+> **Live deployment status:** deployment-ready; final Vercel/Render/Railway URLs and demo video link should be added after the owner's hosting accounts and secrets are configured.
 
 ## Evaluator Reliability Snapshot
 
@@ -104,9 +102,11 @@ Supported examples:
 | ------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | GA4           | `sessionSource`, `sessionMedium`, `purchaseRevenue`, `eventValue`, `sessions`, `conversions`       | Maps source/medium to channel and campaign context, uses sessions as traffic volume, defaults missing spend to 0 |
 | Shopify       | `created_at`, `total_price`, `sales`, `orders`, `product_type`                                     | Maps order revenue and product type into ecommerce campaign rows, defaults missing media spend to 0              |
-| Ads platforms | `spend`, `cost`, `clicks`, `impressions`, `conversions`, `conversion_value`, `revenue`, `campaign` | Maps platform exports into paid media rows and calculates ROAS when absent                                       |
+| Ads platforms | `spend`, `cost`, `metrics_cost_micros`, `clicks`, `metrics_clicks`, `impressions`, `metrics_impressions`, `conversions`, `metrics_conversions`, `conversion_value`, `metrics_conversions_value`, `conversion`, `revenue`, `campaign`, `campaign_name` | Maps platform exports into paid media rows, converts Google Ads micros to currency units, and calculates ROAS when absent |
 
-Multiple CSV files can be placed in the same `data/` folder. Each file is adapted independently before safe merging, so a GA4 traffic file, Shopify orders file, and paid ads file can be evaluated together without hardcoded filenames.
+Multiple CSV files can be placed in the same `data/` folder. Each file is normalized with source provenance, then reconciled before modeling. If Shopify/order data is present, it is treated as revenue-of-record; GA4 and Ads rows are used for attribution, spend, clicks, impressions, and conversion shape instead of adding duplicate revenue. If GA4 and Ads are present without Shopify, GA4 revenue is treated as the revenue source and Ads rows provide media cost and delivery signals.
+
+The public AIgnition Drive resource was inspected for visible file metadata and headers. It currently exposes Ads-shaped files named `google_ads_campaign_stats.csv`, `meta_ads_campaign_stats.csv`, and `bing_campaign_stats.csv`; the adapter supports their observed columns including `segments_date`, `metrics_cost_micros`, `metrics_conversions_value`, `date_start`, `conversion`, `TimePeriod`, `CampaignType`, and `CampaignName`.
 
 ## Why This Solution Stands Out
 
@@ -220,25 +220,36 @@ The offline evaluator artifact at `pickle/model.pkl` is a compact joblib artifac
 | numpy                | 2.4.6                        |
 | joblib               | 1.5.3                        |
 | Artifact type        | `forecastiq_evaluator_model` |
-| Artifact version     | 2                            |
+| Artifact version     | 3                            |
 | Evaluator model type | `trained_model`              |
-| Artifact size        | 56,475 bytes                 |
+| Artifact size        | ~569 KB                      |
 | Training rows        | 1,440                        |
+| Rolling samples      | 414                          |
 | Feature count        | 26                           |
 | Revenue blend weight | 0.10                         |
+| ROAS blend weight    | 0.40                         |
 
-The evaluator model trains on rolling historical samples from `data/sample_campaigns.csv` and predicts 30, 60, and 90 day revenue and ROAS at overall, channel, campaign type, and campaign levels. The safe baseline remains available for missing, corrupt, incompatible, tiny, or malformed hidden evaluator data.
+The evaluator model trains on rolling historical samples from `data/sample_campaigns.csv` and predicts 30, 60, and 90 day revenue and ROAS at overall, channel, campaign type, and campaign levels. The artifact stores dedicated training-sample counts by horizon: 252 samples for 30 days, 108 for 60 days, and 54 for 90 days. If a future training slice lacks enough dedicated samples for a horizon, that horizon is explicitly marked fallback-only instead of fitting on mismatched 30/60-day targets. The safe baseline remains available for missing, corrupt, incompatible, tiny, or malformed hidden evaluator data.
 
 The offline predictions file includes revenue and ROAS ranges. `expected_roas`, `lower_roas`, and `upper_roas` are derived from the same projected-spend denominator used for revenue planning. When GA4 or Shopify-style exports do not contain spend, ForecastIQ keeps the CSV numeric and NaN-safe by emitting `expected_roas = lower_roas = upper_roas = 0` with `forecast_confidence = not_computable` instead of fabricating a confident ROAS from unrelated spend-bearing training data.
 
-Backtesting uses the final 30 days as a holdout and trains on the earlier period. Current holdout metrics are:
+Backtesting uses the final 30 days as a holdout and trains on the earlier period. Current primary holdout metrics are:
+
+### Revenue
 
 | Model         |      MAE |     RMSE |  MAPE | Interval coverage |
 | ------------- | -------: | -------: | ----: | ----------------: |
-| Trained model | 2,107.20 | 2,672.49 | 2.83% |           100.00% |
+| Trained model | 2,250.45 | 2,809.34 | 2.89% |           100.00% |
 | Safe baseline | 2,185.89 | 2,763.76 | 2.78% |            88.89% |
 
-The trained evaluator improves MAE by 78.69 and RMSE by 91.27 versus the safe baseline while preserving full holdout interval coverage. The summary is generated by:
+### ROAS
+
+| Model         |  MAE | RMSE |  MAPE | Interval coverage |
+| ------------- | ---: | ---: | ----: | ----------------: |
+| Trained model | 0.05 | 0.06 | 1.26% |           100.00% |
+| Safe baseline | 0.05 | 0.07 | 1.44% |           100.00% |
+
+The trained evaluator slightly trails the safe baseline on primary 30-day revenue point error but improves interval coverage, and it improves ROAS RMSE/MAPE. The summary is generated by:
 
 ```bash
 python -m backend.backtest
@@ -246,25 +257,33 @@ python -m backend.backtest
 
 Reports are written to `reports/backtest_report.json` and `reports/backtest_summary.md`.
 
-Blend-weight validation tested revenue model weights of 0.10, 0.25, 0.40, 0.50, and 0.60. The current 0.10 blend had the best RMSE/MAE balance, so the packaged artifact keeps the lower trained-model weight instead of over-trusting the model on limited sample history.
+Blend-weight validation tested revenue and ROAS model weights of 0.10, 0.25, 0.40, 0.50, and 0.60. Revenue keeps the conservative 0.10 blend because higher trained-model weights worsened revenue RMSE/MAE on the holdout. ROAS uses 0.40 because that weight produced the best ROAS RMSE/MAE balance.
 
 | Revenue model weight |      MAE |     RMSE |  MAPE | Interval coverage |
 | -------------------: | -------: | -------: | ----: | ----------------: |
-|                 0.10 | 2,107.20 | 2,672.49 | 2.83% |           100.00% |
-|                 0.25 | 2,208.04 | 2,800.71 | 3.22% |           100.00% |
-|                 0.40 | 2,463.50 | 3,206.38 | 3.80% |           100.00% |
-|                 0.50 | 2,808.06 | 3,587.39 | 4.22% |           100.00% |
-|                 0.60 | 3,187.48 | 4,028.53 | 4.71% |           100.00% |
+|                 0.10 | 2,250.45 | 2,809.34 | 2.89% |           100.00% |
+|                 0.25 | 2,447.17 | 2,976.24 | 3.20% |           100.00% |
+|                 0.40 | 2,654.54 | 3,244.23 | 3.53% |           100.00% |
+|                 0.50 | 2,809.54 | 3,467.85 | 3.80% |           100.00% |
+|                 0.60 | 2,964.53 | 3,720.04 | 4.07% |           100.00% |
 
-Per-horizon backtesting is included for transparency:
+| ROAS model weight |  MAE | RMSE |  MAPE | Interval coverage |
+| ----------------: | ---: | ---: | ----: | ----------------: |
+|              0.10 | 0.05 | 0.06 | 1.41% |           100.00% |
+|              0.25 | 0.05 | 0.06 | 1.30% |           100.00% |
+|              0.40 | 0.05 | 0.06 | 1.26% |           100.00% |
+|              0.50 | 0.05 | 0.07 | 1.29% |           100.00% |
+|              0.60 | 0.05 | 0.07 | 1.20% |           100.00% |
 
-| Horizon | Trained MAE | Trained RMSE | Trained MAPE | Trained coverage | Baseline MAE | Baseline RMSE |
-| ------: | ----------: | -----------: | -----------: | ---------------: | -----------: | ------------: |
-| 30 days |    2,107.20 |     2,672.49 |        2.83% |          100.00% |     2,185.89 |      2,763.76 |
-| 60 days |    5,144.93 |     8,652.28 |        1.96% |          100.00% |     4,728.39 |      6,906.01 |
-| 90 days |   21,917.54 |    34,288.82 |        6.90% |          100.00% |    13,145.11 |     18,642.51 |
+Walk-forward per-horizon backtesting is included for transparency:
 
-This is why ForecastIQ keeps both systems: the trained model improves the primary evaluator-style 30-day holdout, while the deterministic baseline remains a reliability guardrail for longer or incompatible cases.
+| Horizon | Folds | Segments | Trained revenue MAE | Trained revenue RMSE | Trained ROAS MAE | Trained ROAS RMSE | Trained coverage |
+| ------: | ----: | -------: | ------------------: | -------------------: | ---------------: | ----------------: | ---------------: |
+|      30 |     3 |       54 |            2,976.77 |             4,753.35 |             0.05 |              0.06 |          100.00% |
+|      60 |     3 |       54 |           11,515.01 |            19,457.66 |             0.10 |              0.13 |           70.37% |
+|      90 |     2 |       36 |           22,981.64 |            35,641.57 |             0.11 |              0.13 |           55.56% |
+
+This is why ForecastIQ keeps both systems: the trained model provides ML behavior and ROAS lift where validated, while the deterministic baseline remains a reliability guardrail for longer, thinner, or incompatible cases.
 
 ## Budget Simulator
 
@@ -317,7 +336,7 @@ Prerequisites:
 
 - Node.js 20+.
 - pnpm, npm, or bun. The repository includes `bun.lock`, but Vite scripts also work through npm-compatible package managers.
-- Python 3.10+.
+- Python 3.14 is the pinned evaluator environment used for the committed artifact and CI. Other Python versions may work for the app, but the automated evaluator path is verified against Python 3.14 to avoid model-serialization drift.
 
 Install frontend dependencies:
 
@@ -378,7 +397,11 @@ Expected output columns:
 | `lower_revenue`    | Conservative revenue interval bound                                                     |
 | `upper_revenue`    | Upside revenue interval bound                                                           |
 | `expected_roas`    | Expected revenue divided by projected spend                                             |
+| `lower_roas`       | Conservative ROAS interval bound, or `0` when spend is not computable                   |
+| `upper_roas`       | Upside ROAS interval bound, or `0` when spend is not computable                         |
 | `model_type`       | `trained_model` for compatible artifact predictions, otherwise `safe_baseline_fallback` |
+| `interval_width_pct` | Revenue interval width as a percentage of expected revenue                            |
+| `forecast_confidence` | `high`, `medium`, `low`, or `not_computable` for zero-spend ROAS cases              |
 
 Assumptions and fallback behavior:
 

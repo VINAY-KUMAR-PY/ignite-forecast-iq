@@ -101,6 +101,98 @@ class SchemaAdapterTests(unittest.TestCase):
             self.assertTrue(rows)
             self.assertEqual({row["horizon_days"] for row in rows}, {30, 60, 90})
 
+    def test_overlapping_ga4_shopify_ads_revenue_is_not_double_counted(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            data_dir = Path(tmp)
+            dates = pd.date_range("2026-01-01", periods=5, freq="D").strftime("%Y-%m-%d")
+            true_daily_revenue = [11000, 11500, 12000, 11800, 12500]
+            total_truth = float(sum(true_daily_revenue))
+
+            (data_dir / "ga4_sessions.csv").write_text(
+                "date,sessionSource,sessionMedium,purchaseRevenue,sessions,conversions\n"
+                + "\n".join(
+                    f"{date},google,cpc,{revenue * 0.65},1000,40\n"
+                    f"{date},facebook,paid_social,{revenue * 0.35},800,28"
+                    for date, revenue in zip(dates, true_daily_revenue)
+                ),
+                encoding="utf-8",
+            )
+            (data_dir / "shopify_orders.csv").write_text(
+                "created_at,total_price,orders,product_type\n"
+                + "\n".join(
+                    f"{date}T09:00:00Z,{revenue},50,All Products"
+                    for date, revenue in zip(dates, true_daily_revenue)
+                ),
+                encoding="utf-8",
+            )
+            (data_dir / "ads_export.csv").write_text(
+                "date,platform,campaign,cost,clicks,impressions,conversions,conversion_value\n"
+                + "\n".join(
+                    f"{date},Google Ads,Brand,{revenue * 0.08},200,5000,30,{revenue * 0.65}\n"
+                    f"{date},Meta Ads,Prospecting,{revenue * 0.06},160,6000,22,{revenue * 0.35}"
+                    for date, revenue in zip(dates, true_daily_revenue)
+                ),
+                encoding="utf-8",
+            )
+
+            raw = read_csv_folder(data_dir)
+            cleaned = canonicalize_frame(raw)
+
+            self.assertGreater(cleaned.valid_rows, 0)
+            self.assertTrue(math.isclose(float(cleaned.frame["revenue"].sum()), total_truth, rel_tol=0.01))
+            self.assertLess(float(cleaned.frame["revenue"].sum()), total_truth * 1.05)
+            self.assertIn("Google Ads", set(cleaned.frame["channel"]))
+            self.assertIn("Meta Ads", set(cleaned.frame["channel"]))
+
+    def test_real_drive_ads_column_shapes_are_supported(self) -> None:
+        google = pd.DataFrame(
+            {
+                "segments_date": ["2024-01-01"],
+                "metrics_clicks": [158],
+                "metrics_conversions": [4.2],
+                "metrics_cost_micros": [46_980_000],
+                "metrics_impressions": [481],
+                "metrics_conversions_value": [549.99],
+                "campaign_advertising_channel_type": ["SEARCH"],
+                "campaign_name": ["Search_TM_Campaign_01"],
+            }
+        )
+        meta = pd.DataFrame(
+            {
+                "date_start": ["2024-05-23"],
+                "cpc": [12.1],
+                "spend": [85.0],
+                "clicks": [37],
+                "impressions": [5188],
+                "conversion": [183.0],
+                "campaign_name": ["Generic_Campaign_02"],
+            }
+        )
+        bing = pd.DataFrame(
+            {
+                "TimePeriod": ["2024-05-25"],
+                "Revenue": [100.0],
+                "Spend": [4.7],
+                "Clicks": [22],
+                "Impressions": [140],
+                "Conversions": [2.0],
+                "CampaignType": ["Search"],
+                "CampaignName": ["Search_TM_Campaign_02"],
+            }
+        )
+
+        google_clean = canonicalize_frame(google).frame
+        meta_clean = canonicalize_frame(meta).frame
+        bing_clean = canonicalize_frame(bing).frame
+
+        self.assertEqual(google_clean.iloc[0]["date"], "2024-01-01")
+        self.assertTrue(math.isclose(float(google_clean.iloc[0]["spend"]), 46.98, rel_tol=0.001))
+        self.assertEqual(float(google_clean.iloc[0]["revenue"]), 549.99)
+        self.assertEqual(meta_clean.iloc[0]["date"], "2024-05-23")
+        self.assertEqual(float(meta_clean.iloc[0]["revenue"]), 183.0)
+        self.assertEqual(bing_clean.iloc[0]["date"], "2024-05-25")
+        self.assertEqual(bing_clean.iloc[0]["campaign_name"], "Search_TM_Campaign_02")
+
     def test_api_validation_accepts_ga4_records(self) -> None:
         records = [
             {

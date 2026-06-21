@@ -18,6 +18,7 @@ from backend.predict import (
     safe_load_model,
     write_predictions,
 )
+from backend.utils import read_csv_folder as read_training_csv_folder
 
 
 class OfflinePredictionTests(unittest.TestCase):
@@ -91,6 +92,21 @@ class OfflinePredictionTests(unittest.TestCase):
             self.assertFalse(written.empty)
             self.assertFalse(written.isna().any().any())
             self.assertEqual(set(written["model_type"]), {SAFE_BASELINE_MODEL_TYPE})
+
+    def test_training_and_prediction_readers_use_same_parser(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            data_dir = Path(tmp)
+            (data_dir / "google_ads_campaign_stats.csv").write_text(
+                "segments_date,metrics_clicks,metrics_conversions,metrics_cost_micros,metrics_impressions,metrics_conversions_value,campaign_advertising_channel_type,campaign_name\n"
+                "2024-01-01,158,4.2,46980000,481,549.99,SEARCH,Search_TM_Campaign_01\n",
+                encoding="utf-8",
+            )
+
+            prediction_frame = read_csv_folder(data_dir)
+            training_frame = read_training_csv_folder(data_dir)
+
+            self.assertEqual(list(prediction_frame.columns), list(training_frame.columns))
+            pd.testing.assert_frame_equal(prediction_frame.reset_index(drop=True), training_frame.reset_index(drop=True))
 
     def test_trained_model_loads_and_generates_schema_clean_predictions(self) -> None:
         raw = read_csv_folder("data")

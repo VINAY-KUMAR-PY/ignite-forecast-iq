@@ -10,7 +10,11 @@ The backend first adapts common GA4, Shopify, Ads, and canonical CSV schemas int
 
 ## Can this work with real ecommerce exports?
 
-Yes. The schema adapter supports GA4 fields like `sessionSource`, `sessionMedium`, `purchaseRevenue`, `eventValue`, `sessions`, and `conversions`; Shopify fields like `created_at`, `total_price`, `sales`, `orders`, and `product_type`; and Ads fields like `spend`, `cost`, `clicks`, `impressions`, `conversions`, `conversion_value`, and `revenue`. Each CSV is normalized before merging, so mixed folders remain evaluator-safe.
+Yes. The schema adapter supports GA4 fields like `sessionSource`, `sessionMedium`, `purchaseRevenue`, `eventValue`, `sessions`, and `conversions`; Shopify fields like `created_at`, `total_price`, `sales`, `orders`, and `product_type`; and Ads fields like `spend`, `cost`, `metrics_cost_micros`, `metrics_clicks`, `metrics_impressions`, `metrics_conversions`, `metrics_conversions_value`, `conversion`, `conversion_value`, and `revenue`.
+
+The public AIgnition Drive folder was inspected for visible file metadata and headers. It exposes `google_ads_campaign_stats.csv`, `meta_ads_campaign_stats.csv`, and `bing_campaign_stats.csv`; ForecastIQ supports the observed columns including `segments_date`, `date_start`, `TimePeriod`, `CampaignType`, and `CampaignName`.
+
+For mixed GA4/Shopify/Ads folders, each CSV is normalized with provenance before reconciliation. Shopify/order data is treated as revenue-of-record when present, and GA4/Ads rows provide attribution and media signals instead of adding duplicate revenue.
 
 ## How are confidence intervals calculated?
 
@@ -42,7 +46,7 @@ The root `run.sh` path is isolated from the live app. It reads CSV files from th
 
 ## Why does a trained evaluator model exist?
 
-The trained evaluator model gives the offline scoring path real ML behavior instead of only a deterministic baseline. It is a compact joblib sklearn artifact with 26 engineered features, trained on 1,440 rows and 414 rolling forecast samples. It improves the primary 30-day holdout MAE and RMSE while preserving the required output schema.
+The trained evaluator model gives the offline scoring path real ML behavior instead of only a deterministic baseline. It is a compact joblib sklearn artifact with 26 engineered features, trained on 1,440 rows and 414 rolling forecast samples. The artifact includes dedicated horizon sample counts, residual calibration, revenue and ROAS weights, and fallback metadata while preserving the required output schema.
 
 ## When does fallback activate?
 
@@ -50,7 +54,7 @@ Fallback activates if the model file is missing, corrupt, too large, incompatibl
 
 ## Why keep fallback if a trained model exists?
 
-The fallback improves reliability. Backtesting shows the trained model is strongest on the primary 30-day evaluator holdout, while the deterministic baseline can be more stable on longer 60/90-day holdouts. Keeping both systems makes the submission robust for hidden data instead of overfitting to one sample file.
+The fallback improves reliability. Backtesting shows the trained model improves ROAS RMSE/MAPE and interval coverage, while the deterministic baseline can be more stable for some longer-horizon revenue point estimates. Keeping both systems makes the submission robust for hidden data instead of overfitting to one sample file.
 
 ## How do you know the evaluator model is compatible?
 
@@ -58,11 +62,13 @@ The model artifact was verified in a clean Python 3.14.4 environment with pinned
 
 ## How did you validate the trained-model blend weight?
 
-Revenue blend weights of 0.10, 0.25, 0.40, 0.50, and 0.60 were tested on the same 30-day holdout. Weight 0.10 produced the best RMSE/MAE balance: MAE 2,107.20, RMSE 2,672.49, MAPE 2.83%, and 100.00% interval coverage. Higher weights worsened error, so the current artifact keeps 0.10.
+Revenue and ROAS blend weights of 0.10, 0.25, 0.40, 0.50, and 0.60 were tested on the same 30-day holdout. Revenue keeps 0.10 because it produced the best revenue RMSE/MAE balance. ROAS uses 0.40 because it produced the best ROAS RMSE/MAE balance. The weights are stored both globally and by horizon, with unsupported horizons able to fall back to weight 0.
 
 ## What does the holdout backtest show?
 
-The final 30 days were held out while the model trained on the earlier period. Across 18 evaluated segments, the trained evaluator achieved MAE 2,107.20, RMSE 2,672.49, MAPE 2.83%, and 100.00% interval coverage. The safe baseline achieved MAE 2,185.89, RMSE 2,763.76, MAPE 2.78%, and 88.89% interval coverage. The backtest report also includes blend-weight comparison and 30/60/90-day per-horizon performance.
+The final 30 days were held out while the model trained on the earlier period. Across 18 evaluated segments, the trained evaluator achieved revenue MAE 2,250.45, revenue RMSE 2,809.34, revenue MAPE 2.89%, and 100.00% interval coverage. The safe baseline achieved revenue MAE 2,185.89, revenue RMSE 2,763.76, revenue MAPE 2.78%, and 88.89% interval coverage. For ROAS, the trained evaluator achieved MAE 0.05, RMSE 0.06, MAPE 1.26%, and 100.00% interval coverage versus baseline RMSE 0.07 and MAPE 1.44%.
+
+The backtest report also includes revenue and ROAS blend-weight comparisons plus walk-forward 30/60/90-day horizon performance.
 
 ## What is the model verification process?
 

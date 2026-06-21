@@ -1,6 +1,6 @@
 # ForecastIQ Backtest Summary
 
-Generated: 2026-06-19T16:27:02.180972+00:00
+Generated: 2026-06-20T15:48:08.218142+00:00
 
 ## Holdout Design
 
@@ -23,43 +23,66 @@ Generated: 2026-06-19T16:27:02.180972+00:00
 
 - Model type: trained_model
 - Artifact type: forecastiq_evaluator_model
-- Artifact version: 2
+- Artifact version: 3
 - Training rows: 1200
 - Rolling training samples: 306
 - Revenue blend weight: 0.1
 
 ## Primary 30-Day Metrics
 
+### Revenue
+
 | Model | MAE | RMSE | MAPE | Interval coverage |
 | --- | ---: | ---: | ---: | ---: |
-| Trained model | 2107.2 | 2672.49 | 2.83% | 100.0% |
+| Trained model | 2250.45 | 2809.34 | 2.89% | 100.0% |
 | Safe baseline | 2185.89 | 2763.76 | 2.78% | 88.89% |
+
+### ROAS
+
+| Model | MAE | RMSE | MAPE | Interval coverage |
+| --- | ---: | ---: | ---: | ---: |
+| Trained model | 0.05 | 0.06 | 1.26% | 100.0% |
+| Safe baseline | 0.05 | 0.07 | 1.44% | 100.0% |
 
 ## Trained vs Baseline
 
-- MAE improvement vs safe baseline: 78.69
-- RMSE improvement vs safe baseline: 91.27
-- MAPE improvement vs safe baseline: -0.05 percentage points
+- MAE improvement vs safe baseline: -64.56
+- RMSE improvement vs safe baseline: -45.58
+- MAPE improvement vs safe baseline: -0.11 percentage points
+- ROAS MAE improvement vs safe baseline: 0.0
+- ROAS RMSE improvement vs safe baseline: 0.01
 
-## Blend Weight Comparison
+## Revenue Blend Weight Comparison
 
 | Revenue model weight | MAE | RMSE | MAPE | Interval coverage |
 | ---: | ---: | ---: | ---: | ---: |
-| 0.10 | 2107.2 | 2672.49 | 2.83% | 100.0% |
-| 0.25 | 2208.04 | 2800.71 | 3.22% | 100.0% |
-| 0.40 | 2463.5 | 3206.38 | 3.8% | 100.0% |
-| 0.50 | 2808.06 | 3587.39 | 4.22% | 100.0% |
-| 0.60 | 3187.48 | 4028.53 | 4.71% | 100.0% |
+| 0.10 | 2250.45 | 2809.34 | 2.89% | 100.0% |
+| 0.25 | 2447.17 | 2976.24 | 3.2% | 100.0% |
+| 0.40 | 2654.54 | 3244.23 | 3.53% | 100.0% |
+| 0.50 | 2809.54 | 3467.85 | 3.8% | 100.0% |
+| 0.60 | 2964.53 | 3720.04 | 4.07% | 100.0% |
 
 Recommendation: Keep revenue_model_weight=0.10; it has the best RMSE/MAE balance in the holdout comparison.
 
-## Per-Horizon Performance
+## ROAS Blend Weight Comparison
 
-| Horizon days | Trained MAE | Trained RMSE | Trained MAPE | Trained coverage | Baseline MAE | Baseline RMSE |
-| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 30 | 2107.2 | 2672.49 | 2.83% | 100.0% | 2185.89 | 2763.76 |
-| 60 | 5144.93 | 8652.28 | 1.96% | 100.0% | 4728.39 | 6906.01 |
-| 90 | 21917.54 | 34288.82 | 6.9% | 100.0% | 13145.11 | 18642.51 |
+| ROAS model weight | MAE | RMSE | MAPE | Interval coverage |
+| ---: | ---: | ---: | ---: | ---: |
+| 0.10 | 0.05 | 0.06 | 1.41% | 100.0% |
+| 0.25 | 0.05 | 0.06 | 1.3% | 100.0% |
+| 0.40 | 0.05 | 0.06 | 1.26% | 100.0% |
+| 0.50 | 0.05 | 0.07 | 1.29% | 100.0% |
+| 0.60 | 0.05 | 0.07 | 1.2% | 100.0% |
+
+Recommendation: Keep roas_model_weight=0.40; it has the best ROAS RMSE/MAE balance.
+
+## Walk-Forward Per-Horizon Performance
+
+| Horizon days | Folds | Segments | Trained revenue MAE | Trained revenue RMSE | Trained revenue MAPE | Trained ROAS MAE | Trained ROAS RMSE | Trained coverage | Baseline MAE | Baseline RMSE |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 30 | 3 | 54 | 2976.77 | 4753.35 | 2.83% | 0.05 | 0.06 | 100.0% | 3097.88 | 4501.73 |
+| 60 | 3 | 54 | 11515.01 | 19457.66 | 5.29% | 0.1 | 0.13 | 70.37% | 11221.15 | 18229.52 |
+| 90 | 2 | 36 | 22981.64 | 35641.57 | 7.38% | 0.11 | 0.13 | 55.56% | 22981.64 | 35641.57 |
 
 ## Confidence Interval Methodology
 

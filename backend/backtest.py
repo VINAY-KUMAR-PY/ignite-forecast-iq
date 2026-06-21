@@ -43,17 +43,17 @@ def _round(value: float, digits: int = 4) -> float:
     return round(_safe_float(value), digits)
 
 
-def _metrics(rows: list[dict[str, Any]], prefix: str) -> dict[str, float]:
+def _target_metrics(rows: list[dict[str, Any]], prefix: str, target: str) -> dict[str, float]:
     if not rows:
         return {"mae": 0.0, "rmse": 0.0, "mape": 0.0, "interval_coverage": 0.0}
-    actual = np.asarray([_safe_float(row["actual_revenue"]) for row in rows], dtype=float)
-    predicted = np.asarray([_safe_float(row[f"{prefix}_expected_revenue"]) for row in rows], dtype=float)
+    actual = np.asarray([_safe_float(row[f"actual_{target}"]) for row in rows], dtype=float)
+    predicted = np.asarray([_safe_float(row[f"{prefix}_expected_{target}"]) for row in rows], dtype=float)
     errors = actual - predicted
     denom = np.maximum(np.abs(actual), 1.0)
     coverage = [
-        _safe_float(row[f"{prefix}_lower_revenue"])
-        <= _safe_float(row["actual_revenue"])
-        <= _safe_float(row[f"{prefix}_upper_revenue"])
+        _safe_float(row[f"{prefix}_lower_{target}"])
+        <= _safe_float(row[f"actual_{target}"])
+        <= _safe_float(row[f"{prefix}_upper_{target}"])
         for row in rows
     ]
     return {
@@ -61,6 +61,20 @@ def _metrics(rows: list[dict[str, Any]], prefix: str) -> dict[str, float]:
         "rmse": _round(float(np.sqrt(np.mean(errors**2))), 2),
         "mape": _round(float(np.mean(np.abs(errors) / denom) * 100), 2),
         "interval_coverage": _round(float(np.mean(coverage) * 100), 2),
+    }
+
+
+def _metrics(rows: list[dict[str, Any]], prefix: str) -> dict[str, Any]:
+    revenue = _target_metrics(rows, prefix, "revenue")
+    roas = _target_metrics(rows, prefix, "roas")
+    return {
+        **revenue,
+        "revenue": revenue,
+        "roas": roas,
+        "roas_mae": roas["mae"],
+        "roas_rmse": roas["rmse"],
+        "roas_mape": roas["mape"],
+        "roas_interval_coverage": roas["interval_coverage"],
     }
 
 
@@ -87,6 +101,19 @@ def _with_revenue_weight(model: dict[str, Any], weight: float) -> dict[str, Any]
     adjusted = dict(model)
     adjusted["confidence"] = dict(model.get("confidence") or {})
     adjusted["confidence"]["revenue_model_weight"] = float(weight)
+    adjusted["confidence"]["revenue_model_weight_by_horizon"] = {
+        str(horizon): float(weight) for horizon in HORIZONS
+    }
+    return adjusted
+
+
+def _with_roas_weight(model: dict[str, Any], weight: float) -> dict[str, Any]:
+    adjusted = dict(model)
+    adjusted["confidence"] = dict(model.get("confidence") or {})
+    adjusted["confidence"]["roas_model_weight"] = float(weight)
+    adjusted["confidence"]["roas_model_weight_by_horizon"] = {
+        str(horizon): float(weight) for horizon in HORIZONS
+    }
     return adjusted
 
 
@@ -128,11 +155,15 @@ def _score_rows(
                 "trained_lower_revenue": _round(trained["lower_revenue"], 2),
                 "trained_upper_revenue": _round(trained["upper_revenue"], 2),
                 "trained_expected_roas": _round(trained["expected_roas"], 4),
+                "trained_lower_roas": _round(trained["lower_roas"], 4),
+                "trained_upper_roas": _round(trained["upper_roas"], 4),
                 "trained_model_type": trained_model_type,
                 "safe_expected_revenue": _round(safe["expected_revenue"], 2),
                 "safe_lower_revenue": _round(safe["lower_revenue"], 2),
                 "safe_upper_revenue": _round(safe["upper_revenue"], 2),
                 "safe_expected_roas": _round(safe["expected_roas"], 4),
+                "safe_lower_roas": _round(safe["lower_roas"], 4),
+                "safe_upper_roas": _round(safe["upper_roas"], 4),
             }
         )
     return rows
@@ -155,6 +186,8 @@ def _score_split(
         "mae_delta": _round(safe_metrics["mae"] - trained_metrics["mae"], 2),
         "rmse_delta": _round(safe_metrics["rmse"] - trained_metrics["rmse"], 2),
         "mape_delta": _round(safe_metrics["mape"] - trained_metrics["mape"], 2),
+        "roas_mae_delta": _round(safe_metrics["roas_mae"] - trained_metrics["roas_mae"], 4),
+        "roas_rmse_delta": _round(safe_metrics["roas_rmse"] - trained_metrics["roas_rmse"], 4),
     }
     return {
         "horizon_days": horizon_days,
@@ -218,6 +251,104 @@ def _compare_blend_weights(
     }
 
 
+def _compare_roas_blend_weights(
+    train_frame: pd.DataFrame,
+    test_frame: pd.DataFrame,
+    horizon_days: int,
+    weights: tuple[float, ...] = BLEND_WEIGHT_CANDIDATES,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    base_model = train_evaluator_model(train_frame)
+    results: list[dict[str, Any]] = []
+    for weight in weights:
+        model = _with_roas_weight(base_model, weight)
+        rows = _score_rows(train_frame, test_frame, horizon_days, model)
+        metrics = _metrics(rows, "trained")["roas"]
+        results.append(
+            {
+                "roas_model_weight": weight,
+                "mae": metrics["mae"],
+                "rmse": metrics["rmse"],
+                "mape": metrics["mape"],
+                "interval_coverage": metrics["interval_coverage"],
+            }
+        )
+
+    best = min(results, key=lambda item: (item["rmse"], item["mae"], item["mape"]))
+    current_weight = float(base_model.get("confidence", {}).get("roas_model_weight", 0.25))
+    decision = "keep_current" if math.isclose(best["roas_model_weight"], current_weight) else "review_candidate"
+    recommendation = (
+        f"Keep roas_model_weight={current_weight:.2f}; it has the best ROAS RMSE/MAE balance."
+        if decision == "keep_current"
+        else (
+            f"Candidate roas_model_weight={best['roas_model_weight']:.2f} scored best on ROAS RMSE. "
+            "Review before updating the packaged artifact."
+        )
+    )
+    return results, {
+        "current_roas_model_weight": current_weight,
+        "recommended_roas_model_weight": best["roas_model_weight"],
+        "decision": decision,
+        "recommendation": recommendation,
+        "selection_metric": "lowest ROAS RMSE, then MAE, then MAPE",
+    }
+
+
+def _walk_forward_horizon(frame: pd.DataFrame, horizon: int) -> dict[str, Any]:
+    max_date = frame["date_dt"].max()
+    folds: list[dict[str, Any]] = []
+    rows: list[dict[str, Any]] = []
+    for offset in (0, 30, 60):
+        start = max_date - pd.Timedelta(days=horizon - 1 + offset)
+        end = start + pd.Timedelta(days=horizon - 1)
+        train_frame = frame[frame["date_dt"] < start].drop(columns=["date_dt"]).copy()
+        test_frame = frame[(frame["date_dt"] >= start) & (frame["date_dt"] <= end)].drop(columns=["date_dt"]).copy()
+        if train_frame.empty or test_frame.empty:
+            continue
+        try:
+            scored = _score_split(train_frame, test_frame, horizon)
+        except Exception as exc:
+            folds.append(
+                {
+                    "start_date": start.strftime("%Y-%m-%d"),
+                    "end_date": end.strftime("%Y-%m-%d"),
+                    "error": f"{type(exc).__name__}: {exc}",
+                }
+            )
+            continue
+        horizon_model = (scored["model"].get("confidence") or {}).get("horizon_training_samples", {})
+        fallback_horizons = (scored["model"].get("confidence") or {}).get("fallback_horizons", [])
+        folds.append(
+            {
+                "start_date": start.strftime("%Y-%m-%d"),
+                "end_date": end.strftime("%Y-%m-%d"),
+                "train_rows": scored["train_rows"],
+                "test_rows": scored["test_rows"],
+                "segments_evaluated": scored["segments_evaluated"],
+                "dedicated_training_samples": int(horizon_model.get(str(horizon), 0)),
+                "fallback_only": horizon in fallback_horizons,
+            }
+        )
+        rows.extend(scored["rows"])
+
+    trained_metrics = _metrics(rows, "trained")
+    safe_metrics = _metrics(rows, "safe")
+    return {
+        "horizon_days": horizon,
+        "folds": folds,
+        "fold_count": len([fold for fold in folds if "error" not in fold]),
+        "segments_evaluated": len(rows),
+        "trained_model_metrics": trained_metrics,
+        "safe_baseline_metrics": safe_metrics,
+        "trained_vs_safe_baseline": {
+            "mae_delta": _round(safe_metrics["mae"] - trained_metrics["mae"], 2),
+            "rmse_delta": _round(safe_metrics["rmse"] - trained_metrics["rmse"], 2),
+            "mape_delta": _round(safe_metrics["mape"] - trained_metrics["mape"], 2),
+            "roas_mae_delta": _round(safe_metrics["roas_mae"] - trained_metrics["roas_mae"], 4),
+            "roas_rmse_delta": _round(safe_metrics["roas_rmse"] - trained_metrics["roas_rmse"], 4),
+        },
+    }
+
+
 def run_backtest(data_dir: str | Path = "data", holdout_days: int = 30) -> dict[str, Any]:
     """Train on historical rows, score holdouts, and compare trained vs baseline behavior."""
     raw = read_csv_folder(data_dir)
@@ -232,22 +363,9 @@ def run_backtest(data_dir: str | Path = "data", holdout_days: int = 30) -> dict[
     train_frame, test_frame = _split_holdout(frame, holdout_days)
     primary = _score_split(train_frame, test_frame, holdout_days)
     blend_comparison, blend_recommendation = _compare_blend_weights(train_frame, test_frame, holdout_days)
+    roas_blend_comparison, roas_blend_recommendation = _compare_roas_blend_weights(train_frame, test_frame, holdout_days)
 
-    per_horizon: list[dict[str, Any]] = []
-    for horizon in HORIZONS:
-        horizon_train, horizon_test = _split_holdout(frame, horizon)
-        scored = _score_split(horizon_train, horizon_test, horizon)
-        per_horizon.append(
-            {
-                "horizon_days": horizon,
-                "train_rows": scored["train_rows"],
-                "test_rows": scored["test_rows"],
-                "segments_evaluated": scored["segments_evaluated"],
-                "trained_model_metrics": scored["trained_model_metrics"],
-                "safe_baseline_metrics": scored["safe_baseline_metrics"],
-                "trained_vs_safe_baseline": scored["trained_vs_safe_baseline"],
-            }
-        )
+    per_horizon = [_walk_forward_horizon(frame, horizon) for horizon in HORIZONS]
 
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -264,8 +382,10 @@ def run_backtest(data_dir: str | Path = "data", holdout_days: int = 30) -> dict[
         "trained_vs_safe_baseline": primary["trained_vs_safe_baseline"],
         "blend_weight_comparison": blend_comparison,
         "blend_weight_recommendation": blend_recommendation,
+        "roas_blend_weight_comparison": roas_blend_comparison,
+        "roas_blend_weight_recommendation": roas_blend_recommendation,
         "per_horizon_performance": per_horizon,
-        "recommendation": blend_recommendation["recommendation"],
+        "recommendation": f'{blend_recommendation["recommendation"]} {roas_blend_recommendation["recommendation"]}',
         "rows": primary["rows"],
     }
 
@@ -304,6 +424,8 @@ def _metric_row(label: str, metrics: dict[str, float]) -> str:
 def _summary_markdown(report: dict[str, Any]) -> str:
     trained = report["trained_model_metrics"]
     safe = report["safe_baseline_metrics"]
+    trained_roas = trained["roas"]
+    safe_roas = safe["roas"]
     improvement = report["trained_vs_safe_baseline"]
     env = report["environment"]
     model = report["model"]
@@ -312,9 +434,16 @@ def _summary_markdown(report: dict[str, Any]) -> str:
         f'{item["mape"]}% | {item["interval_coverage"]}% |'
         for item in report["blend_weight_comparison"]
     )
+    roas_blend_rows = "\n".join(
+        f'| {item["roas_model_weight"]:.2f} | {item["mae"]} | {item["rmse"]} | '
+        f'{item["mape"]}% | {item["interval_coverage"]}% |'
+        for item in report["roas_blend_weight_comparison"]
+    )
     horizon_rows = "\n".join(
-        f'| {item["horizon_days"]} | {item["trained_model_metrics"]["mae"]} | '
+        f'| {item["horizon_days"]} | {item["fold_count"]} | {item["segments_evaluated"]} | '
+        f'{item["trained_model_metrics"]["mae"]} | '
         f'{item["trained_model_metrics"]["rmse"]} | {item["trained_model_metrics"]["mape"]}% | '
+        f'{item["trained_model_metrics"]["roas_mae"]} | {item["trained_model_metrics"]["roas_rmse"]} | '
         f'{item["trained_model_metrics"]["interval_coverage"]}% | '
         f'{item["safe_baseline_metrics"]["mae"]} | {item["safe_baseline_metrics"]["rmse"]} |'
         for item in report["per_horizon_performance"]
@@ -351,18 +480,29 @@ Generated: {report["generated_at"]}
 
 ## Primary 30-Day Metrics
 
+### Revenue
+
 | Model | MAE | RMSE | MAPE | Interval coverage |
 | --- | ---: | ---: | ---: | ---: |
 {_metric_row("Trained model", trained)}
 {_metric_row("Safe baseline", safe)}
+
+### ROAS
+
+| Model | MAE | RMSE | MAPE | Interval coverage |
+| --- | ---: | ---: | ---: | ---: |
+{_metric_row("Trained model", trained_roas)}
+{_metric_row("Safe baseline", safe_roas)}
 
 ## Trained vs Baseline
 
 - MAE improvement vs safe baseline: {improvement["mae_delta"]}
 - RMSE improvement vs safe baseline: {improvement["rmse_delta"]}
 - MAPE improvement vs safe baseline: {improvement["mape_delta"]} percentage points
+- ROAS MAE improvement vs safe baseline: {improvement["roas_mae_delta"]}
+- ROAS RMSE improvement vs safe baseline: {improvement["roas_rmse_delta"]}
 
-## Blend Weight Comparison
+## Revenue Blend Weight Comparison
 
 | Revenue model weight | MAE | RMSE | MAPE | Interval coverage |
 | ---: | ---: | ---: | ---: | ---: |
@@ -370,10 +510,18 @@ Generated: {report["generated_at"]}
 
 Recommendation: {report["blend_weight_recommendation"]["recommendation"]}
 
-## Per-Horizon Performance
+## ROAS Blend Weight Comparison
 
-| Horizon days | Trained MAE | Trained RMSE | Trained MAPE | Trained coverage | Baseline MAE | Baseline RMSE |
-| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| ROAS model weight | MAE | RMSE | MAPE | Interval coverage |
+| ---: | ---: | ---: | ---: | ---: |
+{roas_blend_rows}
+
+Recommendation: {report["roas_blend_weight_recommendation"]["recommendation"]}
+
+## Walk-Forward Per-Horizon Performance
+
+| Horizon days | Folds | Segments | Trained revenue MAE | Trained revenue RMSE | Trained revenue MAPE | Trained ROAS MAE | Trained ROAS RMSE | Trained coverage | Baseline MAE | Baseline RMSE |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 {horizon_rows}
 
 ## Confidence Interval Methodology

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-19T16:27:02.180972+00:00",
+  "generated_at": "2026-06-20T15:48:08.218142+00:00",
   "data_dir": "data",
   "holdout_days": 30,
   "train_rows": 1200,
@@ -13,7 +13,11 @@
     "lower_revenue",
     "upper_revenue",
     "expected_roas",
-    "model_type"
+    "lower_roas",
+    "upper_roas",
+    "model_type",
+    "interval_width_pct",
+    "forecast_confidence"
   ],
   "environment": {
     "python": "3.14.4",
@@ -26,7 +30,7 @@
   "model": {
     "model_type": "trained_model",
     "artifact_type": "forecastiq_evaluator_model",
-    "artifact_version": 2,
+    "artifact_version": 3,
     "training_samples": 306,
     "training_rows": 1200,
     "confidence": {
@@ -38,67 +42,122 @@
         "90": 1.35
       },
       "revenue_model_weight": 0.1,
-      "roas_model_weight": 0.25,
+      "roas_model_weight": 0.4,
+      "revenue_model_weight_by_horizon": {
+        "30": 0.1,
+        "60": 0.1,
+        "90": 0.1
+      },
+      "roas_model_weight_by_horizon": {
+        "30": 0.4,
+        "60": 0.4,
+        "90": 0.4
+      },
+      "horizon_training_samples": {
+        "30": 198,
+        "60": 72,
+        "90": 36
+      },
+      "fallback_horizons": [],
       "revenue_residual_std": 7164.47,
       "roas_residual_std": 0.21,
       "revenue_residual_by_horizon": {
         "30": 4892.72,
         "60": 9710.7,
         "90": 14566.64
+      },
+      "roas_residual_by_horizon": {
+        "30": 0.2067,
+        "60": 0.2067,
+        "90": 0.2067
       }
     }
   },
   "trained_model_metrics": {
-    "mae": 2107.2,
-    "rmse": 2672.49,
-    "mape": 2.83,
-    "interval_coverage": 100.0
+    "mae": 2250.45,
+    "rmse": 2809.34,
+    "mape": 2.89,
+    "interval_coverage": 100.0,
+    "revenue": {
+      "mae": 2250.45,
+      "rmse": 2809.34,
+      "mape": 2.89,
+      "interval_coverage": 100.0
+    },
+    "roas": {
+      "mae": 0.05,
+      "rmse": 0.06,
+      "mape": 1.26,
+      "interval_coverage": 100.0
+    },
+    "roas_mae": 0.05,
+    "roas_rmse": 0.06,
+    "roas_mape": 1.26,
+    "roas_interval_coverage": 100.0
   },
   "safe_baseline_metrics": {
     "mae": 2185.89,
     "rmse": 2763.76,
     "mape": 2.78,
-    "interval_coverage": 88.89
+    "interval_coverage": 88.89,
+    "revenue": {
+      "mae": 2185.89,
+      "rmse": 2763.76,
+      "mape": 2.78,
+      "interval_coverage": 88.89
+    },
+    "roas": {
+      "mae": 0.05,
+      "rmse": 0.07,
+      "mape": 1.44,
+      "interval_coverage": 100.0
+    },
+    "roas_mae": 0.05,
+    "roas_rmse": 0.07,
+    "roas_mape": 1.44,
+    "roas_interval_coverage": 100.0
   },
   "trained_vs_safe_baseline": {
-    "mae_delta": 78.69,
-    "rmse_delta": 91.27,
-    "mape_delta": -0.05
+    "mae_delta": -64.56,
+    "rmse_delta": -45.58,
+    "mape_delta": -0.11,
+    "roas_mae_delta": 0.0,
+    "roas_rmse_delta": 0.01
   },
   "blend_weight_comparison": [
     {
       "revenue_model_weight": 0.1,
-      "mae": 2107.2,
-      "rmse": 2672.49,
-      "mape": 2.83,
+      "mae": 2250.45,
+      "rmse": 2809.34,
+      "mape": 2.89,
       "interval_coverage": 100.0
     },
     {
       "revenue_model_weight": 0.25,
-      "mae": 2208.04,
-      "rmse": 2800.71,
-      "mape": 3.22,
+      "mae": 2447.17,
+      "rmse": 2976.24,
+      "mape": 3.2,
       "interval_coverage": 100.0
     },
     {
       "revenue_model_weight": 0.4,
-      "mae": 2463.5,
-      "rmse": 3206.38,
-      "mape": 3.8,
+      "mae": 2654.54,
+      "rmse": 3244.23,
+      "mape": 3.53,
       "interval_coverage": 100.0
     },
     {
       "revenue_model_weight": 0.5,
-      "mae": 2808.06,
-      "rmse": 3587.39,
-      "mape": 4.22,
+      "mae": 2809.54,
+      "rmse": 3467.85,
+      "mape": 3.8,
       "interval_coverage": 100.0
     },
     {
       "revenue_model_weight": 0.6,
-      "mae": 3187.48,
-      "rmse": 4028.53,
-      "mape": 4.71,
+      "mae": 2964.53,
+      "rmse": 3720.04,
+      "mape": 4.07,
       "interval_coverage": 100.0
     }
   ],
@@ -109,78 +168,304 @@
     "recommendation": "Keep revenue_model_weight=0.10; it has the best RMSE/MAE balance in the holdout comparison.",
     "selection_metric": "lowest RMSE, then MAE, then MAPE"
   },
+  "roas_blend_weight_comparison": [
+    {
+      "roas_model_weight": 0.1,
+      "mae": 0.05,
+      "rmse": 0.06,
+      "mape": 1.41,
+      "interval_coverage": 100.0
+    },
+    {
+      "roas_model_weight": 0.25,
+      "mae": 0.05,
+      "rmse": 0.06,
+      "mape": 1.3,
+      "interval_coverage": 100.0
+    },
+    {
+      "roas_model_weight": 0.4,
+      "mae": 0.05,
+      "rmse": 0.06,
+      "mape": 1.26,
+      "interval_coverage": 100.0
+    },
+    {
+      "roas_model_weight": 0.5,
+      "mae": 0.05,
+      "rmse": 0.07,
+      "mape": 1.29,
+      "interval_coverage": 100.0
+    },
+    {
+      "roas_model_weight": 0.6,
+      "mae": 0.05,
+      "rmse": 0.07,
+      "mape": 1.2,
+      "interval_coverage": 100.0
+    }
+  ],
+  "roas_blend_weight_recommendation": {
+    "current_roas_model_weight": 0.4,
+    "recommended_roas_model_weight": 0.4,
+    "decision": "keep_current",
+    "recommendation": "Keep roas_model_weight=0.40; it has the best ROAS RMSE/MAE balance.",
+    "selection_metric": "lowest ROAS RMSE, then MAE, then MAPE"
+  },
   "per_horizon_performance": [
     {
       "horizon_days": 30,
-      "train_rows": 1200,
-      "test_rows": 240,
-      "segments_evaluated": 18,
+      "folds": [
+        {
+          "start_date": "2026-05-19",
+          "end_date": "2026-06-17",
+          "train_rows": 1200,
+          "test_rows": 240,
+          "segments_evaluated": 18,
+          "dedicated_training_samples": 198,
+          "fallback_only": false
+        },
+        {
+          "start_date": "2026-04-19",
+          "end_date": "2026-05-18",
+          "train_rows": 960,
+          "test_rows": 240,
+          "segments_evaluated": 18,
+          "dedicated_training_samples": 144,
+          "fallback_only": false
+        },
+        {
+          "start_date": "2026-03-20",
+          "end_date": "2026-04-18",
+          "train_rows": 720,
+          "test_rows": 240,
+          "segments_evaluated": 18,
+          "dedicated_training_samples": 90,
+          "fallback_only": false
+        }
+      ],
+      "fold_count": 3,
+      "segments_evaluated": 54,
       "trained_model_metrics": {
-        "mae": 2107.2,
-        "rmse": 2672.49,
+        "mae": 2976.77,
+        "rmse": 4753.35,
         "mape": 2.83,
-        "interval_coverage": 100.0
+        "interval_coverage": 100.0,
+        "revenue": {
+          "mae": 2976.77,
+          "rmse": 4753.35,
+          "mape": 2.83,
+          "interval_coverage": 100.0
+        },
+        "roas": {
+          "mae": 0.05,
+          "rmse": 0.06,
+          "mape": 1.36,
+          "interval_coverage": 100.0
+        },
+        "roas_mae": 0.05,
+        "roas_rmse": 0.06,
+        "roas_mape": 1.36,
+        "roas_interval_coverage": 100.0
       },
       "safe_baseline_metrics": {
-        "mae": 2185.89,
-        "rmse": 2763.76,
-        "mape": 2.78,
-        "interval_coverage": 88.89
+        "mae": 3097.88,
+        "rmse": 4501.73,
+        "mape": 3.15,
+        "interval_coverage": 96.3,
+        "revenue": {
+          "mae": 3097.88,
+          "rmse": 4501.73,
+          "mape": 3.15,
+          "interval_coverage": 96.3
+        },
+        "roas": {
+          "mae": 0.05,
+          "rmse": 0.06,
+          "mape": 1.46,
+          "interval_coverage": 100.0
+        },
+        "roas_mae": 0.05,
+        "roas_rmse": 0.06,
+        "roas_mape": 1.46,
+        "roas_interval_coverage": 100.0
       },
       "trained_vs_safe_baseline": {
-        "mae_delta": 78.69,
-        "rmse_delta": 91.27,
-        "mape_delta": -0.05
+        "mae_delta": 121.11,
+        "rmse_delta": -251.62,
+        "mape_delta": 0.32,
+        "roas_mae_delta": 0.0,
+        "roas_rmse_delta": 0.0
       }
     },
     {
       "horizon_days": 60,
-      "train_rows": 960,
-      "test_rows": 480,
-      "segments_evaluated": 18,
+      "folds": [
+        {
+          "start_date": "2026-04-19",
+          "end_date": "2026-06-17",
+          "train_rows": 960,
+          "test_rows": 480,
+          "segments_evaluated": 18,
+          "dedicated_training_samples": 54,
+          "fallback_only": false
+        },
+        {
+          "start_date": "2026-03-20",
+          "end_date": "2026-05-18",
+          "train_rows": 720,
+          "test_rows": 480,
+          "segments_evaluated": 18,
+          "dedicated_training_samples": 18,
+          "fallback_only": false
+        },
+        {
+          "start_date": "2026-02-18",
+          "end_date": "2026-04-18",
+          "train_rows": 480,
+          "test_rows": 480,
+          "segments_evaluated": 18,
+          "dedicated_training_samples": 0,
+          "fallback_only": true
+        }
+      ],
+      "fold_count": 3,
+      "segments_evaluated": 54,
       "trained_model_metrics": {
-        "mae": 5144.93,
-        "rmse": 8652.28,
-        "mape": 1.96,
-        "interval_coverage": 100.0
+        "mae": 11515.01,
+        "rmse": 19457.66,
+        "mape": 5.29,
+        "interval_coverage": 70.37,
+        "revenue": {
+          "mae": 11515.01,
+          "rmse": 19457.66,
+          "mape": 5.29,
+          "interval_coverage": 70.37
+        },
+        "roas": {
+          "mae": 0.1,
+          "rmse": 0.13,
+          "mape": 2.75,
+          "interval_coverage": 96.3
+        },
+        "roas_mae": 0.1,
+        "roas_rmse": 0.13,
+        "roas_mape": 2.75,
+        "roas_interval_coverage": 96.3
       },
       "safe_baseline_metrics": {
-        "mae": 4728.39,
-        "rmse": 6906.01,
-        "mape": 2.24,
-        "interval_coverage": 100.0
+        "mae": 11221.15,
+        "rmse": 18229.52,
+        "mape": 5.37,
+        "interval_coverage": 68.52,
+        "revenue": {
+          "mae": 11221.15,
+          "rmse": 18229.52,
+          "mape": 5.37,
+          "interval_coverage": 68.52
+        },
+        "roas": {
+          "mae": 0.07,
+          "rmse": 0.08,
+          "mape": 1.84,
+          "interval_coverage": 100.0
+        },
+        "roas_mae": 0.07,
+        "roas_rmse": 0.08,
+        "roas_mape": 1.84,
+        "roas_interval_coverage": 100.0
       },
       "trained_vs_safe_baseline": {
-        "mae_delta": -416.54,
-        "rmse_delta": -1746.27,
-        "mape_delta": 0.28
+        "mae_delta": -293.86,
+        "rmse_delta": -1228.14,
+        "mape_delta": 0.08,
+        "roas_mae_delta": -0.03,
+        "roas_rmse_delta": -0.05
       }
     },
     {
       "horizon_days": 90,
-      "train_rows": 720,
-      "test_rows": 720,
-      "segments_evaluated": 18,
+      "folds": [
+        {
+          "start_date": "2026-03-20",
+          "end_date": "2026-06-17",
+          "train_rows": 720,
+          "test_rows": 720,
+          "segments_evaluated": 18,
+          "dedicated_training_samples": 0,
+          "fallback_only": true
+        },
+        {
+          "start_date": "2026-02-18",
+          "end_date": "2026-05-18",
+          "train_rows": 480,
+          "test_rows": 720,
+          "segments_evaluated": 18,
+          "dedicated_training_samples": 0,
+          "fallback_only": true
+        },
+        {
+          "start_date": "2026-01-19",
+          "end_date": "2026-04-18",
+          "error": "ValueError: not enough rolling forecast samples to train evaluator model"
+        }
+      ],
+      "fold_count": 2,
+      "segments_evaluated": 36,
       "trained_model_metrics": {
-        "mae": 21917.54,
-        "rmse": 34288.82,
-        "mape": 6.9,
-        "interval_coverage": 100.0
+        "mae": 22981.64,
+        "rmse": 35641.57,
+        "mape": 7.38,
+        "interval_coverage": 55.56,
+        "revenue": {
+          "mae": 22981.64,
+          "rmse": 35641.57,
+          "mape": 7.38,
+          "interval_coverage": 55.56
+        },
+        "roas": {
+          "mae": 0.11,
+          "rmse": 0.13,
+          "mape": 2.78,
+          "interval_coverage": 100.0
+        },
+        "roas_mae": 0.11,
+        "roas_rmse": 0.13,
+        "roas_mape": 2.78,
+        "roas_interval_coverage": 100.0
       },
       "safe_baseline_metrics": {
-        "mae": 13145.11,
-        "rmse": 18642.51,
-        "mape": 4.4,
-        "interval_coverage": 100.0
+        "mae": 22981.64,
+        "rmse": 35641.57,
+        "mape": 7.38,
+        "interval_coverage": 55.56,
+        "revenue": {
+          "mae": 22981.64,
+          "rmse": 35641.57,
+          "mape": 7.38,
+          "interval_coverage": 55.56
+        },
+        "roas": {
+          "mae": 0.11,
+          "rmse": 0.13,
+          "mape": 2.78,
+          "interval_coverage": 100.0
+        },
+        "roas_mae": 0.11,
+        "roas_rmse": 0.13,
+        "roas_mape": 2.78,
+        "roas_interval_coverage": 100.0
       },
       "trained_vs_safe_baseline": {
-        "mae_delta": -8772.43,
-        "rmse_delta": -15646.31,
-        "mape_delta": -2.5
+        "mae_delta": 0.0,
+        "rmse_delta": 0.0,
+        "mape_delta": 0.0,
+        "roas_mae_delta": 0.0,
+        "roas_rmse_delta": 0.0
       }
     }
   ],
-  "recommendation": "Keep revenue_model_weight=0.10; it has the best RMSE/MAE balance in the holdout comparison.",
+  "recommendation": "Keep revenue_model_weight=0.10; it has the best RMSE/MAE balance in the holdout comparison. Keep roas_model_weight=0.40; it has the best ROAS RMSE/MAE balance.",
   "rows": [
     {
       "level": "overall",
@@ -188,15 +473,19 @@
       "horizon_days": 30,
       "actual_revenue": 476116.68,
       "actual_roas": 4.0445,
-      "trained_expected_revenue": 480819.34,
-      "trained_lower_revenue": 423121.02,
-      "trained_upper_revenue": 538517.66,
+      "trained_expected_revenue": 481794.26,
+      "trained_lower_revenue": 423978.95,
+      "trained_upper_revenue": 539609.57,
       "trained_expected_roas": 4.07,
+      "trained_lower_roas": 3.57,
+      "trained_upper_roas": 4.54,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 482379.32,
       "safe_lower_revenue": 443788.98,
       "safe_upper_revenue": 520969.67,
-      "safe_expected_roas": 4.06
+      "safe_expected_roas": 4.06,
+      "safe_lower_roas": 3.74,
+      "safe_upper_roas": 4.39
     },
     {
       "level": "channel",
@@ -204,15 +493,19 @@
       "horizon_days": 30,
       "actual_revenue": 264801.33,
       "actual_roas": 4.586,
-      "trained_expected_revenue": 270270.95,
-      "trained_lower_revenue": 237838.44,
-      "trained_upper_revenue": 302703.47,
+      "trained_expected_revenue": 270586.68,
+      "trained_lower_revenue": 238116.28,
+      "trained_upper_revenue": 303057.08,
       "trained_expected_roas": 4.61,
+      "trained_lower_roas": 4.06,
+      "trained_upper_roas": 5.17,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 270817.94,
       "safe_lower_revenue": 249152.5,
       "safe_upper_revenue": 292483.37,
-      "safe_expected_roas": 4.62
+      "safe_expected_roas": 4.62,
+      "safe_lower_roas": 4.25,
+      "safe_upper_roas": 4.99
     },
     {
       "level": "channel",
@@ -220,15 +513,19 @@
       "horizon_days": 30,
       "actual_revenue": 139555.62,
       "actual_roas": 2.9754,
-      "trained_expected_revenue": 139780.81,
-      "trained_lower_revenue": 123007.11,
-      "trained_upper_revenue": 156554.51,
+      "trained_expected_revenue": 140463.97,
+      "trained_lower_revenue": 123608.29,
+      "trained_upper_revenue": 157319.64,
       "trained_expected_roas": 2.99,
+      "trained_lower_roas": 2.62,
+      "trained_upper_roas": 3.33,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 140404.68,
       "safe_lower_revenue": 129172.3,
       "safe_upper_revenue": 151637.05,
-      "safe_expected_roas": 2.97
+      "safe_expected_roas": 2.97,
+      "safe_lower_roas": 2.74,
+      "safe_upper_roas": 3.21
     },
     {
       "level": "channel",
@@ -236,15 +533,19 @@
       "horizon_days": 30,
       "actual_revenue": 71759.73,
       "actual_roas": 5.488,
-      "trained_expected_revenue": 72178.8,
-      "trained_lower_revenue": 62589.07,
-      "trained_upper_revenue": 81768.53,
-      "trained_expected_roas": 5.46,
+      "trained_expected_revenue": 72028.56,
+      "trained_lower_revenue": 62438.83,
+      "trained_upper_revenue": 81618.29,
+      "trained_expected_roas": 5.45,
+      "trained_lower_roas": 4.8,
+      "trained_upper_roas": 6.28,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 71160.51,
       "safe_lower_revenue": 65467.67,
       "safe_upper_revenue": 76853.35,
-      "safe_expected_roas": 5.48
+      "safe_expected_roas": 5.48,
+      "safe_lower_roas": 5.04,
+      "safe_upper_roas": 5.91
     },
     {
       "level": "campaign_type",
@@ -252,15 +553,19 @@
       "horizon_days": 30,
       "actual_revenue": 53922.02,
       "actual_roas": 2.9848,
-      "trained_expected_revenue": 52191.74,
-      "trained_lower_revenue": 42602.0,
-      "trained_upper_revenue": 61781.47,
-      "trained_expected_roas": 2.95,
+      "trained_expected_revenue": 52110.68,
+      "trained_lower_revenue": 42520.95,
+      "trained_upper_revenue": 61700.41,
+      "trained_expected_roas": 2.96,
+      "trained_lower_roas": 2.39,
+      "trained_upper_roas": 3.46,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 51961.55,
       "safe_lower_revenue": 47804.62,
       "safe_upper_revenue": 56118.47,
-      "safe_expected_roas": 2.92
+      "safe_expected_roas": 2.92,
+      "safe_lower_roas": 2.68,
+      "safe_upper_roas": 3.15
     },
     {
       "level": "campaign_type",
@@ -268,15 +573,19 @@
       "horizon_days": 30,
       "actual_revenue": 93907.13,
       "actual_roas": 4.2731,
-      "trained_expected_revenue": 97087.88,
-      "trained_lower_revenue": 85437.34,
-      "trained_upper_revenue": 108738.43,
+      "trained_expected_revenue": 96950.87,
+      "trained_lower_revenue": 85316.76,
+      "trained_upper_revenue": 108584.97,
       "trained_expected_roas": 4.29,
+      "trained_lower_roas": 3.8,
+      "trained_upper_roas": 4.84,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 96286.88,
       "safe_lower_revenue": 88583.93,
       "safe_upper_revenue": 103989.83,
-      "safe_expected_roas": 4.29
+      "safe_expected_roas": 4.29,
+      "safe_lower_roas": 3.95,
+      "safe_upper_roas": 4.63
     },
     {
       "level": "campaign_type",
@@ -284,15 +593,19 @@
       "horizon_days": 30,
       "actual_revenue": 38705.24,
       "actual_roas": 2.9226,
-      "trained_expected_revenue": 42957.16,
-      "trained_lower_revenue": 33367.43,
-      "trained_upper_revenue": 52546.89,
-      "trained_expected_roas": 3.05,
+      "trained_expected_revenue": 42753.47,
+      "trained_lower_revenue": 33163.74,
+      "trained_upper_revenue": 52343.2,
+      "trained_expected_roas": 3.04,
+      "trained_lower_roas": 2.39,
+      "trained_upper_roas": 3.77,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 42449.76,
       "safe_lower_revenue": 39053.78,
       "safe_upper_revenue": 45845.74,
-      "safe_expected_roas": 3.06
+      "safe_expected_roas": 3.06,
+      "safe_lower_roas": 2.81,
+      "safe_upper_roas": 3.3
     },
     {
       "level": "campaign_type",
@@ -300,15 +613,19 @@
       "horizon_days": 30,
       "actual_revenue": 46928.36,
       "actual_roas": 3.0094,
-      "trained_expected_revenue": 46184.19,
-      "trained_lower_revenue": 36594.46,
-      "trained_upper_revenue": 55773.92,
-      "trained_expected_roas": 2.98,
+      "trained_expected_revenue": 46066.14,
+      "trained_lower_revenue": 36476.41,
+      "trained_upper_revenue": 55655.88,
+      "trained_expected_roas": 2.99,
+      "trained_lower_roas": 2.35,
+      "trained_upper_roas": 3.58,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 46006.26,
       "safe_lower_revenue": 42325.76,
       "safe_upper_revenue": 49686.76,
-      "safe_expected_roas": 2.96
+      "safe_expected_roas": 2.96,
+      "safe_lower_roas": 2.72,
+      "safe_upper_roas": 3.2
     },
     {
       "level": "campaign_type",
@@ -316,15 +633,19 @@
       "horizon_days": 30,
       "actual_revenue": 123975.04,
       "actual_roas": 5.5512,
-      "trained_expected_revenue": 124921.04,
-      "trained_lower_revenue": 109930.51,
-      "trained_upper_revenue": 139911.56,
-      "trained_expected_roas": 5.6,
+      "trained_expected_revenue": 125376.68,
+      "trained_lower_revenue": 110331.48,
+      "trained_upper_revenue": 140421.88,
+      "trained_expected_roas": 5.64,
+      "trained_lower_roas": 4.88,
+      "trained_upper_roas": 6.22,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 125520.65,
       "safe_lower_revenue": 115479.0,
       "safe_upper_revenue": 135562.3,
-      "safe_expected_roas": 5.56
+      "safe_expected_roas": 5.56,
+      "safe_lower_roas": 5.11,
+      "safe_upper_roas": 6.0
     },
     {
       "level": "campaign_type",
@@ -332,15 +653,19 @@
       "horizon_days": 30,
       "actual_revenue": 118678.89,
       "actual_roas": 4.4772,
-      "trained_expected_revenue": 120107.49,
-      "trained_lower_revenue": 105694.59,
-      "trained_upper_revenue": 134520.39,
-      "trained_expected_roas": 4.55,
+      "trained_expected_revenue": 120463.67,
+      "trained_lower_revenue": 106008.03,
+      "trained_upper_revenue": 134919.32,
+      "trained_expected_roas": 4.56,
+      "trained_lower_roas": 3.99,
+      "trained_upper_roas": 5.08,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 120172.26,
       "safe_lower_revenue": 110558.48,
       "safe_upper_revenue": 129786.04,
-      "safe_expected_roas": 4.53
+      "safe_expected_roas": 4.53,
+      "safe_lower_roas": 4.16,
+      "safe_upper_roas": 4.89
     },
     {
       "level": "campaign",
@@ -348,15 +673,19 @@
       "horizon_days": 30,
       "actual_revenue": 53922.02,
       "actual_roas": 2.9848,
-      "trained_expected_revenue": 52191.74,
-      "trained_lower_revenue": 42602.0,
-      "trained_upper_revenue": 61781.47,
-      "trained_expected_roas": 2.95,
+      "trained_expected_revenue": 52110.68,
+      "trained_lower_revenue": 42520.95,
+      "trained_upper_revenue": 61700.41,
+      "trained_expected_roas": 2.96,
+      "trained_lower_roas": 2.39,
+      "trained_upper_roas": 3.46,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 51961.55,
       "safe_lower_revenue": 47804.62,
       "safe_upper_revenue": 56118.47,
-      "safe_expected_roas": 2.92
+      "safe_expected_roas": 2.92,
+      "safe_lower_roas": 2.68,
+      "safe_upper_roas": 3.15
     },
     {
       "level": "campaign",
@@ -364,15 +693,19 @@
       "horizon_days": 30,
       "actual_revenue": 36728.84,
       "actual_roas": 6.0193,
-      "trained_expected_revenue": 37079.44,
-      "trained_lower_revenue": 27489.71,
-      "trained_upper_revenue": 46669.17,
+      "trained_expected_revenue": 36875.82,
+      "trained_lower_revenue": 27286.09,
+      "trained_upper_revenue": 46465.55,
       "trained_expected_roas": 6.07,
+      "trained_lower_roas": 4.5,
+      "trained_upper_roas": 7.66,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 36892.53,
       "safe_lower_revenue": 33941.13,
       "safe_upper_revenue": 39843.93,
-      "safe_expected_roas": 6.09
+      "safe_expected_roas": 6.09,
+      "safe_lower_roas": 5.6,
+      "safe_upper_roas": 6.57
     },
     {
       "level": "campaign",
@@ -380,15 +713,19 @@
       "horizon_days": 30,
       "actual_revenue": 35030.89,
       "actual_roas": 5.0231,
-      "trained_expected_revenue": 34717.37,
-      "trained_lower_revenue": 25127.64,
-      "trained_upper_revenue": 44307.1,
-      "trained_expected_roas": 4.93,
+      "trained_expected_revenue": 34482.72,
+      "trained_lower_revenue": 24892.98,
+      "trained_upper_revenue": 44072.45,
+      "trained_expected_roas": 4.9,
+      "trained_lower_roas": 3.59,
+      "trained_upper_roas": 6.36,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 34268.01,
       "safe_lower_revenue": 31526.57,
       "safe_upper_revenue": 37009.45,
-      "safe_expected_roas": 4.94
+      "safe_expected_roas": 4.94,
+      "safe_lower_roas": 4.55,
+      "safe_upper_roas": 5.34
     },
     {
       "level": "campaign",
@@ -396,15 +733,19 @@
       "horizon_days": 30,
       "actual_revenue": 87246.2,
       "actual_roas": 5.3752,
-      "trained_expected_revenue": 88836.1,
-      "trained_lower_revenue": 78175.77,
-      "trained_upper_revenue": 99496.43,
+      "trained_expected_revenue": 88878.34,
+      "trained_lower_revenue": 78212.94,
+      "trained_upper_revenue": 99543.75,
       "trained_expected_roas": 5.36,
+      "trained_lower_roas": 4.73,
+      "trained_upper_roas": 6.02,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 88628.13,
       "safe_lower_revenue": 81537.88,
       "safe_upper_revenue": 95718.38,
-      "safe_expected_roas": 5.36
+      "safe_expected_roas": 5.36,
+      "safe_lower_roas": 4.93,
+      "safe_upper_roas": 5.79
     },
     {
       "level": "campaign",
@@ -412,15 +753,19 @@
       "horizon_days": 30,
       "actual_revenue": 46928.36,
       "actual_roas": 3.0094,
-      "trained_expected_revenue": 46184.19,
-      "trained_lower_revenue": 36594.46,
-      "trained_upper_revenue": 55773.92,
-      "trained_expected_roas": 2.98,
+      "trained_expected_revenue": 46066.14,
+      "trained_lower_revenue": 36476.41,
+      "trained_upper_revenue": 55655.88,
+      "trained_expected_roas": 2.99,
+      "trained_lower_roas": 2.35,
+      "trained_upper_roas": 3.58,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 46006.26,
       "safe_lower_revenue": 42325.76,
       "safe_upper_revenue": 49686.76,
-      "safe_expected_roas": 2.96
+      "safe_expected_roas": 2.96,
+      "safe_lower_roas": 2.72,
+      "safe_upper_roas": 3.2
     },
     {
       "level": "campaign",
@@ -428,15 +773,19 @@
       "horizon_days": 30,
       "actual_revenue": 83648.0,
       "actual_roas": 4.2823,
-      "trained_expected_revenue": 86318.15,
-      "trained_lower_revenue": 75959.97,
-      "trained_upper_revenue": 96676.32,
-      "trained_expected_roas": 4.36,
+      "trained_expected_revenue": 86471.29,
+      "trained_lower_revenue": 76094.74,
+      "trained_upper_revenue": 96847.84,
+      "trained_expected_roas": 4.35,
+      "trained_lower_roas": 3.88,
+      "trained_upper_roas": 4.94,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 85905.37,
       "safe_lower_revenue": 79032.94,
       "safe_upper_revenue": 92777.8,
-      "safe_expected_roas": 4.38
+      "safe_expected_roas": 4.38,
+      "safe_lower_roas": 4.03,
+      "safe_upper_roas": 4.73
     },
     {
       "level": "campaign",
@@ -444,15 +793,19 @@
       "horizon_days": 30,
       "actual_revenue": 38705.24,
       "actual_roas": 2.9226,
-      "trained_expected_revenue": 42957.16,
-      "trained_lower_revenue": 33367.43,
-      "trained_upper_revenue": 52546.89,
-      "trained_expected_roas": 3.05,
+      "trained_expected_revenue": 42753.47,
+      "trained_lower_revenue": 33163.74,
+      "trained_upper_revenue": 52343.2,
+      "trained_expected_roas": 3.04,
+      "trained_lower_roas": 2.39,
+      "trained_upper_roas": 3.77,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 42449.76,
       "safe_lower_revenue": 39053.78,
       "safe_upper_revenue": 45845.74,
-      "safe_expected_roas": 3.06
+      "safe_expected_roas": 3.06,
+      "safe_lower_roas": 2.81,
+      "safe_upper_roas": 3.3
     },
     {
       "level": "campaign",
@@ -460,15 +813,19 @@
       "horizon_days": 30,
       "actual_revenue": 93907.13,
       "actual_roas": 4.2731,
-      "trained_expected_revenue": 97087.88,
-      "trained_lower_revenue": 85437.34,
-      "trained_upper_revenue": 108738.43,
+      "trained_expected_revenue": 96950.87,
+      "trained_lower_revenue": 85316.76,
+      "trained_upper_revenue": 108584.97,
       "trained_expected_roas": 4.29,
+      "trained_lower_roas": 3.8,
+      "trained_upper_roas": 4.84,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 96286.88,
       "safe_lower_revenue": 88583.93,
       "safe_upper_revenue": 103989.83,
-      "safe_expected_roas": 4.29
+      "safe_expected_roas": 4.29,
+      "safe_lower_roas": 3.95,
+      "safe_upper_roas": 4.63
     }
   ]
 }

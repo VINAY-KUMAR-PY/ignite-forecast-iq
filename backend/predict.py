@@ -20,7 +20,16 @@ import joblib
 import numpy as np
 import pandas as pd
 
-from .schema_adapters import CANONICAL_COLUMNS, COLUMN_ALIASES, alias_index, normalize_marketing_frame
+from .schema_adapters import (
+    CANONICAL_COLUMNS,
+    COLUMN_ALIASES,
+    SOURCE_FILE_COLUMN,
+    SOURCE_SCHEMA_COLUMN,
+    alias_index,
+    channel_from_source_file,
+    normalize_marketing_frame,
+    reconcile_normalized_frames,
+)
 
 
 OUTPUT_COLUMNS = [
@@ -136,13 +145,28 @@ def read_csv_folder(data_dir: str | Path) -> pd.DataFrame:
         adapted = normalize_marketing_frame(frame)
         for issue in adapted.issues[:3]:
             log(f"{file.name}: {issue}")
-        adapted.frame["__source_file"] = file.name
+        inferred_channel = channel_from_source_file(file.name)
+        if inferred_channel:
+            missing_channel = adapted.frame["channel"].astype(str).str.strip().str.lower().isin(
+                {"", "unknown channel", "nan", "none", "null"}
+            )
+            adapted.frame.loc[missing_channel, "channel"] = inferred_channel
+        adapted.frame[SOURCE_FILE_COLUMN] = file.name
         frames.append(adapted.frame)
         log(f"Loaded {len(adapted.frame)} rows from {file.name} as {adapted.schema_type} schema")
 
     if not frames:
         return pd.DataFrame()
-    return pd.concat(frames, ignore_index=True)
+    reconciled = reconcile_normalized_frames(frames)
+    schemas = sorted(
+        set(
+            str(value)
+            for value in reconciled.get(SOURCE_SCHEMA_COLUMN, pd.Series(dtype=str)).dropna().unique().tolist()
+        )
+    )
+    if len(schemas) > 1 or any(str(schema).startswith("reconciled_") for schema in schemas):
+        log(f"Reconciled multi-source CSV folder using schemas: {', '.join(schemas)}")
+    return reconciled
 
 
 def canonicalize_frame(raw: pd.DataFrame) -> CleanResult:
@@ -150,9 +174,13 @@ def canonicalize_frame(raw: pd.DataFrame) -> CleanResult:
         return CleanResult(frame=empty_frame(), total_rows=0, valid_rows=0, issues=["empty input"])
 
     total_rows = len(raw)
-    adapted = normalize_marketing_frame(raw)
-    raw = adapted.frame
-    issues: list[str] = list(adapted.issues)
+    if all(column in raw.columns for column in CANONICAL_COLUMNS):
+        raw = raw.copy()
+        issues: list[str] = []
+    else:
+        adapted = normalize_marketing_frame(raw)
+        raw = adapted.frame
+        issues = list(adapted.issues)
     mapping = alias_index(raw.columns)
 
     def series_for(column: str, default: Any) -> pd.Series:
@@ -252,18 +280,22 @@ def fallback_model_config(reason: str = "fallback") -> dict[str, Any]:
 
 
 def is_trained_model_artifact(model: dict[str, Any]) -> bool:
+    def valid_horizon_entry(entry: Any) -> bool:
+        return isinstance(entry, dict) and (
+            entry.get("fallback_only") is True
+            or (
+                hasattr(entry.get("revenue_model"), "predict")
+                and hasattr(entry.get("roas_model"), "predict")
+            )
+        )
+
     return (
         isinstance(model, dict)
         and model.get("artifact_type") == ARTIFACT_TYPE
         and model.get("artifact_version") == ARTIFACT_VERSION
         and model.get("model_type") == TRAINED_MODEL_TYPE
         and isinstance(model.get("models"), dict)
-        and all(
-            isinstance(model["models"].get(horizon), dict)
-            and hasattr(model["models"][horizon].get("revenue_model"), "predict")
-            and hasattr(model["models"][horizon].get("roas_model"), "predict")
-            for horizon in HORIZONS
-        )
+        and all(valid_horizon_entry(model["models"].get(horizon) or model["models"].get(str(horizon))) for horizon in HORIZONS)
         and list(model.get("feature_columns") or []) == FEATURE_COLUMNS
     )
 
@@ -507,13 +539,26 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
 
     models: dict[int, dict[str, Any]] = {}
     revenue_by_horizon: dict[str, float] = {}
+    roas_by_horizon: dict[str, float] = {}
+    horizon_sample_counts: dict[str, int] = {}
+    fallback_horizons: list[int] = []
     revenue_residuals_all: list[float] = []
     roas_residuals_all: list[float] = []
     horizon_array = np.asarray(horizon_labels)
     for horizon in HORIZONS:
         mask = horizon_array == horizon
-        if int(mask.sum()) < 8:
-            mask = np.ones(len(X), dtype=bool)
+        dedicated_samples = int(mask.sum())
+        horizon_sample_counts[str(horizon)] = dedicated_samples
+        if dedicated_samples < MIN_TRAINED_MODEL_ROWS:
+            fallback_horizons.append(horizon)
+            revenue_by_horizon[str(horizon)] = clean_number(max(float(np.mean(np.abs(y_revenue))) * 0.08, 1.0))
+            roas_by_horizon[str(horizon)] = clean_number(max(float(np.mean(np.abs(y_roas))) * 0.08, 0.05), 4)
+            models[horizon] = {
+                "fallback_only": True,
+                "training_samples": dedicated_samples,
+                "fallback_reason": f"only {dedicated_samples} dedicated {horizon}d samples",
+            }
+            continue
         X_h = X.loc[mask]
         y_rev_h = y_revenue[mask]
         y_roas_h = y_roas[mask]
@@ -538,10 +583,13 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
         horizon_std = safe_float(np.std(revenue_residuals_h, ddof=1), 0.0) if len(revenue_residuals_h) >= 2 else 0.0
         horizon_floor = safe_float(np.mean(np.abs(y_rev_h)), 0.0) * 0.05
         revenue_by_horizon[str(horizon)] = clean_number(max(horizon_std, horizon_floor, 1.0))
+        roas_std = safe_float(np.std(roas_residuals_h, ddof=1), 0.0) if len(roas_residuals_h) >= 2 else 0.0
+        roas_floor = safe_float(np.mean(np.abs(y_roas_h)), 0.0) * 0.05
+        roas_by_horizon[str(horizon)] = clean_number(max(roas_std, roas_floor, 0.05), 4)
         models[horizon] = {
             "revenue_model": revenue_model,
             "roas_model": roas_model,
-            "training_samples": int(len(X_h)),
+            "training_samples": dedicated_samples,
         }
 
     revenue_residuals = np.asarray(revenue_residuals_all, dtype=float)
@@ -568,7 +616,15 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
             "minimum_interval_pct": 0.12,
             "horizon_interval_multiplier": {"30": 1.0, "60": 1.18, "90": 1.35},
             "revenue_model_weight": 0.10,
-            "roas_model_weight": 0.25,
+            "roas_model_weight": 0.40,
+            "revenue_model_weight_by_horizon": {
+                str(horizon): 0.0 if horizon in fallback_horizons else 0.10 for horizon in HORIZONS
+            },
+            "roas_model_weight_by_horizon": {
+                str(horizon): 0.0 if horizon in fallback_horizons else 0.40 for horizon in HORIZONS
+            },
+            "horizon_training_samples": horizon_sample_counts,
+            "fallback_horizons": fallback_horizons,
             "revenue_residual_std": clean_number(
                 max(safe_float(np.std(revenue_residuals, ddof=1), 0.0), safe_float(np.mean(np.abs(y_revenue)), 0.0) * 0.05)
             ),
@@ -576,6 +632,7 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
                 max(safe_float(np.std(roas_residuals, ddof=1), 0.0), safe_float(np.mean(np.abs(y_roas)), 0.0) * 0.05, 0.05)
             ),
             "revenue_residual_by_horizon": revenue_by_horizon,
+            "roas_residual_by_horizon": roas_by_horizon,
         },
         "fallback_metadata": fallback_model_config("trained model unavailable"),
     }
@@ -679,6 +736,8 @@ def trained_forecast_segment(
     horizon_model = (model.get("models") or {}).get(horizon) or (model.get("models") or {}).get(str(horizon))
     if not horizon_model:
         raise ValueError(f"missing trained sub-model for {horizon}d horizon")
+    if horizon_model.get("fallback_only") is True:
+        raise ValueError(horizon_model.get("fallback_reason") or f"{horizon}d horizon configured for safe fallback")
     trained_revenue = safe_float(horizon_model["revenue_model"].predict(features)[0])
     trained_roas = safe_float(horizon_model["roas_model"].predict(features)[0])
     if trained_revenue < 0 or trained_roas < 0 or not np.isfinite(trained_revenue) or not np.isfinite(trained_roas):
@@ -690,7 +749,7 @@ def trained_forecast_segment(
 
     if baseline_revenue > 0:
         trained_revenue = min(max(trained_revenue, baseline_revenue * 0.35), baseline_revenue * 3.0)
-        revenue_weight = min(0.8, max(0.0, safe_float(model.get("confidence", {}).get("revenue_model_weight"), 0.1)))
+        revenue_weight = _horizon_model_weight(model, "revenue_model_weight", horizon, 0.1)
         expected_revenue = (trained_revenue * revenue_weight) + (baseline_revenue * (1 - revenue_weight))
     else:
         expected_revenue = max(0.0, trained_revenue)
@@ -698,7 +757,7 @@ def trained_forecast_segment(
     roas_guard = max(20.0, baseline_roas * 3.0)
     expected_roas = min(max(trained_roas, 0.0), roas_guard)
     if baseline_roas > 0:
-        roas_weight = min(0.8, max(0.0, safe_float(model.get("confidence", {}).get("roas_model_weight"), 0.25)))
+        roas_weight = _horizon_model_weight(model, "roas_model_weight", horizon, 0.40)
         expected_roas = (expected_roas * roas_weight) + (baseline_roas * (1 - roas_weight))
 
     confidence = model.get("confidence") or {}
@@ -749,6 +808,13 @@ def trained_forecast_segment(
         "upper_roas": clean_number(upper_roas),
         "forecast_confidence": roas_confidence,
     }
+
+
+def _horizon_model_weight(model: dict[str, Any], key: str, horizon: int, default: float) -> float:
+    confidence = model.get("confidence", {}) or {}
+    horizon_weights = confidence.get(f"{key}_by_horizon") or {}
+    value = horizon_weights.get(str(horizon), confidence.get(key, default))
+    return min(0.8, max(0.0, safe_float(value, default)))
 
 
 def build_trained_predictions(frame: pd.DataFrame, model: dict[str, Any]) -> tuple[list[dict[str, Any]], int]:

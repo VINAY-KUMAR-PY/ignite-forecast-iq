@@ -82,15 +82,15 @@ sequenceDiagram
 
 - GA4 fields such as `sessionSource`, `sessionMedium`, `purchaseRevenue`, `eventValue`, `sessions`, and `conversions`.
 - Shopify fields such as `created_at`, `total_price`, `sales`, `orders`, and `product_type`.
-- Ads fields such as `spend`, `cost`, `clicks`, `impressions`, `conversions`, `conversion_value`, and `revenue`.
+- Ads fields such as `spend`, `cost`, `metrics_cost_micros`, `clicks`, `metrics_clicks`, `impressions`, `metrics_impressions`, `conversions`, `metrics_conversions`, `metrics_conversions_value`, `conversion`, `conversion_value`, and `revenue`.
 
-Each CSV file is normalized before merging. This prevents mixed folders from losing revenue or date fields when one export uses `date` and another uses `created_at`.
+Each CSV file is normalized with `source_schema` and `source_file` provenance before merging. Multi-source folders are reconciled instead of blindly concatenated: Shopify/order files are treated as revenue-of-record when present, GA4 revenue is used as the revenue source when Shopify is absent, and Ads files provide spend, delivery, and conversion shape. This prevents overlapping GA4, Shopify, and Ads exports from double-counting the same ecommerce revenue.
 
 ## Model Design
 
 The forecasting layer trains separate models for revenue and ROAS. Feature engineering includes media inputs, seasonality, trend, target lags, rolling target averages, and rolling spend. Confidence intervals are derived from residual volatility and widen over the forecast horizon. Revenue intervals and ROAS intervals are emitted together in the offline evaluator output and live API summary. If spend is absent, ROAS is marked `not_computable` with numeric zero bounds so the evaluator contract remains NaN-safe without inventing a confident efficiency metric.
 
-The offline evaluator model uses a compact joblib sklearn artifact at `pickle/model.pkl`. If loading or feature generation fails, the deterministic safe baseline remains active and still produces the required prediction schema.
+The offline evaluator model uses a compact joblib sklearn artifact at `pickle/model.pkl`. The artifact stores dedicated training-sample counts by horizon plus horizon-aware revenue and ROAS blend weights. If a horizon has fewer than the minimum dedicated samples during training, that horizon is marked fallback-only instead of training on mismatched target scales. If loading or feature generation fails, the deterministic safe baseline remains active and still produces the required prediction schema.
 
 The `/api/train` endpoint is deliberately separate from public forecasting. It requires `TRAINING_ADMIN_TOKEN`, rejects path traversal, and persists only evaluator-safe `.pkl` files under `pickle/`.
 
@@ -104,21 +104,31 @@ ForecastIQ is designed to degrade gracefully instead of failing during a judge d
 
 - Evaluator isolation: `run.sh` only loads CSV data, loads `pickle/model.pkl` when compatible, writes `predictions.csv`, and exits.
 - Trained model plus fallback: the packaged model is used for normal evaluator data, while `safe_baseline_fallback` covers corrupt models, unsupported schemas, tiny datasets, and malformed hidden files.
-- Schema adapters: GA4, Shopify, Ads, and canonical CSV files are normalized before validation and modeling.
+- Schema adapters: GA4, Shopify, Ads, and canonical CSV files are normalized and reconciled before validation and modeling.
+- Real resource check: the public AIgnition Drive folder exposed Ads-shaped CSV headers for Google, Meta, and Bing; those observed columns are covered by regression tests.
 - Confidence intervals: residual calibration, horizon widening, and non-negative lower bounds keep forecast ranges business-safe.
 - Gemini resilience: live Gemini output is optional; fallback executive insights use the same campaign summary when the API key, network, model, or response format fails.
 - CI verification: the evaluator workflow compiles Python, runs tests, generates predictions, and checks schema, horizons, numeric output, ROAS range ordering, and `trained_model` usage.
 
 ## Backtesting Snapshot
 
-The latest holdout backtest trains on the earlier period and evaluates the final 30 days. The trained evaluator model improves MAE and RMSE versus the safe baseline on the primary 30-day holdout while preserving full interval coverage:
+The latest holdout backtest trains on the earlier period and evaluates the final 30 days. It now reports revenue and ROAS metrics separately:
+
+### Revenue
 
 | Model         |      MAE |     RMSE |  MAPE | Interval coverage |
 | ------------- | -------: | -------: | ----: | ----------------: |
-| Trained model | 2,107.20 | 2,672.49 | 2.83% |           100.00% |
+| Trained model | 2,250.45 | 2,809.34 | 2.89% |           100.00% |
 | Safe baseline | 2,185.89 | 2,763.76 | 2.78% |            88.89% |
 
-This is why both modes coexist: the trained model improves credibility and normal-case quality, while the fallback protects hidden-dataset reliability.
+### ROAS
+
+| Model         |  MAE | RMSE |  MAPE | Interval coverage |
+| ------------- | ---: | ---: | ----: | ----------------: |
+| Trained model | 0.05 | 0.06 | 1.26% |           100.00% |
+| Safe baseline | 0.05 | 0.07 | 1.44% |           100.00% |
+
+Walk-forward validation also reports 30/60/90-day horizon behavior and records whether a fold used a trained horizon model or an explicit fallback-only horizon. This is why both modes coexist: the trained model adds ML behavior where validated, while the fallback protects hidden-dataset reliability.
 
 ## Deployment Model
 

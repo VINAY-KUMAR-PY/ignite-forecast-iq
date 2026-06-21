@@ -37,17 +37,10 @@ def pct_change(new: float, old: float) -> float:
 
 
 def read_csv_folder(data_dir: str | Path) -> pd.DataFrame:
-    """Read every CSV in a folder into one dataframe with source filenames."""
-    data_path = Path(data_dir)
-    files = sorted(list(data_path.glob("*.csv")))
-    if not files:
-        raise FileNotFoundError(f"No CSV files found in {data_path}")
-    frames = []
-    for file in files:
-        frame = pd.read_csv(file)
-        frame["__source_file"] = file.name
-        frames.append(frame)
-    return pd.concat(frames, ignore_index=True)
+    """Read CSV files using the same schema-safe path as the evaluator."""
+    from .predict import read_csv_folder as read_evaluator_csv_folder
+
+    return read_evaluator_csv_folder(data_dir)
 
 
 def write_prediction_rows(rows: Iterable[Dict[str, Any]], output_path: str | Path) -> None:

@@ -496,6 +496,40 @@ function ForecastPage() {
               <ExplanationCard title="ROAS explanation" text={diagnostics.roasExplanation} />
               <FeatureList title="Top revenue drivers" features={diagnostics.topRevenueFeatures} />
               <FeatureList title="Top ROAS drivers" features={diagnostics.topRoasFeatures} />
+              <ShapImportanceList features={diagnostics.shap_importance ?? []} />
+            </div>
+          </Card>
+
+          <Card
+            data-testid="why-this-forecast"
+            className="mt-6 bg-gradient-card border-border/60 p-5"
+          >
+            <div className="mb-4 flex items-center gap-2">
+              <Brain className="h-4 w-4 text-primary" />
+              <div>
+                <h3 className="text-sm font-semibold">Why this forecast?</h3>
+                <p className="text-xs text-muted-foreground">
+                  Local forecast explainability for this selected segment. These drivers compare the
+                  current forecast row with typical historical values, not generic feature
+                  importance.
+                </p>
+              </div>
+            </div>
+            <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
+              {diagnostics.whyThisForecastSummary ||
+                "Local driver estimates are unavailable for this segment."}
+            </p>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <LocalDriverList
+                title="Top positive drivers"
+                direction="positive"
+                drivers={diagnostics.whyThisForecast ?? []}
+              />
+              <LocalDriverList
+                title="Top negative drivers"
+                direction="negative"
+                drivers={diagnostics.whyThisForecast ?? []}
+              />
             </div>
           </Card>
 
@@ -768,6 +802,123 @@ function FeatureList({
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function ShapImportanceList({
+  features,
+}: {
+  features: Array<{ feature: string; shap_value: number; direction: "positive" | "negative" }>;
+}) {
+  const maxImpact = Math.max(1, ...features.map((feature) => Math.abs(feature.shap_value)));
+
+  return (
+    <div className="rounded-lg border border-border/40 bg-background/40 p-4 lg:col-span-2">
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        SHAP importance
+      </h4>
+      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+        Why this forecast - global SHAP values (avg |impact| across recent samples).
+      </p>
+      <div className="mt-3 space-y-2">
+        {features.length ? (
+          features.map((feature) => {
+            const positive = feature.direction === "positive";
+            return (
+              <div key={`${feature.feature}-${feature.direction}`}>
+                <div className="mb-1 flex items-center justify-between gap-3 text-xs">
+                  <span className="capitalize">{feature.feature.replaceAll("_", " ")}</span>
+                  <span className={positive ? "text-success" : "text-amber-500"}>
+                    {feature.shap_value.toFixed(3)}
+                  </span>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className={positive ? "h-full bg-success" : "h-full bg-amber-500"}
+                    style={{
+                      width: `${Math.max(
+                        8,
+                        Math.min(100, (Math.abs(feature.shap_value) / maxImpact) * 100),
+                      )}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            SHAP attribution is unavailable for this segment, so the page shows local permutation
+            drivers instead.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function LocalDriverList({
+  title,
+  direction,
+  drivers,
+}: {
+  title: string;
+  direction: "positive" | "negative";
+  drivers: Array<{
+    feature: string;
+    label: string;
+    direction: "positive" | "negative";
+    impact: number;
+    explanation: string;
+  }>;
+}) {
+  const filtered = drivers.filter((driver) => driver.direction === direction);
+  const tone =
+    direction === "positive"
+      ? "border-success/20 bg-success/10 text-success"
+      : "border-destructive/20 bg-destructive/10 text-destructive";
+  const barColor = direction === "positive" ? "bg-success" : "bg-destructive";
+  const maxImpact = Math.max(1, ...filtered.map((driver) => driver.impact));
+
+  return (
+    <div className="rounded-lg border border-border/40 bg-background/40 p-4">
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {title}
+      </h4>
+      <div className="mt-3 space-y-3">
+        {filtered.length ? (
+          filtered.map((driver) => (
+            <div key={`${driver.direction}-${driver.feature}`}>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-sm font-medium">{driver.label}</div>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                    {driver.explanation}
+                  </p>
+                </div>
+                <span
+                  className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium ${tone}`}
+                >
+                  {fmtCurrency(driver.impact)}
+                </span>
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+                <div
+                  className={`h-full ${barColor}`}
+                  style={{
+                    width: `${Math.max(8, Math.min(100, (driver.impact / maxImpact) * 100))}%`,
+                  }}
+                />
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            No material {direction} driver was detected for this forecast row.
+          </p>
+        )}
       </div>
     </div>
   );

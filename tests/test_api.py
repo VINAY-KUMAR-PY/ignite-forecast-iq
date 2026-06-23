@@ -99,6 +99,17 @@ class ApiSecurityTests(unittest.TestCase):
         self.assertEqual(payload["summary"]["horizonDays"], 30)
         self.assertIn("diagnostics", payload["summary"])
 
+    def test_heavy_api_routes_have_rate_limits_registered(self) -> None:
+        protected_handlers = {
+            "backend.main.forecast",
+            "backend.main.simulate",
+            "backend.main.decision_support",
+            "backend.main.insights",
+        }
+        registered_handlers = set(app.state.limiter._route_limits)
+
+        self.assertTrue(protected_handlers.issubset(registered_handlers))
+
     def test_simulate_and_decision_support_happy_paths(self) -> None:
         rows = sample_rows()
         budgets = {"Google Ads": 5000, "Meta Ads": 4200, "Microsoft Ads": 2800}

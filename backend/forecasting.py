@@ -15,6 +15,7 @@ import pandas as pd
 from .data_preprocessing import aggregate_daily, feature_frame, filter_frame, future_features
 from .schemas import (
     AccuracyMetrics,
+    ForecastContribution,
     FeatureImportance,
     ForecastBusinessBrief,
     ForecastDiagnostics,
@@ -40,7 +41,7 @@ except Exception:  # pragma: no cover - exercised only when dependency is unavai
 CHANNELS = ["Google Ads", "Meta Ads", "Microsoft Ads"]
 logger = logging.getLogger(__name__)
 HORIZON_CONFIGS = {
-    30: {"n_estimators": 140, "max_depth": 4, "learning_rate": 0.06},
+    30: {"n_estimators": 200, "max_depth": 4, "learning_rate": 0.05, "subsample": 0.8, "colsample_bytree": 0.8},
     60: {"n_estimators": 100, "max_depth": 3, "learning_rate": 0.05},
     90: {"n_estimators": 80, "max_depth": 3, "learning_rate": 0.04},
 }
@@ -66,8 +67,8 @@ def _new_model(horizon: int = 30) -> Any:
             n_estimators=config["n_estimators"],
             max_depth=config["max_depth"],
             learning_rate=config["learning_rate"],
-            subsample=0.9,
-            colsample_bytree=0.9,
+            subsample=config.get("subsample", 0.9),
+            colsample_bytree=config.get("colsample_bytree", 0.9),
             reg_lambda=1.0,
             random_state=42,
             n_jobs=1,
@@ -162,6 +163,47 @@ def _feature_importance(trained: Optional[TargetModel], limit: int = 6) -> List[
     ]
 
 
+def _shap_importance(daily: pd.DataFrame, target: str, trained: Optional[TargetModel], limit: int = 10) -> list[dict[str, Any]]:
+    """Return lightweight SHAP attribution for recent training rows when available."""
+    if trained is None or daily.empty:
+        return []
+    try:
+        import shap
+
+        X, _ = feature_frame(daily, target)
+        if X.empty:
+            return []
+        sample = X[trained.feature_columns].tail(min(100, len(X))).astype(float)
+        if sample.empty:
+            return []
+
+        explainer = shap.TreeExplainer(trained.model)
+        shap_values = explainer.shap_values(sample)
+        if isinstance(shap_values, list):
+            shap_values = shap_values[0]
+        values = np.asarray(shap_values, dtype=float)
+        if values.ndim == 3:
+            values = values[:, :, 0]
+        if values.ndim != 2 or values.shape[1] != len(trained.feature_columns):
+            return []
+
+        global_shap = np.abs(values).mean(axis=0)
+        directions = values.mean(axis=0)
+        ranked = np.argsort(global_shap)[::-1][:limit]
+        return [
+            {
+                "feature": trained.feature_columns[int(index)],
+                "shap_value": round(float(global_shap[int(index)]), 6),
+                "direction": "positive" if directions[int(index)] >= 0 else "negative",
+            }
+            for index in ranked
+            if np.isfinite(global_shap[int(index)]) and global_shap[int(index)] > 0
+        ]
+    except Exception as exc:
+        logger.info("SHAP forecast attribution unavailable: %s", exc)
+        return []
+
+
 def _feature_label(feature: str) -> str:
     labels = {
         "spend": "current spend",
@@ -206,6 +248,93 @@ def _explain_features(target: str, features: List[FeatureImportance]) -> str:
         f"The {target} forecast is primarily shaped by {driver_text}. "
         "These drivers combine current media intensity, lagged performance and seasonal signals."
     )
+
+
+def _impact_phrase(direction: str, label: str, impact: float, target: str) -> str:
+    movement = "raises" if direction == "positive" else "pulls down"
+    unit = "forecast revenue" if target == "revenue" else "forecast ROAS"
+    formatted = f"{impact:,.0f}" if target == "revenue" else f"{impact:.2f}x"
+    return f"{label} {movement} the local {unit} by about {formatted} versus a typical historical value."
+
+
+def _local_permutation_explanations(
+    daily: pd.DataFrame,
+    trained: Optional[TargetModel],
+    target: str,
+    limit_per_direction: int = 3,
+) -> tuple[List[ForecastContribution], str]:
+    """Estimate local driver impact by replacing one forecast feature with its historical median."""
+    if trained is None or daily.empty:
+        return [], "Local forecast explanations are unavailable because this segment used fallback forecasting."
+
+    try:
+        X_train, _ = feature_frame(daily, target)
+        if X_train.empty:
+            return [], "Local forecast explanations need more valid history for this segment."
+
+        history = daily.copy().sort_values("date").reset_index(drop=True)
+        future_date = pd.to_datetime(history["date"].iloc[-1]) + pd.Timedelta(days=1)
+        exog = _project_exog(history, future_date)
+        current = future_features(history, target, future_date, exog)[trained.feature_columns].astype(float)
+        baseline_frame = X_train[trained.feature_columns]
+        median_values = baseline_frame.median(numeric_only=True)
+        lower_values = baseline_frame.quantile(0.25, numeric_only=True)
+        upper_values = baseline_frame.quantile(0.75, numeric_only=True)
+        base_prediction = float(trained.model.predict(current)[0])
+
+        impacts: list[tuple[str, float]] = []
+        for feature in trained.feature_columns:
+            if feature not in current.columns:
+                continue
+            feature_impacts: list[float] = []
+            for values in (median_values, lower_values, upper_values):
+                replacement = float(values.get(feature, 0.0))
+                mutated = current.copy()
+                mutated.loc[:, feature] = replacement
+                mutated_prediction = float(trained.model.predict(mutated)[0])
+                impact = base_prediction - mutated_prediction
+                if np.isfinite(impact):
+                    feature_impacts.append(impact)
+            if feature_impacts:
+                strongest = max(feature_impacts, key=lambda value: abs(value))
+                if abs(strongest) > 1e-6:
+                    impacts.append((feature, strongest))
+
+        positive = sorted((item for item in impacts if item[1] > 0), key=lambda item: item[1], reverse=True)[
+            :limit_per_direction
+        ]
+        negative = sorted((item for item in impacts if item[1] < 0), key=lambda item: item[1])[
+            :limit_per_direction
+        ]
+
+        contributions: List[ForecastContribution] = []
+        for feature, impact in positive + negative:
+            direction = "positive" if impact > 0 else "negative"
+            label = _feature_label(feature)
+            abs_impact = round_money(abs(impact))
+            contributions.append(
+                ForecastContribution(
+                    feature=feature,
+                    label=label,
+                    direction=direction,
+                    impact=abs_impact,
+                    explanation=_impact_phrase(direction, label, abs_impact, target),
+                )
+            )
+
+        if not contributions:
+            return [], "No single feature materially changed the local forecast versus typical history."
+
+        pos_count = sum(1 for item in contributions if item.direction == "positive")
+        neg_count = sum(1 for item in contributions if item.direction == "negative")
+        summary = (
+            f"Permutation-baseline analysis found {pos_count} positive and {neg_count} negative local drivers. "
+            "Each impact compares the current forecast feature row with that feature set to its historical median."
+        )
+        return contributions, summary
+    except Exception as exc:
+        logger.info("Local forecast explainability unavailable: %s", exc)
+        return [], "Local forecast explanations are unavailable for this segment."
 
 
 def _business_brief(
@@ -289,6 +418,7 @@ def forecast_diagnostics(
     roas_accuracy, roas_coverage = _target_quality(daily, "roas", roas_model)
     revenue_features = _feature_importance(revenue_model)
     roas_features = _feature_importance(roas_model)
+    local_drivers, local_summary = _local_permutation_explanations(daily, revenue_model, "revenue")
     return ForecastDiagnostics(
         revenueFitMapePct=revenue_accuracy.mapePct,
         roasFitMapePct=roas_accuracy.mapePct,
@@ -301,6 +431,10 @@ def forecast_diagnostics(
         roasAccuracy=roas_accuracy,
         revenueExplanation=_explain_features("revenue", revenue_features),
         roasExplanation=_explain_features("ROAS", roas_features),
+        explainabilityMethod="permutation_baseline",
+        shap_importance=_shap_importance(daily, "revenue", revenue_model),
+        whyThisForecast=local_drivers,
+        whyThisForecastSummary=local_summary,
         businessBrief=_business_brief(daily, future_revenue, future_roas, revenue_accuracy, roas_accuracy),
     )
 

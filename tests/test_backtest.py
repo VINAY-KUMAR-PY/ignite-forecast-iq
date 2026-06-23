@@ -21,6 +21,13 @@ class BacktestReportTests(unittest.TestCase):
         self.assertIn("roas_blend_weight_comparison", report)
         self.assertTrue(report["roas_blend_weight_comparison"])
         self.assertIn("roas_blend_weight_recommendation", report)
+        self.assertIn("model_performance_evidence", report)
+        evidence = report["model_performance_evidence"]
+        self.assertIn(evidence["overall_winner"], {"trained_model", "safe_baseline_fallback", "mixed", "tie"})
+        for target in ["revenue", "roas"]:
+            self.assertIn(evidence[target]["winner"], {"trained_model", "safe_baseline_fallback", "tie"})
+            self.assertIn("interpretation", evidence[target])
+            self.assertIn("mae_difference_pct", evidence[target])
 
     def test_walk_forward_horizons_record_training_sample_safeguards(self) -> None:
         report = run_backtest("data", holdout_days=30)
@@ -30,6 +37,7 @@ class BacktestReportTests(unittest.TestCase):
         for item in report["per_horizon_performance"]:
             self.assertGreater(item["fold_count"], 0)
             self.assertGreater(item["segments_evaluated"], 0)
+            self.assertIn("model_performance_evidence", item)
             for fold in item["folds"]:
                 if "error" in fold:
                     continue

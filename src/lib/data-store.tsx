@@ -13,6 +13,7 @@ interface DataCtx {
 const Ctx = createContext<DataCtx | null>(null);
 
 const STORAGE_KEY = "forecastiq:data:v1";
+export const DEMO_REQUEST_KEY = "forecastiq:demo-requested";
 
 export function DataProvider({ children }: { children: ReactNode }) {
   const [rows, setRowsState] = useState<CampaignRow[]>([]);
@@ -21,6 +22,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     try {
+      const requestedDemo = localStorage.getItem(DEMO_REQUEST_KEY) === "1";
+      if (requestedDemo) {
+        setRowsState(generateDemoData(365));
+        setIsDemo(true);
+        localStorage.removeItem(DEMO_REQUEST_KEY);
+        setHydrated(true);
+        return;
+      }
+
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
@@ -56,6 +66,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
       loadDemo: () => {
         setRowsState(generateDemoData(365));
         setIsDemo(true);
+        try {
+          localStorage.removeItem(DEMO_REQUEST_KEY);
+        } catch {
+          // ignore storage availability
+        }
       },
       clear: () => {
         setRowsState([]);

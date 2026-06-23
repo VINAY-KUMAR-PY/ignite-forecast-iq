@@ -1,0 +1,1441 @@
+date,channel,campaign_type,campaign_name,spend,clicks,impressions,conversions,revenue,roas
+2025-12-20,Google Ads,Search,Brand Search,351.69,455,19124,26,1638.88,4.66
+2025-12-20,Google Ads,Shopping,Generic Search,412.3,548,18930,14,1966.67,4.77
+2025-12-20,Google Ads,Performance Max,Shopping Best Sellers,403.84,404,17444,22,1740.55,4.31
+2025-12-20,Meta Ads,Prospecting,Lookalike Prospecting,275.11,736,18850,19,762.05,2.77
+2025-12-20,Meta Ads,Retargeting,Cart Retargeting,345.12,436,19779,30,1094.03,3.17
+2025-12-20,Meta Ads,Advantage+,Advantage Shopping,338.81,629,15705,33,901.23,2.66
+2025-12-20,Microsoft Ads,Search,Bing Brand,133.53,382,8830,16,870.62,6.52
+2025-12-20,Microsoft Ads,Shopping,Bing Generic,143.26,404,10004,21,766.44,5.35
+2025-12-21,Google Ads,Search,Brand Search,360.44,481,18835,14,1690.46,4.69
+2025-12-21,Google Ads,Shopping,Generic Search,358.59,675,19546,28,1369.81,3.82
+2025-12-21,Google Ads,Performance Max,Shopping Best Sellers,427.41,978,23086,53,1688.27,3.95
+2025-12-21,Meta Ads,Prospecting,Lookalike Prospecting,282.03,469,21099,20,767.12,2.72
+2025-12-21,Meta Ads,Retargeting,Cart Retargeting,365.35,877,24501,55,1139.89,3.12
+2025-12-21,Meta Ads,Advantage+,Advantage Shopping,390.96,445,16985,16,1082.96,2.77
+2025-12-21,Microsoft Ads,Search,Bing Brand,110.86,236,9028,13,762.72,6.88
+2025-12-21,Microsoft Ads,Shopping,Bing Generic,136.87,213,8575,8,748.68,5.47
+2025-12-22,Google Ads,Search,Brand Search,413.56,1168,28249,50,2076.07,5.02
+2025-12-22,Google Ads,Shopping,Generic Search,427.9,566,27783,15,2096.71,4.9
+2025-12-22,Google Ads,Performance Max,Shopping Best Sellers,467.87,1053,36327,29,2082.02,4.45
+2025-12-22,Meta Ads,Prospecting,Lookalike Prospecting,314.35,895,20687,57,1075.08,3.42
+2025-12-22,Meta Ads,Retargeting,Cart Retargeting,319.51,742,23221,27,1019.24,3.19
+2025-12-22,Meta Ads,Advantage+,Advantage Shopping,450.12,826,27711,56,1201.82,2.67
+2025-12-22,Microsoft Ads,Search,Bing Brand,164.08,240,10587,16,938.54,5.72
+2025-12-22,Microsoft Ads,Shopping,Bing Generic,189.9,455,13436,15,877.34,4.62
+2025-12-23,Google Ads,Search,Brand Search,441.79,1082,34035,27,2398.92,5.43
+2025-12-23,Google Ads,Shopping,Generic Search,445.81,1526,37363,95,1658.41,3.72
+2025-12-23,Google Ads,Performance Max,Shopping Best Sellers,504.14,1751,41093,51,1900.61,3.77
+2025-12-23,Meta Ads,Prospecting,Lookalike Prospecting,326.83,944,24913,29,862.83,2.64
+2025-12-23,Meta Ads,Retargeting,Cart Retargeting,377.53,828,20359,36,1147.69,3.04
+2025-12-23,Meta Ads,Advantage+,Advantage Shopping,392.86,683,29404,27,1190.37,3.03
+2025-12-23,Microsoft Ads,Search,Bing Brand,170.49,331,10522,10,1087.73,6.38
+2025-12-23,Microsoft Ads,Shopping,Bing Generic,155.56,255,10652,9,728.02,4.68
+2025-12-24,Google Ads,Search,Brand Search,353.3,768,18478,49,1967.88,5.57
+2025-12-24,Google Ads,Shopping,Generic Search,409.48,696,29525,22,1629.73,3.98
+2025-12-24,Google Ads,Performance Max,Shopping Best Sellers,615.05,1494,38914,92,2700.07,4.39
+2025-12-24,Meta Ads,Prospecting,Lookalike Prospecting,297.21,529,18248,24,790.58,2.66
+2025-12-24,Meta Ads,Retargeting,Cart Retargeting,410.4,728,35412,31,1292.76,3.15
+2025-12-24,Meta Ads,Advantage+,Advantage Shopping,412.49,503,21940,23,1361.22,3.3
+2025-12-24,Microsoft Ads,Search,Bing Brand,144.18,322,7676,14,829.04,5.75
+2025-12-24,Microsoft Ads,Shopping,Bing Generic,191.23,372,8467,23,950.41,4.97
+2025-12-25,Google Ads,Search,Brand Search,473.24,847,37950,40,2848.9,6.02
+2025-12-25,Google Ads,Shopping,Generic Search,433.26,539,19340,37,1811.03,4.18
+2025-12-25,Google Ads,Performance Max,Shopping Best Sellers,501.66,909,31341,62,2327.7,4.64
+2025-12-25,Meta Ads,Prospecting,Lookalike Prospecting,384.02,629,28544,24,1171.26,3.05
+2025-12-25,Meta Ads,Retargeting,Cart Retargeting,441.83,1099,29337,30,1356.42,3.07
+2025-12-25,Meta Ads,Advantage+,Advantage Shopping,448.71,797,36064,54,1346.13,3.0
+2025-12-25,Microsoft Ads,Search,Bing Brand,128.63,315,8847,11,719.04,5.59
+2025-12-25,Microsoft Ads,Shopping,Bing Generic,151.28,269,8030,14,822.96,5.44
+2025-12-26,Google Ads,Search,Brand Search,402.77,1116,26392,38,2215.23,5.5
+2025-12-26,Google Ads,Shopping,Generic Search,512.39,1087,30646,42,2044.44,3.99
+2025-12-26,Google Ads,Performance Max,Shopping Best Sellers,512.96,695,23219,49,2359.62,4.6
+2025-12-26,Meta Ads,Prospecting,Lookalike Prospecting,385.94,496,19911,33,1018.88,2.64
+2025-12-26,Meta Ads,Retargeting,Cart Retargeting,433.1,561,25392,35,1437.89,3.32
+2025-12-26,Meta Ads,Advantage+,Advantage Shopping,467.64,1415,40416,36,1445.01,3.09
+2025-12-26,Microsoft Ads,Search,Bing Brand,164.46,501,11817,16,950.58,5.78
+2025-12-26,Microsoft Ads,Shopping,Bing Generic,151.76,255,10152,13,661.67,4.36
+2025-12-27,Google Ads,Search,Brand Search,372.43,653,26271,31,1836.08,4.93
+2025-12-27,Google Ads,Shopping,Generic Search,455.92,610,21042,23,2151.94,4.72
+2025-12-27,Google Ads,Performance Max,Shopping Best Sellers,386.05,677,27282,40,1787.41,4.63
+2025-12-27,Meta Ads,Prospecting,Lookalike Prospecting,285.12,241,12099,16,838.25,2.94
+2025-12-27,Meta Ads,Retargeting,Cart Retargeting,367.12,968,29207,31,1116.04,3.04
+2025-12-27,Meta Ads,Advantage+,Advantage Shopping,325.64,1039,26850,66,924.82,2.84
+2025-12-27,Microsoft Ads,Search,Bing Brand,141.78,156,7547,9,798.22,5.63
+2025-12-27,Microsoft Ads,Shopping,Bing Generic,163.65,252,11444,17,780.61,4.77
+2025-12-28,Google Ads,Search,Brand Search,390.66,1255,30661,33,2379.12,6.09
+2025-12-28,Google Ads,Shopping,Generic Search,436.2,1422,36591,91,1788.42,4.1
+2025-12-28,Google Ads,Performance Max,Shopping Best Sellers,507.02,817,39259,52,2038.22,4.02
+2025-12-28,Meta Ads,Prospecting,Lookalike Prospecting,314.16,741,24739,29,870.22,2.77
+2025-12-28,Meta Ads,Retargeting,Cart Retargeting,357.53,354,15397,14,990.36,2.77
+2025-12-28,Meta Ads,Advantage+,Advantage Shopping,414.8,785,22632,34,1406.17,3.39
+2025-12-28,Microsoft Ads,Search,Bing Brand,145.78,258,12284,18,902.38,6.19
+2025-12-28,Microsoft Ads,Shopping,Bing Generic,131.37,148,7087,7,726.48,5.53
+2025-12-29,Google Ads,Search,Brand Search,450.1,976,31183,41,2291.01,5.09
+2025-12-29,Google Ads,Shopping,Generic Search,498.06,664,36804,44,1992.24,4.0
+2025-12-29,Google Ads,Performance Max,Shopping Best Sellers,559.68,1495,42193,62,2552.14,4.56
+2025-12-29,Meta Ads,Prospecting,Lookalike Prospecting,291.37,433,16567,27,914.9,3.14
+2025-12-29,Meta Ads,Retargeting,Cart Retargeting,419.16,671,23439,29,1186.22,2.83
+2025-12-29,Meta Ads,Advantage+,Advantage Shopping,416.25,1076,25358,60,1119.71,2.69
+2025-12-29,Microsoft Ads,Search,Bing Brand,170.98,306,9497,8,1080.59,6.32
+2025-12-29,Microsoft Ads,Shopping,Bing Generic,163.58,390,11140,18,785.18,4.8
+2025-12-30,Google Ads,Search,Brand Search,413.62,1085,26179,66,2043.28,4.94
+2025-12-30,Google Ads,Shopping,Generic Search,436.83,981,28479,39,1659.95,3.8
+2025-12-30,Google Ads,Performance Max,Shopping Best Sellers,612.11,1055,44241,36,2815.71,4.6
+2025-12-30,Meta Ads,Prospecting,Lookalike Prospecting,287.81,731,18242,21,802.99,2.79
+2025-12-30,Meta Ads,Retargeting,Cart Retargeting,382.71,701,19422,33,1190.23,3.11
+2025-12-30,Meta Ads,Advantage+,Advantage Shopping,410.83,651,17357,39,1285.9,3.13
+2025-12-30,Microsoft Ads,Search,Bing Brand,133.02,285,6640,14,798.12,6.0
+2025-12-30,Microsoft Ads,Shopping,Bing Generic,151.0,362,12106,22,688.56,4.56
+2025-12-31,Google Ads,Search,Brand Search,446.13,1311,30692,85,2725.85,6.11
+2025-12-31,Google Ads,Shopping,Generic Search,508.48,1303,32906,65,2318.67,4.56
+2025-12-31,Google Ads,Performance Max,Shopping Best Sellers,629.09,986,39859,36,2887.52,4.59
+2025-12-31,Meta Ads,Prospecting,Lookalike Prospecting,356.12,799,23311,30,1146.71,3.22
+2025-12-31,Meta Ads,Retargeting,Cart Retargeting,341.9,488,18540,24,964.16,2.82
+2025-12-31,Meta Ads,Advantage+,Advantage Shopping,397.59,1059,29115,30,1101.32,2.77
+2025-12-31,Microsoft Ads,Search,Bing Brand,148.38,211,9008,9,919.96,6.2
+2025-12-31,Microsoft Ads,Shopping,Bing Generic,200.19,591,14674,35,1004.95,5.02
+2026-01-01,Google Ads,Search,Brand Search,409.15,889,23661,56,1894.36,4.63
+2026-01-01,Google Ads,Shopping,Generic Search,564.66,1375,42710,72,2371.57,4.2
+2026-01-01,Google Ads,Performance Max,Shopping Best Sellers,510.64,590,31462,24,2022.13,3.96
+2026-01-01,Meta Ads,Prospecting,Lookalike Prospecting,362.35,540,17910,17,1058.06,2.92
+2026-01-01,Meta Ads,Retargeting,Cart Retargeting,412.77,806,24655,21,1073.2,2.6
+2026-01-01,Meta Ads,Advantage+,Advantage Shopping,472.39,573,29655,24,1270.73,2.69
+2026-01-01,Microsoft Ads,Search,Bing Brand,139.45,296,10634,17,812.99,5.83
+2026-01-01,Microsoft Ads,Shopping,Bing Generic,196.98,167,8999,8,898.23,4.56
+2026-01-02,Google Ads,Search,Brand Search,495.82,1354,35330,74,2553.47,5.15
+2026-01-02,Google Ads,Shopping,Generic Search,535.75,506,27308,16,2593.03,4.84
+2026-01-02,Google Ads,Performance Max,Shopping Best Sellers,496.05,791,33423,45,2232.22,4.5
+2026-01-02,Meta Ads,Prospecting,Lookalike Prospecting,373.74,970,25910,29,1016.57,2.72
+2026-01-02,Meta Ads,Retargeting,Cart Retargeting,439.89,385,20615,15,1491.23,3.39
+2026-01-02,Meta Ads,Advantage+,Advantage Shopping,479.64,1050,28706,30,1621.18,3.38
+2026-01-02,Microsoft Ads,Search,Bing Brand,163.77,291,7629,18,1038.3,6.34
+2026-01-02,Microsoft Ads,Shopping,Bing Generic,184.66,611,15931,25,808.81,4.38
+2026-01-03,Google Ads,Search,Brand Search,351.68,612,22778,39,1821.7,5.18
+2026-01-03,Google Ads,Shopping,Generic Search,460.22,1354,39227,84,1762.64,3.83
+2026-01-03,Google Ads,Performance Max,Shopping Best Sellers,505.92,1636,37955,61,2134.98,4.22
+2026-01-03,Meta Ads,Prospecting,Lookalike Prospecting,318.53,596,20309,35,965.15,3.03
+2026-01-03,Meta Ads,Retargeting,Cart Retargeting,311.16,500,24701,32,1026.83,3.3
+2026-01-03,Meta Ads,Advantage+,Advantage Shopping,350.87,679,24373,18,1042.08,2.97
+2026-01-03,Microsoft Ads,Search,Bing Brand,144.57,289,7452,12,806.7,5.58
+2026-01-03,Microsoft Ads,Shopping,Bing Generic,168.98,168,9198,11,875.32,5.18
+2026-01-04,Google Ads,Search,Brand Search,313.66,757,20070,42,1791.0,5.71
+2026-01-04,Google Ads,Shopping,Generic Search,438.71,696,34080,24,1882.07,4.29
+2026-01-04,Google Ads,Performance Max,Shopping Best Sellers,505.93,1045,34489,51,2059.14,4.07
+2026-01-04,Meta Ads,Prospecting,Lookalike Prospecting,284.36,587,16176,22,912.8,3.21
+2026-01-04,Meta Ads,Retargeting,Cart Retargeting,310.78,332,15746,16,832.89,2.68
+2026-01-04,Meta Ads,Advantage+,Advantage Shopping,416.21,659,21534,38,1140.42,2.74
+2026-01-04,Microsoft Ads,Search,Bing Brand,150.5,170,8238,6,928.59,6.17
+2026-01-04,Microsoft Ads,Shopping,Bing Generic,138.16,188,5891,7,616.19,4.46
+2026-01-05,Google Ads,Search,Brand Search,499.29,780,36640,50,2726.12,5.46
+2026-01-05,Google Ads,Shopping,Generic Search,500.99,1026,33984,46,2379.7,4.75
+2026-01-05,Google Ads,Performance Max,Shopping Best Sellers,513.71,1318,43330,82,1931.55,3.76
+2026-01-05,Meta Ads,Prospecting,Lookalike Prospecting,338.11,461,23778,15,892.61,2.64
+2026-01-05,Meta Ads,Retargeting,Cart Retargeting,412.9,755,35809,45,1172.64,2.84
+2026-01-05,Meta Ads,Advantage+,Advantage Shopping,475.97,784,24825,35,1542.14,3.24
+2026-01-05,Microsoft Ads,Search,Bing Brand,153.67,345,13300,18,1035.74,6.74
+2026-01-05,Microsoft Ads,Shopping,Bing Generic,187.81,372,15897,13,982.25,5.23
+2026-01-06,Google Ads,Search,Brand Search,457.87,455,22812,11,2225.25,4.86
+2026-01-06,Google Ads,Shopping,Generic Search,496.81,658,27378,37,2190.93,4.41
+2026-01-06,Google Ads,Performance Max,Shopping Best Sellers,611.38,1874,44589,113,2592.25,4.24
+2026-01-06,Meta Ads,Prospecting,Lookalike Prospecting,364.87,891,30655,44,1145.69,3.14
+2026-01-06,Meta Ads,Retargeting,Cart Retargeting,425.86,670,33727,22,1422.37,3.34
+2026-01-06,Meta Ads,Advantage+,Advantage Shopping,433.99,748,29344,23,1393.11,3.21
+2026-01-06,Microsoft Ads,Search,Bing Brand,166.77,437,14079,21,1079.0,6.47
+2026-01-06,Microsoft Ads,Shopping,Bing Generic,157.82,256,9697,9,673.89,4.27
+2026-01-07,Google Ads,Search,Brand Search,380.32,998,30280,68,2308.54,6.07
+2026-01-07,Google Ads,Shopping,Generic Search,588.22,606,31839,36,2652.87,4.51
+2026-01-07,Google Ads,Performance Max,Shopping Best Sellers,571.31,1080,47546,55,2559.47,4.48
+2026-01-07,Meta Ads,Prospecting,Lookalike Prospecting,367.67,459,16952,18,1099.33,2.99
+2026-01-07,Meta Ads,Retargeting,Cart Retargeting,430.78,882,24486,33,1421.57,3.3
+2026-01-07,Meta Ads,Advantage+,Advantage Shopping,530.8,1057,35433,41,1730.41,3.26
+2026-01-07,Microsoft Ads,Search,Bing Brand,149.07,282,8972,20,1033.06,6.93
+2026-01-07,Microsoft Ads,Shopping,Bing Generic,192.38,267,11657,11,954.2,4.96
+2026-01-08,Google Ads,Search,Brand Search,475.64,844,36244,42,2644.56,5.56
+2026-01-08,Google Ads,Shopping,Generic Search,579.23,900,42528,62,2450.14,4.23
+2026-01-08,Google Ads,Performance Max,Shopping Best Sellers,599.62,952,29458,47,2392.48,3.99
+2026-01-08,Meta Ads,Prospecting,Lookalike Prospecting,308.0,768,25589,23,1050.28,3.41
+2026-01-08,Meta Ads,Retargeting,Cart Retargeting,454.05,1053,33712,39,1362.15,3.0
+2026-01-08,Meta Ads,Advantage+,Advantage Shopping,516.76,885,27372,37,1756.98,3.4
+2026-01-08,Microsoft Ads,Search,Bing Brand,180.16,595,14696,22,1106.18,6.14
+2026-01-08,Microsoft Ads,Shopping,Bing Generic,201.06,527,16897,33,961.07,4.78
+2026-01-09,Google Ads,Search,Brand Search,410.91,1236,28111,58,2083.31,5.07
+2026-01-09,Google Ads,Shopping,Generic Search,454.29,845,26136,42,1976.16,4.35
+2026-01-09,Google Ads,Performance Max,Shopping Best Sellers,573.78,1047,28970,53,2346.76,4.09
+2026-01-09,Meta Ads,Prospecting,Lookalike Prospecting,325.4,535,14306,30,1051.04,3.23
+2026-01-09,Meta Ads,Retargeting,Cart Retargeting,453.41,1282,32585,89,1314.89,2.9
+2026-01-09,Meta Ads,Advantage+,Advantage Shopping,468.21,1009,30248,65,1222.03,2.61
+2026-01-09,Microsoft Ads,Search,Bing Brand,178.56,350,11726,20,1074.93,6.02
+2026-01-09,Microsoft Ads,Shopping,Bing Generic,179.51,265,8786,18,917.3,5.11
+2026-01-10,Google Ads,Search,Brand Search,352.59,1008,25119,64,1999.19,5.67
+2026-01-10,Google Ads,Shopping,Generic Search,480.5,992,27028,59,1998.88,4.16
+2026-01-10,Google Ads,Performance Max,Shopping Best Sellers,548.5,851,24726,57,2051.39,3.74
+2026-01-10,Meta Ads,Prospecting,Lookalike Prospecting,347.18,439,21362,23,1114.45,3.21
+2026-01-10,Meta Ads,Retargeting,Cart Retargeting,388.54,1180,28453,32,1146.19,2.95
+2026-01-10,Meta Ads,Advantage+,Advantage Shopping,432.21,554,25443,27,1223.15,2.83
+2026-01-10,Microsoft Ads,Search,Bing Brand,137.09,136,6806,9,908.91,6.63
+2026-01-10,Microsoft Ads,Shopping,Bing Generic,161.58,292,13424,13,733.57,4.54
+2026-01-11,Google Ads,Search,Brand Search,344.09,568,14597,37,1723.89,5.01
+2026-01-11,Google Ads,Shopping,Generic Search,457.52,764,28310,39,1779.75,3.89
+2026-01-11,Google Ads,Performance Max,Shopping Best Sellers,514.23,1095,27385,37,2164.91,4.21
+2026-01-11,Meta Ads,Prospecting,Lookalike Prospecting,289.77,502,15263,26,866.41,2.99
+2026-01-11,Meta Ads,Retargeting,Cart Retargeting,403.72,1219,34723,46,1142.53,2.83
+2026-01-11,Meta Ads,Advantage+,Advantage Shopping,404.97,589,30579,31,1279.71,3.16
+2026-01-11,Microsoft Ads,Search,Bing Brand,134.73,287,7394,15,918.86,6.82
+2026-01-11,Microsoft Ads,Shopping,Bing Generic,148.94,371,10417,21,758.1,5.09
+2026-01-12,Google Ads,Search,Brand Search,470.48,1372,33061,74,2766.42,5.88
+2026-01-12,Google Ads,Shopping,Generic Search,487.17,1229,33167,36,2060.73,4.23
+2026-01-12,Google Ads,Performance Max,Shopping Best Sellers,551.43,590,27518,29,2536.58,4.6
+2026-01-12,Meta Ads,Prospecting,Lookalike Prospecting,415.04,1366,34493,50,1257.57,3.03
+2026-01-12,Meta Ads,Retargeting,Cart Retargeting,461.43,1351,36126,54,1375.06,2.98
+2026-01-12,Meta Ads,Advantage+,Advantage Shopping,416.84,869,20148,55,1413.09,3.39
+2026-01-12,Microsoft Ads,Search,Bing Brand,173.26,577,14818,24,1204.16,6.95
+2026-01-12,Microsoft Ads,Shopping,Bing Generic,204.81,404,13547,22,866.35,4.23
+2026-01-13,Google Ads,Search,Brand Search,474.51,1591,37490,48,2609.8,5.5
+2026-01-13,Google Ads,Shopping,Generic Search,476.85,1271,39002,84,1778.65,3.73
+2026-01-13,Google Ads,Performance Max,Shopping Best Sellers,539.94,1778,42695,69,2035.57,3.77
+2026-01-13,Meta Ads,Prospecting,Lookalike Prospecting,351.63,771,29741,36,949.4,2.7
+2026-01-13,Meta Ads,Retargeting,Cart Retargeting,365.77,524,17595,29,1218.01,3.33
+2026-01-13,Meta Ads,Advantage+,Advantage Shopping,514.68,1168,31324,37,1734.47,3.37
+2026-01-13,Microsoft Ads,Search,Bing Brand,157.97,289,10113,20,859.36,5.44
+2026-01-13,Microsoft Ads,Shopping,Bing Generic,160.08,424,9917,27,755.58,4.72
+2026-01-14,Google Ads,Search,Brand Search,393.82,1137,26189,47,2225.08,5.65
+2026-01-14,Google Ads,Shopping,Generic Search,506.53,964,24059,44,1990.66,3.93
+2026-01-14,Google Ads,Performance Max,Shopping Best Sellers,626.48,801,43147,48,2800.37,4.47
+2026-01-14,Meta Ads,Prospecting,Lookalike Prospecting,334.04,445,22516,26,898.57,2.69
+2026-01-14,Meta Ads,Retargeting,Cart Retargeting,382.26,823,31015,26,1055.04,2.76
+2026-01-14,Meta Ads,Advantage+,Advantage Shopping,541.16,950,43633,29,1396.19,2.58
+2026-01-14,Microsoft Ads,Search,Bing Brand,150.11,201,10770,5,836.11,5.57
+2026-01-14,Microsoft Ads,Shopping,Bing Generic,206.62,263,11688,7,938.05,4.54
+2026-01-15,Google Ads,Search,Brand Search,488.86,1122,36936,67,2644.73,5.41
+2026-01-15,Google Ads,Shopping,Generic Search,528.17,1454,34158,39,2022.89,3.83
+2026-01-15,Google Ads,Performance Max,Shopping Best Sellers,652.35,1277,42706,87,3092.14,4.74
+2026-01-15,Meta Ads,Prospecting,Lookalike Prospecting,314.16,676,18872,32,936.2,2.98
+2026-01-15,Meta Ads,Retargeting,Cart Retargeting,479.23,740,21870,21,1265.17,2.64
+2026-01-15,Meta Ads,Advantage+,Advantage Shopping,447.14,789,29814,55,1390.61,3.11
+2026-01-15,Microsoft Ads,Search,Bing Brand,165.46,236,11457,13,1001.03,6.05
+2026-01-15,Microsoft Ads,Shopping,Bing Generic,211.37,595,16192,21,1080.1,5.11
+2026-01-16,Google Ads,Search,Brand Search,448.72,765,25690,33,2230.14,4.97
+2026-01-16,Google Ads,Shopping,Generic Search,459.84,917,33076,29,1935.93,4.21
+2026-01-16,Google Ads,Performance Max,Shopping Best Sellers,682.12,1107,54181,32,2578.41,3.78
+2026-01-16,Meta Ads,Prospecting,Lookalike Prospecting,395.21,881,26494,44,1288.38,3.26
+2026-01-16,Meta Ads,Retargeting,Cart Retargeting,402.37,823,23302,48,1078.35,2.68
+2026-01-16,Meta Ads,Advantage+,Advantage Shopping,540.99,1556,46297,64,1725.76,3.19
+2026-01-16,Microsoft Ads,Search,Bing Brand,168.69,288,12070,9,949.72,5.63
+2026-01-16,Microsoft Ads,Shopping,Bing Generic,211.86,532,16169,33,999.98,4.72
+2026-01-17,Google Ads,Search,Brand Search,426.06,1140,33586,61,2594.71,6.09
+2026-01-17,Google Ads,Shopping,Generic Search,377.3,747,29930,25,1818.59,4.82
+2026-01-17,Google Ads,Performance Max,Shopping Best Sellers,538.57,560,30856,36,2191.98,4.07
+2026-01-17,Meta Ads,Prospecting,Lookalike Prospecting,315.64,526,15272,14,921.67,2.92
+2026-01-17,Meta Ads,Retargeting,Cart Retargeting,386.46,632,23533,26,1066.63,2.76
+2026-01-17,Meta Ads,Advantage+,Advantage Shopping,436.31,596,29469,16,1409.28,3.23
+2026-01-17,Microsoft Ads,Search,Bing Brand,123.36,224,8922,12,780.87,6.33
+2026-01-17,Microsoft Ads,Shopping,Bing Generic,159.86,327,8679,10,770.53,4.82
+2026-01-18,Google Ads,Search,Brand Search,376.73,838,27325,46,1902.49,5.05
+2026-01-18,Google Ads,Shopping,Generic Search,381.71,479,26326,18,1591.73,4.17
+2026-01-18,Google Ads,Performance Max,Shopping Best Sellers,461.05,654,24665,17,1779.65,3.86
+2026-01-18,Meta Ads,Prospecting,Lookalike Prospecting,334.98,719,19800,34,914.5,2.73
+2026-01-18,Meta Ads,Retargeting,Cart Retargeting,398.21,728,18016,20,1298.16,3.26
+2026-01-18,Meta Ads,Advantage+,Advantage Shopping,346.2,922,27971,47,1159.77,3.35
+2026-01-18,Microsoft Ads,Search,Bing Brand,148.49,130,7006,5,887.97,5.98
+2026-01-18,Microsoft Ads,Shopping,Bing Generic,176.86,589,14050,17,894.91,5.06
+2026-01-19,Google Ads,Search,Brand Search,512.75,1111,35123,48,2558.62,4.99
+2026-01-19,Google Ads,Shopping,Generic Search,502.81,641,28654,31,2066.55,4.11
+2026-01-19,Google Ads,Performance Max,Shopping Best Sellers,533.59,1196,44163,69,2299.77,4.31
+2026-01-19,Meta Ads,Prospecting,Lookalike Prospecting,410.01,471,21580,16,1336.63,3.26
+2026-01-19,Meta Ads,Retargeting,Cart Retargeting,445.35,720,31842,43,1434.03,3.22
+2026-01-19,Meta Ads,Advantage+,Advantage Shopping,489.49,1107,37296,74,1571.26,3.21
+2026-01-19,Microsoft Ads,Search,Bing Brand,170.22,483,11933,26,1082.6,6.36
+2026-01-19,Microsoft Ads,Shopping,Bing Generic,171.72,275,10629,10,740.11,4.31
+2026-01-20,Google Ads,Search,Brand Search,397.97,663,22274,18,2145.06,5.39
+2026-01-20,Google Ads,Shopping,Generic Search,594.71,1936,48107,102,2253.95,3.79
+2026-01-20,Google Ads,Performance Max,Shopping Best Sellers,612.82,1583,41025,103,2610.61,4.26
+2026-01-20,Meta Ads,Prospecting,Lookalike Prospecting,367.65,691,26225,32,1198.54,3.26
+2026-01-20,Meta Ads,Retargeting,Cart Retargeting,384.71,743,17950,30,1011.79,2.63
+2026-01-20,Meta Ads,Advantage+,Advantage Shopping,526.33,640,26193,29,1578.99,3.0
+2026-01-20,Microsoft Ads,Search,Bing Brand,164.25,224,8072,8,1011.78,6.16
+2026-01-20,Microsoft Ads,Shopping,Bing Generic,188.48,500,12987,27,882.09,4.68
+2026-01-21,Google Ads,Search,Brand Search,401.15,739,29094,43,1909.47,4.76
+2026-01-21,Google Ads,Shopping,Generic Search,567.02,1229,46097,63,2716.03,4.79
+2026-01-21,Google Ads,Performance Max,Shopping Best Sellers,543.62,1682,46505,72,2239.71,4.12
+2026-01-21,Meta Ads,Prospecting,Lookalike Prospecting,386.69,601,21628,36,1303.15,3.37
+2026-01-21,Meta Ads,Retargeting,Cart Retargeting,478.57,1412,37952,79,1502.71,3.14
+2026-01-21,Meta Ads,Advantage+,Advantage Shopping,498.86,835,30457,34,1556.44,3.12
+2026-01-21,Microsoft Ads,Search,Bing Brand,151.01,392,12782,14,850.19,5.63
+2026-01-21,Microsoft Ads,Shopping,Bing Generic,172.38,284,13790,17,744.68,4.32
+2026-01-22,Google Ads,Search,Brand Search,518.04,606,22638,36,3082.34,5.95
+2026-01-22,Google Ads,Shopping,Generic Search,478.27,934,23579,56,1984.82,4.15
+2026-01-22,Google Ads,Performance Max,Shopping Best Sellers,677.72,1199,41812,66,2643.11,3.9
+2026-01-22,Meta Ads,Prospecting,Lookalike Prospecting,345.23,709,18926,32,1018.43,2.95
+2026-01-22,Meta Ads,Retargeting,Cart Retargeting,441.6,1045,34616,65,1254.14,2.84
+2026-01-22,Meta Ads,Advantage+,Advantage Shopping,475.8,1232,41061,46,1608.2,3.38
+2026-01-22,Microsoft Ads,Search,Bing Brand,162.56,545,13896,33,1003.0,6.17
+2026-01-22,Microsoft Ads,Shopping,Bing Generic,173.17,500,12270,25,789.66,4.56
+2026-01-23,Google Ads,Search,Brand Search,410.11,837,32933,50,2419.65,5.9
+2026-01-23,Google Ads,Shopping,Generic Search,505.02,721,24559,49,2419.05,4.79
+2026-01-23,Google Ads,Performance Max,Shopping Best Sellers,564.27,609,32576,17,2392.5,4.24
+2026-01-23,Meta Ads,Prospecting,Lookalike Prospecting,378.74,912,32857,24,1052.9,2.78
+2026-01-23,Meta Ads,Retargeting,Cart Retargeting,499.2,1372,35567,43,1637.38,3.28
+2026-01-23,Meta Ads,Advantage+,Advantage Shopping,464.91,737,34089,42,1524.9,3.28
+2026-01-23,Microsoft Ads,Search,Bing Brand,166.88,187,7604,12,881.13,5.28
+2026-01-23,Microsoft Ads,Shopping,Bing Generic,199.74,274,13133,10,1040.65,5.21
+2026-01-24,Google Ads,Search,Brand Search,370.3,871,22548,40,1736.71,4.69
+2026-01-24,Google Ads,Shopping,Generic Search,401.3,509,27631,25,1922.23,4.79
+2026-01-24,Google Ads,Performance Max,Shopping Best Sellers,478.24,997,29324,36,1850.79,3.87
+2026-01-24,Meta Ads,Prospecting,Lookalike Prospecting,310.06,616,14217,17,973.59,3.14
+2026-01-24,Meta Ads,Retargeting,Cart Retargeting,372.33,1043,32197,44,1120.71,3.01
+2026-01-24,Meta Ads,Advantage+,Advantage Shopping,415.91,881,35829,23,1293.48,3.11
+2026-01-24,Microsoft Ads,Search,Bing Brand,155.99,402,11696,24,914.1,5.86
+2026-01-24,Microsoft Ads,Shopping,Bing Generic,177.98,252,7830,16,831.17,4.67
+2026-01-25,Google Ads,Search,Brand Search,355.84,808,22385,43,2063.87,5.8
+2026-01-25,Google Ads,Shopping,Generic Search,506.19,1164,38940,44,1908.34,3.77
+2026-01-25,Google Ads,Performance Max,Shopping Best Sellers,447.07,829,19620,40,1761.46,3.94
+2026-01-25,Meta Ads,Prospecting,Lookalike Prospecting,369.98,743,19757,25,1124.74,3.04
+2026-01-25,Meta Ads,Retargeting,Cart Retargeting,353.83,763,28646,23,1146.41,3.24
+2026-01-25,Meta Ads,Advantage+,Advantage Shopping,403.89,1257,30473,53,1344.95,3.33
+2026-01-25,Microsoft Ads,Search,Bing Brand,165.15,447,10634,22,1010.72,6.12
+2026-01-25,Microsoft Ads,Shopping,Bing Generic,182.24,279,8301,17,949.47,5.21
+2026-01-26,Google Ads,Search,Brand Search,482.75,775,22015,30,2466.85,5.11
+2026-01-26,Google Ads,Shopping,Generic Search,569.64,1129,41606,30,2398.18,4.21
+2026-01-26,Google Ads,Performance Max,Shopping Best Sellers,701.5,1533,60972,106,2890.18,4.12
+2026-01-26,Meta Ads,Prospecting,Lookalike Prospecting,438.25,850,30979,52,1156.98,2.64
+2026-01-26,Meta Ads,Retargeting,Cart Retargeting,469.79,769,22750,46,1587.89,3.38
+2026-01-26,Meta Ads,Advantage+,Advantage Shopping,430.05,912,33128,39,1135.33,2.64
+2026-01-26,Microsoft Ads,Search,Bing Brand,175.52,543,12735,23,1107.53,6.31
+2026-01-26,Microsoft Ads,Shopping,Bing Generic,215.93,403,14214,22,1079.65,5.0
+2026-01-27,Google Ads,Search,Brand Search,439.52,1022,33010,43,2105.3,4.79
+2026-01-27,Google Ads,Shopping,Generic Search,564.75,898,30334,63,2264.65,4.01
+2026-01-27,Google Ads,Performance Max,Shopping Best Sellers,586.62,797,37605,51,2815.78,4.8
+2026-01-27,Meta Ads,Prospecting,Lookalike Prospecting,378.99,477,23509,27,1262.04,3.33
+2026-01-27,Meta Ads,Retargeting,Cart Retargeting,495.46,562,28555,28,1412.06,2.85
+2026-01-27,Meta Ads,Advantage+,Advantage Shopping,570.9,1780,42265,96,1883.97,3.3
+2026-01-27,Microsoft Ads,Search,Bing Brand,188.76,208,8959,6,1158.99,6.14
+2026-01-27,Microsoft Ads,Shopping,Bing Generic,218.57,404,14629,25,928.92,4.25
+2026-01-28,Google Ads,Search,Brand Search,487.71,583,22376,41,2701.91,5.54
+2026-01-28,Google Ads,Shopping,Generic Search,595.05,1796,45588,51,2576.57,4.33
+2026-01-28,Google Ads,Performance Max,Shopping Best Sellers,728.03,1617,45319,65,3254.29,4.47
+2026-01-28,Meta Ads,Prospecting,Lookalike Prospecting,433.23,697,30669,48,1403.67,3.24
+2026-01-28,Meta Ads,Retargeting,Cart Retargeting,438.31,414,19502,13,1463.96,3.34
+2026-01-28,Meta Ads,Advantage+,Advantage Shopping,454.79,908,33618,61,1296.15,2.85
+2026-01-28,Microsoft Ads,Search,Bing Brand,195.15,359,10397,18,1311.41,6.72
+2026-01-28,Microsoft Ads,Shopping,Bing Generic,176.73,362,11665,12,818.26,4.63
+2026-01-29,Google Ads,Search,Brand Search,549.82,1447,39391,76,2666.63,4.85
+2026-01-29,Google Ads,Shopping,Generic Search,619.58,919,49031,25,2713.76,4.38
+2026-01-29,Google Ads,Performance Max,Shopping Best Sellers,663.76,1796,47327,79,2913.91,4.39
+2026-01-29,Meta Ads,Prospecting,Lookalike Prospecting,405.33,727,28463,49,1215.99,3.0
+2026-01-29,Meta Ads,Retargeting,Cart Retargeting,447.35,838,32578,24,1458.36,3.26
+2026-01-29,Meta Ads,Advantage+,Advantage Shopping,439.5,653,28036,34,1296.53,2.95
+2026-01-29,Microsoft Ads,Search,Bing Brand,163.53,496,12271,34,1062.94,6.5
+2026-01-29,Microsoft Ads,Shopping,Bing Generic,177.81,315,11962,14,839.26,4.72
+2026-01-30,Google Ads,Search,Brand Search,447.7,530,20754,22,2238.5,5.0
+2026-01-30,Google Ads,Shopping,Generic Search,581.35,1042,47054,41,2325.4,4.0
+2026-01-30,Google Ads,Performance Max,Shopping Best Sellers,653.45,1544,49885,74,2659.54,4.07
+2026-01-30,Meta Ads,Prospecting,Lookalike Prospecting,389.49,714,16765,34,1106.15,2.84
+2026-01-30,Meta Ads,Retargeting,Cart Retargeting,519.08,580,30044,27,1432.66,2.76
+2026-01-30,Meta Ads,Advantage+,Advantage Shopping,576.46,1164,36419,73,1804.32,3.13
+2026-01-30,Microsoft Ads,Search,Bing Brand,170.81,483,12766,20,1158.09,6.78
+2026-01-30,Microsoft Ads,Shopping,Bing Generic,196.01,322,9949,9,980.05,5.0
+2026-01-31,Google Ads,Search,Brand Search,407.57,973,22248,54,2351.68,5.77
+2026-01-31,Google Ads,Shopping,Generic Search,414.22,957,24740,39,2017.25,4.87
+2026-01-31,Google Ads,Performance Max,Shopping Best Sellers,611.88,974,31180,46,2820.77,4.61
+2026-01-31,Meta Ads,Prospecting,Lookalike Prospecting,280.17,484,15966,22,756.46,2.7
+2026-01-31,Meta Ads,Retargeting,Cart Retargeting,392.96,757,22304,24,1182.81,3.01
+2026-01-31,Meta Ads,Advantage+,Advantage Shopping,500.05,742,27736,46,1600.16,3.2
+2026-01-31,Microsoft Ads,Search,Bing Brand,148.5,323,8240,13,962.28,6.48
+2026-01-31,Microsoft Ads,Shopping,Bing Generic,179.84,475,12277,27,999.91,5.56
+2026-02-01,Google Ads,Search,Brand Search,433.23,1184,27448,71,2018.85,4.66
+2026-02-01,Google Ads,Shopping,Generic Search,515.51,1273,38386,42,2263.09,4.39
+2026-02-01,Google Ads,Performance Max,Shopping Best Sellers,560.9,978,44789,54,2490.4,4.44
+2026-02-01,Meta Ads,Prospecting,Lookalike Prospecting,279.84,243,13137,10,945.86,3.38
+2026-02-01,Meta Ads,Retargeting,Cart Retargeting,338.99,782,20498,52,1071.21,3.16
+2026-02-01,Meta Ads,Advantage+,Advantage Shopping,485.69,470,21760,16,1554.21,3.2
+2026-02-01,Microsoft Ads,Search,Bing Brand,139.3,239,9145,8,891.52,6.4
+2026-02-01,Microsoft Ads,Shopping,Bing Generic,193.6,427,11218,25,906.05,4.68
+2026-02-02,Google Ads,Search,Brand Search,511.96,818,35557,30,2902.81,5.67
+2026-02-02,Google Ads,Shopping,Generic Search,577.93,1276,49575,48,2294.38,3.97
+2026-02-02,Google Ads,Performance Max,Shopping Best Sellers,584.82,891,32906,60,2660.93,4.55
+2026-02-02,Meta Ads,Prospecting,Lookalike Prospecting,431.6,729,20494,31,1212.8,2.81
+2026-02-02,Meta Ads,Retargeting,Cart Retargeting,527.29,1743,44797,66,1724.24,3.27
+2026-02-02,Meta Ads,Advantage+,Advantage Shopping,484.47,823,27899,30,1540.61,3.18
+2026-02-02,Microsoft Ads,Search,Bing Brand,175.58,491,11630,28,985.0,5.61
+2026-02-02,Microsoft Ads,Shopping,Bing Generic,181.11,301,12389,17,916.42,5.06
+2026-02-03,Google Ads,Search,Brand Search,496.31,633,22017,36,2769.41,5.58
+2026-02-03,Google Ads,Shopping,Generic Search,496.8,678,20981,45,2300.18,4.63
+2026-02-03,Google Ads,Performance Max,Shopping Best Sellers,628.5,1558,51240,53,3029.37,4.82
+2026-02-03,Meta Ads,Prospecting,Lookalike Prospecting,454.64,1344,32309,39,1295.72,2.85
+2026-02-03,Meta Ads,Retargeting,Cart Retargeting,469.74,1483,35015,98,1423.31,3.03
+2026-02-03,Meta Ads,Advantage+,Advantage Shopping,467.58,978,23337,68,1552.37,3.32
+2026-02-03,Microsoft Ads,Search,Bing Brand,171.61,621,14441,41,1050.25,6.12
+2026-02-03,Microsoft Ads,Shopping,Bing Generic,230.49,324,15572,22,974.97,4.23
+2026-02-04,Google Ads,Search,Brand Search,459.33,941,30522,63,2806.51,6.11
+2026-02-04,Google Ads,Shopping,Generic Search,636.07,675,32234,22,2709.66,4.26
+2026-02-04,Google Ads,Performance Max,Shopping Best Sellers,641.77,1201,32332,73,2573.5,4.01
+2026-02-04,Meta Ads,Prospecting,Lookalike Prospecting,406.04,816,20260,53,1307.45,3.22
+2026-02-04,Meta Ads,Retargeting,Cart Retargeting,508.84,827,23357,28,1531.61,3.01
+2026-02-04,Meta Ads,Advantage+,Advantage Shopping,463.62,611,24647,22,1321.32,2.85
+2026-02-04,Microsoft Ads,Search,Bing Brand,192.62,394,10707,10,1329.08,6.9
+2026-02-04,Microsoft Ads,Shopping,Bing Generic,216.65,205,9705,8,1117.91,5.16
+2026-02-05,Google Ads,Search,Brand Search,480.26,1434,39516,56,2583.8,5.38
+2026-02-05,Google Ads,Shopping,Generic Search,503.76,946,27846,33,2418.05,4.8
+2026-02-05,Google Ads,Performance Max,Shopping Best Sellers,576.27,1471,43594,64,2235.93,3.88
+2026-02-05,Meta Ads,Prospecting,Lookalike Prospecting,405.23,946,26821,33,1207.59,2.98
+2026-02-05,Meta Ads,Retargeting,Cart Retargeting,425.05,696,34553,31,1364.41,3.21
+2026-02-05,Meta Ads,Advantage+,Advantage Shopping,560.18,740,37749,37,1484.48,2.65
+2026-02-05,Microsoft Ads,Search,Bing Brand,179.15,232,8732,11,1119.69,6.25
+2026-02-05,Microsoft Ads,Shopping,Bing Generic,181.83,253,12408,12,818.24,4.5
+2026-02-06,Google Ads,Search,Brand Search,546.24,1062,35558,29,2895.07,5.3
+2026-02-06,Google Ads,Shopping,Generic Search,569.29,1201,42439,74,2658.58,4.67
+2026-02-06,Google Ads,Performance Max,Shopping Best Sellers,706.86,839,31129,23,3103.12,4.39
+2026-02-06,Meta Ads,Prospecting,Lookalike Prospecting,463.79,884,20920,23,1562.97,3.37
+2026-02-06,Meta Ads,Retargeting,Cart Retargeting,450.65,1497,34458,81,1455.6,3.23
+2026-02-06,Meta Ads,Advantage+,Advantage Shopping,514.44,1237,30461,81,1754.24,3.41
+2026-02-06,Microsoft Ads,Search,Bing Brand,172.38,396,12374,22,1110.13,6.44
+2026-02-06,Microsoft Ads,Shopping,Bing Generic,197.95,416,13100,24,882.86,4.46
+2026-02-07,Google Ads,Search,Brand Search,381.11,422,16397,23,1764.54,4.63
+2026-02-07,Google Ads,Shopping,Generic Search,491.65,950,38866,39,2133.76,4.34
+2026-02-07,Google Ads,Performance Max,Shopping Best Sellers,511.72,799,38188,49,2471.61,4.83
+2026-02-07,Meta Ads,Prospecting,Lookalike Prospecting,328.2,494,26837,17,1056.8,3.22
+2026-02-07,Meta Ads,Retargeting,Cart Retargeting,340.63,852,23470,23,889.04,2.61
+2026-02-07,Meta Ads,Advantage+,Advantage Shopping,478.28,594,25131,38,1396.58,2.92
+2026-02-07,Microsoft Ads,Search,Bing Brand,129.59,280,7130,16,794.39,6.13
+2026-02-07,Microsoft Ads,Shopping,Bing Generic,164.91,314,11917,12,829.5,5.03
+2026-02-08,Google Ads,Search,Brand Search,371.87,499,19318,14,2089.91,5.62
+2026-02-08,Google Ads,Shopping,Generic Search,556.41,1583,46194,70,2648.51,4.76
+2026-02-08,Google Ads,Performance Max,Shopping Best Sellers,552.58,1653,46622,100,2691.06,4.87
+2026-02-08,Meta Ads,Prospecting,Lookalike Prospecting,318.55,431,15518,25,933.35,2.93
+2026-02-08,Meta Ads,Retargeting,Cart Retargeting,388.64,786,21582,48,1278.63,3.29
+2026-02-08,Meta Ads,Advantage+,Advantage Shopping,504.92,1403,43196,44,1540.01,3.05
+2026-02-08,Microsoft Ads,Search,Bing Brand,139.12,415,9892,26,781.85,5.62
+2026-02-08,Microsoft Ads,Shopping,Bing Generic,152.79,193,7727,11,796.04,5.21
+2026-02-09,Google Ads,Search,Brand Search,519.3,991,26208,57,3084.64,5.94
+2026-02-09,Google Ads,Shopping,Generic Search,593.7,1284,48165,87,2541.04,4.28
+2026-02-09,Google Ads,Performance Max,Shopping Best Sellers,559.93,1005,47758,70,2704.46,4.83
+2026-02-09,Meta Ads,Prospecting,Lookalike Prospecting,402.26,649,27836,43,1118.28,2.78
+2026-02-09,Meta Ads,Retargeting,Cart Retargeting,477.24,899,28219,37,1541.49,3.23
+2026-02-09,Meta Ads,Advantage+,Advantage Shopping,493.12,653,31746,45,1484.29,3.01
+2026-02-09,Microsoft Ads,Search,Bing Brand,179.77,413,14947,18,1206.26,6.71
+2026-02-09,Microsoft Ads,Shopping,Bing Generic,214.64,258,10424,17,970.17,4.52
+2026-02-10,Google Ads,Search,Brand Search,517.37,672,25278,28,2716.19,5.25
+2026-02-10,Google Ads,Shopping,Generic Search,647.26,1656,46251,61,2783.22,4.3
+2026-02-10,Google Ads,Performance Max,Shopping Best Sellers,733.59,1599,51994,52,3565.25,4.86
+2026-02-10,Meta Ads,Prospecting,Lookalike Prospecting,444.84,1016,33102,67,1209.96,2.72
+2026-02-10,Meta Ads,Retargeting,Cart Retargeting,477.49,402,21317,25,1489.77,3.12
+2026-02-10,Meta Ads,Advantage+,Advantage Shopping,612.14,1343,46765,84,1922.12,3.14
+2026-02-10,Microsoft Ads,Search,Bing Brand,166.55,220,7064,9,1079.24,6.48
+2026-02-10,Microsoft Ads,Shopping,Bing Generic,219.17,467,15286,22,1124.34,5.13
+2026-02-11,Google Ads,Search,Brand Search,426.47,576,18139,22,2324.26,5.45
+2026-02-11,Google Ads,Shopping,Generic Search,676.68,1889,53182,116,2517.25,3.72
+2026-02-11,Google Ads,Performance Max,Shopping Best Sellers,755.09,765,34986,26,2891.99,3.83
+2026-02-11,Meta Ads,Prospecting,Lookalike Prospecting,411.41,629,22228,26,1341.2,3.26
+2026-02-11,Meta Ads,Retargeting,Cart Retargeting,458.63,948,39699,53,1398.82,3.05
+2026-02-11,Meta Ads,Advantage+,Advantage Shopping,597.62,1819,48180,53,1870.55,3.13
+2026-02-11,Microsoft Ads,Search,Bing Brand,175.81,143,7828,5,1093.54,6.22
+2026-02-11,Microsoft Ads,Shopping,Bing Generic,211.96,536,16384,34,1019.53,4.81
+2026-02-12,Google Ads,Search,Brand Search,442.43,457,19429,29,2397.97,5.42
+2026-02-12,Google Ads,Shopping,Generic Search,662.16,582,29198,39,2827.42,4.27
+2026-02-12,Google Ads,Performance Max,Shopping Best Sellers,755.56,1385,32852,54,3309.35,4.38
+2026-02-12,Meta Ads,Prospecting,Lookalike Prospecting,469.88,1302,35641,56,1442.53,3.07
+2026-02-12,Meta Ads,Retargeting,Cart Retargeting,410.31,860,21673,37,1116.04,2.72
+2026-02-12,Meta Ads,Advantage+,Advantage Shopping,608.17,1000,46222,69,1739.37,2.86
+2026-02-12,Microsoft Ads,Search,Bing Brand,196.7,328,16886,15,1205.77,6.13
+2026-02-12,Microsoft Ads,Shopping,Bing Generic,235.79,774,18063,33,1103.5,4.68
+2026-02-13,Google Ads,Search,Brand Search,554.7,1319,30120,62,2590.45,4.67
+2026-02-13,Google Ads,Shopping,Generic Search,563.92,1236,34643,68,2723.73,4.83
+2026-02-13,Google Ads,Performance Max,Shopping Best Sellers,583.2,1660,45439,48,2589.41,4.44
+2026-02-13,Meta Ads,Prospecting,Lookalike Prospecting,365.41,959,25771,38,1162.0,3.18
+2026-02-13,Meta Ads,Retargeting,Cart Retargeting,416.28,636,23258,24,1074.0,2.58
+2026-02-13,Meta Ads,Advantage+,Advantage Shopping,477.91,964,29725,42,1309.47,2.74
+2026-02-13,Microsoft Ads,Search,Bing Brand,156.26,242,7217,10,917.25,5.87
+2026-02-13,Microsoft Ads,Shopping,Bing Generic,205.65,247,12226,16,948.05,4.61
+2026-02-14,Google Ads,Search,Brand Search,484.6,736,32826,31,2951.21,6.09
+2026-02-14,Google Ads,Shopping,Generic Search,439.76,555,28228,25,1785.43,4.06
+2026-02-14,Google Ads,Performance Max,Shopping Best Sellers,551.19,615,25058,22,2359.09,4.28
+2026-02-14,Meta Ads,Prospecting,Lookalike Prospecting,359.39,379,18257,15,1106.92,3.08
+2026-02-14,Meta Ads,Retargeting,Cart Retargeting,458.07,1246,32023,50,1310.08,2.86
+2026-02-14,Meta Ads,Advantage+,Advantage Shopping,431.42,1508,34806,47,1406.43,3.26
+2026-02-14,Microsoft Ads,Search,Bing Brand,146.02,195,7453,13,1006.08,6.89
+2026-02-14,Microsoft Ads,Shopping,Bing Generic,206.48,465,15129,24,951.87,4.61
+2026-02-15,Google Ads,Search,Brand Search,394.99,878,31102,26,2050.0,5.19
+2026-02-15,Google Ads,Shopping,Generic Search,509.14,1211,33885,60,2245.31,4.41
+2026-02-15,Google Ads,Performance Max,Shopping Best Sellers,649.69,1411,47997,54,2761.18,4.25
+2026-02-15,Meta Ads,Prospecting,Lookalike Prospecting,368.16,820,28645,39,1203.88,3.27
+2026-02-15,Meta Ads,Retargeting,Cart Retargeting,419.08,1099,30023,66,1165.04,2.78
+2026-02-15,Meta Ads,Advantage+,Advantage Shopping,394.78,713,25094,34,1346.2,3.41
+2026-02-15,Microsoft Ads,Search,Bing Brand,176.36,452,11722,19,1137.52,6.45
+2026-02-15,Microsoft Ads,Shopping,Bing Generic,202.98,290,14354,17,1004.75,4.95
+2026-02-16,Google Ads,Search,Brand Search,541.38,737,38500,51,2793.52,5.16
+2026-02-16,Google Ads,Shopping,Generic Search,631.31,2065,47898,92,2638.88,4.18
+2026-02-16,Google Ads,Performance Max,Shopping Best Sellers,572.97,1172,37232,60,2297.61,4.01
+2026-02-16,Meta Ads,Prospecting,Lookalike Prospecting,425.17,965,25341,50,1254.25,2.95
+2026-02-16,Meta Ads,Retargeting,Cart Retargeting,481.3,430,20747,19,1381.33,2.87
+2026-02-16,Meta Ads,Advantage+,Advantage Shopping,628.14,1149,52971,45,1683.42,2.68
+2026-02-16,Microsoft Ads,Search,Bing Brand,183.45,355,11692,16,1030.99,5.62
+2026-02-16,Microsoft Ads,Shopping,Bing Generic,229.3,497,12729,15,1066.25,4.65
+2026-02-17,Google Ads,Search,Brand Search,574.93,928,41666,64,3219.61,5.6
+2026-02-17,Google Ads,Shopping,Generic Search,550.29,882,27078,60,2151.63,3.91
+2026-02-17,Google Ads,Performance Max,Shopping Best Sellers,623.19,1086,31347,48,2611.17,4.19
+2026-02-17,Meta Ads,Prospecting,Lookalike Prospecting,353.82,601,18002,26,1096.84,3.1
+2026-02-17,Meta Ads,Retargeting,Cart Retargeting,514.5,1523,39027,42,1414.88,2.75
+2026-02-17,Meta Ads,Advantage+,Advantage Shopping,479.15,640,24155,29,1585.99,3.31
+2026-02-17,Microsoft Ads,Search,Bing Brand,172.54,393,11344,20,1164.64,6.75
+2026-02-17,Microsoft Ads,Shopping,Bing Generic,224.16,517,12924,27,1125.28,5.02
+2026-02-18,Google Ads,Search,Brand Search,570.97,1074,31623,31,3248.82,5.69
+2026-02-18,Google Ads,Shopping,Generic Search,530.98,674,29598,38,2038.96,3.84
+2026-02-18,Google Ads,Performance Max,Shopping Best Sellers,686.34,926,33084,31,2882.63,4.2
+2026-02-18,Meta Ads,Prospecting,Lookalike Prospecting,436.11,1363,30980,68,1378.11,3.16
+2026-02-18,Meta Ads,Retargeting,Cart Retargeting,482.88,806,27117,22,1303.78,2.7
+2026-02-18,Meta Ads,Advantage+,Advantage Shopping,526.13,993,25330,68,1362.68,2.59
+2026-02-18,Microsoft Ads,Search,Bing Brand,187.7,394,13667,25,1148.72,6.12
+2026-02-18,Microsoft Ads,Shopping,Bing Generic,216.4,355,9389,14,937.01,4.33
+2026-02-19,Google Ads,Search,Brand Search,483.09,716,23946,42,2623.18,5.43
+2026-02-19,Google Ads,Shopping,Generic Search,654.77,647,30836,39,2854.8,4.36
+2026-02-19,Google Ads,Performance Max,Shopping Best Sellers,757.23,1142,59834,65,3134.93,4.14
+2026-02-19,Meta Ads,Prospecting,Lookalike Prospecting,425.59,785,19836,46,1451.26,3.41
+2026-02-19,Meta Ads,Retargeting,Cart Retargeting,454.62,766,28295,47,1554.8,3.42
+2026-02-19,Meta Ads,Advantage+,Advantage Shopping,542.03,1007,41684,62,1848.32,3.41
+2026-02-19,Microsoft Ads,Search,Bing Brand,193.28,493,14300,16,1134.55,5.87
+2026-02-19,Microsoft Ads,Shopping,Bing Generic,192.75,193,9890,8,867.38,4.5
+2026-02-20,Google Ads,Search,Brand Search,485.71,997,27474,38,2637.41,5.43
+2026-02-20,Google Ads,Shopping,Generic Search,560.32,1725,48382,51,2650.31,4.73
+2026-02-20,Google Ads,Performance Max,Shopping Best Sellers,790.45,2886,65880,185,3667.69,4.64
+2026-02-20,Meta Ads,Prospecting,Lookalike Prospecting,370.51,720,19724,45,1226.39,3.31
+2026-02-20,Meta Ads,Retargeting,Cart Retargeting,528.49,1117,33837,41,1664.74,3.15
+2026-02-20,Meta Ads,Advantage+,Advantage Shopping,539.39,1555,38034,45,1596.59,2.96
+2026-02-20,Microsoft Ads,Search,Bing Brand,189.55,440,15948,30,1088.02,5.74
+2026-02-20,Microsoft Ads,Shopping,Bing Generic,206.53,588,15869,34,871.56,4.22
+2026-02-21,Google Ads,Search,Brand Search,433.32,495,25185,24,2435.26,5.62
+2026-02-21,Google Ads,Shopping,Generic Search,463.06,596,23863,37,1954.11,4.22
+2026-02-21,Google Ads,Performance Max,Shopping Best Sellers,548.83,1134,37033,46,2409.36,4.39
+2026-02-21,Meta Ads,Prospecting,Lookalike Prospecting,374.43,668,17404,31,981.01,2.62
+2026-02-21,Meta Ads,Retargeting,Cart Retargeting,360.74,402,22315,27,1190.44,3.3
+2026-02-21,Meta Ads,Advantage+,Advantage Shopping,421.9,706,20224,23,1333.2,3.16
+2026-02-21,Microsoft Ads,Search,Bing Brand,180.54,316,12901,13,1036.3,5.74
+2026-02-21,Microsoft Ads,Shopping,Bing Generic,207.56,322,12419,18,921.57,4.44
+2026-02-22,Google Ads,Search,Brand Search,403.08,535,29693,25,2261.28,5.61
+2026-02-22,Google Ads,Shopping,Generic Search,450.63,597,32715,34,1789.0,3.97
+2026-02-22,Google Ads,Performance Max,Shopping Best Sellers,639.66,836,39022,24,3127.94,4.89
+2026-02-22,Meta Ads,Prospecting,Lookalike Prospecting,341.61,416,15922,27,1089.74,3.19
+2026-02-22,Meta Ads,Retargeting,Cart Retargeting,363.59,592,27594,41,1174.4,3.23
+2026-02-22,Meta Ads,Advantage+,Advantage Shopping,414.35,613,17561,27,1255.48,3.03
+2026-02-22,Microsoft Ads,Search,Bing Brand,170.41,239,8318,13,1080.4,6.34
+2026-02-22,Microsoft Ads,Shopping,Bing Generic,205.64,359,9567,18,890.42,4.33
+2026-02-23,Google Ads,Search,Brand Search,507.75,617,28512,23,3082.04,6.07
+2026-02-23,Google Ads,Shopping,Generic Search,529.9,1236,36563,74,2310.36,4.36
+2026-02-23,Google Ads,Performance Max,Shopping Best Sellers,737.47,1365,52824,66,3480.86,4.72
+2026-02-23,Meta Ads,Prospecting,Lookalike Prospecting,426.08,458,23562,30,1367.72,3.21
+2026-02-23,Meta Ads,Retargeting,Cart Retargeting,564.0,823,26549,43,1692.0,3.0
+2026-02-23,Meta Ads,Advantage+,Advantage Shopping,565.01,2064,48822,64,1921.03,3.4
+2026-02-23,Microsoft Ads,Search,Bing Brand,212.41,444,12414,26,1325.44,6.24
+2026-02-23,Microsoft Ads,Shopping,Bing Generic,252.81,214,10808,8,1332.31,5.27
+2026-02-24,Google Ads,Search,Brand Search,451.07,1090,34966,58,2124.54,4.71
+2026-02-24,Google Ads,Shopping,Generic Search,613.32,909,45129,45,2575.94,4.2
+2026-02-24,Google Ads,Performance Max,Shopping Best Sellers,723.16,1266,40458,43,2914.33,4.03
+2026-02-24,Meta Ads,Prospecting,Lookalike Prospecting,468.11,962,27891,60,1418.37,3.03
+2026-02-24,Meta Ads,Retargeting,Cart Retargeting,522.51,1419,38373,90,1379.43,2.64
+2026-02-24,Meta Ads,Advantage+,Advantage Shopping,482.22,884,29681,46,1277.88,2.65
+2026-02-24,Microsoft Ads,Search,Bing Brand,179.36,285,13511,16,1173.01,6.54
+2026-02-24,Microsoft Ads,Shopping,Bing Generic,235.68,632,20006,38,1046.42,4.44
+2026-02-25,Google Ads,Search,Brand Search,568.06,1038,27103,39,2766.45,4.87
+2026-02-25,Google Ads,Shopping,Generic Search,691.03,1167,29936,43,3199.47,4.63
+2026-02-25,Google Ads,Performance Max,Shopping Best Sellers,601.79,818,40891,37,2744.16,4.56
+2026-02-25,Meta Ads,Prospecting,Lookalike Prospecting,408.28,760,27563,28,1224.84,3.0
+2026-02-25,Meta Ads,Retargeting,Cart Retargeting,432.46,772,32229,37,1323.33,3.06
+2026-02-25,Meta Ads,Advantage+,Advantage Shopping,481.2,772,25506,33,1587.96,3.3
+2026-02-25,Microsoft Ads,Search,Bing Brand,170.14,444,13711,29,1167.16,6.86
+2026-02-25,Microsoft Ads,Shopping,Bing Generic,239.18,389,13509,22,1145.67,4.79
+2026-02-26,Google Ads,Search,Brand Search,493.23,900,28990,59,2337.91,4.74
+2026-02-26,Google Ads,Shopping,Generic Search,553.55,2042,47696,57,2585.08,4.67
+2026-02-26,Google Ads,Performance Max,Shopping Best Sellers,693.68,1471,55507,73,2802.47,4.04
+2026-02-26,Meta Ads,Prospecting,Lookalike Prospecting,361.2,630,24335,33,993.3,2.75
+2026-02-26,Meta Ads,Retargeting,Cart Retargeting,491.17,1201,31534,41,1512.8,3.08
+2026-02-26,Meta Ads,Advantage+,Advantage Shopping,637.52,614,33808,27,2052.81,3.22
+2026-02-26,Microsoft Ads,Search,Bing Brand,175.76,572,14022,39,1029.95,5.86
+2026-02-26,Microsoft Ads,Shopping,Bing Generic,187.21,554,15015,16,958.52,5.12
+2026-02-27,Google Ads,Search,Brand Search,538.86,676,34563,47,2683.52,4.98
+2026-02-27,Google Ads,Shopping,Generic Search,660.59,2279,55131,110,2516.85,3.81
+2026-02-27,Google Ads,Performance Max,Shopping Best Sellers,748.82,1299,64290,38,3107.6,4.15
+2026-02-27,Meta Ads,Prospecting,Lookalike Prospecting,379.55,564,17219,25,1241.13,3.27
+2026-02-27,Meta Ads,Retargeting,Cart Retargeting,572.42,806,30764,49,1591.33,2.78
+2026-02-27,Meta Ads,Advantage+,Advantage Shopping,603.2,852,33968,24,1930.24,3.2
+2026-02-27,Microsoft Ads,Search,Bing Brand,174.41,263,11914,9,1152.85,6.61
+2026-02-27,Microsoft Ads,Shopping,Bing Generic,220.99,629,14611,22,1054.12,4.77
+2026-02-28,Google Ads,Search,Brand Search,421.14,441,19960,25,2114.12,5.02
+2026-02-28,Google Ads,Shopping,Generic Search,574.35,1000,25165,40,2607.55,4.54
+2026-02-28,Google Ads,Performance Max,Shopping Best Sellers,514.05,935,29819,52,2056.2,4.0
+2026-02-28,Meta Ads,Prospecting,Lookalike Prospecting,333.68,413,14481,19,1137.85,3.41
+2026-02-28,Meta Ads,Retargeting,Cart Retargeting,452.18,1105,28393,35,1261.58,2.79
+2026-02-28,Meta Ads,Advantage+,Advantage Shopping,402.01,742,34660,46,1318.59,3.28
+2026-02-28,Microsoft Ads,Search,Bing Brand,155.39,366,11034,13,986.73,6.35
+2026-02-28,Microsoft Ads,Shopping,Bing Generic,206.59,385,9276,17,875.94,4.24
+2026-03-01,Google Ads,Search,Brand Search,396.51,837,31452,23,2371.13,5.98
+2026-03-01,Google Ads,Shopping,Generic Search,515.03,1375,34932,59,2008.62,3.9
+2026-03-01,Google Ads,Performance Max,Shopping Best Sellers,503.82,591,25078,20,2277.27,4.52
+2026-03-01,Meta Ads,Prospecting,Lookalike Prospecting,336.93,500,14676,18,1118.61,3.32
+2026-03-01,Meta Ads,Retargeting,Cart Retargeting,392.58,513,26217,19,1150.26,2.93
+2026-03-01,Meta Ads,Advantage+,Advantage Shopping,422.33,1094,34551,58,1161.41,2.75
+2026-03-01,Microsoft Ads,Search,Bing Brand,178.2,591,15418,24,1181.47,6.63
+2026-03-01,Microsoft Ads,Shopping,Bing Generic,191.02,493,15868,21,932.18,4.88
+2026-03-02,Google Ads,Search,Brand Search,483.25,1035,25059,62,2464.57,5.1
+2026-03-02,Google Ads,Shopping,Generic Search,535.92,1338,35277,94,2620.65,4.89
+2026-03-02,Google Ads,Performance Max,Shopping Best Sellers,817.37,1458,58490,90,3122.35,3.82
+2026-03-02,Meta Ads,Prospecting,Lookalike Prospecting,491.63,1012,42692,64,1292.99,2.63
+2026-03-02,Meta Ads,Retargeting,Cart Retargeting,550.56,1756,43915,58,1585.61,2.88
+2026-03-02,Meta Ads,Advantage+,Advantage Shopping,588.65,1804,43203,47,1919.0,3.26
+2026-03-02,Microsoft Ads,Search,Bing Brand,206.9,455,13937,15,1425.54,6.89
+2026-03-02,Microsoft Ads,Shopping,Bing Generic,260.55,435,16714,20,1412.18,5.42
+2026-03-03,Google Ads,Search,Brand Search,469.13,771,24323,19,2331.58,4.97
+2026-03-03,Google Ads,Shopping,Generic Search,709.5,1244,33965,83,2795.43,3.94
+2026-03-03,Google Ads,Performance Max,Shopping Best Sellers,790.12,1129,33964,75,3231.59,4.09
+2026-03-03,Meta Ads,Prospecting,Lookalike Prospecting,473.12,1641,38195,69,1556.56,3.29
+2026-03-03,Meta Ads,Retargeting,Cart Retargeting,575.42,692,26784,22,1674.47,2.91
+2026-03-03,Meta Ads,Advantage+,Advantage Shopping,510.49,1703,39631,92,1725.46,3.38
+2026-03-03,Microsoft Ads,Search,Bing Brand,174.64,539,12785,33,1210.26,6.93
+2026-03-03,Microsoft Ads,Shopping,Bing Generic,205.97,267,10276,15,1033.97,5.02
+2026-03-04,Google Ads,Search,Brand Search,476.85,1723,40387,73,2727.58,5.72
+2026-03-04,Google Ads,Shopping,Generic Search,726.8,1063,31585,71,3532.25,4.86
+2026-03-04,Google Ads,Performance Max,Shopping Best Sellers,820.45,2344,55339,73,3248.98,3.96
+2026-03-04,Meta Ads,Prospecting,Lookalike Prospecting,470.38,907,40550,59,1307.66,2.78
+2026-03-04,Meta Ads,Retargeting,Cart Retargeting,438.99,1275,31063,58,1395.99,3.18
+2026-03-04,Meta Ads,Advantage+,Advantage Shopping,531.71,591,23954,18,1483.47,2.79
+2026-03-04,Microsoft Ads,Search,Bing Brand,164.31,532,12318,34,974.36,5.93
+2026-03-04,Microsoft Ads,Shopping,Bing Generic,226.11,311,15052,14,1069.5,4.73
+2026-03-05,Google Ads,Search,Brand Search,606.12,983,44200,28,3394.27,5.6
+2026-03-05,Google Ads,Shopping,Generic Search,698.87,1683,39376,48,2830.42,4.05
+2026-03-05,Google Ads,Performance Max,Shopping Best Sellers,640.07,1546,47966,101,2656.29,4.15
+2026-03-05,Meta Ads,Prospecting,Lookalike Prospecting,380.38,809,26480,21,1171.57,3.08
+2026-03-05,Meta Ads,Retargeting,Cart Retargeting,578.66,1048,47473,31,1573.96,2.72
+2026-03-05,Meta Ads,Advantage+,Advantage Shopping,522.15,1409,38312,82,1430.69,2.74
+2026-03-05,Microsoft Ads,Search,Bing Brand,181.31,184,9553,9,1042.53,5.75
+2026-03-05,Microsoft Ads,Shopping,Bing Generic,251.94,427,14672,16,1113.57,4.42
+2026-03-06,Google Ads,Search,Brand Search,572.55,545,29192,18,3166.2,5.53
+2026-03-06,Google Ads,Shopping,Generic Search,588.89,1225,47093,53,2237.78,3.8
+2026-03-06,Google Ads,Performance Max,Shopping Best Sellers,715.02,1060,32963,35,3210.44,4.49
+2026-03-06,Meta Ads,Prospecting,Lookalike Prospecting,492.58,760,30569,35,1423.56,2.89
+2026-03-06,Meta Ads,Retargeting,Cart Retargeting,463.72,780,20762,43,1303.05,2.81
+2026-03-06,Meta Ads,Advantage+,Advantage Shopping,501.38,1439,33274,74,1438.96,2.87
+2026-03-06,Microsoft Ads,Search,Bing Brand,199.93,455,15760,22,1341.53,6.71
+2026-03-06,Microsoft Ads,Shopping,Bing Generic,254.58,632,20793,18,1239.8,4.87
+2026-03-07,Google Ads,Search,Brand Search,516.35,1381,33353,84,2943.2,5.7
+2026-03-07,Google Ads,Shopping,Generic Search,560.28,1001,26564,33,2487.64,4.44
+2026-03-07,Google Ads,Performance Max,Shopping Best Sellers,696.39,1162,54584,51,3391.42,4.87
+2026-03-07,Meta Ads,Prospecting,Lookalike Prospecting,426.03,1270,37012,79,1256.79,2.95
+2026-03-07,Meta Ads,Retargeting,Cart Retargeting,393.99,647,32755,27,1319.87,3.35
+2026-03-07,Meta Ads,Advantage+,Advantage Shopping,469.74,765,25567,49,1338.76,2.85
+2026-03-07,Microsoft Ads,Search,Bing Brand,180.32,342,11814,15,1143.23,6.34
+2026-03-07,Microsoft Ads,Shopping,Bing Generic,169.9,549,12934,37,852.9,5.02
+2026-03-08,Google Ads,Search,Brand Search,467.78,820,25669,33,2231.31,4.77
+2026-03-08,Google Ads,Shopping,Generic Search,516.38,1116,32972,30,2148.14,4.16
+2026-03-08,Google Ads,Performance Max,Shopping Best Sellers,561.04,1403,38930,38,2171.22,3.87
+2026-03-08,Meta Ads,Prospecting,Lookalike Prospecting,415.46,818,21891,54,1188.22,2.86
+2026-03-08,Meta Ads,Retargeting,Cart Retargeting,482.58,984,38019,37,1254.71,2.6
+2026-03-08,Meta Ads,Advantage+,Advantage Shopping,485.64,915,22543,28,1534.62,3.16
+2026-03-08,Microsoft Ads,Search,Bing Brand,190.73,378,15099,17,1150.1,6.03
+2026-03-08,Microsoft Ads,Shopping,Bing Generic,200.88,408,10348,24,897.93,4.47
+2026-03-09,Google Ads,Search,Brand Search,594.1,1473,46902,47,3523.01,5.93
+2026-03-09,Google Ads,Shopping,Generic Search,597.39,1153,28737,74,2574.75,4.31
+2026-03-09,Google Ads,Performance Max,Shopping Best Sellers,614.09,1941,48809,70,2413.37,3.93
+2026-03-09,Meta Ads,Prospecting,Lookalike Prospecting,435.73,807,32117,50,1459.7,3.35
+2026-03-09,Meta Ads,Retargeting,Cart Retargeting,513.03,459,24407,19,1595.52,3.11
+2026-03-09,Meta Ads,Advantage+,Advantage Shopping,600.02,1620,48705,66,1638.05,2.73
+2026-03-09,Microsoft Ads,Search,Bing Brand,176.76,481,13381,18,1201.97,6.8
+2026-03-09,Microsoft Ads,Shopping,Bing Generic,221.27,646,14991,41,982.44,4.44
+2026-03-10,Google Ads,Search,Brand Search,575.85,893,31159,23,3247.79,5.64
+2026-03-10,Google Ads,Shopping,Generic Search,694.58,1228,29450,66,3208.96,4.62
+2026-03-10,Google Ads,Performance Max,Shopping Best Sellers,748.35,1555,39930,60,2776.38,3.71
+2026-03-10,Meta Ads,Prospecting,Lookalike Prospecting,509.19,864,31097,35,1588.67,3.12
+2026-03-10,Meta Ads,Retargeting,Cart Retargeting,472.72,1351,34260,58,1403.98,2.97
+2026-03-10,Meta Ads,Advantage+,Advantage Shopping,509.63,1461,36594,61,1533.99,3.01
+2026-03-10,Microsoft Ads,Search,Bing Brand,207.94,240,11526,7,1312.1,6.31
+2026-03-10,Microsoft Ads,Shopping,Bing Generic,266.14,533,21495,30,1354.65,5.09
+2026-03-11,Google Ads,Search,Brand Search,620.48,1146,30246,75,3145.83,5.07
+2026-03-11,Google Ads,Shopping,Generic Search,701.41,1702,48398,95,3268.57,4.66
+2026-03-11,Google Ads,Performance Max,Shopping Best Sellers,778.12,1673,67608,73,3493.76,4.49
+2026-03-11,Meta Ads,Prospecting,Lookalike Prospecting,428.19,1040,31627,35,1117.58,2.61
+2026-03-11,Meta Ads,Retargeting,Cart Retargeting,552.03,1401,36466,92,1529.12,2.77
+2026-03-11,Meta Ads,Advantage+,Advantage Shopping,617.56,1970,49432,127,1858.86,3.01
+2026-03-11,Microsoft Ads,Search,Bing Brand,178.75,211,8537,13,970.61,5.43
+2026-03-11,Microsoft Ads,Shopping,Bing Generic,250.15,485,18158,14,1118.17,4.47
+2026-03-12,Google Ads,Search,Brand Search,526.99,1132,29416,45,3024.92,5.74
+2026-03-12,Google Ads,Shopping,Generic Search,591.42,1436,47494,92,2395.25,4.05
+2026-03-12,Google Ads,Performance Max,Shopping Best Sellers,747.88,1390,33808,66,3612.26,4.83
+2026-03-12,Meta Ads,Prospecting,Lookalike Prospecting,497.48,535,27573,34,1442.69,2.9
+2026-03-12,Meta Ads,Retargeting,Cart Retargeting,456.08,904,27553,59,1254.22,2.75
+2026-03-12,Meta Ads,Advantage+,Advantage Shopping,578.8,1643,42950,77,1649.58,2.85
+2026-03-12,Microsoft Ads,Search,Bing Brand,207.91,266,14669,10,1158.06,5.57
+2026-03-12,Microsoft Ads,Shopping,Bing Generic,250.62,588,19148,35,1115.26,4.45
+2026-03-13,Google Ads,Search,Brand Search,480.86,966,33904,66,2668.77,5.55
+2026-03-13,Google Ads,Shopping,Generic Search,618.03,873,31503,22,2311.43,3.74
+2026-03-13,Google Ads,Performance Max,Shopping Best Sellers,688.58,1240,34826,66,3236.33,4.7
+2026-03-13,Meta Ads,Prospecting,Lookalike Prospecting,410.32,504,23592,21,1296.61,3.16
+2026-03-13,Meta Ads,Retargeting,Cart Retargeting,531.84,1083,42054,41,1446.6,2.72
+2026-03-13,Meta Ads,Advantage+,Advantage Shopping,631.03,1483,36097,104,1943.57,3.08
+2026-03-13,Microsoft Ads,Search,Bing Brand,189.95,253,11049,17,1293.56,6.81
+2026-03-13,Microsoft Ads,Shopping,Bing Generic,262.86,507,13742,16,1253.84,4.77
+2026-03-14,Google Ads,Search,Brand Search,500.13,683,24809,37,2755.72,5.51
+2026-03-14,Google Ads,Shopping,Generic Search,459.46,784,24586,21,2182.43,4.75
+2026-03-14,Google Ads,Performance Max,Shopping Best Sellers,710.4,939,50730,53,3196.8,4.5
+2026-03-14,Meta Ads,Prospecting,Lookalike Prospecting,364.82,737,24307,24,1057.98,2.9
+2026-03-14,Meta Ads,Retargeting,Cart Retargeting,461.57,903,25640,49,1435.48,3.11
+2026-03-14,Meta Ads,Advantage+,Advantage Shopping,457.69,873,22048,26,1414.26,3.09
+2026-03-14,Microsoft Ads,Search,Bing Brand,179.78,176,8473,6,983.4,5.47
+2026-03-14,Microsoft Ads,Shopping,Bing Generic,176.03,268,11537,15,804.46,4.57
+2026-03-15,Google Ads,Search,Brand Search,435.79,656,28037,44,2039.5,4.68
+2026-03-15,Google Ads,Shopping,Generic Search,511.22,1535,36922,96,1891.51,3.7
+2026-03-15,Google Ads,Performance Max,Shopping Best Sellers,647.95,934,29841,54,2514.05,3.88
+2026-03-15,Meta Ads,Prospecting,Lookalike Prospecting,327.72,751,17173,29,914.34,2.79
+2026-03-15,Meta Ads,Retargeting,Cart Retargeting,430.44,408,21462,16,1144.97,2.66
+2026-03-15,Meta Ads,Advantage+,Advantage Shopping,542.97,836,40850,49,1542.03,2.84
+2026-03-15,Microsoft Ads,Search,Bing Brand,143.93,232,10342,10,968.65,6.73
+2026-03-15,Microsoft Ads,Shopping,Bing Generic,191.3,318,15597,20,969.89,5.07
+2026-03-16,Google Ads,Search,Brand Search,501.05,1071,42742,45,2620.49,5.23
+2026-03-16,Google Ads,Shopping,Generic Search,718.89,1982,51184,60,3350.03,4.66
+2026-03-16,Google Ads,Performance Max,Shopping Best Sellers,781.22,1460,65944,64,2945.2,3.77
+2026-03-16,Meta Ads,Prospecting,Lookalike Prospecting,462.26,761,33527,32,1502.35,3.25
+2026-03-16,Meta Ads,Retargeting,Cart Retargeting,497.12,1440,36191,99,1292.51,2.6
+2026-03-16,Meta Ads,Advantage+,Advantage Shopping,522.16,705,24584,19,1749.24,3.35
+2026-03-16,Microsoft Ads,Search,Bing Brand,186.01,488,13710,29,1080.72,5.81
+2026-03-16,Microsoft Ads,Shopping,Bing Generic,239.13,728,20566,29,1193.26,4.99
+2026-03-17,Google Ads,Search,Brand Search,562.98,917,26058,33,3197.73,5.68
+2026-03-17,Google Ads,Shopping,Generic Search,615.79,1454,36528,73,2777.21,4.51
+2026-03-17,Google Ads,Performance Max,Shopping Best Sellers,851.66,1334,60428,84,3202.24,3.76
+2026-03-17,Meta Ads,Prospecting,Lookalike Prospecting,500.88,700,22724,25,1657.91,3.31
+2026-03-17,Meta Ads,Retargeting,Cart Retargeting,600.31,1084,31229,47,1572.81,2.62
+2026-03-17,Meta Ads,Advantage+,Advantage Shopping,543.1,1257,42393,80,1613.01,2.97
+2026-03-17,Microsoft Ads,Search,Bing Brand,198.39,447,12773,13,1085.19,5.47
+2026-03-17,Microsoft Ads,Shopping,Bing Generic,227.35,194,9550,10,1132.2,4.98
+2026-03-18,Google Ads,Search,Brand Search,581.37,882,37716,49,2953.36,5.08
+2026-03-18,Google Ads,Shopping,Generic Search,742.68,785,33006,36,3074.7,4.14
+2026-03-18,Google Ads,Performance Max,Shopping Best Sellers,752.44,1671,47623,96,3340.83,4.44
+2026-03-18,Meta Ads,Prospecting,Lookalike Prospecting,395.42,552,20553,34,1273.25,3.22
+2026-03-18,Meta Ads,Retargeting,Cart Retargeting,600.63,1426,39335,39,1699.78,2.83
+2026-03-18,Meta Ads,Advantage+,Advantage Shopping,530.77,1449,39414,43,1433.08,2.7
+2026-03-18,Microsoft Ads,Search,Bing Brand,209.41,495,17561,23,1170.6,5.59
+2026-03-18,Microsoft Ads,Shopping,Bing Generic,255.52,344,11971,23,1328.7,5.2
+2026-03-19,Google Ads,Search,Brand Search,621.8,1418,47721,77,3426.12,5.51
+2026-03-19,Google Ads,Shopping,Generic Search,745.44,1527,48042,42,2877.4,3.86
+2026-03-19,Google Ads,Performance Max,Shopping Best Sellers,842.81,1677,53714,111,3969.64,4.71
+2026-03-19,Meta Ads,Prospecting,Lookalike Prospecting,405.38,648,30352,27,1244.52,3.07
+2026-03-19,Meta Ads,Retargeting,Cart Retargeting,540.86,980,34986,68,1795.66,3.32
+2026-03-19,Meta Ads,Advantage+,Advantage Shopping,675.23,1579,36673,108,2174.24,3.22
+2026-03-19,Microsoft Ads,Search,Bing Brand,199.6,438,12090,26,1097.8,5.5
+2026-03-19,Microsoft Ads,Shopping,Bing Generic,219.78,648,17743,43,1138.46,5.18
+2026-03-20,Google Ads,Search,Brand Search,586.19,1050,41085,43,2884.05,4.92
+2026-03-20,Google Ads,Shopping,Generic Search,687.75,2103,49005,100,3356.22,4.88
+2026-03-20,Google Ads,Performance Max,Shopping Best Sellers,787.35,1009,37158,47,3220.26,4.09
+2026-03-20,Meta Ads,Prospecting,Lookalike Prospecting,463.23,1054,28158,66,1454.54,3.14
+2026-03-20,Meta Ads,Retargeting,Cart Retargeting,489.09,1211,38332,32,1609.11,3.29
+2026-03-20,Meta Ads,Advantage+,Advantage Shopping,529.35,1012,26995,33,1662.16,3.14
+2026-03-20,Microsoft Ads,Search,Bing Brand,189.2,543,15093,21,1078.44,5.7
+2026-03-20,Microsoft Ads,Shopping,Bing Generic,254.47,413,20009,26,1084.04,4.26
+2026-03-21,Google Ads,Search,Brand Search,508.41,1250,38338,45,3009.79,5.92
+2026-03-21,Google Ads,Shopping,Generic Search,597.15,1157,32810,77,2782.72,4.66
+2026-03-21,Google Ads,Performance Max,Shopping Best Sellers,600.08,1347,51554,67,2910.39,4.85
+2026-03-21,Meta Ads,Prospecting,Lookalike Prospecting,321.12,860,22454,55,895.92,2.79
+2026-03-21,Meta Ads,Retargeting,Cart Retargeting,487.48,1252,35931,74,1633.06,3.35
+2026-03-21,Meta Ads,Advantage+,Advantage Shopping,508.92,1686,39149,64,1572.56,3.09
+2026-03-21,Microsoft Ads,Search,Bing Brand,152.92,174,7709,8,984.8,6.44
+2026-03-21,Microsoft Ads,Shopping,Bing Generic,189.89,272,12732,14,911.47,4.8
+2026-03-22,Google Ads,Search,Brand Search,436.04,710,32239,23,2232.52,5.12
+2026-03-22,Google Ads,Shopping,Generic Search,517.28,1477,43429,81,1944.97,3.76
+2026-03-22,Google Ads,Performance Max,Shopping Best Sellers,621.79,1387,36135,55,2729.66,4.39
+2026-03-22,Meta Ads,Prospecting,Lookalike Prospecting,346.98,487,15638,21,947.26,2.73
+2026-03-22,Meta Ads,Retargeting,Cart Retargeting,447.01,547,23224,22,1189.05,2.66
+2026-03-22,Meta Ads,Advantage+,Advantage Shopping,480.03,1158,36420,81,1324.88,2.76
+2026-03-22,Microsoft Ads,Search,Bing Brand,188.55,283,7994,13,1310.42,6.95
+2026-03-22,Microsoft Ads,Shopping,Bing Generic,223.67,672,15646,37,1131.77,5.06
+2026-03-23,Google Ads,Search,Brand Search,533.19,1263,45068,62,3199.14,6.0
+2026-03-23,Google Ads,Shopping,Generic Search,610.02,1337,48188,82,2928.1,4.8
+2026-03-23,Google Ads,Performance Max,Shopping Best Sellers,732.57,1389,60380,67,2747.14,3.75
+2026-03-23,Meta Ads,Prospecting,Lookalike Prospecting,520.97,1417,44299,36,1417.04,2.72
+2026-03-23,Meta Ads,Retargeting,Cart Retargeting,454.67,1414,34924,62,1427.66,3.14
+2026-03-23,Meta Ads,Advantage+,Advantage Shopping,524.47,1675,38613,100,1589.14,3.03
+2026-03-23,Microsoft Ads,Search,Bing Brand,213.82,356,16167,16,1471.08,6.88
+2026-03-23,Microsoft Ads,Shopping,Bing Generic,223.99,385,9955,19,969.88,4.33
+2026-03-24,Google Ads,Search,Brand Search,580.23,874,31123,47,2883.74,4.97
+2026-03-24,Google Ads,Shopping,Generic Search,642.71,1483,46467,80,2390.88,3.72
+2026-03-24,Google Ads,Performance Max,Shopping Best Sellers,775.22,1919,52988,54,3573.76,4.61
+2026-03-24,Meta Ads,Prospecting,Lookalike Prospecting,518.98,1038,40174,30,1385.68,2.67
+2026-03-24,Meta Ads,Retargeting,Cart Retargeting,573.99,1207,34313,56,1693.27,2.95
+2026-03-24,Meta Ads,Advantage+,Advantage Shopping,608.14,1404,36242,70,1635.9,2.69
+2026-03-24,Microsoft Ads,Search,Bing Brand,234.75,711,17014,43,1293.47,5.51
+2026-03-24,Microsoft Ads,Shopping,Bing Generic,254.58,699,21570,35,1204.16,4.73
+2026-03-25,Google Ads,Search,Brand Search,499.22,1099,34371,74,2311.39,4.63
+2026-03-25,Google Ads,Shopping,Generic Search,616.84,1374,50988,60,2837.46,4.6
+2026-03-25,Google Ads,Performance Max,Shopping Best Sellers,783.22,916,38568,57,3383.51,4.32
+2026-03-25,Meta Ads,Prospecting,Lookalike Prospecting,412.55,1292,32173,82,1126.26,2.73
+2026-03-25,Meta Ads,Retargeting,Cart Retargeting,603.36,1223,37865,47,2063.49,3.42
+2026-03-25,Meta Ads,Advantage+,Advantage Shopping,519.32,1189,38768,47,1381.39,2.66
+2026-03-25,Microsoft Ads,Search,Bing Brand,180.6,286,8398,19,1154.03,6.39
+2026-03-25,Microsoft Ads,Shopping,Bing Generic,223.74,405,15603,21,1080.66,4.83
+2026-03-26,Google Ads,Search,Brand Search,580.57,951,32648,24,3001.55,5.17
+2026-03-26,Google Ads,Shopping,Generic Search,605.58,1338,45595,84,2398.1,3.96
+2026-03-26,Google Ads,Performance Max,Shopping Best Sellers,661.86,1620,53945,67,3031.32,4.58
+2026-03-26,Meta Ads,Prospecting,Lookalike Prospecting,429.56,724,21439,46,1305.86,3.04
+2026-03-26,Meta Ads,Retargeting,Cart Retargeting,591.9,974,39206,63,1598.13,2.7
+2026-03-26,Meta Ads,Advantage+,Advantage Shopping,521.99,697,22361,18,1378.05,2.64
+2026-03-26,Microsoft Ads,Search,Bing Brand,210.73,600,14446,30,1255.95,5.96
+2026-03-26,Microsoft Ads,Shopping,Bing Generic,241.32,582,15262,24,1346.57,5.58
+2026-03-27,Google Ads,Search,Brand Search,519.18,995,38936,46,3000.86,5.78
+2026-03-27,Google Ads,Shopping,Generic Search,662.43,1508,42791,95,2768.96,4.18
+2026-03-27,Google Ads,Performance Max,Shopping Best Sellers,824.5,1279,40782,58,3660.78,4.44
+2026-03-27,Meta Ads,Prospecting,Lookalike Prospecting,411.74,1274,29511,74,1391.68,3.38
+2026-03-27,Meta Ads,Retargeting,Cart Retargeting,529.04,841,27429,23,1523.64,2.88
+2026-03-27,Meta Ads,Advantage+,Advantage Shopping,579.58,1237,29735,51,1518.5,2.62
+2026-03-27,Microsoft Ads,Search,Bing Brand,203.7,391,8981,15,1232.38,6.05
+2026-03-27,Microsoft Ads,Shopping,Bing Generic,253.96,800,20148,29,1252.02,4.93
+2026-03-28,Google Ads,Search,Brand Search,484.96,952,34634,52,2366.6,4.88
+2026-03-28,Google Ads,Shopping,Generic Search,613.75,1504,36171,73,2651.4,4.32
+2026-03-28,Google Ads,Performance Max,Shopping Best Sellers,600.65,1172,38387,61,2847.08,4.74
+2026-03-28,Meta Ads,Prospecting,Lookalike Prospecting,385.42,381,19060,21,1040.63,2.7
+2026-03-28,Meta Ads,Retargeting,Cart Retargeting,405.26,866,23627,26,1110.41,2.74
+2026-03-28,Meta Ads,Advantage+,Advantage Shopping,463.94,1054,34522,49,1512.44,3.26
+2026-03-28,Microsoft Ads,Search,Bing Brand,156.69,231,12457,6,868.06,5.54
+2026-03-28,Microsoft Ads,Shopping,Bing Generic,204.85,274,14407,14,909.53,4.44
+2026-03-29,Google Ads,Search,Brand Search,410.88,883,20586,46,2058.51,5.01
+2026-03-29,Google Ads,Shopping,Generic Search,566.44,1483,42132,56,2107.16,3.72
+2026-03-29,Google Ads,Performance Max,Shopping Best Sellers,547.64,1925,47467,63,2321.99,4.24
+2026-03-29,Meta Ads,Prospecting,Lookalike Prospecting,426.6,1305,33171,43,1313.93,3.08
+2026-03-29,Meta Ads,Retargeting,Cart Retargeting,470.04,943,35060,43,1316.11,2.8
+2026-03-29,Meta Ads,Advantage+,Advantage Shopping,523.32,647,31057,22,1449.6,2.77
+2026-03-29,Microsoft Ads,Search,Bing Brand,192.85,257,11743,8,1182.17,6.13
+2026-03-29,Microsoft Ads,Shopping,Bing Generic,198.92,334,8704,16,1006.54,5.06
+2026-03-30,Google Ads,Search,Brand Search,502.3,810,24042,50,2687.3,5.35
+2026-03-30,Google Ads,Shopping,Generic Search,747.68,1681,53246,70,3461.76,4.63
+2026-03-30,Google Ads,Performance Max,Shopping Best Sellers,644.24,1310,33711,79,2796.0,4.34
+2026-03-30,Meta Ads,Prospecting,Lookalike Prospecting,443.54,1264,33426,71,1361.67,3.07
+2026-03-30,Meta Ads,Retargeting,Cart Retargeting,465.62,711,29554,45,1252.52,2.69
+2026-03-30,Meta Ads,Advantage+,Advantage Shopping,565.61,783,34157,45,1877.83,3.32
+2026-03-30,Microsoft Ads,Search,Bing Brand,225.82,194,10682,11,1413.63,6.26
+2026-03-30,Microsoft Ads,Shopping,Bing Generic,253.96,326,14806,18,1180.91,4.65
+2026-03-31,Google Ads,Search,Brand Search,528.02,887,32241,33,3120.6,5.91
+2026-03-31,Google Ads,Shopping,Generic Search,702.81,1634,42587,76,3239.95,4.61
+2026-03-31,Google Ads,Performance Max,Shopping Best Sellers,724.22,1005,38688,41,3164.84,4.37
+2026-03-31,Meta Ads,Prospecting,Lookalike Prospecting,492.12,1392,39603,82,1574.78,3.2
+2026-03-31,Meta Ads,Retargeting,Cart Retargeting,526.07,611,25925,26,1667.64,3.17
+2026-03-31,Meta Ads,Advantage+,Advantage Shopping,577.21,1541,42349,50,1754.72,3.04
+2026-03-31,Microsoft Ads,Search,Bing Brand,237.77,239,10961,16,1255.43,5.28
+2026-03-31,Microsoft Ads,Shopping,Bing Generic,234.96,245,12213,7,1010.33,4.3
+2026-04-01,Google Ads,Search,Brand Search,552.8,1214,38491,69,3372.08,6.1
+2026-04-01,Google Ads,Shopping,Generic Search,686.13,1876,54143,84,3320.87,4.84
+2026-04-01,Google Ads,Performance Max,Shopping Best Sellers,684.48,1361,53510,36,3073.32,4.49
+2026-04-01,Meta Ads,Prospecting,Lookalike Prospecting,477.16,560,25015,15,1436.25,3.01
+2026-04-01,Meta Ads,Retargeting,Cart Retargeting,491.28,1059,24114,64,1267.5,2.58
+2026-04-01,Meta Ads,Advantage+,Advantage Shopping,580.92,1250,39720,73,1690.48,2.91
+2026-04-01,Microsoft Ads,Search,Bing Brand,178.68,388,9792,26,968.45,5.42
+2026-04-01,Microsoft Ads,Shopping,Bing Generic,228.6,420,12446,14,1266.44,5.54
+2026-04-02,Google Ads,Search,Brand Search,653.91,1005,35148,30,3589.97,5.49
+2026-04-02,Google Ads,Shopping,Generic Search,575.14,1892,48666,129,2329.32,4.05
+2026-04-02,Google Ads,Performance Max,Shopping Best Sellers,848.98,2077,57620,142,3973.23,4.68
+2026-04-02,Meta Ads,Prospecting,Lookalike Prospecting,472.45,1545,35947,71,1526.01,3.23
+2026-04-02,Meta Ads,Retargeting,Cart Retargeting,530.01,482,22913,14,1627.13,3.07
+2026-04-02,Meta Ads,Advantage+,Advantage Shopping,636.54,1106,46124,43,2176.97,3.42
+2026-04-02,Microsoft Ads,Search,Bing Brand,237.84,400,10093,14,1462.72,6.15
+2026-04-02,Microsoft Ads,Shopping,Bing Generic,209.28,330,16522,22,1075.7,5.14
+2026-04-03,Google Ads,Search,Brand Search,571.33,1175,46989,79,2942.35,5.15
+2026-04-03,Google Ads,Shopping,Generic Search,706.33,1056,45526,61,3383.32,4.79
+2026-04-03,Google Ads,Performance Max,Shopping Best Sellers,849.32,1063,43421,56,3354.81,3.95
+2026-04-03,Meta Ads,Prospecting,Lookalike Prospecting,412.67,1224,34420,67,1101.83,2.67
+2026-04-03,Meta Ads,Retargeting,Cart Retargeting,557.07,706,36971,33,1793.77,3.22
+2026-04-03,Meta Ads,Advantage+,Advantage Shopping,634.87,2265,54815,145,1898.26,2.99
+2026-04-03,Microsoft Ads,Search,Bing Brand,207.26,436,17248,15,1442.53,6.96
+2026-04-03,Microsoft Ads,Shopping,Bing Generic,246.86,586,19247,29,1059.03,4.29
+2026-04-04,Google Ads,Search,Brand Search,483.47,794,35238,55,2523.71,5.22
+2026-04-04,Google Ads,Shopping,Generic Search,595.46,796,43477,27,2530.7,4.25
+2026-04-04,Google Ads,Performance Max,Shopping Best Sellers,653.3,1125,45453,56,2672.0,4.09
+2026-04-04,Meta Ads,Prospecting,Lookalike Prospecting,356.42,682,24803,32,1062.13,2.98
+2026-04-04,Meta Ads,Retargeting,Cart Retargeting,409.28,967,24047,36,1297.42,3.17
+2026-04-04,Meta Ads,Advantage+,Advantage Shopping,460.43,749,31270,22,1238.56,2.69
+2026-04-04,Microsoft Ads,Search,Bing Brand,161.61,277,9931,9,916.33,5.67
+2026-04-04,Microsoft Ads,Shopping,Bing Generic,231.91,410,18148,19,1025.04,4.42
+2026-04-05,Google Ads,Search,Brand Search,560.4,1344,36575,81,3306.36,5.9
+2026-04-05,Google Ads,Shopping,Generic Search,524.78,1005,35450,56,2293.29,4.37
+2026-04-05,Google Ads,Performance Max,Shopping Best Sellers,547.84,1195,34757,54,2563.89,4.68
+2026-04-05,Meta Ads,Prospecting,Lookalike Prospecting,369.03,1047,24805,38,1062.81,2.88
+2026-04-05,Meta Ads,Retargeting,Cart Retargeting,382.24,1333,30974,45,1024.4,2.68
+2026-04-05,Meta Ads,Advantage+,Advantage Shopping,526.1,1004,26228,41,1646.69,3.13
+2026-04-05,Microsoft Ads,Search,Bing Brand,184.35,570,13853,24,1124.53,6.1
+2026-04-05,Microsoft Ads,Shopping,Bing Generic,188.63,205,9152,13,958.24,5.08
+2026-04-06,Google Ads,Search,Brand Search,547.78,1487,37098,42,3051.13,5.57
+2026-04-06,Google Ads,Shopping,Generic Search,597.33,859,33605,32,2371.4,3.97
+2026-04-06,Google Ads,Performance Max,Shopping Best Sellers,796.96,1999,49428,83,3203.78,4.02
+2026-04-06,Meta Ads,Prospecting,Lookalike Prospecting,478.44,661,29008,17,1621.91,3.39
+2026-04-06,Meta Ads,Retargeting,Cart Retargeting,578.87,1768,48810,51,1817.65,3.14
+2026-04-06,Meta Ads,Advantage+,Advantage Shopping,548.2,1005,24598,50,1463.69,2.67
+2026-04-06,Microsoft Ads,Search,Bing Brand,177.04,273,13530,10,1053.39,5.95
+2026-04-06,Microsoft Ads,Shopping,Bing Generic,215.18,459,17612,17,1099.57,5.11
+2026-04-07,Google Ads,Search,Brand Search,538.57,1027,25802,27,2999.83,5.57
+2026-04-07,Google Ads,Shopping,Generic Search,705.66,1214,39964,84,3337.77,4.73
+2026-04-07,Google Ads,Performance Max,Shopping Best Sellers,772.51,2070,47910,117,3113.22,4.03
+2026-04-07,Meta Ads,Prospecting,Lookalike Prospecting,417.87,1016,29417,51,1287.04,3.08
+2026-04-07,Meta Ads,Retargeting,Cart Retargeting,544.23,823,30441,41,1698.0,3.12
+2026-04-07,Meta Ads,Advantage+,Advantage Shopping,674.22,976,39415,38,1988.95,2.95
+2026-04-07,Microsoft Ads,Search,Bing Brand,175.49,379,14067,17,1170.52,6.67
+2026-04-07,Microsoft Ads,Shopping,Bing Generic,204.05,525,17265,13,1118.19,5.48
+2026-04-08,Google Ads,Search,Brand Search,566.29,540,29676,23,2865.43,5.06
+2026-04-08,Google Ads,Shopping,Generic Search,652.36,867,38988,50,2850.81,4.37
+2026-04-08,Google Ads,Performance Max,Shopping Best Sellers,736.52,1149,39650,41,3056.56,4.15
+2026-04-08,Meta Ads,Prospecting,Lookalike Prospecting,506.06,1419,39645,54,1690.24,3.34
+2026-04-08,Meta Ads,Retargeting,Cart Retargeting,582.83,1419,35308,47,1900.03,3.26
+2026-04-08,Meta Ads,Advantage+,Advantage Shopping,573.61,1004,40037,53,1783.93,3.11
+2026-04-08,Microsoft Ads,Search,Bing Brand,188.25,266,8327,9,997.73,5.3
+2026-04-08,Microsoft Ads,Shopping,Bing Generic,211.57,579,15695,21,968.99,4.58
+2026-04-09,Google Ads,Search,Brand Search,515.0,771,29554,47,2765.55,5.37
+2026-04-09,Google Ads,Shopping,Generic Search,779.14,1608,60472,101,3319.14,4.26
+2026-04-09,Google Ads,Performance Max,Shopping Best Sellers,874.75,1336,67272,62,3297.81,3.77
+2026-04-09,Meta Ads,Prospecting,Lookalike Prospecting,421.06,1311,33170,40,1385.29,3.29
+2026-04-09,Meta Ads,Retargeting,Cart Retargeting,587.83,1331,45090,77,1640.05,2.79
+2026-04-09,Meta Ads,Advantage+,Advantage Shopping,523.77,1267,40170,88,1555.6,2.97
+2026-04-09,Microsoft Ads,Search,Bing Brand,207.55,307,11632,16,1336.62,6.44
+2026-04-09,Microsoft Ads,Shopping,Bing Generic,207.13,333,13555,18,1139.21,5.5
+2026-04-10,Google Ads,Search,Brand Search,524.45,1004,42409,30,3125.72,5.96
+2026-04-10,Google Ads,Shopping,Generic Search,701.36,875,34739,27,2868.56,4.09
+2026-04-10,Google Ads,Performance Max,Shopping Best Sellers,835.87,1408,36686,65,3101.08,3.71
+2026-04-10,Meta Ads,Prospecting,Lookalike Prospecting,481.95,490,22183,14,1392.84,2.89
+2026-04-10,Meta Ads,Retargeting,Cart Retargeting,562.51,1674,48862,46,1890.03,3.36
+2026-04-10,Meta Ads,Advantage+,Advantage Shopping,644.83,1065,50049,38,2044.11,3.17
+2026-04-10,Microsoft Ads,Search,Bing Brand,241.9,716,18397,32,1601.38,6.62
+2026-04-10,Microsoft Ads,Shopping,Bing Generic,219.07,274,12732,18,1130.4,5.16
+2026-04-11,Google Ads,Search,Brand Search,484.63,967,26782,32,2558.85,5.28
+2026-04-11,Google Ads,Shopping,Generic Search,507.79,958,38063,60,2092.09,4.12
+2026-04-11,Google Ads,Performance Max,Shopping Best Sellers,726.98,722,32786,28,3176.9,4.37
+2026-04-11,Meta Ads,Prospecting,Lookalike Prospecting,362.54,527,15238,22,1047.74,2.89
+2026-04-11,Meta Ads,Retargeting,Cart Retargeting,408.89,1257,32939,45,1063.11,2.6
+2026-04-11,Meta Ads,Advantage+,Advantage Shopping,553.61,1030,36678,50,1732.8,3.13
+2026-04-11,Microsoft Ads,Search,Bing Brand,175.69,323,12226,17,1091.03,6.21
+2026-04-11,Microsoft Ads,Shopping,Bing Generic,178.4,319,8028,10,879.51,4.93
+2026-04-12,Google Ads,Search,Brand Search,545.63,716,34834,36,2689.96,4.93
+2026-04-12,Google Ads,Shopping,Generic Search,625.71,1489,41085,54,2809.44,4.49
+2026-04-12,Google Ads,Performance Max,Shopping Best Sellers,614.98,1172,27791,40,2724.36,4.43
+2026-04-12,Meta Ads,Prospecting,Lookalike Prospecting,391.53,693,17853,19,1303.79,3.33
+2026-04-12,Meta Ads,Retargeting,Cart Retargeting,463.52,777,28144,44,1562.06,3.37
+2026-04-12,Meta Ads,Advantage+,Advantage Shopping,571.13,496,25032,19,1599.16,2.8
+2026-04-12,Microsoft Ads,Search,Bing Brand,201.04,344,9322,17,1389.19,6.91
+2026-04-12,Microsoft Ads,Shopping,Bing Generic,183.73,335,9773,11,907.63,4.94
+2026-04-13,Google Ads,Search,Brand Search,628.46,1017,29379,42,3299.41,5.25
+2026-04-13,Google Ads,Shopping,Generic Search,665.74,1215,54409,40,2995.83,4.5
+2026-04-13,Google Ads,Performance Max,Shopping Best Sellers,743.08,1604,36499,72,3046.63,4.1
+2026-04-13,Meta Ads,Prospecting,Lookalike Prospecting,446.72,1023,38693,43,1268.68,2.84
+2026-04-13,Meta Ads,Retargeting,Cart Retargeting,589.41,1488,44008,75,1732.87,2.94
+2026-04-13,Meta Ads,Advantage+,Advantage Shopping,561.48,1156,46983,79,1807.97,3.22
+2026-04-13,Microsoft Ads,Search,Bing Brand,206.65,672,15433,35,1229.57,5.95
+2026-04-13,Microsoft Ads,Shopping,Bing Generic,245.0,351,13618,12,1367.1,5.58
+2026-04-14,Google Ads,Search,Brand Search,648.86,1842,51252,69,3023.69,4.66
+2026-04-14,Google Ads,Shopping,Generic Search,686.82,1266,57464,34,3001.4,4.37
+2026-04-14,Google Ads,Performance Max,Shopping Best Sellers,732.43,1420,42861,50,2827.18,3.86
+2026-04-14,Meta Ads,Prospecting,Lookalike Prospecting,515.99,1296,30955,75,1372.53,2.66
+2026-04-14,Meta Ads,Retargeting,Cart Retargeting,582.84,1145,29014,64,1894.23,3.25
+2026-04-14,Meta Ads,Advantage+,Advantage Shopping,633.68,1125,43588,65,2116.49,3.34
+2026-04-14,Microsoft Ads,Search,Bing Brand,215.5,365,9593,15,1163.7,5.4
+2026-04-14,Microsoft Ads,Shopping,Bing Generic,268.58,884,21769,31,1286.5,4.79
+2026-04-15,Google Ads,Search,Brand Search,611.51,993,25998,42,3381.65,5.53
+2026-04-15,Google Ads,Shopping,Generic Search,633.55,919,42002,44,2375.81,3.75
+2026-04-15,Google Ads,Performance Max,Shopping Best Sellers,699.85,1479,52433,67,2631.44,3.76
+2026-04-15,Meta Ads,Prospecting,Lookalike Prospecting,483.95,642,25162,27,1451.85,3.0
+2026-04-15,Meta Ads,Retargeting,Cart Retargeting,480.29,627,32523,27,1272.77,2.65
+2026-04-15,Meta Ads,Advantage+,Advantage Shopping,536.88,882,41244,27,1610.64,3.0
+2026-04-15,Microsoft Ads,Search,Bing Brand,214.53,354,15307,19,1308.63,6.1
+2026-04-15,Microsoft Ads,Shopping,Bing Generic,262.43,453,11868,18,1194.06,4.55
+2026-04-16,Google Ads,Search,Brand Search,662.64,1389,47862,56,3154.17,4.76
+2026-04-16,Google Ads,Shopping,Generic Search,637.48,712,27469,49,2811.29,4.41
+2026-04-16,Google Ads,Performance Max,Shopping Best Sellers,797.7,1076,49377,29,3900.75,4.89
+2026-04-16,Meta Ads,Prospecting,Lookalike Prospecting,517.86,1148,30462,73,1424.12,2.75
+2026-04-16,Meta Ads,Retargeting,Cart Retargeting,477.2,1701,40420,109,1255.04,2.63
+2026-04-16,Meta Ads,Advantage+,Advantage Shopping,683.02,1045,50011,47,1769.02,2.59
+2026-04-16,Microsoft Ads,Search,Bing Brand,178.51,275,11819,13,1005.01,5.63
+2026-04-16,Microsoft Ads,Shopping,Bing Generic,225.35,366,16867,21,1099.71,4.88
+2026-04-17,Google Ads,Search,Brand Search,493.88,679,35490,22,2716.34,5.5
+2026-04-17,Google Ads,Shopping,Generic Search,629.98,852,43978,46,2929.41,4.65
+2026-04-17,Google Ads,Performance Max,Shopping Best Sellers,648.55,1412,35157,77,2704.45,4.17
+2026-04-17,Meta Ads,Prospecting,Lookalike Prospecting,525.16,1485,42556,53,1365.42,2.6
+2026-04-17,Meta Ads,Retargeting,Cart Retargeting,524.35,639,24373,41,1782.79,3.4
+2026-04-17,Meta Ads,Advantage+,Advantage Shopping,626.25,1209,40411,81,1715.93,2.74
+2026-04-17,Microsoft Ads,Search,Bing Brand,178.56,313,11753,13,1016.01,5.69
+2026-04-17,Microsoft Ads,Shopping,Bing Generic,217.56,431,12583,15,1020.36,4.69
+2026-04-18,Google Ads,Search,Brand Search,564.6,1520,44341,98,3037.55,5.38
+2026-04-18,Google Ads,Shopping,Generic Search,638.46,897,27662,34,2987.99,4.68
+2026-04-18,Google Ads,Performance Max,Shopping Best Sellers,573.52,832,41042,35,2741.43,4.78
+2026-04-18,Meta Ads,Prospecting,Lookalike Prospecting,452.59,759,31749,27,1398.5,3.09
+2026-04-18,Meta Ads,Retargeting,Cart Retargeting,406.4,895,33706,44,1381.76,3.4
+2026-04-18,Meta Ads,Advantage+,Advantage Shopping,471.16,1213,31267,77,1272.13,2.7
+2026-04-18,Microsoft Ads,Search,Bing Brand,166.01,234,10885,16,1075.74,6.48
+2026-04-18,Microsoft Ads,Shopping,Bing Generic,236.16,830,19834,33,1041.47,4.41
+2026-04-19,Google Ads,Search,Brand Search,498.95,620,23614,40,3018.65,6.05
+2026-04-19,Google Ads,Shopping,Generic Search,609.18,1430,49713,62,2814.41,4.62
+2026-04-19,Google Ads,Performance Max,Shopping Best Sellers,634.08,2204,52144,82,3056.27,4.82
+2026-04-19,Meta Ads,Prospecting,Lookalike Prospecting,429.94,818,21632,43,1147.94,2.67
+2026-04-19,Meta Ads,Retargeting,Cart Retargeting,423.35,533,22180,30,1295.45,3.06
+2026-04-19,Meta Ads,Advantage+,Advantage Shopping,496.84,979,31523,51,1570.01,3.16
+2026-04-19,Microsoft Ads,Search,Bing Brand,188.93,467,15180,15,1116.58,5.91
+2026-04-19,Microsoft Ads,Shopping,Bing Generic,184.95,260,14131,10,787.89,4.26
+2026-04-20,Google Ads,Search,Brand Search,568.67,1854,49173,52,3264.17,5.74
+2026-04-20,Google Ads,Shopping,Generic Search,770.67,1919,62440,76,3760.87,4.88
+2026-04-20,Google Ads,Performance Max,Shopping Best Sellers,760.59,874,45802,51,3042.36,4.0
+2026-04-20,Meta Ads,Prospecting,Lookalike Prospecting,453.17,1175,31503,61,1287.0,2.84
+2026-04-20,Meta Ads,Retargeting,Cart Retargeting,550.58,1344,42621,61,1827.93,3.32
+2026-04-20,Meta Ads,Advantage+,Advantage Shopping,686.13,1875,59565,80,1797.66,2.62
+2026-04-20,Microsoft Ads,Search,Bing Brand,227.13,510,14815,14,1412.75,6.22
+2026-04-20,Microsoft Ads,Shopping,Bing Generic,228.47,503,12727,23,1087.52,4.76
+2026-04-21,Google Ads,Search,Brand Search,570.73,798,25372,25,3167.55,5.55
+2026-04-21,Google Ads,Shopping,Generic Search,749.97,1170,55887,70,3179.87,4.24
+2026-04-21,Google Ads,Performance Max,Shopping Best Sellers,879.56,1216,42297,55,3993.2,4.54
+2026-04-21,Meta Ads,Prospecting,Lookalike Prospecting,423.01,728,31332,33,1302.87,3.08
+2026-04-21,Meta Ads,Retargeting,Cart Retargeting,502.76,1612,41640,92,1588.72,3.16
+2026-04-21,Meta Ads,Advantage+,Advantage Shopping,546.6,933,34011,45,1464.89,2.68
+2026-04-21,Microsoft Ads,Search,Bing Brand,203.5,565,13233,24,1347.17,6.62
+2026-04-21,Microsoft Ads,Shopping,Bing Generic,235.6,640,19567,35,1241.61,5.27
+2026-04-22,Google Ads,Search,Brand Search,519.97,950,26024,42,3083.42,5.93
+2026-04-22,Google Ads,Shopping,Generic Search,637.32,1357,39566,41,2944.42,4.62
+2026-04-22,Google Ads,Performance Max,Shopping Best Sellers,680.84,1172,47669,53,2682.51,3.94
+2026-04-22,Meta Ads,Prospecting,Lookalike Prospecting,525.32,909,22199,32,1596.97,3.04
+2026-04-22,Meta Ads,Retargeting,Cart Retargeting,562.27,682,33993,35,1675.56,2.98
+2026-04-22,Meta Ads,Advantage+,Advantage Shopping,570.97,1297,39905,81,1735.75,3.04
+2026-04-22,Microsoft Ads,Search,Bing Brand,180.92,245,12917,16,998.68,5.52
+2026-04-22,Microsoft Ads,Shopping,Bing Generic,258.18,600,14311,16,1383.84,5.36
+2026-04-23,Google Ads,Search,Brand Search,570.22,1396,41195,78,2788.38,4.89
+2026-04-23,Google Ads,Shopping,Generic Search,699.62,1043,34970,53,3253.23,4.65
+2026-04-23,Google Ads,Performance Max,Shopping Best Sellers,878.79,1345,48745,57,3348.19,3.81
+2026-04-23,Meta Ads,Prospecting,Lookalike Prospecting,406.6,695,27149,22,1195.4,2.94
+2026-04-23,Meta Ads,Retargeting,Cart Retargeting,581.02,1208,38183,68,1632.67,2.81
+2026-04-23,Meta Ads,Advantage+,Advantage Shopping,644.33,1657,48220,115,1720.36,2.67
+2026-04-23,Microsoft Ads,Search,Bing Brand,210.43,772,17681,29,1357.27,6.45
+2026-04-23,Microsoft Ads,Shopping,Bing Generic,253.73,731,16655,30,1179.84,4.65
+2026-04-24,Google Ads,Search,Brand Search,516.58,1163,33777,55,2825.69,5.47
+2026-04-24,Google Ads,Shopping,Generic Search,609.67,1958,45046,49,2700.84,4.43
+2026-04-24,Google Ads,Performance Max,Shopping Best Sellers,654.81,1241,30977,76,2913.9,4.45
+2026-04-24,Meta Ads,Prospecting,Lookalike Prospecting,547.45,1017,31216,55,1604.03,2.93
+2026-04-24,Meta Ads,Retargeting,Cart Retargeting,461.6,973,25237,38,1269.4,2.75
+2026-04-24,Meta Ads,Advantage+,Advantage Shopping,623.6,945,26363,38,1777.26,2.85
+2026-04-24,Microsoft Ads,Search,Bing Brand,226.81,222,9823,9,1433.44,6.32
+2026-04-24,Microsoft Ads,Shopping,Bing Generic,232.56,750,19355,41,1195.36,5.14
+2026-04-25,Google Ads,Search,Brand Search,488.4,1282,40118,51,2720.39,5.57
+2026-04-25,Google Ads,Shopping,Generic Search,621.22,1861,46850,72,2609.12,4.2
+2026-04-25,Google Ads,Performance Max,Shopping Best Sellers,694.25,1075,45900,60,2832.54,4.08
+2026-04-25,Meta Ads,Prospecting,Lookalike Prospecting,433.71,1085,25117,41,1444.25,3.33
+2026-04-25,Meta Ads,Retargeting,Cart Retargeting,389.92,1092,27370,55,1329.63,3.41
+2026-04-25,Meta Ads,Advantage+,Advantage Shopping,503.26,1529,40717,87,1550.04,3.08
+2026-04-25,Microsoft Ads,Search,Bing Brand,166.88,313,10117,11,887.8,5.32
+2026-04-25,Microsoft Ads,Shopping,Bing Generic,202.48,271,10474,8,1117.69,5.52
+2026-04-26,Google Ads,Search,Brand Search,536.26,1316,44564,34,3104.95,5.79
+2026-04-26,Google Ads,Shopping,Generic Search,566.48,1203,28641,70,2435.86,4.3
+2026-04-26,Google Ads,Performance Max,Shopping Best Sellers,652.72,1286,31623,80,3022.09,4.63
+2026-04-26,Meta Ads,Prospecting,Lookalike Prospecting,451.38,798,21654,36,1421.85,3.15
+2026-04-26,Meta Ads,Retargeting,Cart Retargeting,490.25,874,20681,49,1480.56,3.02
+2026-04-26,Meta Ads,Advantage+,Advantage Shopping,537.6,650,33874,31,1424.64,2.65
+2026-04-26,Microsoft Ads,Search,Bing Brand,186.5,331,12680,22,1081.7,5.8
+2026-04-26,Microsoft Ads,Shopping,Bing Generic,193.91,278,10558,12,868.72,4.48
+2026-04-27,Google Ads,Search,Brand Search,514.77,514,27959,27,2496.63,4.85
+2026-04-27,Google Ads,Shopping,Generic Search,682.91,1037,39448,33,2697.49,3.95
+2026-04-27,Google Ads,Performance Max,Shopping Best Sellers,823.72,867,43671,46,3327.83,4.04
+2026-04-27,Meta Ads,Prospecting,Lookalike Prospecting,448.11,648,21444,36,1321.92,2.95
+2026-04-27,Meta Ads,Retargeting,Cart Retargeting,478.6,663,29286,34,1258.72,2.63
+2026-04-27,Meta Ads,Advantage+,Advantage Shopping,641.31,1603,47118,63,2103.5,3.28
+2026-04-27,Microsoft Ads,Search,Bing Brand,233.32,537,16843,37,1514.25,6.49
+2026-04-27,Microsoft Ads,Shopping,Bing Generic,265.59,498,12730,33,1288.11,4.85
+2026-04-28,Google Ads,Search,Brand Search,580.7,1542,42276,71,3083.52,5.31
+2026-04-28,Google Ads,Shopping,Generic Search,621.61,1709,50195,113,2467.79,3.97
+2026-04-28,Google Ads,Performance Max,Shopping Best Sellers,746.62,2068,53707,134,3389.65,4.54
+2026-04-28,Meta Ads,Prospecting,Lookalike Prospecting,465.52,801,29509,37,1215.01,2.61
+2026-04-28,Meta Ads,Retargeting,Cart Retargeting,490.07,723,33913,21,1582.93,3.23
+2026-04-28,Meta Ads,Advantage+,Advantage Shopping,686.26,1357,38886,82,2230.34,3.25
+2026-04-28,Microsoft Ads,Search,Bing Brand,214.07,443,12974,22,1273.72,5.95
+2026-04-28,Microsoft Ads,Shopping,Bing Generic,282.79,635,16213,33,1340.42,4.74
+2026-04-29,Google Ads,Search,Brand Search,640.14,1594,49566,57,3379.94,5.28
+2026-04-29,Google Ads,Shopping,Generic Search,715.49,1976,60022,93,2711.71,3.79
+2026-04-29,Google Ads,Performance Max,Shopping Best Sellers,796.26,2100,53333,69,3392.07,4.26
+2026-04-29,Meta Ads,Prospecting,Lookalike Prospecting,541.62,995,25398,59,1429.88,2.64
+2026-04-29,Meta Ads,Retargeting,Cart Retargeting,526.63,769,37763,47,1579.89,3.0
+2026-04-29,Meta Ads,Advantage+,Advantage Shopping,700.27,890,49457,28,2338.9,3.34
+2026-04-29,Microsoft Ads,Search,Bing Brand,188.1,370,11201,13,1162.46,6.18
+2026-04-29,Microsoft Ads,Shopping,Bing Generic,259.86,734,17583,28,1208.35,4.65
+2026-04-30,Google Ads,Search,Brand Search,670.08,1557,57772,45,3538.02,5.28
+2026-04-30,Google Ads,Shopping,Generic Search,573.12,735,34495,28,2802.56,4.89
+2026-04-30,Google Ads,Performance Max,Shopping Best Sellers,741.17,1194,32901,74,3231.5,4.36
+2026-04-30,Meta Ads,Prospecting,Lookalike Prospecting,451.43,881,36546,50,1489.72,3.3
+2026-04-30,Meta Ads,Retargeting,Cart Retargeting,529.39,875,31353,43,1508.76,2.85
+2026-04-30,Meta Ads,Advantage+,Advantage Shopping,655.53,926,33085,62,1953.48,2.98
+2026-04-30,Microsoft Ads,Search,Bing Brand,234.96,723,20415,22,1299.33,5.53
+2026-04-30,Microsoft Ads,Shopping,Bing Generic,211.96,484,15783,22,898.71,4.24
+2026-05-01,Google Ads,Search,Brand Search,678.93,1387,48137,63,3224.92,4.75
+2026-05-01,Google Ads,Shopping,Generic Search,743.13,1030,45447,49,3292.07,4.43
+2026-05-01,Google Ads,Performance Max,Shopping Best Sellers,786.49,1041,45608,54,3334.72,4.24
+2026-05-01,Meta Ads,Prospecting,Lookalike Prospecting,484.55,792,25513,34,1594.17,3.29
+2026-05-01,Meta Ads,Retargeting,Cart Retargeting,556.06,1568,47833,89,1607.01,2.89
+2026-05-01,Meta Ads,Advantage+,Advantage Shopping,546.04,866,39900,50,1627.2,2.98
+2026-05-01,Microsoft Ads,Search,Bing Brand,244.72,567,18855,16,1700.8,6.95
+2026-05-01,Microsoft Ads,Shopping,Bing Generic,276.29,652,17478,44,1199.1,4.34
+2026-05-02,Google Ads,Search,Brand Search,425.46,866,33149,24,2374.07,5.58
+2026-05-02,Google Ads,Shopping,Generic Search,541.58,1071,34173,49,2512.93,4.64
+2026-05-02,Google Ads,Performance Max,Shopping Best Sellers,696.89,2302,59393,88,2926.94,4.2
+2026-05-02,Meta Ads,Prospecting,Lookalike Prospecting,337.31,943,25543,47,1133.36,3.36
+2026-05-02,Meta Ads,Retargeting,Cart Retargeting,394.81,379,19586,26,1176.53,2.98
+2026-05-02,Meta Ads,Advantage+,Advantage Shopping,573.93,635,31513,30,1779.18,3.1
+2026-05-02,Microsoft Ads,Search,Bing Brand,197.6,240,9478,15,1134.22,5.74
+2026-05-02,Microsoft Ads,Shopping,Bing Generic,173.87,289,8669,9,759.81,4.37
+2026-05-03,Google Ads,Search,Brand Search,483.47,941,25990,44,2823.46,5.84
+2026-05-03,Google Ads,Shopping,Generic Search,624.73,725,35877,23,2961.22,4.74
+2026-05-03,Google Ads,Performance Max,Shopping Best Sellers,738.4,2082,47492,124,2864.99,3.88
+2026-05-03,Meta Ads,Prospecting,Lookalike Prospecting,363.0,603,25661,35,1070.85,2.95
+2026-05-03,Meta Ads,Retargeting,Cart Retargeting,436.49,697,33172,23,1361.85,3.12
+2026-05-03,Meta Ads,Advantage+,Advantage Shopping,505.37,1435,38194,70,1430.2,2.83
+2026-05-03,Microsoft Ads,Search,Bing Brand,170.79,236,10821,15,1106.72,6.48
+2026-05-03,Microsoft Ads,Shopping,Bing Generic,173.72,385,10805,26,953.72,5.49
+2026-05-04,Google Ads,Search,Brand Search,621.19,1789,51743,122,2907.17,4.68
+2026-05-04,Google Ads,Shopping,Generic Search,665.37,1433,53646,53,3193.78,4.8
+2026-05-04,Google Ads,Performance Max,Shopping Best Sellers,674.13,1531,40179,90,3026.84,4.49
+2026-05-04,Meta Ads,Prospecting,Lookalike Prospecting,508.19,691,25802,39,1560.14,3.07
+2026-05-04,Meta Ads,Retargeting,Cart Retargeting,491.82,1409,35547,36,1495.13,3.04
+2026-05-04,Meta Ads,Advantage+,Advantage Shopping,542.94,799,33699,30,1449.65,2.67
+2026-05-04,Microsoft Ads,Search,Bing Brand,191.1,374,8817,20,1014.74,5.31
+2026-05-04,Microsoft Ads,Shopping,Bing Generic,272.0,700,19234,21,1501.44,5.52
+2026-05-05,Google Ads,Search,Brand Search,653.72,1936,46766,98,3150.93,4.82
+2026-05-05,Google Ads,Shopping,Generic Search,781.82,1409,57311,65,3737.1,4.78
+2026-05-05,Google Ads,Performance Max,Shopping Best Sellers,881.46,1854,73621,82,3940.13,4.47
+2026-05-05,Meta Ads,Prospecting,Lookalike Prospecting,533.71,670,30183,19,1723.88,3.23
+2026-05-05,Meta Ads,Retargeting,Cart Retargeting,596.48,665,33981,45,1729.79,2.9
+2026-05-05,Meta Ads,Advantage+,Advantage Shopping,576.17,1557,36948,82,1699.7,2.95
+2026-05-05,Microsoft Ads,Search,Bing Brand,190.09,350,9214,12,1161.45,6.11
+2026-05-05,Microsoft Ads,Shopping,Bing Generic,256.87,394,19058,11,1405.08,5.47
+2026-05-06,Google Ads,Search,Brand Search,600.11,1539,37246,49,3000.55,5.0
+2026-05-06,Google Ads,Shopping,Generic Search,710.59,1274,51097,72,3425.04,4.82
+2026-05-06,Google Ads,Performance Max,Shopping Best Sellers,873.53,2417,56947,114,3834.8,4.39
+2026-05-06,Meta Ads,Prospecting,Lookalike Prospecting,462.96,1372,35714,68,1523.14,3.29
+2026-05-06,Meta Ads,Retargeting,Cart Retargeting,460.75,1109,36311,56,1557.34,3.38
+2026-05-06,Meta Ads,Advantage+,Advantage Shopping,709.74,1466,51586,78,2044.05,2.88
+2026-05-06,Microsoft Ads,Search,Bing Brand,242.97,690,16050,20,1316.9,5.42
+2026-05-06,Microsoft Ads,Shopping,Bing Generic,242.4,390,17247,10,1277.45,5.27
+2026-05-07,Google Ads,Search,Brand Search,564.86,1711,41413,91,2773.46,4.91
+2026-05-07,Google Ads,Shopping,Generic Search,649.3,1699,45760,53,2467.34,3.8
+2026-05-07,Google Ads,Performance Max,Shopping Best Sellers,697.31,1471,47893,41,3179.73,4.56
+2026-05-07,Meta Ads,Prospecting,Lookalike Prospecting,478.67,1254,31605,57,1359.42,2.84
+2026-05-07,Meta Ads,Retargeting,Cart Retargeting,634.62,1087,28255,29,1656.36,2.61
+2026-05-07,Meta Ads,Advantage+,Advantage Shopping,546.79,1178,39385,65,1782.54,3.26
+2026-05-07,Microsoft Ads,Search,Bing Brand,237.2,679,16146,18,1309.34,5.52
+2026-05-07,Microsoft Ads,Shopping,Bing Generic,217.37,575,13739,16,1110.76,5.11
+2026-05-08,Google Ads,Search,Brand Search,624.25,599,31057,23,3008.89,4.82
+2026-05-08,Google Ads,Shopping,Generic Search,743.66,1233,36946,76,3160.55,4.25
+2026-05-08,Google Ads,Performance Max,Shopping Best Sellers,675.69,1250,52679,77,2905.47,4.3
+2026-05-08,Meta Ads,Prospecting,Lookalike Prospecting,461.28,1417,39762,56,1503.77,3.26
+2026-05-08,Meta Ads,Retargeting,Cart Retargeting,630.98,1208,30401,73,1930.8,3.06
+2026-05-08,Meta Ads,Advantage+,Advantage Shopping,675.41,815,38564,26,2080.26,3.08
+2026-05-08,Microsoft Ads,Search,Bing Brand,206.03,405,13784,27,1330.95,6.46
+2026-05-08,Microsoft Ads,Shopping,Bing Generic,209.39,569,16779,34,910.85,4.35
+2026-05-09,Google Ads,Search,Brand Search,415.22,398,17558,12,2225.58,5.36
+2026-05-09,Google Ads,Shopping,Generic Search,597.22,1414,36269,85,2848.74,4.77
+2026-05-09,Google Ads,Performance Max,Shopping Best Sellers,687.61,1538,48677,67,2716.06,3.95
+2026-05-09,Meta Ads,Prospecting,Lookalike Prospecting,451.33,447,19720,21,1394.61,3.09
+2026-05-09,Meta Ads,Retargeting,Cart Retargeting,524.93,1096,40533,28,1632.53,3.11
+2026-05-09,Meta Ads,Advantage+,Advantage Shopping,477.65,645,31458,27,1280.1,2.68
+2026-05-09,Microsoft Ads,Search,Bing Brand,192.27,379,9973,21,1190.15,6.19
+2026-05-09,Microsoft Ads,Shopping,Bing Generic,190.96,532,14866,36,855.5,4.48
+2026-05-10,Google Ads,Search,Brand Search,487.21,672,35155,36,2382.46,4.89
+2026-05-10,Google Ads,Shopping,Generic Search,530.22,1178,30245,70,2237.53,4.22
+2026-05-10,Google Ads,Performance Max,Shopping Best Sellers,552.91,1044,46234,63,2537.86,4.59
+2026-05-10,Meta Ads,Prospecting,Lookalike Prospecting,393.83,1191,32404,62,1055.46,2.68
+2026-05-10,Meta Ads,Retargeting,Cart Retargeting,433.13,831,31384,50,1191.11,2.75
+2026-05-10,Meta Ads,Advantage+,Advantage Shopping,492.6,1505,37043,63,1310.32,2.66
+2026-05-10,Microsoft Ads,Search,Bing Brand,161.53,424,10305,13,982.1,6.08
+2026-05-10,Microsoft Ads,Shopping,Bing Generic,233.76,299,13892,17,1131.4,4.84
+2026-05-11,Google Ads,Search,Brand Search,610.68,665,31205,37,3719.04,6.09
+2026-05-11,Google Ads,Shopping,Generic Search,583.44,1402,46864,46,2252.08,3.86
+2026-05-11,Google Ads,Performance Max,Shopping Best Sellers,733.7,1955,50745,105,3499.75,4.77
+2026-05-11,Meta Ads,Prospecting,Lookalike Prospecting,488.84,1685,41872,49,1329.64,2.72
+2026-05-11,Meta Ads,Retargeting,Cart Retargeting,609.58,1766,52915,111,1822.64,2.99
+2026-05-11,Meta Ads,Advantage+,Advantage Shopping,578.21,1061,43440,42,1844.49,3.19
+2026-05-11,Microsoft Ads,Search,Bing Brand,216.97,326,14891,17,1475.4,6.8
+2026-05-11,Microsoft Ads,Shopping,Bing Generic,206.41,273,9041,16,1147.64,5.56
+2026-05-12,Google Ads,Search,Brand Search,498.29,1227,31675,76,2700.73,5.42
+2026-05-12,Google Ads,Shopping,Generic Search,668.55,822,44881,48,2667.51,3.99
+2026-05-12,Google Ads,Performance Max,Shopping Best Sellers,883.22,1702,48851,49,3409.23,3.86
+2026-05-12,Meta Ads,Prospecting,Lookalike Prospecting,468.76,1392,34524,82,1331.28,2.84
+2026-05-12,Meta Ads,Retargeting,Cart Retargeting,463.65,1449,35577,63,1372.4,2.96
+2026-05-12,Meta Ads,Advantage+,Advantage Shopping,679.62,1473,42744,94,1964.1,2.89
+2026-05-12,Microsoft Ads,Search,Bing Brand,182.45,196,10396,9,1240.66,6.8
+2026-05-12,Microsoft Ads,Shopping,Bing Generic,227.09,583,15081,35,1251.27,5.51
+2026-05-13,Google Ads,Search,Brand Search,506.94,740,38076,50,3016.29,5.95
+2026-05-13,Google Ads,Shopping,Generic Search,716.51,926,33671,49,3417.75,4.77
+2026-05-13,Google Ads,Performance Max,Shopping Best Sellers,738.52,979,49588,56,2887.61,3.91
+2026-05-13,Meta Ads,Prospecting,Lookalike Prospecting,427.04,472,22521,22,1451.94,3.4
+2026-05-13,Meta Ads,Retargeting,Cart Retargeting,623.45,1245,53093,73,1913.99,3.07
+2026-05-13,Meta Ads,Advantage+,Advantage Shopping,567.05,1093,30638,41,1633.1,2.88
+2026-05-13,Microsoft Ads,Search,Bing Brand,181.87,368,11618,11,1065.76,5.86
+2026-05-13,Microsoft Ads,Shopping,Bing Generic,261.5,442,17253,23,1344.11,5.14
+2026-05-14,Google Ads,Search,Brand Search,641.33,2135,50278,60,3880.05,6.05
+2026-05-14,Google Ads,Shopping,Generic Search,763.32,1439,34813,55,3244.11,4.25
+2026-05-14,Google Ads,Performance Max,Shopping Best Sellers,884.07,1738,48109,82,3385.99,3.83
+2026-05-14,Meta Ads,Prospecting,Lookalike Prospecting,527.95,950,37077,65,1594.41,3.02
+2026-05-14,Meta Ads,Retargeting,Cart Retargeting,553.62,942,31889,51,1489.24,2.69
+2026-05-14,Meta Ads,Advantage+,Advantage Shopping,579.92,1132,47107,77,1525.19,2.63
+2026-05-14,Microsoft Ads,Search,Bing Brand,221.09,442,12696,18,1319.91,5.97
+2026-05-14,Microsoft Ads,Shopping,Bing Generic,252.25,596,20151,23,1304.13,5.17
+2026-05-15,Google Ads,Search,Brand Search,515.99,635,25659,30,2997.9,5.81
+2026-05-15,Google Ads,Shopping,Generic Search,780.03,936,34422,43,3603.74,4.62
+2026-05-15,Google Ads,Performance Max,Shopping Best Sellers,688.65,1296,50982,89,3312.41,4.81
+2026-05-15,Meta Ads,Prospecting,Lookalike Prospecting,522.3,827,37598,30,1650.47,3.16
+2026-05-15,Meta Ads,Retargeting,Cart Retargeting,465.91,550,22220,18,1327.84,2.85
+2026-05-15,Meta Ads,Advantage+,Advantage Shopping,633.47,960,35641,40,1653.36,2.61
+2026-05-15,Microsoft Ads,Search,Bing Brand,213.9,498,11886,22,1187.14,5.55
+2026-05-15,Microsoft Ads,Shopping,Bing Generic,244.76,403,15325,10,1079.39,4.41
+2026-05-16,Google Ads,Search,Brand Search,527.29,1091,30007,51,3211.2,6.09
+2026-05-16,Google Ads,Shopping,Generic Search,529.65,1502,45619,47,2558.21,4.83
+2026-05-16,Google Ads,Performance Max,Shopping Best Sellers,659.26,1466,40805,85,3157.86,4.79
+2026-05-16,Meta Ads,Prospecting,Lookalike Prospecting,445.18,773,29735,33,1201.99,2.7
+2026-05-16,Meta Ads,Retargeting,Cart Retargeting,507.33,455,23419,25,1496.62,2.95
+2026-05-16,Meta Ads,Advantage+,Advantage Shopping,534.1,1133,44920,29,1479.46,2.77
+2026-05-16,Microsoft Ads,Search,Bing Brand,179.08,262,12933,13,1079.85,6.03
+2026-05-16,Microsoft Ads,Shopping,Bing Generic,185.01,545,12808,36,860.3,4.65
+2026-05-17,Google Ads,Search,Brand Search,467.85,1039,37625,43,2269.07,4.85
+2026-05-17,Google Ads,Shopping,Generic Search,528.4,1851,45436,54,2177.01,4.12
+2026-05-17,Google Ads,Performance Max,Shopping Best Sellers,692.46,2334,60013,89,2929.11,4.23
+2026-05-17,Meta Ads,Prospecting,Lookalike Prospecting,432.99,1092,26444,34,1472.17,3.4
+2026-05-17,Meta Ads,Retargeting,Cart Retargeting,469.91,732,24130,47,1245.26,2.65
+2026-05-17,Meta Ads,Advantage+,Advantage Shopping,600.87,1928,51197,56,1586.3,2.64
+2026-05-17,Microsoft Ads,Search,Bing Brand,171.68,338,10413,19,1174.29,6.84
+2026-05-17,Microsoft Ads,Shopping,Bing Generic,221.67,312,11166,16,975.35,4.4
+2026-05-18,Google Ads,Search,Brand Search,498.31,1027,39644,52,2925.08,5.87
+2026-05-18,Google Ads,Shopping,Generic Search,668.8,699,28163,48,2494.62,3.73
+2026-05-18,Google Ads,Performance Max,Shopping Best Sellers,851.91,2507,60845,110,3637.66,4.27
+2026-05-18,Meta Ads,Prospecting,Lookalike Prospecting,469.09,525,24868,20,1482.32,3.16
+2026-05-18,Meta Ads,Retargeting,Cart Retargeting,631.36,1579,47700,80,1666.79,2.64
+2026-05-18,Meta Ads,Advantage+,Advantage Shopping,693.03,1585,43953,48,2155.32,3.11
+2026-05-18,Microsoft Ads,Search,Bing Brand,211.67,377,16942,10,1322.94,6.25
+2026-05-18,Microsoft Ads,Shopping,Bing Generic,230.27,246,11075,9,1248.06,5.42
+2026-05-19,Google Ads,Search,Brand Search,568.41,842,32979,41,3410.46,6.0
+2026-05-19,Google Ads,Shopping,Generic Search,770.68,1342,58949,39,3329.34,4.32
+2026-05-19,Google Ads,Performance Max,Shopping Best Sellers,831.25,2668,67547,149,3615.94,4.35
+2026-05-19,Meta Ads,Prospecting,Lookalike Prospecting,440.07,658,32114,34,1390.62,3.16
+2026-05-19,Meta Ads,Retargeting,Cart Retargeting,601.13,1088,39264,51,1556.93,2.59
+2026-05-19,Meta Ads,Advantage+,Advantage Shopping,587.88,603,27400,21,1969.4,3.35
+2026-05-19,Microsoft Ads,Search,Bing Brand,189.68,523,13203,25,1291.72,6.81
+2026-05-19,Microsoft Ads,Shopping,Bing Generic,246.71,393,18758,18,1226.15,4.97
+2026-05-20,Google Ads,Search,Brand Search,504.0,1283,42111,50,2948.4,5.85
+2026-05-20,Google Ads,Shopping,Generic Search,646.06,1778,53001,106,3023.56,4.68
+2026-05-20,Google Ads,Performance Max,Shopping Best Sellers,729.69,1238,31591,43,3320.09,4.55
+2026-05-20,Meta Ads,Prospecting,Lookalike Prospecting,523.29,581,27314,18,1412.88,2.7
+2026-05-20,Meta Ads,Retargeting,Cart Retargeting,470.97,729,36397,44,1488.27,3.16
+2026-05-20,Meta Ads,Advantage+,Advantage Shopping,670.08,1212,31394,58,1755.61,2.62
+2026-05-20,Microsoft Ads,Search,Bing Brand,180.84,190,9654,10,989.19,5.47
+2026-05-20,Microsoft Ads,Shopping,Bing Generic,263.91,514,22011,34,1396.08,5.29
+2026-05-21,Google Ads,Search,Brand Search,523.83,965,24141,65,2697.72,5.15
+2026-05-21,Google Ads,Shopping,Generic Search,772.26,1179,38015,68,3181.71,4.12
+2026-05-21,Google Ads,Performance Max,Shopping Best Sellers,704.52,1081,32732,28,3085.8,4.38
+2026-05-21,Meta Ads,Prospecting,Lookalike Prospecting,426.81,967,23339,48,1169.46,2.74
+2026-05-21,Meta Ads,Retargeting,Cart Retargeting,626.41,1006,32342,57,1666.25,2.66
+2026-05-21,Meta Ads,Advantage+,Advantage Shopping,592.2,1570,36589,52,1823.98,3.08
+2026-05-21,Microsoft Ads,Search,Bing Brand,200.61,248,10360,7,1187.61,5.92
+2026-05-21,Microsoft Ads,Shopping,Bing Generic,281.67,285,13228,17,1233.71,4.38
+2026-05-22,Google Ads,Search,Brand Search,620.27,721,27185,22,3386.67,5.46
+2026-05-22,Google Ads,Shopping,Generic Search,628.03,1527,35195,69,2775.89,4.42
+2026-05-22,Google Ads,Performance Max,Shopping Best Sellers,780.6,1439,62832,40,3161.43,4.05
+2026-05-22,Meta Ads,Prospecting,Lookalike Prospecting,520.12,855,37740,60,1549.96,2.98
+2026-05-22,Meta Ads,Retargeting,Cart Retargeting,542.1,1175,33454,34,1447.41,2.67
+2026-05-22,Meta Ads,Advantage+,Advantage Shopping,547.61,775,37552,52,1599.02,2.92
+2026-05-22,Microsoft Ads,Search,Bing Brand,242.36,558,20815,29,1303.9,5.38
+2026-05-22,Microsoft Ads,Shopping,Bing Generic,281.92,828,22473,31,1234.81,4.38
+2026-05-23,Google Ads,Search,Brand Search,520.79,1089,28270,59,2864.34,5.5
+2026-05-23,Google Ads,Shopping,Generic Search,547.0,1078,37821,50,2335.69,4.27
+2026-05-23,Google Ads,Performance Max,Shopping Best Sellers,597.13,686,27982,33,2758.74,4.62
+2026-05-23,Meta Ads,Prospecting,Lookalike Prospecting,408.83,368,19003,10,1099.75,2.69
+2026-05-23,Meta Ads,Retargeting,Cart Retargeting,481.11,1016,28491,32,1635.77,3.4
+2026-05-23,Meta Ads,Advantage+,Advantage Shopping,537.85,918,24442,55,1430.68,2.66
+2026-05-23,Microsoft Ads,Search,Bing Brand,192.53,425,13823,16,1080.09,5.61
+2026-05-23,Microsoft Ads,Shopping,Bing Generic,193.83,552,12909,15,1044.74,5.39
+2026-05-24,Google Ads,Search,Brand Search,476.22,739,28222,31,2857.32,6.0
+2026-05-24,Google Ads,Shopping,Generic Search,557.27,1508,37365,58,2084.19,3.74
+2026-05-24,Google Ads,Performance Max,Shopping Best Sellers,684.38,1204,32886,57,2935.99,4.29
+2026-05-24,Meta Ads,Prospecting,Lookalike Prospecting,343.32,882,24617,45,1081.46,3.15
+2026-05-24,Meta Ads,Retargeting,Cart Retargeting,451.28,824,29243,39,1489.22,3.3
+2026-05-24,Meta Ads,Advantage+,Advantage Shopping,595.13,1496,34443,59,1844.9,3.1
+2026-05-24,Microsoft Ads,Search,Bing Brand,149.33,322,11896,19,797.42,5.34
+2026-05-24,Microsoft Ads,Shopping,Bing Generic,173.0,204,9923,8,941.12,5.44
+2026-05-25,Google Ads,Search,Brand Search,554.14,972,39763,53,2853.82,5.15
+2026-05-25,Google Ads,Shopping,Generic Search,692.95,808,31146,32,3319.23,4.79
+2026-05-25,Google Ads,Performance Max,Shopping Best Sellers,647.76,1644,40641,83,2649.34,4.09
+2026-05-25,Meta Ads,Prospecting,Lookalike Prospecting,527.82,1288,38699,89,1477.9,2.8
+2026-05-25,Meta Ads,Retargeting,Cart Retargeting,520.94,1377,35301,41,1515.94,2.91
+2026-05-25,Meta Ads,Advantage+,Advantage Shopping,651.12,1594,42078,64,1862.2,2.86
+2026-05-25,Microsoft Ads,Search,Bing Brand,217.38,414,13395,26,1280.37,5.89
+2026-05-25,Microsoft Ads,Shopping,Bing Generic,265.37,447,17544,12,1425.04,5.37
+2026-05-26,Google Ads,Search,Brand Search,672.22,1308,35066,38,3515.71,5.23
+2026-05-26,Google Ads,Shopping,Generic Search,746.45,843,42665,51,2843.97,3.81
+2026-05-26,Google Ads,Performance Max,Shopping Best Sellers,758.63,2062,59025,80,2996.59,3.95
+2026-05-26,Meta Ads,Prospecting,Lookalike Prospecting,512.78,789,33996,34,1507.57,2.94
+2026-05-26,Meta Ads,Retargeting,Cart Retargeting,563.31,976,43011,25,1667.4,2.96
+2026-05-26,Meta Ads,Advantage+,Advantage Shopping,656.08,1049,44586,72,2165.06,3.3
+2026-05-26,Microsoft Ads,Search,Bing Brand,225.72,605,18999,32,1370.12,6.07
+2026-05-26,Microsoft Ads,Shopping,Bing Generic,263.72,610,17795,30,1268.49,4.81
+2026-05-27,Google Ads,Search,Brand Search,554.37,968,27037,37,2683.15,4.84
+2026-05-27,Google Ads,Shopping,Generic Search,657.86,1027,52208,35,2684.07,4.08
+2026-05-27,Google Ads,Performance Max,Shopping Best Sellers,742.54,1302,52774,68,3482.51,4.69
+2026-05-27,Meta Ads,Prospecting,Lookalike Prospecting,452.79,559,22928,35,1213.48,2.68
+2026-05-27,Meta Ads,Retargeting,Cart Retargeting,534.92,1148,32965,31,1631.51,3.05
+2026-05-27,Meta Ads,Advantage+,Advantage Shopping,548.32,1144,29405,63,1474.98,2.69
+2026-05-27,Microsoft Ads,Search,Bing Brand,187.58,491,16014,13,1262.41,6.73
+2026-05-27,Microsoft Ads,Shopping,Bing Generic,270.49,758,18683,50,1171.22,4.33
+2026-05-28,Google Ads,Search,Brand Search,561.74,818,40212,55,2904.2,5.17
+2026-05-28,Google Ads,Shopping,Generic Search,719.23,1255,33830,84,2783.42,3.87
+2026-05-28,Google Ads,Performance Max,Shopping Best Sellers,768.55,2750,65123,100,3612.18,4.7
+2026-05-28,Meta Ads,Prospecting,Lookalike Prospecting,523.78,970,24881,39,1456.11,2.78
+2026-05-28,Meta Ads,Retargeting,Cart Retargeting,555.18,1014,42014,45,1615.57,2.91
+2026-05-28,Meta Ads,Advantage+,Advantage Shopping,544.81,1373,46661,50,1487.33,2.73
+2026-05-28,Microsoft Ads,Search,Bing Brand,215.06,540,12659,21,1314.02,6.11
+2026-05-28,Microsoft Ads,Shopping,Bing Generic,236.42,825,20178,55,1217.56,5.15
+2026-05-29,Google Ads,Search,Brand Search,553.01,810,43666,55,3152.16,5.7
+2026-05-29,Google Ads,Shopping,Generic Search,693.08,2113,49763,118,3264.41,4.71
+2026-05-29,Google Ads,Performance Max,Shopping Best Sellers,832.86,1450,55696,99,3323.11,3.99
+2026-05-29,Meta Ads,Prospecting,Lookalike Prospecting,445.46,858,21156,55,1452.2,3.26
+2026-05-29,Meta Ads,Retargeting,Cart Retargeting,520.76,1350,31081,49,1739.34,3.34
+2026-05-29,Meta Ads,Advantage+,Advantage Shopping,533.63,659,28067,43,1744.97,3.27
+2026-05-29,Microsoft Ads,Search,Bing Brand,236.65,732,19305,32,1502.73,6.35
+2026-05-29,Microsoft Ads,Shopping,Bing Generic,205.97,691,16281,32,1112.24,5.4
+2026-05-30,Google Ads,Search,Brand Search,470.73,1427,34967,88,2772.6,5.89
+2026-05-30,Google Ads,Shopping,Generic Search,619.51,1090,40135,57,2812.58,4.54
+2026-05-30,Google Ads,Performance Max,Shopping Best Sellers,702.3,820,43821,22,3223.56,4.59
+2026-05-30,Meta Ads,Prospecting,Lookalike Prospecting,407.73,681,31638,29,1268.04,3.11
+2026-05-30,Meta Ads,Retargeting,Cart Retargeting,470.68,475,21510,23,1336.73,2.84
+2026-05-30,Meta Ads,Advantage+,Advantage Shopping,591.45,1807,45153,101,1939.96,3.28
+2026-05-30,Microsoft Ads,Search,Bing Brand,191.23,451,12148,17,1112.96,5.82
+2026-05-30,Microsoft Ads,Shopping,Bing Generic,214.83,388,16752,17,1149.34,5.35
+2026-05-31,Google Ads,Search,Brand Search,434.44,1505,36716,53,2580.57,5.94
+2026-05-31,Google Ads,Shopping,Generic Search,641.02,1563,45589,103,3083.31,4.81
+2026-05-31,Google Ads,Performance Max,Shopping Best Sellers,734.31,1209,54013,52,2893.18,3.94
+2026-05-31,Meta Ads,Prospecting,Lookalike Prospecting,380.77,483,17518,33,1066.16,2.8
+2026-05-31,Meta Ads,Retargeting,Cart Retargeting,396.32,1023,24406,46,1260.3,3.18
+2026-05-31,Meta Ads,Advantage+,Advantage Shopping,542.14,922,40178,59,1452.94,2.68
+2026-05-31,Microsoft Ads,Search,Bing Brand,190.43,262,12233,17,1096.88,5.76
+2026-05-31,Microsoft Ads,Shopping,Bing Generic,208.93,407,11435,18,1165.83,5.58
+2026-06-01,Google Ads,Search,Brand Search,559.59,764,30810,40,2708.42,4.84
+2026-06-01,Google Ads,Shopping,Generic Search,755.27,1645,54978,42,3126.82,4.14
+2026-06-01,Google Ads,Performance Max,Shopping Best Sellers,670.7,1760,49086,100,2743.16,4.09
+2026-06-01,Meta Ads,Prospecting,Lookalike Prospecting,495.35,543,26516,15,1585.12,3.2
+2026-06-01,Meta Ads,Retargeting,Cart Retargeting,509.46,1854,42219,125,1416.3,2.78
+2026-06-01,Meta Ads,Advantage+,Advantage Shopping,703.65,1021,53246,37,2167.24,3.08
+2026-06-01,Microsoft Ads,Search,Bing Brand,216.14,357,12917,24,1251.45,5.79
+2026-06-01,Microsoft Ads,Shopping,Bing Generic,245.88,411,13207,27,1231.86,5.01
+2026-06-02,Google Ads,Search,Brand Search,645.42,1155,36324,36,3110.92,4.82
+2026-06-02,Google Ads,Shopping,Generic Search,585.57,1137,27963,71,2195.89,3.75
+2026-06-02,Google Ads,Performance Max,Shopping Best Sellers,819.19,1829,44836,96,3940.3,4.81
+2026-06-02,Meta Ads,Prospecting,Lookalike Prospecting,502.66,1162,28192,46,1407.45,2.8
+2026-06-02,Meta Ads,Retargeting,Cart Retargeting,622.71,1221,30393,67,2005.13,3.22
+2026-06-02,Meta Ads,Advantage+,Advantage Shopping,669.77,782,32610,21,1754.8,2.62
+2026-06-02,Microsoft Ads,Search,Bing Brand,191.97,519,11833,35,1243.97,6.48
+2026-06-02,Microsoft Ads,Shopping,Bing Generic,205.59,465,15194,22,966.27,4.7
+2026-06-03,Google Ads,Search,Brand Search,638.75,621,30382,40,3787.79,5.93
+2026-06-03,Google Ads,Shopping,Generic Search,598.48,975,38837,63,2334.07,3.9
+2026-06-03,Google Ads,Performance Max,Shopping Best Sellers,778.88,2115,66768,107,3427.07,4.4
+2026-06-03,Meta Ads,Prospecting,Lookalike Prospecting,450.89,1229,34525,80,1190.35,2.64
+2026-06-03,Meta Ads,Retargeting,Cart Retargeting,455.53,935,33085,48,1434.92,3.15
+2026-06-03,Meta Ads,Advantage+,Advantage Shopping,698.86,687,34188,43,2292.26,3.28
+2026-06-03,Microsoft Ads,Search,Bing Brand,218.28,620,18550,16,1320.59,6.05
+2026-06-03,Microsoft Ads,Shopping,Bing Generic,276.9,621,23478,36,1414.96,5.11
+2026-06-04,Google Ads,Search,Brand Search,617.47,981,41748,27,3741.87,6.06
+2026-06-04,Google Ads,Shopping,Generic Search,696.39,615,30989,42,2848.24,4.09
+2026-06-04,Google Ads,Performance Max,Shopping Best Sellers,728.43,1570,36429,100,3044.84,4.18
+2026-06-04,Meta Ads,Prospecting,Lookalike Prospecting,401.88,759,19826,29,1326.2,3.3
+2026-06-04,Meta Ads,Retargeting,Cart Retargeting,579.67,846,27492,38,1814.37,3.13
+2026-06-04,Meta Ads,Advantage+,Advantage Shopping,669.73,1044,48772,57,1902.03,2.84
+2026-06-04,Microsoft Ads,Search,Bing Brand,229.46,603,14693,28,1411.18,6.15
+2026-06-04,Microsoft Ads,Shopping,Bing Generic,245.27,729,18651,38,1174.84,4.79
+2026-06-05,Google Ads,Search,Brand Search,561.58,662,24608,30,2953.91,5.26
+2026-06-05,Google Ads,Shopping,Generic Search,606.27,917,29694,49,2740.34,4.52
+2026-06-05,Google Ads,Performance Max,Shopping Best Sellers,762.18,1955,47012,91,3086.83,4.05
+2026-06-05,Meta Ads,Prospecting,Lookalike Prospecting,410.16,1352,33892,66,1103.33,2.69
+2026-06-05,Meta Ads,Retargeting,Cart Retargeting,500.59,436,22749,13,1311.55,2.62
+2026-06-05,Meta Ads,Advantage+,Advantage Shopping,594.53,1398,42651,51,1581.45,2.66
+2026-06-05,Microsoft Ads,Search,Bing Brand,190.91,259,12343,14,1032.82,5.41
+2026-06-05,Microsoft Ads,Shopping,Bing Generic,215.5,259,12862,17,961.13,4.46
+2026-06-06,Google Ads,Search,Brand Search,449.08,994,28056,53,2474.43,5.51
+2026-06-06,Google Ads,Shopping,Generic Search,514.73,956,41801,32,2501.59,4.86
+2026-06-06,Google Ads,Performance Max,Shopping Best Sellers,683.0,1152,55475,57,3025.69,4.43
+2026-06-06,Meta Ads,Prospecting,Lookalike Prospecting,325.64,492,16193,28,872.72,2.68
+2026-06-06,Meta Ads,Retargeting,Cart Retargeting,501.26,1062,34630,56,1699.27,3.39
+2026-06-06,Meta Ads,Advantage+,Advantage Shopping,587.21,1527,42468,65,1691.16,2.88
+2026-06-06,Microsoft Ads,Search,Bing Brand,162.45,145,6924,4,890.23,5.48
+2026-06-06,Microsoft Ads,Shopping,Bing Generic,231.24,415,11889,23,1246.38,5.39
+2026-06-07,Google Ads,Search,Brand Search,469.69,836,36425,32,2611.48,5.56
+2026-06-07,Google Ads,Shopping,Generic Search,549.33,527,23611,17,2345.64,4.27
+2026-06-07,Google Ads,Performance Max,Shopping Best Sellers,673.11,1717,42552,88,3271.31,4.86
+2026-06-07,Meta Ads,Prospecting,Lookalike Prospecting,349.38,537,27784,14,1069.1,3.06
+2026-06-07,Meta Ads,Retargeting,Cart Retargeting,466.44,1609,40150,94,1483.28,3.18
+2026-06-07,Meta Ads,Advantage+,Advantage Shopping,524.83,887,28910,42,1600.73,3.05
+2026-06-07,Microsoft Ads,Search,Bing Brand,178.21,507,12927,24,1126.29,6.32
+2026-06-07,Microsoft Ads,Shopping,Bing Generic,214.48,343,13081,10,1059.53,4.94
+2026-06-08,Google Ads,Search,Brand Search,643.25,1257,40718,85,3377.06,5.25
+2026-06-08,Google Ads,Shopping,Generic Search,629.84,689,27043,23,2859.47,4.54
+2026-06-08,Google Ads,Performance Max,Shopping Best Sellers,715.59,1546,37130,62,2848.05,3.98
+2026-06-08,Meta Ads,Prospecting,Lookalike Prospecting,475.35,728,34018,28,1563.9,3.29
+2026-06-08,Meta Ads,Retargeting,Cart Retargeting,569.63,1607,45279,93,1931.05,3.39
+2026-06-08,Meta Ads,Advantage+,Advantage Shopping,664.23,1816,53141,68,2158.75,3.25
+2026-06-08,Microsoft Ads,Search,Bing Brand,222.8,247,10652,13,1428.15,6.41
+2026-06-08,Microsoft Ads,Shopping,Bing Generic,208.63,468,18092,16,997.25,4.78
+2026-06-09,Google Ads,Search,Brand Search,487.92,1087,39834,35,2268.83,4.65
+2026-06-09,Google Ads,Shopping,Generic Search,730.82,624,31746,28,3486.01,4.77
+2026-06-09,Google Ads,Performance Max,Shopping Best Sellers,780.49,1004,40651,40,2997.08,3.84
+2026-06-09,Meta Ads,Prospecting,Lookalike Prospecting,438.38,892,35727,28,1148.56,2.62
+2026-06-09,Meta Ads,Retargeting,Cart Retargeting,565.22,1483,40768,99,1701.31,3.01
+2026-06-09,Meta Ads,Advantage+,Advantage Shopping,593.88,991,47434,29,1757.88,2.96
+2026-06-09,Microsoft Ads,Search,Bing Brand,213.35,712,18056,19,1410.24,6.61
+2026-06-09,Microsoft Ads,Shopping,Bing Generic,208.68,706,16943,23,1060.09,5.08
+2026-06-10,Google Ads,Search,Brand Search,531.92,1276,34450,38,2813.86,5.29
+2026-06-10,Google Ads,Shopping,Generic Search,691.57,1335,33334,60,2835.44,4.1
+2026-06-10,Google Ads,Performance Max,Shopping Best Sellers,730.89,1513,38766,61,3376.71,4.62
+2026-06-10,Meta Ads,Prospecting,Lookalike Prospecting,459.77,1017,27016,42,1218.39,2.65
+2026-06-10,Meta Ads,Retargeting,Cart Retargeting,560.15,1232,42520,43,1518.01,2.71
+2026-06-10,Meta Ads,Advantage+,Advantage Shopping,663.51,1200,40089,76,1944.08,2.93
+2026-06-10,Microsoft Ads,Search,Bing Brand,225.17,213,9759,5,1326.25,5.89
+2026-06-10,Microsoft Ads,Shopping,Bing Generic,261.88,314,11998,22,1442.96,5.51
+2026-06-11,Google Ads,Search,Brand Search,507.89,1360,38683,73,2397.24,4.72
+2026-06-11,Google Ads,Shopping,Generic Search,744.49,1916,52429,105,2806.73,3.77
+2026-06-11,Google Ads,Performance Max,Shopping Best Sellers,754.81,1619,45357,81,3056.98,4.05
+2026-06-11,Meta Ads,Prospecting,Lookalike Prospecting,429.67,649,35626,24,1374.94,3.2
+2026-06-11,Meta Ads,Retargeting,Cart Retargeting,536.02,1166,39405,40,1795.67,3.35
+2026-06-11,Meta Ads,Advantage+,Advantage Shopping,612.81,1580,43719,103,1985.5,3.24
+2026-06-11,Microsoft Ads,Search,Bing Brand,223.99,294,11396,8,1334.98,5.96
+2026-06-11,Microsoft Ads,Shopping,Bing Generic,225.55,361,16984,25,1175.12,5.21
+2026-06-12,Google Ads,Search,Brand Search,528.9,1115,35347,66,2517.56,4.76
+2026-06-12,Google Ads,Shopping,Generic Search,586.93,1526,45691,55,2189.25,3.73
+2026-06-12,Google Ads,Performance Max,Shopping Best Sellers,814.68,1469,70399,41,3723.09,4.57
+2026-06-12,Meta Ads,Prospecting,Lookalike Prospecting,439.1,490,25446,27,1365.6,3.11
+2026-06-12,Meta Ads,Retargeting,Cart Retargeting,466.82,1045,35086,72,1321.1,2.83
+2026-06-12,Meta Ads,Advantage+,Advantage Shopping,662.3,1843,44673,98,2258.44,3.41
+2026-06-12,Microsoft Ads,Search,Bing Brand,207.36,304,11978,18,1304.29,6.29
+2026-06-12,Microsoft Ads,Shopping,Bing Generic,254.17,594,18846,21,1306.43,5.14
+2026-06-13,Google Ads,Search,Brand Search,449.29,973,35506,29,2471.1,5.5
+2026-06-13,Google Ads,Shopping,Generic Search,588.46,527,26885,34,2765.76,4.7
+2026-06-13,Google Ads,Performance Max,Shopping Best Sellers,622.02,1155,36462,59,2637.36,4.24
+2026-06-13,Meta Ads,Prospecting,Lookalike Prospecting,385.35,643,20757,28,1121.37,2.91
+2026-06-13,Meta Ads,Retargeting,Cart Retargeting,435.46,1207,27882,75,1463.15,3.36
+2026-06-13,Meta Ads,Advantage+,Advantage Shopping,447.44,707,33111,40,1203.61,2.69
+2026-06-13,Microsoft Ads,Search,Bing Brand,191.66,300,9884,18,1048.38,5.47
+2026-06-13,Microsoft Ads,Shopping,Bing Generic,227.3,649,19282,28,1072.86,4.72
+2026-06-14,Google Ads,Search,Brand Search,417.17,402,18277,17,2286.09,5.48
+2026-06-14,Google Ads,Shopping,Generic Search,636.77,1569,40668,49,2585.29,4.06
+2026-06-14,Google Ads,Performance Max,Shopping Best Sellers,643.78,2177,52945,76,2420.61,3.76
+2026-06-14,Meta Ads,Prospecting,Lookalike Prospecting,421.51,542,20024,35,1260.31,2.99
+2026-06-14,Meta Ads,Retargeting,Cart Retargeting,431.61,1206,29116,73,1320.73,3.06
+2026-06-14,Meta Ads,Advantage+,Advantage Shopping,500.15,1310,34639,63,1590.48,3.18
+2026-06-14,Microsoft Ads,Search,Bing Brand,169.3,427,10532,17,1022.57,6.04
+2026-06-14,Microsoft Ads,Shopping,Bing Generic,217.79,317,13162,14,1117.26,5.13
+2026-06-15,Google Ads,Search,Brand Search,573.04,1746,47019,94,3472.62,6.06
+2026-06-15,Google Ads,Shopping,Generic Search,732.38,1920,49611,109,3332.33,4.55
+2026-06-15,Google Ads,Performance Max,Shopping Best Sellers,760.16,1175,51061,62,2926.62,3.85
+2026-06-15,Meta Ads,Prospecting,Lookalike Prospecting,466.85,724,31588,34,1223.15,2.62
+2026-06-15,Meta Ads,Retargeting,Cart Retargeting,595.2,1135,50073,29,1595.14,2.68
+2026-06-15,Meta Ads,Advantage+,Advantage Shopping,655.73,1987,48362,89,1829.49,2.79
+2026-06-15,Microsoft Ads,Search,Bing Brand,224.31,258,13477,16,1415.4,6.31
+2026-06-15,Microsoft Ads,Shopping,Bing Generic,200.63,491,12173,19,965.03,4.81
+2026-06-16,Google Ads,Search,Brand Search,520.86,541,24204,17,2500.13,4.8
+2026-06-16,Google Ads,Shopping,Generic Search,603.38,963,33672,31,2298.88,3.81
+2026-06-16,Google Ads,Performance Max,Shopping Best Sellers,771.7,651,33355,28,3156.25,4.09
+2026-06-16,Meta Ads,Prospecting,Lookalike Prospecting,428.73,674,24262,42,1256.18,2.93
+2026-06-16,Meta Ads,Retargeting,Cart Retargeting,463.35,1168,35143,55,1274.21,2.75
+2026-06-16,Meta Ads,Advantage+,Advantage Shopping,648.12,599,30577,28,1879.55,2.9
+2026-06-16,Microsoft Ads,Search,Bing Brand,197.87,287,11939,19,1207.01,6.1
+2026-06-16,Microsoft Ads,Shopping,Bing Generic,218.92,387,15845,19,1212.82,5.54
+2026-06-17,Google Ads,Search,Brand Search,615.31,749,37105,40,3125.77,5.08
+2026-06-17,Google Ads,Shopping,Generic Search,591.54,1517,34782,91,2874.88,4.86
+2026-06-17,Google Ads,Performance Max,Shopping Best Sellers,752.19,1857,62445,47,3166.72,4.21
+2026-06-17,Meta Ads,Prospecting,Lookalike Prospecting,449.08,1069,24707,27,1472.98,3.28
+2026-06-17,Meta Ads,Retargeting,Cart Retargeting,599.51,1645,41309,69,1792.53,2.99
+2026-06-17,Meta Ads,Advantage+,Advantage Shopping,570.27,1218,38968,33,1773.54,3.11
+2026-06-17,Microsoft Ads,Search,Bing Brand,219.2,344,12172,11,1365.62,6.23
+2026-06-17,Microsoft Ads,Shopping,Bing Generic,208.79,333,11395,17,1039.77,4.98

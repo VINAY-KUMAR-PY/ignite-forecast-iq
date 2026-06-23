@@ -5,9 +5,12 @@ import os
 from pathlib import Path
 
 import joblib
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 from .data_preprocessing import validate_records
 from .decision_support import build_decision_support, compute_driver_evidence
@@ -34,6 +37,10 @@ from .utils import load_json_env
 
 load_dotenv()
 
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=[os.getenv("SLOWAPI_DEFAULT_LIMITS", "200/hour")],
+)
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(
     level=getattr(logging, LOG_LEVEL, logging.INFO),
@@ -48,6 +55,8 @@ app = FastAPI(
     version="1.0.0",
     description="FastAPI backend for NetElixir AIgnition 3.0 ecommerce revenue and ROAS forecasting.",
 )
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 allowed_origins = load_json_env(
     "CORS_ORIGINS",
@@ -128,10 +137,11 @@ def validate_data(request: ValidationRequest) -> ValidationResponse:
 
 
 @app.post("/api/forecast", response_model=ForecastResponse)
-def forecast(request: ForecastRequest) -> ForecastResponse:
+@limiter.limit("30/minute")
+def forecast(request: Request, body: ForecastRequest) -> ForecastResponse:
     """Generate revenue and ROAS forecasts for the requested planning level."""
-    frame, validation = _validated_frame([row.model_dump() for row in request.rows], "forecasting")
-    result = forecast_frame(frame, request.horizon, request.level, request.value)
+    frame, validation = _validated_frame([row.model_dump() for row in body.rows], "forecasting")
+    result = forecast_frame(frame, body.horizon, body.level, body.value)
     return ForecastResponse(
         revenue=result["revenue"],
         roas=result["roas"],
@@ -141,10 +151,11 @@ def forecast(request: ForecastRequest) -> ForecastResponse:
 
 
 @app.post("/api/simulate", response_model=SimulationResponse)
-def simulate(request: SimulationRequest) -> SimulationResponse:
+@limiter.limit("30/minute")
+def simulate(request: Request, body: SimulationRequest) -> SimulationResponse:
     """Reforecast channel revenue after planned media budget changes."""
-    frame, validation = _validated_frame([row.model_dump() for row in request.rows], "simulation")
-    result = simulate_budgets(frame, request.horizon, request.budgets)
+    frame, validation = _validated_frame([row.model_dump() for row in body.rows], "simulation")
+    result = simulate_budgets(frame, body.horizon, body.budgets)
     return SimulationResponse(
         channels=result["channels"],
         totals=result["totals"],
@@ -176,24 +187,26 @@ def get_anomalies(request: dict) -> dict:
 
 
 @app.post("/api/decision-support", response_model=DecisionSupportResponse)
-def decision_support(request: DecisionSupportRequest) -> DecisionSupportResponse:
+@limiter.limit("30/minute")
+def decision_support(request: Request, body: DecisionSupportRequest) -> DecisionSupportResponse:
     """Return optimizer, what-if, risk, opportunity and health analytics."""
-    frame, validation = _validated_frame([row.model_dump() for row in request.rows], "decision support")
+    frame, validation = _validated_frame([row.model_dump() for row in body.rows], "decision support")
     result = build_decision_support(
         frame=frame,
-        horizon=request.horizon,
-        budgets=request.budgets,
-        target_revenue=request.targetRevenue,
-        target_roas=request.targetRoas,
-        scenarios=request.scenarios,
+        horizon=body.horizon,
+        budgets=body.budgets,
+        target_revenue=body.targetRevenue,
+        target_roas=body.targetRoas,
+        scenarios=body.scenarios,
     )
     return DecisionSupportResponse(**result, validation=validation)
 
 
 @app.post("/api/insights", response_model=InsightsResponse)
-async def insights(request: InsightsRequest) -> InsightsResponse:
+@limiter.limit("30/minute")
+async def insights(request: Request, body: InsightsRequest) -> InsightsResponse:
     """Turn forecast and performance summaries into executive recommendations."""
-    return await generate_gemini_insights(request.summary)
+    return await generate_gemini_insights(body.summary)
 
 
 @app.post("/api/train", response_model=TrainResponse)

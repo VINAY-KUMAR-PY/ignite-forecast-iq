@@ -29,6 +29,20 @@ export interface ForecastApiResponse {
       roasAccuracy: AccuracyMetrics;
       revenueExplanation: string;
       roasExplanation: string;
+      explainabilityMethod?: string;
+      shap_importance?: Array<{
+        feature: string;
+        shap_value: number;
+        direction: "positive" | "negative";
+      }>;
+      whyThisForecast?: Array<{
+        feature: string;
+        label: string;
+        direction: "positive" | "negative";
+        impact: number;
+        explanation: string;
+      }>;
+      whyThisForecastSummary?: string;
       businessBrief: {
         summary: string;
         risks: string[];

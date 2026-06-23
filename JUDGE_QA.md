@@ -50,7 +50,7 @@ The live XGBoost path is optimized for interactive daily charts, feature importa
 
 ## Why does a trained evaluator model exist?
 
-The trained evaluator model gives the offline scoring path real ML behavior instead of only a deterministic baseline. It is a compact joblib sklearn artifact with 26 engineered features, trained on 1,440 rows and 414 rolling forecast samples. The artifact includes dedicated horizon sample counts, residual calibration, revenue and ROAS weights, and fallback metadata while preserving the required output schema.
+The trained evaluator model gives the offline scoring path real ML behavior instead of only a deterministic baseline. It is a compact joblib sklearn artifact with 35 engineered features, trained on 1,440 rows and 414 rolling forecast samples. The artifact includes dedicated horizon sample counts, residual calibration, revenue and ROAS weights, and fallback metadata while preserving the required output schema.
 
 ## When does fallback activate?
 
@@ -66,11 +66,13 @@ The model artifact was verified in a clean Python 3.14.4 environment with pinned
 
 ## How did you validate the trained-model blend weight?
 
-Revenue and ROAS blend weights of 0.10, 0.25, 0.40, 0.50, and 0.60 were tested on the same 30-day holdout. Revenue keeps 0.10 because it produced the best revenue RMSE/MAE balance. ROAS uses 0.40 because it produced the best ROAS RMSE/MAE balance. The weights are stored both globally and by horizon, with unsupported horizons able to fall back to weight 0.
+Revenue blend weights of 0.00, 0.10, 0.25, 0.40, 0.50, and 0.60 were tested on the same 30-day holdout. Revenue uses 0.00 because higher trained-model weights worsened revenue RMSE/MAE. ROAS uses 0.40 because it produced the best ROAS RMSE/MAE balance. The weights are stored both globally and by horizon, with unsupported horizons able to fall back to weight 0.
 
 ## What does the holdout backtest show?
 
-The final 30 days were held out while the model trained on the earlier period. Across 18 evaluated segments, the trained evaluator achieved revenue MAE 2,250.45, revenue RMSE 2,809.34, revenue MAPE 2.89%, and 100.00% interval coverage. The safe baseline achieved revenue MAE 2,185.89, revenue RMSE 2,763.76, revenue MAPE 2.78%, and 88.89% interval coverage. For ROAS, the trained evaluator achieved MAE 0.05, RMSE 0.06, MAPE 1.26%, and 100.00% interval coverage versus baseline RMSE 0.07 and MAPE 1.44%.
+The final 30 days were held out while the model trained on the earlier period. Across 18 evaluated segments, the trained evaluator currently ties the safe baseline on revenue MAE 2,185.89, revenue RMSE 2,763.76, and revenue MAPE 2.78%, while improving interval coverage to 100.00% versus 88.89%. For ROAS, the trained evaluator achieved MAE 0.05, RMSE 0.06, MAPE 1.26%, and 100.00% interval coverage versus baseline RMSE 0.07 and MAPE 1.44%.
+
+The trained model improves ROAS forecasting (RMSE reduced from 0.07 to 0.06) and interval coverage (100% vs 89%). Revenue point estimates use the deterministic baseline as the primary signal because the holdout shows it is currently more stable; the trained model provides uncertainty calibration via residual distributions.
 
 The backtest report also includes revenue and ROAS blend-weight comparisons plus walk-forward 30/60/90-day horizon performance.
 

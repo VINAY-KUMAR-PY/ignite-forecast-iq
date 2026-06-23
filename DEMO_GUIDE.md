@@ -6,14 +6,14 @@ Show that ForecastIQ turns ecommerce marketing data into validated forecasts, bu
 
 ## Demo Video
 
-Demo Video: `TBD - add final YouTube, Loom, or Drive link before submission`.
+[Add Loom/YouTube URL here before submission - see README for recording steps]
 
 Use a tight 2-minute recording so judges see product value before technical detail:
 
 | Time      | Step                      | What to show                                                                         |
 | --------- | ------------------------- | ------------------------------------------------------------------------------------ |
-| 0:00-0:15 | Upload CSV                | Click **Load sample data** and mention GA4, Shopify, Ads, and canonical CSV support. |
-| 0:15-0:25 | Validation                | Show valid rows and validation coverage for dates, duplicates, spend, and revenue.   |
+| 0:00-0:15 | Homepage demo             | Click **Try Live Demo** and land in the app with sample campaign data already loaded. |
+| 0:15-0:25 | Validation                | Open Upload briefly to show sample CSV support and validation coverage.              |
 | 0:25-0:45 | Dashboard                 | Open the Executive Decision Center and explain the recommended budget action.        |
 | 0:45-1:10 | Forecast                  | Show forecast horizon, confidence interval, accuracy metrics, and explainability.    |
 | 1:10-1:35 | Budget Simulator          | Apply +20% or recommended allocation and show revenue lift plus ROAS impact.         |
@@ -22,28 +22,32 @@ Use a tight 2-minute recording so judges see product value before technical deta
 
 ## Recommended Demo Flow
 
-1. Start on `/app/upload`
-   - Click **Load sample data** for the fastest judge path, or upload `data/sample_campaigns.csv`.
+1. Start on `/`
+   - Click **Try Live Demo** for the fastest judge path.
+   - ForecastIQ loads the built-in sample data and opens `/app` automatically.
+
+2. Open `/app/upload` only if validation needs to be shown
+   - Click **Load sample data** to reset the demo, or upload `data/sample_campaigns.csv`.
    - Mention that GA4, Shopify, and Ads exports are also supported through schema adapters.
    - Confirm 1,440 rows and zero validation issues.
    - Explain that backend validation protects the model from invalid inputs.
 
-2. Open `/app`
+3. Open `/app`
    - Point out forecasted revenue, expected ROAS, confidence, risk, opportunity, and the Executive Decision Center.
    - Mention wasted spend reduction and reallocation upside as the business hook.
 
-3. Open `/app/forecast`
+4. Open `/app/forecast`
    - Show the 30 day forecast first.
    - Switch to 60 or 90 days.
    - Show confidence intervals, accuracy dashboard, explainability center, and executive brief.
    - Mention MAE, RMSE, MAPE, R2, feature importance, and natural-language driver explanations.
 
-4. Open `/app/simulator`
+5. Open `/app/simulator`
    - Adjust Google, Meta, or Microsoft budget sliders.
    - Show projected revenue, ROAS, confidence bounds, and channel breakdown.
    - Show AI Budget Optimizer, What-if Scenario Engine, Risk Detection, Opportunity Detection, and Channel Health Score.
 
-5. Open `/app/insights`
+6. Open `/app/insights`
    - Click Generate insights.
    - Walk through executive summary, revenue drivers, channel analysis, risks, opportunities, and action plan.
    - Click Export PDF to show the executive report workflow.
@@ -54,11 +58,26 @@ Use a tight 2-minute recording so judges see product value before technical deta
 
 ## 30-Second Judge Path
 
-1. Load sample data on `/app/upload`.
+1. Click **Try Live Demo** on `/`.
 2. Show the Executive Decision Center on `/app`.
 3. Show exact budget shifts and expected lift on `/app/simulator`.
 4. Show confidence intervals and explainability on `/app/forecast`.
 5. Generate AI Insights and point to the PDF export on `/app/insights`.
+
+## Judge-Demo Checklist
+
+| Check | What to show |
+| --- | --- |
+| One-click demo | Homepage **Try Live Demo** loads sample data without manual upload. |
+| Upload CSV | `/app/upload` accepts sample or custom GA4, Shopify, and Ads-style CSV exports. |
+| Forecast generation | `/app/forecast` creates 30/60/90-day revenue and ROAS forecasts. |
+| Why this forecast? | Local explainability cards show positive and negative drivers for the current forecast. |
+| Budget simulator | `/app/simulator` compares budget changes and recommended allocation. |
+| AI insights | `/app/insights` generates Gemini or fallback executive recommendations. |
+| Export/report | Export PDF from the Insights page. |
+| Offline evaluator | Run `./run.sh ./data ./pickle/model.pkl ./output/predictions.csv`. |
+| Health check | Verify `GET /health` returns service status. |
+| Deployment | Use README Render/Railway/Vercel instructions; add real URLs only after verification. |
 
 ## Backup Plan
 

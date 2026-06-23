@@ -201,13 +201,23 @@ def feature_frame(daily: pd.DataFrame, target: str) -> tuple[pd.DataFrame, pd.Se
     data = daily.copy().sort_values("date").reset_index(drop=True)
     lag_target = "revenue" if target.startswith("revenue_horizon_") else target
     data["date_dt"] = pd.to_datetime(data["date"])
+    day_index = np.arange(len(data), dtype=float)
     data["dow"] = data["date_dt"].dt.dayofweek
     data["month"] = data["date_dt"].dt.month
     data["day_of_year"] = data["date_dt"].dt.dayofyear
+    data["sin_7"] = np.sin(2 * np.pi * day_index / 7)
+    data["cos_7"] = np.cos(2 * np.pi * day_index / 7)
+    data["sin_30"] = np.sin(2 * np.pi * day_index / 30)
+    data["cos_30"] = np.cos(2 * np.pi * day_index / 30)
+    data["sin_365"] = np.sin(2 * np.pi * day_index / 365)
+    data["cos_365"] = np.cos(2 * np.pi * day_index / 365)
     data["sin_year"] = np.sin(2 * np.pi * data["day_of_year"] / 365.25)
     data["cos_year"] = np.cos(2 * np.pi * data["day_of_year"] / 365.25)
     data["trend"] = np.arange(len(data))
     data = add_holiday_features(data)
+    data["rev_std_14"] = data["revenue"].rolling(14, min_periods=4).std().fillna(0)
+    data["rev_std_28"] = data["revenue"].rolling(28, min_periods=7).std().fillna(0)
+    data["spend_x_sin7"] = data["spend"] * data["sin_7"]
 
     for lag in (1, 7, 14):
         data[f"{lag_target}_lag_{lag}"] = data[lag_target].shift(lag)
@@ -223,6 +233,12 @@ def feature_frame(daily: pd.DataFrame, target: str) -> tuple[pd.DataFrame, pd.Se
         "conversions",
         "dow",
         "month",
+        "sin_7",
+        "cos_7",
+        "sin_30",
+        "cos_30",
+        "sin_365",
+        "cos_365",
         "sin_year",
         "cos_year",
         "is_holiday_week",
@@ -233,6 +249,9 @@ def feature_frame(daily: pd.DataFrame, target: str) -> tuple[pd.DataFrame, pd.Se
         "week_of_year_cos",
         "days_to_black_friday",
         "trend",
+        "rev_std_14",
+        "rev_std_28",
+        "spend_x_sin7",
         f"{lag_target}_lag_1",
         f"{lag_target}_lag_7",
         f"{lag_target}_lag_14",
@@ -266,7 +285,14 @@ def future_features(
         slice_ = values[-window:]
         return float(np.mean(slice_)) if slice_ else 0.0
 
+    def rolling_std(values: list[float], window: int, min_periods: int) -> float:
+        slice_ = values[-window:]
+        return float(np.std(slice_, ddof=1)) if len(slice_) >= min_periods else 0.0
+
     day_of_year = future_date.dayofyear
+    day_index = float(len(hist))
+    sin_7 = float(np.sin(2 * np.pi * day_index / 7))
+    revenue_values = hist["revenue"].astype(float).tolist()
     holiday = add_holiday_features(pd.DataFrame([{"date": future_date.strftime("%Y-%m-%d")}])).iloc[0]
     row = {
         "spend": float(exog.get("spend", 0)),
@@ -275,6 +301,12 @@ def future_features(
         "conversions": float(exog.get("conversions", 0)),
         "dow": int(future_date.dayofweek),
         "month": int(future_date.month),
+        "sin_7": sin_7,
+        "cos_7": float(np.cos(2 * np.pi * day_index / 7)),
+        "sin_30": float(np.sin(2 * np.pi * day_index / 30)),
+        "cos_30": float(np.cos(2 * np.pi * day_index / 30)),
+        "sin_365": float(np.sin(2 * np.pi * day_index / 365)),
+        "cos_365": float(np.cos(2 * np.pi * day_index / 365)),
         "sin_year": float(np.sin(2 * np.pi * day_of_year / 365.25)),
         "cos_year": float(np.cos(2 * np.pi * day_of_year / 365.25)),
         "is_holiday_week": float(holiday["is_holiday_week"]),
@@ -285,6 +317,9 @@ def future_features(
         "week_of_year_cos": float(holiday["week_of_year_cos"]),
         "days_to_black_friday": float(holiday["days_to_black_friday"]),
         "trend": len(hist),
+        "rev_std_14": rolling_std(revenue_values, 14, 4),
+        "rev_std_28": rolling_std(revenue_values, 28, 7),
+        "spend_x_sin7": float(exog.get("spend", 0)) * sin_7,
         f"{target}_lag_1": lag(target_values, 1),
         f"{target}_lag_7": lag(target_values, 7),
         f"{target}_lag_14": lag(target_values, 14),

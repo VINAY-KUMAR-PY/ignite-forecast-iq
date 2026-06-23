@@ -28,7 +28,7 @@ from .predict import (
     trained_forecast_segment,
 )
 
-BLEND_WEIGHT_CANDIDATES = (0.10, 0.25, 0.40, 0.50, 0.60)
+BLEND_WEIGHT_CANDIDATES = (0.0, 0.10, 0.25, 0.40, 0.50, 0.60)
 
 
 def _safe_float(value: Any, default: float = 0.0) -> float:
@@ -75,6 +75,64 @@ def _metrics(rows: list[dict[str, Any]], prefix: str) -> dict[str, Any]:
         "roas_rmse": roas["rmse"],
         "roas_mape": roas["mape"],
         "roas_interval_coverage": roas["interval_coverage"],
+    }
+
+
+def _winner_evidence(
+    trained_metrics: dict[str, Any],
+    safe_metrics: dict[str, Any],
+    target: str = "revenue",
+) -> dict[str, Any]:
+    trained_target = trained_metrics[target] if target in {"revenue", "roas"} else trained_metrics
+    safe_target = safe_metrics[target] if target in {"revenue", "roas"} else safe_metrics
+    trained_mae = _safe_float(trained_target["mae"])
+    safe_mae = _safe_float(safe_target["mae"])
+    if math.isclose(trained_mae, safe_mae, rel_tol=1e-9, abs_tol=1e-9):
+        winner = "tie"
+    elif trained_mae < safe_mae:
+        winner = TRAINED_MODEL_TYPE
+    else:
+        winner = SAFE_BASELINE_MODEL_TYPE
+
+    difference_pct = ((trained_mae - safe_mae) / safe_mae * 100) if safe_mae else 0.0
+    if winner == TRAINED_MODEL_TYPE:
+        interpretation = (
+            f"The trained model has lower {target} MAE than the safe baseline by "
+            f"{abs(difference_pct):.2f}% on this slice."
+        )
+    elif winner == SAFE_BASELINE_MODEL_TYPE:
+        interpretation = (
+            f"The safe baseline has lower {target} MAE than the trained model by "
+            f"{abs(difference_pct):.2f}% on this slice."
+        )
+    else:
+        interpretation = f"The trained model and safe baseline are tied on {target} MAE for this slice."
+
+    return {
+        "target": target,
+        "trained_mae": _round(trained_mae, 4),
+        "safe_baseline_mae": _round(safe_mae, 4),
+        "mae_difference_pct": _round(difference_pct, 2),
+        "winner": winner,
+        "interpretation": interpretation,
+    }
+
+
+def _performance_evidence(trained_metrics: dict[str, Any], safe_metrics: dict[str, Any]) -> dict[str, Any]:
+    revenue = _winner_evidence(trained_metrics, safe_metrics, "revenue")
+    roas = _winner_evidence(trained_metrics, safe_metrics, "roas")
+    if revenue["winner"] == roas["winner"]:
+        overall = revenue["winner"]
+    else:
+        overall = "mixed"
+    return {
+        "overall_winner": overall,
+        "revenue": revenue,
+        "roas": roas,
+        "interpretation": (
+            f"Revenue: {revenue['interpretation']} ROAS: {roas['interpretation']} "
+            "ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+        ),
     }
 
 
@@ -182,6 +240,7 @@ def _score_split(
     rows = _score_rows(train_frame, test_frame, horizon_days, trained_model)
     trained_metrics = _metrics(rows, "trained")
     safe_metrics = _metrics(rows, "safe")
+    evidence = _performance_evidence(trained_metrics, safe_metrics)
     improvement = {
         "mae_delta": _round(safe_metrics["mae"] - trained_metrics["mae"], 2),
         "rmse_delta": _round(safe_metrics["rmse"] - trained_metrics["rmse"], 2),
@@ -205,6 +264,7 @@ def _score_split(
         "trained_model_metrics": trained_metrics,
         "safe_baseline_metrics": safe_metrics,
         "trained_vs_safe_baseline": improvement,
+        "model_performance_evidence": evidence,
         "rows": rows,
     }
 
@@ -332,6 +392,7 @@ def _walk_forward_horizon(frame: pd.DataFrame, horizon: int) -> dict[str, Any]:
 
     trained_metrics = _metrics(rows, "trained")
     safe_metrics = _metrics(rows, "safe")
+    evidence = _performance_evidence(trained_metrics, safe_metrics)
     return {
         "horizon_days": horizon,
         "folds": folds,
@@ -339,6 +400,7 @@ def _walk_forward_horizon(frame: pd.DataFrame, horizon: int) -> dict[str, Any]:
         "segments_evaluated": len(rows),
         "trained_model_metrics": trained_metrics,
         "safe_baseline_metrics": safe_metrics,
+        "model_performance_evidence": evidence,
         "trained_vs_safe_baseline": {
             "mae_delta": _round(safe_metrics["mae"] - trained_metrics["mae"], 2),
             "rmse_delta": _round(safe_metrics["rmse"] - trained_metrics["rmse"], 2),
@@ -380,6 +442,7 @@ def run_backtest(data_dir: str | Path = "data", holdout_days: int = 30) -> dict[
         "trained_model_metrics": primary["trained_model_metrics"],
         "safe_baseline_metrics": primary["safe_baseline_metrics"],
         "trained_vs_safe_baseline": primary["trained_vs_safe_baseline"],
+        "model_performance_evidence": primary["model_performance_evidence"],
         "blend_weight_comparison": blend_comparison,
         "blend_weight_recommendation": blend_recommendation,
         "roas_blend_weight_comparison": roas_blend_comparison,
@@ -421,12 +484,23 @@ def _metric_row(label: str, metrics: dict[str, float]) -> str:
     return f'| {label} | {metrics["mae"]} | {metrics["rmse"]} | {metrics["mape"]}% | {metrics["interval_coverage"]}% |'
 
 
+def _winner_label(value: str) -> str:
+    labels = {
+        TRAINED_MODEL_TYPE: "Trained model",
+        SAFE_BASELINE_MODEL_TYPE: "Safe baseline",
+        "tie": "Tie",
+        "mixed": "Mixed",
+    }
+    return labels.get(value, value)
+
+
 def _summary_markdown(report: dict[str, Any]) -> str:
     trained = report["trained_model_metrics"]
     safe = report["safe_baseline_metrics"]
     trained_roas = trained["roas"]
     safe_roas = safe["roas"]
     improvement = report["trained_vs_safe_baseline"]
+    evidence = report["model_performance_evidence"]
     env = report["environment"]
     model = report["model"]
     blend_rows = "\n".join(
@@ -445,7 +519,8 @@ def _summary_markdown(report: dict[str, Any]) -> str:
         f'{item["trained_model_metrics"]["rmse"]} | {item["trained_model_metrics"]["mape"]}% | '
         f'{item["trained_model_metrics"]["roas_mae"]} | {item["trained_model_metrics"]["roas_rmse"]} | '
         f'{item["trained_model_metrics"]["interval_coverage"]}% | '
-        f'{item["safe_baseline_metrics"]["mae"]} | {item["safe_baseline_metrics"]["rmse"]} |'
+        f'{item["safe_baseline_metrics"]["mae"]} | {item["safe_baseline_metrics"]["rmse"]} | '
+        f'{_winner_label(item["model_performance_evidence"]["revenue"]["winner"])} |'
         for item in report["per_horizon_performance"]
     )
     return f"""# ForecastIQ Backtest Summary
@@ -502,6 +577,15 @@ Generated: {report["generated_at"]}
 - ROAS MAE improvement vs safe baseline: {improvement["roas_mae_delta"]}
 - ROAS RMSE improvement vs safe baseline: {improvement["roas_rmse_delta"]}
 
+### Judge Interpretation
+
+| Target | Trained MAE | Safe baseline MAE | MAE difference % | Winner |
+| --- | ---: | ---: | ---: | --- |
+| Revenue | {evidence["revenue"]["trained_mae"]} | {evidence["revenue"]["safe_baseline_mae"]} | {evidence["revenue"]["mae_difference_pct"]}% | {_winner_label(evidence["revenue"]["winner"])} |
+| ROAS | {evidence["roas"]["trained_mae"]} | {evidence["roas"]["safe_baseline_mae"]} | {evidence["roas"]["mae_difference_pct"]}% | {_winner_label(evidence["roas"]["winner"])} |
+
+Plain-English interpretation: {evidence["interpretation"]}
+
 ## Revenue Blend Weight Comparison
 
 | Revenue model weight | MAE | RMSE | MAPE | Interval coverage |
@@ -520,8 +604,8 @@ Recommendation: {report["roas_blend_weight_recommendation"]["recommendation"]}
 
 ## Walk-Forward Per-Horizon Performance
 
-| Horizon days | Folds | Segments | Trained revenue MAE | Trained revenue RMSE | Trained revenue MAPE | Trained ROAS MAE | Trained ROAS RMSE | Trained coverage | Baseline MAE | Baseline RMSE |
-| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Horizon days | Folds | Segments | Trained revenue MAE | Trained revenue RMSE | Trained revenue MAPE | Trained ROAS MAE | Trained ROAS RMSE | Trained coverage | Baseline MAE | Baseline RMSE | Revenue MAE winner |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 {horizon_rows}
 
 ## Confidence Interval Methodology

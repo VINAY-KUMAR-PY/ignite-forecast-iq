@@ -23,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { useData } from "@/lib/data-store";
 import { aggregateDaily, type DailyAgg } from "@/lib/forecasting";
 import { fetchAnomaliesApi } from "@/lib/backend-api";
-import { generateInsights, type InsightsResponse } from "@/lib/ai-insights.functions";
+import { generateInsightsApi, type InsightsResponse } from "@/lib/ai-insights";
 import { exportExecutivePdfReport } from "@/lib/report-export";
 import { fmtCurrency, fmtPct, fmtRoas } from "@/lib/format";
 import type { CampaignRow } from "@/lib/types";
@@ -61,7 +61,7 @@ function InsightsPage() {
       } catch {
         anomalyContext = {};
       }
-      const res = await generateInsights({ ...summary!, ...anomalyContext });
+      const res = await generateInsightsApi({ ...summary!, ...anomalyContext });
       setInsights(res);
       toast.success("Executive briefing generated");
     } catch (error: unknown) {

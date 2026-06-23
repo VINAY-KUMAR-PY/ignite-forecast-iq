@@ -53,7 +53,7 @@ SAFE_BASELINE_MODEL_TYPE = "safe_baseline_fallback"
 MODEL_TYPE = SAFE_BASELINE_MODEL_TYPE
 ROAS_NOT_COMPUTABLE_CONFIDENCE = "not_computable"
 ARTIFACT_TYPE = "forecastiq_evaluator_model"
-ARTIFACT_VERSION = 3
+ARTIFACT_VERSION = 4
 MAX_MODEL_ARTIFACT_BYTES = 2_000_000
 MIN_TRAINED_MODEL_ROWS = 8
 
@@ -78,8 +78,17 @@ FEATURE_COLUMNS = [
     "roas_trend_28",
     "dow_end",
     "month_end",
+    "sin_7",
+    "cos_7",
+    "sin_30",
+    "cos_30",
+    "sin_365",
+    "cos_365",
     "sin_year_end",
     "cos_year_end",
+    "rev_std_14",
+    "rev_std_28",
+    "spend_x_sin7",
     "level_code",
     "channel_code",
     "campaign_type_code",
@@ -470,6 +479,8 @@ def segment_feature_frame(
     if pd.isna(last_date):
         last_date = pd.Timestamp.today().normalize()
     forecast_end = last_date + pd.Timedelta(days=int(horizon))
+    day_index = float(len(daily) + int(horizon))
+    sin_7 = float(np.sin(2 * np.pi * day_index / 7))
 
     spend_7 = window_sum(daily, "spend", 7)
     spend_28 = window_sum(daily, "spend", 28)
@@ -509,8 +520,17 @@ def segment_feature_frame(
         "roas_trend_28": window_trend(daily, "roas"),
         "dow_end": float(forecast_end.dayofweek),
         "month_end": float(forecast_end.month),
+        "sin_7": sin_7,
+        "cos_7": float(np.cos(2 * np.pi * day_index / 7)),
+        "sin_30": float(np.sin(2 * np.pi * day_index / 30)),
+        "cos_30": float(np.cos(2 * np.pi * day_index / 30)),
+        "sin_365": float(np.sin(2 * np.pi * day_index / 365)),
+        "cos_365": float(np.cos(2 * np.pi * day_index / 365)),
         "sin_year_end": float(np.sin(2 * np.pi * forecast_end.dayofyear / 365.25)),
         "cos_year_end": float(np.cos(2 * np.pi * forecast_end.dayofyear / 365.25)),
+        "rev_std_14": safe_float(daily["revenue"].tail(14).std(ddof=1)) if len(daily) >= 4 else 0.0,
+        "rev_std_28": safe_float(daily["revenue"].tail(28).std(ddof=1)) if len(daily) >= 7 else 0.0,
+        "spend_x_sin7": safe_float(spend_28 / min(28, max(1, len(daily)))) * sin_7,
         "level_code": float(LEVEL_CODES.get(level, 0)),
         "channel_code": float(category_code(channel_value, maps.get("channel", {}))),
         "campaign_type_code": float(category_code(campaign_type_value, maps.get("campaign_type", {}))),
@@ -588,11 +608,14 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
         X_h = X.loc[mask]
         y_rev_h = y_revenue[mask]
         y_roas_h = y_roas[mask]
+        revenue_params = (
+            {"n_estimators": 200, "learning_rate": 0.05, "max_depth": 4, "subsample": 0.8, "max_features": 0.8}
+            if horizon == 30
+            else {"n_estimators": {60: 85, 90: 75}[horizon], "learning_rate": {60: 0.045, 90: 0.04}[horizon], "max_depth": 3}
+        )
         revenue_model = GradientBoostingRegressor(
-            n_estimators={30: 100, 60: 85, 90: 75}[horizon],
-            learning_rate={30: 0.05, 60: 0.045, 90: 0.04}[horizon],
-            max_depth=3,
             random_state=42 + horizon,
+            **revenue_params,
         )
         roas_model = GradientBoostingRegressor(
             n_estimators={30: 80, 60: 70, 90: 60}[horizon],
@@ -630,7 +653,7 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
         "training_rows": int(len(frame)),
         "training_samples": int(len(X)),
         "feature_columns": FEATURE_COLUMNS,
-        "revenue_blend_weight": 0.10,
+        "revenue_blend_weight": 0.0,
         "preprocessing": {
             "column_aliases": COLUMN_ALIASES,
             "category_maps": maps,
@@ -641,10 +664,10 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
             "confidence_z": 1.96,
             "minimum_interval_pct": 0.12,
             "horizon_interval_multiplier": {"30": 1.0, "60": 1.18, "90": 1.35},
-            "revenue_model_weight": 0.10,
+            "revenue_model_weight": 0.0,
             "roas_model_weight": 0.40,
             "revenue_model_weight_by_horizon": {
-                str(horizon): 0.0 if horizon in fallback_horizons else 0.10 for horizon in HORIZONS
+                str(horizon): 0.0 for horizon in HORIZONS
             },
             "roas_model_weight_by_horizon": {
                 str(horizon): 0.0 if horizon in fallback_horizons else 0.40 for horizon in HORIZONS

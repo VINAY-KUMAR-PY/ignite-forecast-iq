@@ -63,6 +63,14 @@ class FeatureImportance(BaseModel):
     label: Optional[str] = None
 
 
+class ForecastContribution(BaseModel):
+    feature: str
+    label: str
+    direction: Literal["positive", "negative"]
+    impact: float
+    explanation: str
+
+
 class AccuracyMetrics(BaseModel):
     mae: float
     rmse: float
@@ -89,6 +97,10 @@ class ForecastDiagnostics(BaseModel):
     roasAccuracy: AccuracyMetrics
     revenueExplanation: str
     roasExplanation: str
+    explainabilityMethod: str = "permutation_baseline"
+    shap_importance: List[Dict[str, Any]] = Field(default_factory=list)
+    whyThisForecast: List[ForecastContribution] = Field(default_factory=list)
+    whyThisForecastSummary: str = ""
     businessBrief: ForecastBusinessBrief
 
 

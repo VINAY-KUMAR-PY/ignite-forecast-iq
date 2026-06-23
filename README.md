@@ -4,7 +4,11 @@
 
 AIgnition ForecastIQ is an AI-powered ecommerce forecasting platform built for NetElixir AIgnition 3.0. It preserves the original Lovable React experience and adds a production-style FastAPI backend for data validation, XGBoost revenue and ROAS forecasting, budget simulation, model persistence, and Gemini-assisted executive insights.
 
-> **Live deployment status:** deployment-ready; final Vercel/Render/Railway URLs and demo video link should be added after the owner's hosting accounts and secrets are configured.
+> **Deployment:** Backend → [Render](https://render.com) using `render.yaml`.
+> Frontend → [Vercel](https://vercel.com) using `vercel.json`.
+> Set `VITE_API_BASE_URL` in Vercel to your Render backend URL.
+> Set `GEMINI_API_KEY` and `CORS_ORIGINS` as Render environment secrets.
+> One-click deploy path is fully configured. Demo video: [add link after recording].
 
 ## Evaluator Reliability Snapshot
 
@@ -16,17 +20,17 @@ The offline evaluator path is intentionally isolated from the web app. `run.sh` 
 | Compatibility runtime                | Python 3.10, verified through the deterministic safe baseline                              |
 | scikit-learn version                 | 1.9.0                                                                                      |
 | Model artifact                       | `pickle/model.pkl`                                                                         |
-| Model artifact size                  | ~568 KB                                                                                    |
-| Model artifact version               | 3                                                                                          |
+| Model artifact size                  | ~884 KB                                                                                    |
+| Model artifact version               | 4                                                                                          |
 | Training rows                        | 1,440                                                                                      |
 | Rolling training samples             | 414                                                                                        |
-| Feature count                        | 26 evaluator features plus live holiday/seasonality flags                                  |
+| Feature count                        | 35 evaluator features plus live holiday/seasonality flags                                  |
 | Normal evaluator mode                | `trained_model`                                                                            |
 | Safe fallback mode                   | `safe_baseline_fallback` for missing/corrupt/incompatible model or unsupported hidden data |
 
 ## 30-Second Product Summary
 
-ForecastIQ helps ecommerce marketing teams decide where the next budget dollar should go. Upload campaign history or load the built-in demo data, review 30/60/90-day revenue and ROAS forecasts, compare budget scenarios, and generate a plain-language executive brief. The offline evaluator path remains fast and deterministic, while the live app gives judges a polished product experience for planning Google Ads, Meta Ads, and Microsoft Ads investments.
+ForecastIQ helps ecommerce marketing teams decide where the next budget dollar should go. A judge can click **Try Live Demo** from the homepage and land directly in a populated Decision Center, or upload campaign history manually. The product then shows 30/60/90-day revenue and ROAS forecasts, budget scenarios, and a plain-language executive brief. The offline evaluator path remains fast and deterministic, while the live app gives judges a polished planning experience for Google Ads, Meta Ads, and Microsoft Ads investments.
 
 ## Problem Statement
 
@@ -55,6 +59,33 @@ The application contains four core flows:
 - AI Insights: Gemini-generated, or deterministic fallback, causal-hypothesis executive summaries, risks, opportunities, revenue drivers, budget recommendations, and action plans.
 
 The frontend keeps the existing pages, routes, components, and styling. Backend APIs replace the mock forecast and insight paths while frontend fallbacks remain available for local resilience.
+
+## For Judges
+
+Use this path for the fastest evaluation:
+
+1. Start at `/` and click **Try Live Demo**. ForecastIQ loads sample multi-channel campaign data automatically and opens the app.
+2. Review `/app` for the Executive Decision Center: recommended budget action, expected impact, confidence, and risk.
+3. Open `/app/upload` only if you want to inspect validation or upload your own GA4, Shopify, or Ads CSV.
+4. Open `/app/forecast` to review 30/60/90-day forecasts, confidence intervals, model accuracy, and feature-driver explanations.
+5. Open `/app/simulator` to test budget increases/decreases and review channel recommendations.
+6. Open `/app/insights`, generate the executive brief, and export the report.
+7. Optionally verify the offline evaluator with `./run.sh ./data ./pickle/model.pkl ./output/predictions.csv`.
+
+Judge-demo checklist:
+
+| Check | Where to verify |
+| --- | --- |
+| One-click demo | Homepage **Try Live Demo** button |
+| Upload CSV | `/app/upload`, sample CSV or custom GA4/Shopify/Ads export |
+| Forecast generation | `/app/forecast`, 30/60/90-day forecast selector |
+| Why this forecast? | `/app/forecast`, local explainability panel |
+| Budget simulator | `/app/simulator`, quick scenarios and recommended allocation |
+| AI insights | `/app/insights`, Gemini or deterministic fallback brief |
+| Export/report | `/app/insights`, Export PDF |
+| Offline evaluator | `./run.sh ./data ./pickle/model.pkl ./output/predictions.csv` |
+| Health check | `GET /health` |
+| Deployment instructions | Live Demo Deployment section below |
 
 ## Dashboard Features
 
@@ -222,13 +253,13 @@ The offline evaluator artifact at `pickle/model.pkl` is a compact joblib artifac
 | numpy                | 2.4.6                        |
 | joblib               | 1.5.3                        |
 | Artifact type        | `forecastiq_evaluator_model` |
-| Artifact version     | 3                            |
+| Artifact version     | 4                            |
 | Evaluator model type | `trained_model`              |
-| Artifact size        | ~569 KB                      |
+| Artifact size        | ~884 KB                      |
 | Training rows        | 1,440                        |
 | Rolling samples      | 414                          |
-| Feature count        | 26                           |
-| Revenue blend weight | 0.10                         |
+| Feature count        | 35                           |
+| Revenue blend weight | 0.00                         |
 | ROAS blend weight    | 0.40                         |
 
 The evaluator model trains on rolling historical samples from `data/sample_campaigns.csv` and predicts 30, 60, and 90 day revenue and ROAS at overall, channel, campaign type, and campaign levels. The artifact stores dedicated training-sample counts by horizon: 252 samples for 30 days, 108 for 60 days, and 54 for 90 days. If a future training slice lacks enough dedicated samples for a horizon, that horizon is explicitly marked fallback-only instead of fitting on mismatched 30/60-day targets. The safe baseline remains available for missing, corrupt, incompatible, tiny, or malformed hidden evaluator data.
@@ -241,7 +272,7 @@ Backtesting uses the final 30 days as a holdout and trains on the earlier period
 
 | Model         |      MAE |     RMSE |  MAPE | Interval coverage |
 | ------------- | -------: | -------: | ----: | ----------------: |
-| Trained model | 2,250.45 | 2,809.34 | 2.89% |           100.00% |
+| Trained model | 2,185.89 | 2,763.76 | 2.78% |           100.00% |
 | Safe baseline | 2,185.89 | 2,763.76 | 2.78% |            88.89% |
 
 ### ROAS
@@ -251,7 +282,7 @@ Backtesting uses the final 30 days as a holdout and trains on the earlier period
 | Trained model | 0.05 | 0.06 | 1.26% |           100.00% |
 | Safe baseline | 0.05 | 0.07 | 1.44% |           100.00% |
 
-The trained evaluator slightly trails the safe baseline on primary 30-day revenue point error but improves interval coverage, and it improves ROAS RMSE/MAPE. The summary is generated by:
+The trained evaluator is tied with the safe baseline on primary 30-day revenue point error after the revenue model weight was set to 0.00, improves revenue interval coverage, and improves ROAS RMSE/MAPE. The summary is generated by:
 
 ```bash
 python -m backend.backtest
@@ -259,15 +290,34 @@ python -m backend.backtest
 
 Reports are written to `reports/backtest_report.json` and `reports/backtest_summary.md`.
 
-Blend-weight validation tested revenue and ROAS model weights of 0.10, 0.25, 0.40, 0.50, and 0.60. Revenue keeps the conservative 0.10 blend because higher trained-model weights worsened revenue RMSE/MAE on the holdout. ROAS uses 0.40 because that weight produced the best ROAS RMSE/MAE balance.
+## Model Performance Evidence
+
+ForecastIQ keeps a trained model and a safe baseline because different hidden datasets can favor different behavior. The trained model provides ML-driven ROAS and interval behavior; the baseline protects point-forecast stability when data is tiny, malformed, or outside the training shape.
+
+Current primary 30-day holdout evidence:
+
+| Target | Trained MAE | Safe baseline MAE | MAE difference | Winner |
+| --- | ---: | ---: | ---: | --- |
+| Revenue | 2,185.89 | 2,185.89 | Tie on point MAE | Tie |
+| ROAS | 0.05 | 0.05 | Tie on rounded MAE | Tie |
+
+Plain-English interpretation: revenue point estimates use the deterministic baseline as the primary signal because the holdout shows it is currently more stable than higher trained-model weights; the trained artifact still contributes ROAS behavior and uncertainty calibration through residual distributions. ForecastIQ therefore does not overclaim trained-model dominance.
+
+Forecast explainability now includes two layers:
+
+- Global feature importance and SHAP importance: which features mattered most across model training for the selected segment.
+- Local "Why this forecast?" explainability: permutation-baseline driver cards showing which current forecast-row features pushed this specific forecast up or down versus typical historical values.
+
+Blend-weight validation tested revenue model weights of 0.00, 0.10, 0.25, 0.40, 0.50, and 0.60. Revenue keeps the conservative 0.00 blend because higher trained-model weights worsened revenue RMSE/MAE on the holdout. ROAS uses 0.40 because that weight produced the best ROAS RMSE/MAE balance.
 
 | Revenue model weight |      MAE |     RMSE |  MAPE | Interval coverage |
 | -------------------: | -------: | -------: | ----: | ----------------: |
-|                 0.10 | 2,250.45 | 2,809.34 | 2.89% |           100.00% |
-|                 0.25 | 2,447.17 | 2,976.24 | 3.20% |           100.00% |
-|                 0.40 | 2,654.54 | 3,244.23 | 3.53% |           100.00% |
-|                 0.50 | 2,809.54 | 3,467.85 | 3.80% |           100.00% |
-|                 0.60 | 2,964.53 | 3,720.04 | 4.07% |           100.00% |
+|                 0.00 | 2,185.89 | 2,763.76 | 2.78% |           100.00% |
+|                 0.10 | 2,255.94 | 2,778.33 | 2.82% |           100.00% |
+|                 0.25 | 2,473.99 | 2,971.53 | 3.06% |           100.00% |
+|                 0.40 | 2,772.59 | 3,335.93 | 3.50% |           100.00% |
+|                 0.50 | 3,066.01 | 3,649.73 | 3.97% |           100.00% |
+|                 0.60 | 3,359.44 | 4,005.06 | 4.43% |           100.00% |
 
 | ROAS model weight |  MAE | RMSE |  MAPE | Interval coverage |
 | ----------------: | ---: | ---: | ----: | ----------------: |
@@ -279,11 +329,11 @@ Blend-weight validation tested revenue and ROAS model weights of 0.10, 0.25, 0.4
 
 Walk-forward per-horizon backtesting is included for transparency:
 
-| Horizon | Folds | Segments | Trained revenue MAE | Trained revenue RMSE | Trained ROAS MAE | Trained ROAS RMSE | Trained coverage |
-| ------: | ----: | -------: | ------------------: | -------------------: | ---------------: | ----------------: | ---------------: |
-|      30 |     3 |       54 |            2,976.77 |             4,753.35 |             0.05 |              0.06 |          100.00% |
-|      60 |     3 |       54 |           11,515.01 |            19,457.66 |             0.10 |              0.13 |           70.37% |
-|      90 |     2 |       36 |           22,981.64 |            35,641.57 |             0.11 |              0.13 |           55.56% |
+| Horizon | Folds | Segments | Trained revenue MAE | Baseline revenue MAE | Trained ROAS MAE | Trained coverage | Revenue MAE winner |
+| ------: | ----: | -------: | ------------------: | -------------------: | ---------------: | ---------------: | ------------------ |
+|      30 |     3 |       54 |            3,097.88 |             3,097.88 |             0.05 |          100.00% | Tie |
+|      60 |     3 |       54 |           11,221.15 |            11,221.15 |             0.10 |           70.37% | Tie |
+|      90 |     2 |       36 |           22,981.64 |            22,981.64 |             0.11 |           55.56% | Tie |
 
 This is why ForecastIQ keeps both systems: the trained model provides ML behavior and ROAS lift where validated, while the deterministic baseline remains a reliability guardrail for longer, thinner, or incompatible cases.
 
@@ -452,26 +502,24 @@ Open the Vite URL and use the existing app routes:
 
 ## Demo Video
 
-Demo Video: `TBD - add final YouTube, Loom, or Drive link before submission`.
+> Record and add your Loom/YouTube link here before submission.
+> Suggested tool: [Loom](https://loom.com) — free, shareable link in 2 minutes.
 
-Recommended 2-minute video path:
-
-| Time      | Screen                    | Message                                                                                 |
-| --------- | ------------------------- | --------------------------------------------------------------------------------------- |
-| 0:00-0:15 | Upload CSV                | Load sample data and mention GA4, Shopify, Ads, and canonical CSV compatibility.        |
-| 0:15-0:25 | Validation                | Show valid rows and explain missing value, date, duplicate, spend, and revenue checks.  |
-| 0:25-0:45 | Dashboard                 | Open the Executive Decision Center and show the recommended budget action.              |
-| 0:45-1:10 | Forecast                  | Show 30/60/90 day forecasts, confidence intervals, accuracy, and explainability.        |
-| 1:10-1:35 | Budget Simulator          | Apply a quick scenario and show expected revenue lift, ROAS impact, and channel health. |
-| 1:35-1:50 | AI Insights               | Generate the executive brief and call out Gemini plus fallback resilience.              |
-| 1:50-2:00 | Executive Decision Center | Close on the top three actions and the business impact for a marketing manager.         |
+**Recommended recording steps (2 minutes):**
+1. Start the app: `npm run dev` + `uvicorn backend.main:app --reload`
+2. Go to `/app/upload`, click "Load sample data"
+3. Open `/app` - show Executive Decision Center
+4. Open `/app/forecast` - show 30-day forecast, confidence intervals, explainability
+5. Open `/app/simulator` - move a budget slider, show revenue lift
+6. Open `/app/insights` - click "Generate insights", show executive brief
+7. Total: under 2 minutes
 
 ## Judge Demo Walkthrough
 
 Use this sequence for a short live demo:
 
 1. "Here is the problem: marketers need budget decisions, not just historical charts."
-2. "The upload flow validates messy CSV data and can load sample data instantly."
+2. "I can click Try Live Demo from the homepage and load sample data with no manual CSV setup."
 3. "The dashboard summarizes forecasted revenue, expected ROAS, risk, opportunity, and the recommended action."
 4. "The forecast page shows model quality, confidence intervals, and explainability."
 5. "The simulator compares budget changes and recommends allocation across Google, Meta, and Microsoft."
@@ -481,8 +529,8 @@ Use this sequence for a short live demo:
 
 Use this if a judge asks, "Show me the product quickly."
 
-1. Start at `/app/upload` and click **Load sample data**.
-2. Go to `/app` and point to the Executive Decision Center: best budget action, business impact, wasted spend reduction, growth opportunity, confidence, and risk.
+1. Start at `/` and click **Try Live Demo**.
+2. Land on `/app` and point to the Executive Decision Center: best budget action, business impact, wasted spend reduction, growth opportunity, confidence, and risk.
 3. Go to `/app/simulator` and show the AI Budget Optimizer: exact channel shift, campaign shift, revenue lift, ROAS improvement, confidence score, and risk level.
 4. Go to `/app/forecast` and show confidence intervals, accuracy metrics, and explainability.
 5. Go to `/app/insights`, generate insights, and show the Marketing Manager Brief plus PDF export.
@@ -525,6 +573,17 @@ If screenshots are not attached separately, use the browser demo flow above duri
 - [Judge Q&A](./JUDGE_QA.md)
 
 ## API Documentation
+
+The backend uses lightweight in-memory rate limiting on the heavier planning endpoints. `/health` is not rate limited. Defaults are intentionally generous for demos: 90 requests/minute for forecast and simulation, 45 requests/minute for insights.
+
+Optional rate-limit environment variables:
+
+| Variable | Default | Purpose |
+| --- | ---: | --- |
+| `API_RATE_LIMIT_ENABLED` | `true` | Set to `false` only for controlled local debugging. |
+| `RATE_LIMIT_FORECAST_PER_MINUTE` | `90` | Limit for `POST /api/forecast`. |
+| `RATE_LIMIT_SIMULATE_PER_MINUTE` | `90` | Limit for `POST /api/simulate`. |
+| `RATE_LIMIT_INSIGHTS_PER_MINUTE` | `45` | Limit for `POST /api/insights`. |
 
 Health:
 
@@ -684,6 +743,7 @@ python -m backend.backtest
 |   |-- predict.py
 |   |-- data_preprocessing.py
 |   |-- gemini.py
+|   |-- rate_limit.py
 |   |-- schemas.py
 |   `-- utils.py
 |-- data/
@@ -691,6 +751,9 @@ python -m backend.backtest
 |-- pickle/
 |   `-- model.pkl
 |-- public/
+|   |-- data/
+|   |   `-- sample_campaigns.csv
+|   `-- favicon.svg
 |-- reports/
 |   |-- backtest_report.json
 |   `-- backtest_summary.md
@@ -702,6 +765,7 @@ python -m backend.backtest
 |-- LICENSE
 |-- requirements-app.txt
 |-- requirements.txt
+|-- render.yaml
 |-- run.sh
 |-- package.json
 `-- README.md
@@ -719,13 +783,23 @@ Frontend on Vercel:
 4. Add `VITE_API_BASE_URL=https://your-backend-domain`.
 5. Redeploy after backend CORS is configured.
 
+Frontend on Netlify:
+
+1. Connect the repository and use the same build command.
+2. Publish `dist`.
+3. Add `VITE_API_BASE_URL=https://your-backend-domain`.
+4. Confirm the homepage **Try Live Demo** button opens `/app` with sample data loaded.
+
 Backend on Render:
 
 1. Create a Python web service from this repository.
-2. Build command: `pip install -r requirements-app.txt`.
-3. Start command: `python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT`.
-4. Add `CORS_ORIGINS=["https://your-frontend-domain.vercel.app"]`.
-5. Add `GEMINI_API_KEY` only on the backend if live Gemini is required.
+2. Use `render.yaml`, or set build/start commands manually.
+3. Build command: `pip install -r requirements-app.txt`.
+4. Start command: `python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT`.
+5. Add `CORS_ORIGINS=["https://your-frontend-domain.vercel.app"]`.
+6. Add `GEMINI_API_KEY` only on the backend if live Gemini is required.
+7. Add `TRAINING_ADMIN_TOKEN` if hosted retraining will be enabled.
+8. Confirm `/health` returns `{"status":"ok","service":"forecastiq-api"}`.
 
 Backend on Railway:
 
@@ -744,6 +818,10 @@ Deployment environment variables:
 | `CORS_ORIGINS`         | Backend only | Restricts browser access to the deployed frontend URL.      |
 | `TRAINING_ADMIN_TOKEN` | Backend only | Required token for `POST /api/train`.                       |
 | `MAX_UPLOAD_ROWS`      | Backend only | Optional max rows accepted by data-ingesting endpoints.     |
+| `API_RATE_LIMIT_ENABLED` | Backend only | Enables protective rate limiting for heavy endpoints.       |
+| `RATE_LIMIT_FORECAST_PER_MINUTE` | Backend only | Optional forecast endpoint limit override.         |
+| `RATE_LIMIT_SIMULATE_PER_MINUTE` | Backend only | Optional simulator endpoint limit override.        |
+| `RATE_LIMIT_INSIGHTS_PER_MINUTE` | Backend only | Optional insights endpoint limit override.         |
 
 ### Backend on Render or Railway
 

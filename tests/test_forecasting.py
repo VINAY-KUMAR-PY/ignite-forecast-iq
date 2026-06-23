@@ -41,6 +41,14 @@ class ForecastingEngineTests(unittest.TestCase):
         self.assertGreaterEqual(summary.upperRevenue, summary.lowerRevenue)
         self.assertEqual(summary.horizonDays, 30)
         self.assertIsNotNone(summary.diagnostics)
+        self.assertEqual(summary.diagnostics.explainabilityMethod, "permutation_baseline")
+        self.assertTrue(summary.diagnostics.whyThisForecastSummary)
+        self.assertTrue(summary.diagnostics.whyThisForecast)
+        self.assertTrue(
+            {"positive", "negative"}.intersection(
+                {driver.direction for driver in summary.diagnostics.whyThisForecast}
+            )
+        )
 
     def test_simulate_budgets_and_spend_curve_are_sane(self) -> None:
         rows = frame()

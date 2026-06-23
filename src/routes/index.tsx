@@ -12,6 +12,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DEMO_REQUEST_KEY, useData } from "@/lib/data-store";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -28,22 +29,32 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
+  const { loadDemo } = useData();
+  const launchDemo = () => {
+    try {
+      localStorage.setItem(DEMO_REQUEST_KEY, "1");
+    } catch {
+      // localStorage may be unavailable in restricted browsers; loadDemo still works in memory.
+    }
+    loadDemo();
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Nav />
-      <Hero />
+      <Nav onTryDemo={launchDemo} />
+      <Hero onTryDemo={launchDemo} />
       <HowItWorks />
       <Features />
       <ForecastingSection />
       <Benefits />
       <AIInsightsSection />
-      <CTA />
+      <CTA onTryDemo={launchDemo} />
       <Footer />
     </div>
   );
 }
 
-function Nav() {
+function Nav({ onTryDemo }: { onTryDemo: () => void }) {
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/70 backdrop-blur-xl">
       <div className="container mx-auto flex h-16 items-center justify-between px-6">
@@ -69,9 +80,9 @@ function Nav() {
             Benefits
           </a>
         </nav>
-        <Link to="/app">
+        <Link to="/app" onClick={onTryDemo}>
           <Button variant="hero" size="sm">
-            Launch app <ArrowRight className="ml-1 h-4 w-4" />
+            Try Live Demo <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
         </Link>
       </div>
@@ -79,7 +90,7 @@ function Nav() {
   );
 }
 
-function Hero() {
+function Hero({ onTryDemo }: { onTryDemo: () => void }) {
   return (
     <section className="relative overflow-hidden bg-gradient-hero">
       <div className="container mx-auto grid gap-12 px-6 py-24 md:py-32 lg:grid-cols-2 lg:items-center">
@@ -98,9 +109,9 @@ function Hero() {
             forecasts, ROAS projections, confidence intervals, and an executive next-budget action.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link to="/app">
+            <Link to="/app" onClick={onTryDemo}>
               <Button variant="hero" size="lg">
-                Open Decision Center <ArrowRight className="ml-1 h-4 w-4" />
+                Try Live Demo <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </Link>
             <a href="#features">
@@ -425,7 +436,7 @@ function AIInsightsSection() {
   );
 }
 
-function CTA() {
+function CTA({ onTryDemo }: { onTryDemo: () => void }) {
   return (
     <section className="border-t border-border/60 py-24">
       <div className="container mx-auto px-6">
@@ -436,9 +447,9 @@ function CTA() {
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
             Launch the judge demo workspace with 365 days of multi-channel data already loaded.
           </p>
-          <Link to="/app" className="mt-8 inline-block">
+          <Link to="/app" onClick={onTryDemo} className="mt-8 inline-block">
             <Button variant="hero" size="lg">
-              Open the Decision Center <ArrowRight className="ml-1 h-4 w-4" />
+              Try Live Demo <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </Link>
         </div>

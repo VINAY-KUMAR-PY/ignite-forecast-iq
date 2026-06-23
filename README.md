@@ -7,7 +7,7 @@ AIgnition ForecastIQ is an AI-powered ecommerce forecasting platform built for N
 > **Deployment:** Backend → [Render](https://render.com) using `render.yaml`.
 > Frontend → [Vercel](https://vercel.com) using `vercel.json`.
 > Set `VITE_API_BASE_URL` in Vercel to your Render backend URL.
-> Set `GEMINI_API_KEY` and `CORS_ORIGINS` as Render environment secrets.
+> Set `GEMINI_API_KEY` and comma-separated `CORS_ORIGINS` as Render environment secrets.
 > One-click deploy path is fully configured. Demo video: [add link after recording].
 
 ## Evaluator Reliability Snapshot
@@ -796,7 +796,7 @@ Backend on Render:
 2. Use `render.yaml`, or set build/start commands manually.
 3. Build command: `pip install -r requirements-app.txt`.
 4. Start command: `python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT`.
-5. Add `CORS_ORIGINS=["https://your-frontend-domain.vercel.app"]`.
+5. Add `CORS_ORIGINS=https://ignite-forecast-iq.vercel.app,https://your-preview-domain.vercel.app`.
 6. Add `GEMINI_API_KEY` only on the backend if live Gemini is required.
 7. Add `TRAINING_ADMIN_TOKEN` if hosted retraining will be enabled.
 8. Confirm `/health` returns `{"status":"ok","service":"forecastiq-api"}`.
@@ -815,7 +815,7 @@ Deployment environment variables:
 | `VITE_API_BASE_URL`    | Frontend     | Public API base URL used by the browser app.                |
 | `GEMINI_API_KEY`       | Backend only | Enables live Gemini insights; never expose through `VITE_`. |
 | `GEMINI_MODEL`         | Backend only | Optional model override, defaulting to a fast Gemini model. |
-| `CORS_ORIGINS`         | Backend only | Restricts browser access to the deployed frontend URL.      |
+| `CORS_ORIGINS`         | Backend only | Comma-separated frontend origins allowed to call the API.   |
 | `TRAINING_ADMIN_TOKEN` | Backend only | Required token for `POST /api/train`.                       |
 | `MAX_UPLOAD_ROWS`      | Backend only | Optional max rows accepted by data-ingesting endpoints.     |
 | `API_RATE_LIMIT_ENABLED` | Backend only | Enables protective rate limiting for heavy endpoints.       |
@@ -834,7 +834,7 @@ python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT
 
 Recommended backend environment variables:
 
-- `CORS_ORIGINS=["https://your-frontend-domain.vercel.app"]`
+- `CORS_ORIGINS=https://ignite-forecast-iq.vercel.app,https://your-preview-domain.vercel.app`
 - `GEMINI_API_KEY=...` only if live Gemini insights are required
 - `GEMINI_MODEL=gemini-2.5-flash-lite`
 - `TRAINING_ADMIN_TOKEN=...` for admin retraining
@@ -854,7 +854,7 @@ Deploy `dist/` to Vercel or any static host. Configure `VITE_API_BASE_URL` to po
 
 - Confirm `./run.sh ./data ./pickle/model.pkl ./output/predictions.csv` still works offline.
 - Confirm `/health` returns `{ "status": "ok" }`.
-- Confirm `CORS_ORIGINS` includes the production frontend URL.
+- Confirm `CORS_ORIGINS` is comma-separated and includes the production frontend URL plus any preview URLs.
 - Store Gemini keys only in backend environment variables.
 - Do not expose secrets with `VITE_` prefixes.
 - Package or mount `pickle/model.pkl` with the backend.

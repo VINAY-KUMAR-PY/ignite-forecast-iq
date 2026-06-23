@@ -32,7 +32,6 @@ from .schemas import (
     ValidationRequest,
     ValidationResponse,
 )
-from .utils import load_json_env
 
 
 load_dotenv()
@@ -58,17 +57,26 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-allowed_origins = load_json_env(
-    "CORS_ORIGINS",
-    [
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:4173",
-        "http://127.0.0.1:4173",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ],
-)
+DEFAULT_CORS_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
+    "http://localhost:4173",
+    "http://127.0.0.1:4173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://ignite-forecast-iq.vercel.app",
+]
+
+
+def _load_cors_origins() -> list[str]:
+    """Load safe default origins plus comma-separated deployment origins."""
+    configured = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "").split(",") if origin.strip()]
+    return list(dict.fromkeys([*DEFAULT_CORS_ORIGINS, *configured]))
+
+
+allowed_origins = _load_cors_origins()
 
 app.add_middleware(
     CORSMiddleware,

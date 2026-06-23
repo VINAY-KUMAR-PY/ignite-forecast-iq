@@ -8,7 +8,7 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from backend.data_preprocessing import MAX_UPLOAD_ROWS
-from backend.main import app
+from backend.main import _load_cors_origins, app
 
 
 def valid_row(day: int = 1) -> dict:
@@ -109,6 +109,38 @@ class ApiSecurityTests(unittest.TestCase):
         registered_handlers = set(app.state.limiter._route_limits)
 
         self.assertTrue(protected_handlers.issubset(registered_handlers))
+
+    def test_cors_origins_parse_comma_separated_environment_values(self) -> None:
+        with patch.dict(
+            os.environ,
+            {"CORS_ORIGINS": " https://preview-one.vercel.app,https://preview-two.onrender.com "},
+            clear=False,
+        ):
+            origins = _load_cors_origins()
+
+        self.assertIn("https://ignite-forecast-iq.vercel.app", origins)
+        self.assertIn("https://preview-one.vercel.app", origins)
+        self.assertIn("https://preview-two.onrender.com", origins)
+        self.assertNotIn(
+            " https://preview-one.vercel.app,https://preview-two.onrender.com ",
+            origins,
+        )
+
+    def test_vercel_origin_preflight_to_insights_is_allowed(self) -> None:
+        response = self.client.options(
+            "/api/insights",
+            headers={
+                "Origin": "https://ignite-forecast-iq.vercel.app",
+                "Access-Control-Request-Method": "POST",
+                "Access-Control-Request-Headers": "content-type",
+            },
+        )
+
+        self.assertIn(response.status_code, {200, 204})
+        self.assertEqual(
+            response.headers.get("access-control-allow-origin"),
+            "https://ignite-forecast-iq.vercel.app",
+        )
 
     def test_simulate_and_decision_support_happy_paths(self) -> None:
         rows = sample_rows()

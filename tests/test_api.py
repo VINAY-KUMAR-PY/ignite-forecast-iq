@@ -126,6 +126,18 @@ class ApiSecurityTests(unittest.TestCase):
             origins,
         )
 
+    def test_cors_origins_accept_legacy_json_array_environment_values(self) -> None:
+        with patch.dict(
+            os.environ,
+            {"CORS_ORIGINS": '["https://legacy-preview.vercel.app","https://api-preview.onrender.com"]'},
+            clear=False,
+        ):
+            origins = _load_cors_origins()
+
+        self.assertIn("https://legacy-preview.vercel.app", origins)
+        self.assertIn("https://api-preview.onrender.com", origins)
+        self.assertIn("https://ignite-forecast-iq.vercel.app", origins)
+
     def test_vercel_origin_preflight_to_insights_is_allowed(self) -> None:
         response = self.client.options(
             "/api/insights",

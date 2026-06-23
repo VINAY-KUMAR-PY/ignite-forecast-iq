@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 import os
 from pathlib import Path
@@ -71,9 +72,31 @@ DEFAULT_CORS_ORIGINS = [
 
 
 def _load_cors_origins() -> list[str]:
-    """Load safe default origins plus comma-separated deployment origins."""
-    configured = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "").split(",") if origin.strip()]
+    """Load safe defaults plus deployment origins without risking startup."""
+    configured = _parse_cors_origin_config(os.getenv("CORS_ORIGINS"))
     return list(dict.fromkeys([*DEFAULT_CORS_ORIGINS, *configured]))
+
+
+def _parse_cors_origin_config(raw: str | None) -> list[str]:
+    """Parse comma-separated CORS origins, accepting legacy JSON arrays too."""
+    if not raw or not raw.strip():
+        return []
+    value = raw.strip()
+    if value.startswith("["):
+        try:
+            decoded = json.loads(value)
+        except json.JSONDecodeError:
+            decoded = None
+        if isinstance(decoded, list):
+            return [_clean_origin(origin) for origin in decoded if _clean_origin(origin)]
+    return [_clean_origin(origin) for origin in value.split(",") if _clean_origin(origin)]
+
+
+def _clean_origin(origin: object) -> str:
+    value = str(origin).strip().strip("\"'")
+    if value != "*":
+        value = value.rstrip("/")
+    return value
 
 
 allowed_origins = _load_cors_origins()

@@ -94,9 +94,11 @@ The live and offline forecasting paths intentionally optimize for different cons
 
 The offline evaluator model uses a compact joblib sklearn artifact at `pickle/model.pkl`. The artifact stores dedicated training-sample counts by horizon plus horizon-aware revenue and ROAS blend weights. If a horizon has fewer than the minimum dedicated samples during training, that horizon is marked fallback-only instead of training on mismatched target scales. If loading or feature generation fails, the deterministic safe baseline remains active and still produces the required prediction schema.
 
-## Revenue Blend Weight Decision Logic
+## Blend Weight Decision Logic
 
-The offline evaluator uses adaptive per-horizon blend weights determined by two gates applied during training:
+The offline evaluator uses adaptive per-horizon blend weights determined by holdout gates applied during training.
+
+**Revenue model weight** (gate: CV R2 threshold and chronological holdout):
 
 | Gate | Condition | Revenue model weight |
 | --- | --- | ---: |
@@ -105,11 +107,16 @@ The offline evaluator uses adaptive per-horizon blend weights determined by two 
 | Weak evidence | Chronological holdout beats deterministic baseline but CV R2 < 0.05 | 0.10 |
 | No evidence | Chronological holdout does not beat deterministic baseline | 0.00 |
 
-The holdout gate uses the latest 20% of each horizon's dedicated training samples by target date to check whether the trained model's MAE beats ForecastIQ's deterministic safe baseline. This prevents CV overfitting on small per-horizon samples.
+**ROAS model weight** (gate: chronological holdout only):
 
-The ROAS model uses a fixed weight of 0.40, which the backtest confirms is optimal across all tested values (see `reports/backtest_summary.md`).
+| Gate | Condition | ROAS model weight |
+| --- | --- | ---: |
+| Holdout validates | Trained ROAS MAE < naive mean MAE on chronological holdout slice | 0.40 |
+| No holdout evidence | Trained ROAS model does not beat naive mean on holdout slice | 0.10 |
 
-If both gates produce 0.00 for all horizons, the evaluator uses the deterministic safe baseline exclusively for revenue, which is correct behavior when the training data is too small for the ML path to generalize.
+Both gates use the latest 20% of each horizon's dedicated training samples by target date to check whether the trained model beats a naive mean forecast. This prevents CV overfitting on small per-horizon samples.
+
+If both revenue gates produce 0.00 for all horizons, the evaluator uses the deterministic safe baseline exclusively for revenue, which is correct behavior when the training data is too small for the ML path to generalize. ROAS uses a soft floor of 0.10 even when the holdout gate fails, preserving some ML-driven ROAS signal while limiting exposure on thin data.
 
 The `/api/train` endpoint is deliberately separate from public forecasting. It requires `TRAINING_ADMIN_TOKEN`, rejects path traversal, and persists only evaluator-safe `.pkl` files under `pickle/`.
 

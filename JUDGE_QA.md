@@ -66,7 +66,7 @@ The model artifact was verified in a clean Python 3.14.4 environment with pinned
 
 ## How did you validate the trained-model blend weight?
 
-Revenue blend weights of 0.00, 0.10, 0.25, 0.40, 0.50, and 0.60 were tested on the same 30-day holdout. The packaged artifact now uses adaptive revenue weights of 0.00 for 30/60/90 days because the chronological holdout gate and regenerated backtest show the deterministic baseline has the best revenue RMSE/MAE balance on this sample. ROAS uses 0.40 because it produced the best ROAS RMSE/MAE balance. The weights are stored both globally and by horizon.
+Revenue blend weights of 0.00, 0.10, 0.25, 0.40, 0.50, and 0.60 were tested on the same 30-day holdout. The packaged artifact now uses adaptive revenue weights of 0.00 for 30/60/90 days because the chronological holdout gate and regenerated backtest show the deterministic baseline has the best revenue RMSE/MAE balance on this sample. ROAS is also gated per horizon; the rebuilt artifact validates 0.40 for 30/60/90 days, and the blend comparison confirms 0.40 has the best ROAS RMSE/MAE balance. The weights are stored both globally and by horizon.
 
 ## What does the holdout backtest show?
 

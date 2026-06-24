@@ -1,6 +1,6 @@
 # ForecastIQ Backtest Summary
 
-Generated: 2026-06-24T10:27:28.554711+00:00
+Generated: 2026-06-24T11:27:07.537473+00:00
 
 ## Holdout Design
 
@@ -27,6 +27,7 @@ Generated: 2026-06-24T10:27:28.554711+00:00
 - Training rows: 1200
 - Rolling training samples: 306
 - Revenue blend weight: 0.0
+- ROAS blend weight: 0.4
 
 ## Primary 30-Day Metrics
 
@@ -100,3 +101,12 @@ Recommendation: Keep roas_model_weight=0.40; it has the best ROAS RMSE/MAE balan
 ForecastIQ uses calibrated residual volatility from rolling historical forecasts, horizon-specific
 widening, a minimum interval width floor, and non-negative lower bounds. If a trained model segment
 cannot be scored safely, the evaluator falls back to the deterministic safe baseline.
+
+
+## Fold Errors
+
+The following fold(s) could not complete due to insufficient training data:
+
+| Horizon | Start date | End date | Error |
+| ---: | --- | --- | --- |
+| 90 | 2026-01-19 | 2026-04-18 | ValueError: not enough rolling forecast samples to train evaluator model |

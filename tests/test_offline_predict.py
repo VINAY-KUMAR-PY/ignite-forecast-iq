@@ -126,22 +126,32 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertEqual({row["model_type"] for row in rows}, {TRAINED_MODEL_TYPE})
 
     def test_adaptive_blend_weight_matches_artifact(self) -> None:
-        """Artifact revenue_blend_weight must equal mean of per-horizon weights."""
+        """Artifact revenue_blend_weight and roas_blend_weight must equal mean of per-horizon weights."""
         artifact = Path("pickle/model.pkl")
         if not artifact.exists():
             self.skipTest("no model artifact")
         model = joblib.load(artifact)
-        per_horizon = model["confidence"].get("revenue_model_weight_by_horizon", {})
-        top_level = float(model.get("revenue_blend_weight", -1))
-        if not per_horizon:
-            return
 
-        expected_mean = sum(float(v) for v in per_horizon.values()) / len(per_horizon)
-        self.assertLess(
-            abs(top_level - expected_mean),
-            0.01,
-            f"revenue_blend_weight={top_level} does not match mean of per-horizon={expected_mean:.3f}: {per_horizon}",
-        )
+        rev_per_horizon = model["confidence"].get("revenue_model_weight_by_horizon", {})
+        rev_top = float(model.get("revenue_blend_weight", -1))
+        if rev_per_horizon:
+            expected_rev = sum(float(v) for v in rev_per_horizon.values()) / len(rev_per_horizon)
+            self.assertLess(
+                abs(rev_top - expected_rev),
+                0.01,
+                f"revenue_blend_weight={rev_top} does not match mean of per-horizon={expected_rev:.3f}: {rev_per_horizon}",
+            )
+
+        roas_top = float(model.get("roas_blend_weight", -99))
+        self.assertNotEqual(roas_top, -99, "roas_blend_weight is missing from artifact root level")
+        roas_per_horizon = model["confidence"].get("roas_model_weight_by_horizon", {})
+        if roas_per_horizon:
+            expected_roas = sum(float(v) for v in roas_per_horizon.values()) / len(roas_per_horizon)
+            self.assertLess(
+                abs(roas_top - expected_roas),
+                0.01,
+                f"roas_blend_weight={roas_top} does not match mean of per-horizon={expected_roas:.3f}: {roas_per_horizon}",
+            )
 
     def test_causal_summary_written(self) -> None:
         raw = pd.read_csv("data/sample_campaigns.csv")
@@ -153,6 +163,13 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertGreater(len(summary), 100)
         self.assertRegex(summary, r"ROAS|roas")
         self.assertIn("$", summary)
+        known_channels = {"Google Ads", "Meta Ads", "Microsoft Ads"}
+        found = [channel for channel in known_channels if channel in summary]
+        self.assertTrue(
+            found,
+            f"Causal summary contains no recognized channel names. Expected one of {known_channels}. "
+            f"Summary start: {summary[:200]}",
+        )
 
     def test_interval_coverage_floor(self) -> None:
         values = pd.Series(np.random.default_rng(42).normal(1000, 200, 60))

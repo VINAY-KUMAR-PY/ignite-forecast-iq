@@ -615,6 +615,7 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
     revenue_by_horizon: dict[str, float] = {}
     roas_by_horizon: dict[str, float] = {}
     revenue_weight_by_horizon: dict[str, float] = {}
+    roas_weight_by_horizon: dict[str, float] = {}
     horizon_sample_counts: dict[str, int] = {}
     fallback_horizons: list[int] = []
     revenue_residuals_all: list[float] = []
@@ -629,6 +630,7 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
             revenue_by_horizon[str(horizon)] = clean_number(max(float(np.mean(np.abs(y_revenue))) * 0.08, 1.0))
             roas_by_horizon[str(horizon)] = clean_number(max(float(np.mean(np.abs(y_roas))) * 0.08, 0.05), 4)
             revenue_weight_by_horizon[str(horizon)] = 0.0
+            roas_weight_by_horizon[str(horizon)] = 0.0
             models[horizon] = {
                 "fallback_only": True,
                 "training_samples": dedicated_samples,
@@ -710,6 +712,38 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
             revenue_model_weight = 0.0
         revenue_weight_by_horizon[str(horizon)] = revenue_model_weight
         revenue_model.fit(X_h, y_rev_h)
+
+        n_eval_roas = max(1, dedicated_samples // 5)
+        n_train_roas = dedicated_samples - n_eval_roas
+        trained_roas_holdout_mae = None
+        baseline_roas_holdout_mae = None
+        roas_holdout_beats_baseline = False
+        if n_train_roas >= 6 and n_eval_roas >= 1:
+            try:
+                chronological_order_roas = np.argsort(target_dates_h)
+                X_h_chrono_roas = X_h.iloc[chronological_order_roas]
+                y_roas_h_chrono = y_roas_h[chronological_order_roas]
+                X_train_rh = X_h_chrono_roas.iloc[:n_train_roas]
+                X_eval_rh = X_h_chrono_roas.iloc[n_train_roas:]
+                y_train_rh = y_roas_h_chrono[:n_train_roas]
+                y_eval_rh = y_roas_h_chrono[n_train_roas:]
+                holdout_roas_model = roas_model.__class__(
+                    n_estimators={30: 80, 60: 70, 90: 60}[horizon],
+                    learning_rate=0.05,
+                    max_depth=2,
+                    random_state=243 + horizon,
+                )
+                holdout_roas_model.fit(X_train_rh, y_train_rh)
+                trained_roas_holdout_mae = float(
+                    np.mean(np.abs(y_eval_rh - holdout_roas_model.predict(X_eval_rh)))
+                )
+                baseline_roas_holdout_mae = float(np.mean(np.abs(y_eval_rh - float(np.mean(y_train_rh)))))
+                roas_holdout_beats_baseline = trained_roas_holdout_mae < baseline_roas_holdout_mae
+            except Exception:
+                roas_holdout_beats_baseline = False
+
+        roas_model_weight = 0.40 if roas_holdout_beats_baseline else 0.10
+        roas_weight_by_horizon[str(horizon)] = roas_model_weight
         roas_model.fit(X_h, y_roas_h)
         revenue_residuals_h = y_rev_h - np.asarray(revenue_model.predict(X_h), dtype=float)
         roas_residuals_h = y_roas_h - np.asarray(roas_model.predict(X_h), dtype=float)
@@ -729,12 +763,19 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
             "revenue_holdout_mae": clean_number(revenue_holdout_mae) if revenue_holdout_mae is not None else None,
             "revenue_holdout_baseline_mae": clean_number(baseline_holdout_mae) if baseline_holdout_mae is not None else None,
             "revenue_holdout_beats_baseline": bool(holdout_beats_baseline),
+            "roas_holdout_mae": clean_number(trained_roas_holdout_mae, 4) if trained_roas_holdout_mae is not None else None,
+            "roas_holdout_baseline_mae": clean_number(baseline_roas_holdout_mae, 4) if baseline_roas_holdout_mae is not None else None,
+            "roas_holdout_beats_baseline": bool(roas_holdout_beats_baseline),
         }
 
     revenue_residuals = np.asarray(revenue_residuals_all, dtype=float)
     roas_residuals = np.asarray(roas_residuals_all, dtype=float)
     revenue_blend_weight = clean_number(
         max(0.0, float(np.mean(list(revenue_weight_by_horizon.values()))) if revenue_weight_by_horizon else 0.0),
+        4,
+    )
+    roas_blend_weight = clean_number(
+        max(0.0, float(np.mean(list(roas_weight_by_horizon.values()))) if roas_weight_by_horizon else 0.0),
         4,
     )
 
@@ -748,6 +789,7 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
         "training_samples": int(len(X)),
         "feature_columns": FEATURE_COLUMNS,
         "revenue_blend_weight": revenue_blend_weight,
+        "roas_blend_weight": roas_blend_weight,
         "preprocessing": {
             "column_aliases": COLUMN_ALIASES,
             "category_maps": maps,
@@ -759,11 +801,9 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
             "minimum_interval_pct": 0.10,
             "horizon_interval_multiplier": {"30": 1.0, "60": 1.30, "90": 1.60},
             "revenue_model_weight": revenue_blend_weight,
-            "roas_model_weight": 0.40,
+            "roas_model_weight": roas_blend_weight,
             "revenue_model_weight_by_horizon": revenue_weight_by_horizon,
-            "roas_model_weight_by_horizon": {
-                str(horizon): 0.0 if horizon in fallback_horizons else 0.40 for horizon in HORIZONS
-            },
+            "roas_model_weight_by_horizon": roas_weight_by_horizon,
             "horizon_training_samples": horizon_sample_counts,
             "fallback_horizons": fallback_horizons,
             "revenue_residual_std": clean_number(

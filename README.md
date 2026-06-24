@@ -22,7 +22,7 @@ The offline evaluator path is intentionally isolated from the web app. `run.sh` 
 | Model artifact                       | `pickle/model.pkl`                                                                         |
 | Model artifact size                  | ~884 KB                                                                                    |
 | Model artifact version               | 4                                                                                          |
-| Training rows                        | 1,440                                                                                      |
+| Training rows                        | 1,440 (full dataset); 1,200 used as training split in primary 30-day holdout backtest      |
 | Rolling training samples             | 414                                                                                        |
 | Feature count                        | 35 evaluator features plus live holiday/seasonality flags                                  |
 | Normal evaluator mode                | `trained_model`                                                                            |
@@ -256,11 +256,11 @@ The offline evaluator artifact at `pickle/model.pkl` is a compact joblib artifac
 | Artifact version     | 4                            |
 | Evaluator model type | `trained_model`              |
 | Artifact size        | ~880 KB                      |
-| Training rows        | 1,440                        |
+| Training rows        | 1,440 (full dataset); 1,200 used as training split in 30-day holdout backtest |
 | Rolling samples      | 414                          |
 | Feature count        | 35                           |
 | Revenue blend weight | adaptive per-horizon: 30d 0.00, 60d 0.00, 90d 0.00 |
-| ROAS blend weight    | 0.40                         |
+| ROAS blend weight    | adaptive per-horizon: 30d 0.40, 60d 0.40, 90d 0.40 (holdout validated); see `reports/backtest_summary.md` |
 | Causal summary output | `output/causal_summary.txt` |
 
 The evaluator model trains on rolling historical samples from `data/sample_campaigns.csv` and predicts 30, 60, and 90 day revenue and ROAS at overall, channel, campaign type, and campaign levels. The artifact stores dedicated training-sample counts by horizon: 252 samples for 30 days, 108 for 60 days, and 54 for 90 days. If a future training slice lacks enough dedicated samples for a horizon, that horizon is explicitly marked fallback-only instead of fitting on mismatched 30/60-day targets. The safe baseline remains available for missing, corrupt, incompatible, tiny, or malformed hidden evaluator data.
@@ -309,7 +309,7 @@ Forecast explainability now includes two layers:
 - Global feature importance and SHAP importance: which features mattered most across model training for the selected segment.
 - Local "Why this forecast?" explainability: permutation-baseline driver cards showing which current forecast-row features pushed this specific forecast up or down versus typical historical values.
 
-Blend-weight validation tested revenue model weights of 0.00, 0.10, 0.25, 0.40, 0.50, and 0.60. The packaged artifact now uses a holdout-gated 0.00 revenue blend because that weight produced the best revenue RMSE/MAE balance on the sample holdout. ROAS uses 0.40 because that weight produced the best ROAS RMSE/MAE balance.
+Blend-weight validation tested revenue model weights of 0.00, 0.10, 0.25, 0.40, 0.50, and 0.60. The packaged artifact now uses a holdout-gated 0.00 revenue blend because that weight produced the best revenue RMSE/MAE balance on the sample holdout. ROAS uses adaptive per-horizon gates; the rebuilt artifact validates 0.40 on the 30, 60, and 90 day horizons, and the blend comparison confirms 0.40 has the best ROAS RMSE/MAE balance.
 
 | Revenue model weight |      MAE |     RMSE |  MAPE | Interval coverage |
 | -------------------: | -------: | -------: | ----: | ----------------: |

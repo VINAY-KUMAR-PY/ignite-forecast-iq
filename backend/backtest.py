@@ -522,6 +522,26 @@ def _summary_markdown(report: dict[str, Any]) -> str:
         f'{item["mape"]}% | {item["interval_coverage"]}% |'
         for item in report["roas_blend_weight_comparison"]
     )
+    fold_errors = [
+        {"horizon": h["horizon_days"], "start": fold["start_date"], "end": fold["end_date"], "error": fold["error"]}
+        for h in report.get("per_horizon_performance", [])
+        for fold in h.get("folds", [])
+        if "error" in fold
+    ]
+    if fold_errors:
+        fe_rows = "\n".join(
+            f'| {e["horizon"]} | {e["start"]} | {e["end"]} | {e["error"]} |'
+            for e in fold_errors
+        )
+        fold_error_section = (
+            "\n\n## Fold Errors\n\n"
+            "The following fold(s) could not complete due to insufficient training data:\n\n"
+            "| Horizon | Start date | End date | Error |\n"
+            "| ---: | --- | --- | --- |\n"
+            f"{fe_rows}"
+        )
+    else:
+        fold_error_section = ""
     horizon_rows = "\n".join(
         f'| {item["horizon_days"]} | {item["fold_count"]} | {item["segments_evaluated"]} | '
         f'{item["trained_model_metrics"]["mae"]} | '
@@ -561,6 +581,7 @@ Generated: {report["generated_at"]}
 - Training rows: {model["training_rows"]}
 - Rolling training samples: {model["training_samples"]}
 - Revenue blend weight: {model["confidence"]["revenue_model_weight"]}
+- ROAS blend weight: {model["confidence"]["roas_model_weight"]}
 
 ## Primary 30-Day Metrics
 
@@ -622,7 +643,7 @@ Recommendation: {report["roas_blend_weight_recommendation"]["recommendation"]}
 ForecastIQ uses calibrated residual volatility from rolling historical forecasts, horizon-specific
 widening, a minimum interval width floor, and non-negative lower bounds. If a trained model segment
 cannot be scored safely, the evaluator falls back to the deterministic safe baseline.
-"""
+{fold_error_section}"""
 
 
 def main() -> None:

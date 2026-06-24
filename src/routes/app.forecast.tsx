@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   Area,
-  AreaChart,
   CartesianGrid,
+  ComposedChart,
   Legend,
   Line,
   ResponsiveContainer,
@@ -136,9 +136,8 @@ function ForecastPage() {
     ? forecastRoasOnly.reduce((s, p) => s + p.upper, 0) / forecastRoasOnly.length
     : 0;
 
-  // chart data — sample historicals
-  const revData = sampleSeries(revFc, 180);
-  const roasData = sampleSeries(roasFc, 180);
+  const revData = buildForecastChartSeries(revFc);
+  const roasData = buildForecastChartSeries(roasFc);
   const diagnostics = apiForecast?.summary.diagnostics;
 
   return (
@@ -287,7 +286,7 @@ function ForecastPage() {
             </span>
           </div>
           <ResponsiveContainer width="100%" height={340}>
-            <AreaChart data={revData} margin={{ left: -10, right: 8, top: 8 }}>
+            <ComposedChart data={revData} margin={{ left: -10, right: 8, top: 8 }}>
               <defs>
                 <linearGradient id="revBand" x1="0" x2="0" y1="0" y2="1">
                   <stop offset="0%" stopColor="var(--color-chart-1)" stopOpacity={0.32} />
@@ -360,7 +359,7 @@ function ForecastPage() {
                 isAnimationActive={false}
                 name="Lower bound"
               />
-            </AreaChart>
+            </ComposedChart>
           </ResponsiveContainer>
         </Card>
 
@@ -377,7 +376,7 @@ function ForecastPage() {
             </span>
           </div>
           <ResponsiveContainer width="100%" height={280}>
-            <AreaChart data={roasData} margin={{ left: -10, right: 8, top: 8 }}>
+            <ComposedChart data={roasData} margin={{ left: -10, right: 8, top: 8 }}>
               <defs>
                 <linearGradient id="roasBand" x1="0" x2="0" y1="0" y2="1">
                   <stop offset="0%" stopColor="var(--color-chart-2)" stopOpacity={0.28} />
@@ -450,7 +449,7 @@ function ForecastPage() {
                 isAnimationActive={false}
                 name="Lower bound"
               />
-            </AreaChart>
+            </ComposedChart>
           </ResponsiveContainer>
         </Card>
       </div>
@@ -924,32 +923,55 @@ function LocalDriverList({
   );
 }
 
-function sampleSeries(
+const CHART_HISTORY_DAYS = 60;
+
+function buildForecastChartSeries(
   points: { date: string; value: number; lower: number; upper: number; historical?: boolean }[],
-  maxHistorical: number,
 ) {
-  const hist = points.filter((p) => p.historical);
+  const hist = points.filter((p) => p.historical).slice(-CHART_HISTORY_DAYS);
   const fc = points.filter((p) => !p.historical);
-  const step = Math.max(1, Math.floor(hist.length / maxHistorical));
-  const sampled = hist.filter((_, i) => i % step === 0 || i === hist.length - 1);
-  return [
-    ...sampled.map((p) => ({
+  const lastHistorical = hist.at(-1);
+  const alignedForecast = alignForecastDates(fc, lastHistorical?.date);
+
+  const historicalPoints = hist.map((p, index) => {
+    const isLastHistorical = index === hist.length - 1;
+    return {
       date: p.date,
       historical: p.value,
-      forecast: null as number | null,
-      lower: null as number | null,
-      upper: null as number | null,
-      range: null as [number, number] | null,
-    })),
-    ...fc.map((p) => ({
-      date: p.date,
-      historical: null as number | null,
-      forecast: p.value,
-      lower: p.lower,
-      upper: p.upper,
-      range: [p.lower, p.upper] as [number, number],
-    })),
-  ];
+      forecast: isLastHistorical ? p.value : (null as number | null),
+      lower: isLastHistorical ? p.value : (null as number | null),
+      upper: isLastHistorical ? p.value : (null as number | null),
+      range: isLastHistorical
+        ? ([p.value, p.value] as [number, number])
+        : (null as [number, number] | null),
+    };
+  });
+
+  const forecastPoints = alignedForecast.map((p) => ({
+    date: p.date,
+    historical: null as number | null,
+    forecast: p.value,
+    lower: p.lower,
+    upper: p.upper,
+    range: [p.lower, p.upper] as [number, number],
+  }));
+
+  return [...historicalPoints, ...forecastPoints];
+}
+
+function alignForecastDates(
+  forecast: { date: string; value: number; lower: number; upper: number }[],
+  lastHistoricalDate?: string,
+) {
+  if (!lastHistoricalDate) return forecast;
+  const base = new Date(`${lastHistoricalDate}T00:00:00.000Z`);
+  if (Number.isNaN(base.getTime())) return forecast;
+
+  return forecast.map((point, index) => {
+    const nextDate = new Date(base);
+    nextDate.setUTCDate(base.getUTCDate() + index + 1);
+    return { ...point, date: nextDate.toISOString().slice(0, 10) };
+  });
 }
 
 type TooltipPayload = {

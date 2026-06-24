@@ -63,6 +63,15 @@ class ApiSecurityTests(unittest.TestCase):
     def setUp(self) -> None:
         self.client = TestClient(app)
 
+    def test_health_supports_get_and_head(self) -> None:
+        get_response = self.client.get("/health")
+        self.assertEqual(get_response.status_code, 200)
+        self.assertEqual(get_response.json(), {"status": "ok", "service": "forecastiq-api"})
+
+        head_response = self.client.head("/health")
+        self.assertEqual(head_response.status_code, 200)
+        self.assertEqual(head_response.content, b"")
+
     def test_train_without_admin_token_returns_401(self) -> None:
         response = self.client.post("/api/train", json={"rows": [valid_row()], "modelPath": "pickle/model.pkl"})
 

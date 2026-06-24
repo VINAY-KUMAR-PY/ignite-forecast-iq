@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 
 import joblib
-from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi import FastAPI, Header, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -152,6 +152,12 @@ def _safe_model_path(model_path: str) -> Path:
 def health() -> dict:
     """Return a cheap liveness probe for local and hosted deployments."""
     return {"status": "ok", "service": "forecastiq-api"}
+
+
+@app.head("/health")
+def health_head() -> Response:
+    """Support HEAD-based uptime checks without a response body."""
+    return Response(status_code=200)
 
 
 @app.post("/api/validate", response_model=ValidationResponse)

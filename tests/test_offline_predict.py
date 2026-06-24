@@ -125,14 +125,23 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assert_valid_prediction_rows(rows)
         self.assertEqual({row["model_type"] for row in rows}, {TRAINED_MODEL_TYPE})
 
-    def test_revenue_blend_weight_nonzero(self) -> None:
+    def test_adaptive_blend_weight_matches_artifact(self) -> None:
+        """Artifact revenue_blend_weight must equal mean of per-horizon weights."""
         artifact = Path("pickle/model.pkl")
         if not artifact.exists():
             self.skipTest("no model artifact")
         model = joblib.load(artifact)
-        weight = float(model.get("revenue_blend_weight", 0))
+        per_horizon = model["confidence"].get("revenue_model_weight_by_horizon", {})
+        top_level = float(model.get("revenue_blend_weight", -1))
+        if not per_horizon:
+            return
 
-        self.assertGreater(weight, 0.0, f"revenue_blend_weight must be > 0, got {weight}")
+        expected_mean = sum(float(v) for v in per_horizon.values()) / len(per_horizon)
+        self.assertLess(
+            abs(top_level - expected_mean),
+            0.01,
+            f"revenue_blend_weight={top_level} does not match mean of per-horizon={expected_mean:.3f}: {per_horizon}",
+        )
 
     def test_causal_summary_written(self) -> None:
         raw = pd.read_csv("data/sample_campaigns.csv")
@@ -154,6 +163,34 @@ class OfflinePredictionTests(unittest.TestCase):
 
         self.assertGreater(w90, w60, f"Intervals must widen: {w30:.0f} < {w60:.0f} < {w90:.0f}")
         self.assertGreater(w60, w30, f"Intervals must widen: {w30:.0f} < {w60:.0f} < {w90:.0f}")
+
+    def test_interval_ordering_widens_by_horizon(self) -> None:
+        """60-day and 90-day intervals must be wider than 30-day at overall level."""
+        df = pd.read_csv("data/sample_campaigns.csv")
+        cleaned = canonicalize_frame(df)
+        model = safe_load_model("pickle/model.pkl")
+        rows = build_predictions(cleaned.frame, model)
+        overall = {int(r["horizon_days"]): r for r in rows if r["level"] == "overall"}
+
+        w30 = float(overall[30]["interval_width_pct"])
+        w60 = float(overall[60]["interval_width_pct"])
+        w90 = float(overall[90]["interval_width_pct"])
+
+        self.assertGreater(w60, w30, f"60d interval ({w60}%) must exceed 30d ({w30}%)")
+        self.assertGreater(w90, w60, f"90d interval ({w90}%) must exceed 60d ({w60}%)")
+
+    def test_causal_summary_contains_anomaly_section(self) -> None:
+        """Causal summary must include an anomaly signals section."""
+        df = pd.read_csv("data/sample_campaigns.csv")
+        cleaned = canonicalize_frame(df)
+        model = safe_load_model("pickle/model.pkl")
+        rows = build_predictions(cleaned.frame, model)
+        summary = generate_offline_causal_summary(cleaned.frame, rows)
+
+        self.assertTrue(
+            "Anomaly signals" in summary or "No anomalies" in summary,
+            "Causal summary must contain an anomaly section",
+        )
 
     def test_corrupt_model_file_uses_safe_baseline_fallback(self) -> None:
         raw = pd.DataFrame(

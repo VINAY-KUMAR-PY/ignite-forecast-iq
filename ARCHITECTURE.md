@@ -88,11 +88,28 @@ Each CSV file is normalized with `source_schema` and `source_file` provenance be
 
 ## Model Design
 
-The forecasting layer trains separate models for revenue and ROAS. Feature engineering includes media inputs, seasonality, trend, target lags, rolling target averages, and rolling spend. Confidence intervals are derived from residual volatility and widen over the forecast horizon. Revenue intervals and ROAS intervals are emitted together in the offline evaluator output and live API summary. The revenue model contributes a weighted blend alongside the deterministic baseline; the exact CV-gated weight is stored per horizon in the artifact's confidence block. If spend is absent, ROAS is marked `not_computable` with numeric zero bounds so the evaluator contract remains NaN-safe without inventing a confident efficiency metric.
+The forecasting layer trains separate models for revenue and ROAS. Feature engineering includes media inputs, seasonality, trend, target lags, rolling target averages, and rolling spend. Confidence intervals are derived from residual volatility and widen over the forecast horizon. Revenue intervals and ROAS intervals are emitted together in the offline evaluator output and live API summary. The revenue model contributes a weighted blend only when a chronological holdout gate validates it against the deterministic baseline; the exact dual-gated weight is stored per horizon in the artifact's confidence block. If spend is absent, ROAS is marked `not_computable` with numeric zero bounds so the evaluator contract remains NaN-safe without inventing a confident efficiency metric.
 
 The live and offline forecasting paths intentionally optimize for different constraints. The live API uses XGBoost-first daily forecasts for interactive charts, explainability, and budget simulation. The offline evaluator uses a compact pre-trained sklearn artifact so `run.sh` stays fast, deterministic, and independent of servers or optional AI services. They share schema normalization, 30/60/90-day horizons, non-negative outputs, uncertainty guardrails, and safe fallback principles, but exact numerical parity is neither promised nor presented because the estimators and output grains differ.
 
 The offline evaluator model uses a compact joblib sklearn artifact at `pickle/model.pkl`. The artifact stores dedicated training-sample counts by horizon plus horizon-aware revenue and ROAS blend weights. If a horizon has fewer than the minimum dedicated samples during training, that horizon is marked fallback-only instead of training on mismatched target scales. If loading or feature generation fails, the deterministic safe baseline remains active and still produces the required prediction schema.
+
+## Revenue Blend Weight Decision Logic
+
+The offline evaluator uses adaptive per-horizon blend weights determined by two gates applied during training:
+
+| Gate | Condition | Revenue model weight |
+| --- | --- | ---: |
+| Strong evidence | CV R2 >= 0.15 and chronological holdout beats deterministic baseline | 0.30 |
+| Moderate evidence | CV R2 >= 0.05 and chronological holdout beats deterministic baseline | 0.15 |
+| Weak evidence | Chronological holdout beats deterministic baseline but CV R2 < 0.05 | 0.10 |
+| No evidence | Chronological holdout does not beat deterministic baseline | 0.00 |
+
+The holdout gate uses the latest 20% of each horizon's dedicated training samples by target date to check whether the trained model's MAE beats ForecastIQ's deterministic safe baseline. This prevents CV overfitting on small per-horizon samples.
+
+The ROAS model uses a fixed weight of 0.40, which the backtest confirms is optimal across all tested values (see `reports/backtest_summary.md`).
+
+If both gates produce 0.00 for all horizons, the evaluator uses the deterministic safe baseline exclusively for revenue, which is correct behavior when the training data is too small for the ML path to generalize.
 
 The `/api/train` endpoint is deliberately separate from public forecasting. It requires `TRAINING_ADMIN_TOKEN`, rejects path traversal, and persists only evaluator-safe `.pkl` files under `pickle/`.
 
@@ -120,7 +137,7 @@ The latest holdout backtest trains on the earlier period and evaluates the final
 
 | Model         |      MAE |     RMSE |  MAPE | Interval coverage |
 | ------------- | -------: | -------: | ----: | ----------------: |
-| Trained model | 2,649.77 | 3,198.49 | 3.31% |           100.00% |
+| Trained model | 2,185.89 | 2,763.76 | 2.78% |           100.00% |
 | Safe baseline | 2,185.89 | 2,763.76 | 2.78% |           100.00% |
 
 ### ROAS
@@ -130,12 +147,12 @@ The latest holdout backtest trains on the earlier period and evaluates the final
 | Trained model | 0.05 | 0.06 | 1.26% |           100.00% |
 | Safe baseline | 0.05 | 0.07 | 1.44% |           100.00% |
 
-Walk-forward validation also reports 30/60/90-day horizon behavior and records whether a fold used a trained horizon model or an explicit fallback-only horizon. This is why both modes coexist: the trained model adds ML behavior where validated, while the fallback protects hidden-dataset reliability.
+Walk-forward validation also reports 30/60/90-day horizon behavior and records whether a fold used a trained horizon model or an explicit fallback-only horizon. This is why both modes coexist: the trained model adds ROAS behavior and diagnostics where validated, while the fallback protects hidden-dataset revenue stability.
 
 | Horizon | Folds | Segments | Trained revenue MAE | Safe baseline MAE | Trained coverage | Revenue MAE winner |
 | ------: | ----: | -------: | ------------------: | ----------------: | ---------------: | ------------------ |
-|      30 |     3 |       54 |            3,780.22 |          3,097.88 |           98.15% | Safe baseline |
-|      60 |     3 |       54 |           19,891.14 |         11,221.15 |           88.89% | Safe baseline |
+|      30 |     3 |       54 |            3,154.41 |          3,097.88 |          100.00% | Safe baseline |
+|      60 |     3 |       54 |           11,221.15 |         11,221.15 |          100.00% | Tie |
 |      90 |     2 |       36 |           22,981.64 |         22,981.64 |          100.00% | Tie |
 
 ## Deployment Model

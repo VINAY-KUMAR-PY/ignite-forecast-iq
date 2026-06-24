@@ -66,15 +66,15 @@ The model artifact was verified in a clean Python 3.14.4 environment with pinned
 
 ## How did you validate the trained-model blend weight?
 
-Revenue blend weights of 0.00, 0.10, 0.25, 0.40, 0.50, and 0.60 were tested on the same 30-day holdout. The packaged artifact uses a CV-gated 0.35 revenue blend for 30/60/90 days so the trained revenue model is not ignored; the report still shows the safe baseline has lower revenue point MAE on this sample. ROAS uses 0.40 because it produced the best ROAS RMSE/MAE balance. The weights are stored both globally and by horizon.
+Revenue blend weights of 0.00, 0.10, 0.25, 0.40, 0.50, and 0.60 were tested on the same 30-day holdout. The packaged artifact now uses adaptive revenue weights of 0.00 for 30/60/90 days because the chronological holdout gate and regenerated backtest show the deterministic baseline has the best revenue RMSE/MAE balance on this sample. ROAS uses 0.40 because it produced the best ROAS RMSE/MAE balance. The weights are stored both globally and by horizon.
 
 ## What does the holdout backtest show?
 
-The final 30 days were held out while the model trained on the earlier period. Across 18 evaluated segments, the trained evaluator produced revenue MAE 2,649.77, RMSE 3,198.49, MAPE 3.31%, and 100.00% interval coverage. The safe baseline remains better on revenue point error at MAE 2,185.89 and RMSE 2,763.76. For ROAS, the trained evaluator achieved MAE 0.05, RMSE 0.06, MAPE 1.26%, and 100.00% interval coverage versus baseline RMSE 0.07 and MAPE 1.44%.
+The final 30 days were held out while the model trained on the earlier period. Across 18 evaluated segments, the trained evaluator produced revenue MAE 2,185.89, RMSE 2,763.76, MAPE 2.78%, and 100.00% interval coverage, matching the safe baseline because revenue is baseline-guarded at weight 0.00. For ROAS, the trained evaluator achieved MAE 0.05, RMSE 0.06, MAPE 1.26%, and 100.00% interval coverage versus baseline RMSE 0.07 and MAPE 1.44%.
 
-The trained model improves ROAS RMSE from 0.07 to 0.06 and keeps interval coverage at 100%. Revenue point estimates remain baseline-guarded because the holdout shows the deterministic baseline is currently more stable; the trained model contributes a nonzero blend and residual calibration without overclaiming revenue superiority.
+The trained model improves ROAS RMSE from 0.07 to 0.06 and keeps interval coverage at 100%. Revenue point estimates remain baseline-guarded because the holdout shows the deterministic baseline is currently more stable; the trained artifact contributes ROAS modeling, residual calibration, and fallback metadata without overclaiming revenue superiority.
 
-The backtest report also includes revenue and ROAS blend-weight comparisons plus walk-forward 30/60/90-day horizon performance. Walk-forward interval coverage is now 98.15%, 88.89%, and 100.00% for 30, 60, and 90 days after widening horizon floors.
+The backtest report also includes revenue and ROAS blend-weight comparisons plus walk-forward 30/60/90-day horizon performance. Walk-forward interval coverage is now 100.00%, 100.00%, and 100.00% for 30, 60, and 90 days after widening horizon floors.
 
 ## What is the model verification process?
 

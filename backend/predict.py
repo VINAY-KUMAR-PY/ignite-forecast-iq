@@ -567,7 +567,9 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
     training_rows: list[dict[str, Any]] = []
     revenue_targets: list[float] = []
     roas_targets: list[float] = []
+    baseline_revenue_targets: list[float] = []
     horizon_labels: list[int] = []
+    target_end_dates: list[pd.Timestamp] = []
 
     for level, segment_name, segment in segment_specs(frame):
         daily = aggregate_segment_daily(segment)
@@ -586,10 +588,17 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
                 features = segment_feature_frame(history, horizon, level, segment_name, maps)
                 future_revenue = safe_float(future["revenue"].sum())
                 future_spend = safe_float(future["spend"].sum())
+                baseline_prediction = forecast_segment(
+                    history,
+                    horizon,
+                    fallback_model_config("training baseline gate"),
+                )["expected_revenue"]
                 training_rows.append(features.iloc[0].to_dict())
                 revenue_targets.append(max(0.0, future_revenue))
                 roas_targets.append(max(0.0, safe_ratio(future_revenue, future_spend)))
+                baseline_revenue_targets.append(max(0.0, safe_float(baseline_prediction)))
                 horizon_labels.append(horizon)
+                target_end_dates.append(pd.to_datetime(future["date"].iloc[-1]))
 
     if len(training_rows) < 30:
         raise ValueError("not enough rolling forecast samples to train evaluator model")
@@ -597,6 +606,8 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
     X = pd.DataFrame(training_rows, columns=FEATURE_COLUMNS).replace([np.inf, -np.inf], 0).fillna(0)
     y_revenue = np.asarray(revenue_targets, dtype=float)
     y_roas = np.asarray(roas_targets, dtype=float)
+    baseline_revenue = np.asarray(baseline_revenue_targets, dtype=float)
+    target_dates = np.asarray(target_end_dates, dtype="datetime64[ns]")
     if len(np.unique(y_revenue)) <= 1 or len(np.unique(y_roas)) <= 1:
         raise ValueError("training targets are not variable enough")
 
@@ -617,7 +628,7 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
             fallback_horizons.append(horizon)
             revenue_by_horizon[str(horizon)] = clean_number(max(float(np.mean(np.abs(y_revenue))) * 0.08, 1.0))
             roas_by_horizon[str(horizon)] = clean_number(max(float(np.mean(np.abs(y_roas))) * 0.08, 0.05), 4)
-            revenue_weight_by_horizon[str(horizon)] = 0.05
+            revenue_weight_by_horizon[str(horizon)] = 0.0
             models[horizon] = {
                 "fallback_only": True,
                 "training_samples": dedicated_samples,
@@ -627,6 +638,8 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
         X_h = X.loc[mask]
         y_rev_h = y_revenue[mask]
         y_roas_h = y_roas[mask]
+        baseline_rev_h = baseline_revenue[mask]
+        target_dates_h = target_dates[mask]
         revenue_params = (
             {"n_estimators": 200, "learning_rate": 0.05, "max_depth": 4, "subsample": 0.8, "max_features": 0.8}
             if horizon == 30
@@ -659,12 +672,42 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
                 revenue_cv_r2 = safe_float(np.mean(finite_scores), 0.0) if len(finite_scores) else 0.0
             except Exception:
                 revenue_cv_r2 = 0.0
-        if revenue_cv_r2 >= 0.15:
-            revenue_model_weight = 0.35
-        elif revenue_cv_r2 >= 0.05:
-            revenue_model_weight = 0.20
+
+        n_eval = max(1, dedicated_samples // 5)
+        n_train = dedicated_samples - n_eval
+        revenue_holdout_mae = None
+        baseline_holdout_mae = None
+        holdout_beats_baseline = False
+        if n_train >= 6 and n_eval >= 1:
+            chronological_order = np.argsort(target_dates_h)
+            X_h_chrono = X_h.iloc[chronological_order]
+            y_rev_h_chrono = y_rev_h[chronological_order]
+            baseline_rev_h_chrono = baseline_rev_h[chronological_order]
+            X_train_h, X_eval_h = X_h_chrono.iloc[:n_train], X_h_chrono.iloc[n_train:]
+            y_train_h, y_eval_h = y_rev_h_chrono[:n_train], y_rev_h_chrono[n_train:]
+            baseline_eval_h = baseline_rev_h_chrono[n_train:]
+            try:
+                holdout_model = revenue_model.__class__(
+                    n_estimators={30: 80, 60: 70, 90: 60}[horizon],
+                    learning_rate=0.05,
+                    max_depth=2,
+                    random_state=142 + horizon,
+                )
+                holdout_model.fit(X_train_h, y_train_h)
+                revenue_holdout_mae = float(np.mean(np.abs(y_eval_h - holdout_model.predict(X_eval_h))))
+                baseline_holdout_mae = float(np.mean(np.abs(y_eval_h - baseline_eval_h)))
+                holdout_beats_baseline = revenue_holdout_mae < baseline_holdout_mae
+            except Exception:
+                holdout_beats_baseline = False
+
+        if revenue_cv_r2 >= 0.15 and holdout_beats_baseline:
+            revenue_model_weight = 0.30
+        elif revenue_cv_r2 >= 0.05 and holdout_beats_baseline:
+            revenue_model_weight = 0.15
+        elif holdout_beats_baseline:
+            revenue_model_weight = 0.10
         else:
-            revenue_model_weight = 0.05
+            revenue_model_weight = 0.0
         revenue_weight_by_horizon[str(horizon)] = revenue_model_weight
         revenue_model.fit(X_h, y_rev_h)
         roas_model.fit(X_h, y_roas_h)
@@ -683,13 +726,15 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
             "roas_model": roas_model,
             "training_samples": dedicated_samples,
             "revenue_cv_r2": clean_number(revenue_cv_r2, 4),
+            "revenue_holdout_mae": clean_number(revenue_holdout_mae) if revenue_holdout_mae is not None else None,
+            "revenue_holdout_baseline_mae": clean_number(baseline_holdout_mae) if baseline_holdout_mae is not None else None,
+            "revenue_holdout_beats_baseline": bool(holdout_beats_baseline),
         }
 
     revenue_residuals = np.asarray(revenue_residuals_all, dtype=float)
     roas_residuals = np.asarray(roas_residuals_all, dtype=float)
-    nonzero_revenue_weights = [weight for weight in revenue_weight_by_horizon.values() if weight > 0]
     revenue_blend_weight = clean_number(
-        float(np.mean(nonzero_revenue_weights)) if nonzero_revenue_weights else 0.05,
+        max(0.0, float(np.mean(list(revenue_weight_by_horizon.values()))) if revenue_weight_by_horizon else 0.0),
         4,
     )
 
@@ -1059,6 +1104,8 @@ def write_predictions(rows: list[dict[str, Any]], output_path: str | Path) -> No
 
 def generate_offline_causal_summary(frame: pd.DataFrame, rows: list[dict]) -> str:
     """Produce a deterministic, data-grounded causal summary for the evaluator output."""
+    from .anomaly import detect_anomalies
+
     if frame.empty or not rows:
         return "Insufficient data for causal summary."
 
@@ -1082,6 +1129,22 @@ def generate_offline_causal_summary(frame: pd.DataFrame, rows: list[dict]) -> st
 
     top_channel = channel_summary.index[0] if not channel_summary.empty else "primary channel"
     top_roas = safe_float(channel_summary["roas"].iloc[0]) if not channel_summary.empty else 0.0
+
+    try:
+        anomalies = detect_anomalies(frame)
+        top_anomalies = anomalies[:3]
+    except Exception:
+        top_anomalies = []
+
+    if top_anomalies:
+        anomaly_lines = [
+            f"  - {a.date} | {a.channel} | {a.metric}: "
+            f"actual={a.actual:.2f}, expected={a.expected:.2f}, "
+            f"z={a.z_score:.1f} ({a.severity})"
+            for a in top_anomalies
+        ]
+    else:
+        anomaly_lines = ["  - No anomalies detected in the historical window."]
 
     spend_trend = window_trend(daily, "spend", 28)
     revenue_trend_val = window_trend(daily, "revenue", 28)
@@ -1114,9 +1177,12 @@ def generate_offline_causal_summary(frame: pd.DataFrame, rows: list[dict]) -> st
         f"Leading channel by ROAS: {top_channel} at {top_roas:.2f}x - "
         "likely driven by stronger conversion quality or lower CPC in this channel.",
         f"30-day forecast: expected revenue ${forecast_rev_30:,.0f} at {forecast_roas_30:.2f}x ROAS.",
-        "Causal hypothesis: recent spend trajectory and channel ROAS efficiency are the "
-        "primary observable drivers of the forecast range. Confidence intervals widen at "
-        "60 and 90 days to reflect accumulated auction, seasonality, and competitor uncertainty.",
+        "Anomaly signals (top 3, used as forecast evidence):",
+        *anomaly_lines,
+        f"Causal hypothesis: the {len(top_anomalies)} anomaly signal(s) above, combined "
+        "with spend trajectory and channel ROAS efficiency, are the observable evidence "
+        "base for the forecast range. Wider intervals at 60 and 90 days reflect compounding "
+        "uncertainty from these detected signals and auction dynamics.",
         "Action: if blended ROAS is above target, test incremental budget in the leading "
         "channel before reallocating away from stable performers.",
     ]

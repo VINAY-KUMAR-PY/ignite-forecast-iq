@@ -68,6 +68,19 @@ jobs:
           if not (frame["expected_roas"] <= frame["upper_roas"]).all():
               raise SystemExit("expected_roas exceeds upper_roas")
 
+          overall = frame[frame["level"] == "overall"].copy()
+          overall["horizon_days"] = overall["horizon_days"].astype(int)
+          if set(overall["horizon_days"].tolist()) == {30, 60, 90}:
+              o = overall.set_index("horizon_days")
+              w30 = float(o.loc[30, "interval_width_pct"])
+              w60 = float(o.loc[60, "interval_width_pct"])
+              w90 = float(o.loc[90, "interval_width_pct"])
+              if not (w90 >= w60 >= w30):
+                  raise SystemExit(
+                      f"Intervals not monotonically widening: 30d={w30} 60d={w60} 90d={w90}"
+                  )
+              print(f"Interval widening OK: {w30}% -> {w60}% -> {w90}%")
+
           modes = set(frame["model_type"].astype(str))
           if sys.version_info >= (3, 11) and "trained_model" not in modes:
               raise SystemExit(f"trained_model missing on supported artifact runtime: {sorted(modes)}")
@@ -82,9 +95,19 @@ jobs:
           from pathlib import Path
 
           p = Path("output/causal_summary.txt")
-          if not p.exists() or len(p.read_text()) < 50:
+          if not p.exists():
+              raise SystemExit("causal_summary.txt missing")
+          text = p.read_text()
+          if len(text) < 100:
               raise SystemExit("causal_summary.txt missing or too short")
-          print("Causal summary OK:", len(p.read_text()), "chars")
+          if "Anomaly signals" not in text and "No anomalies" not in text:
+              raise SystemExit("causal_summary.txt missing anomaly section")
+          known_channels = {"Google Ads", "Meta Ads", "Microsoft Ads"}
+          found = [c for c in known_channels if c in text]
+          if not found:
+              raise SystemExit("causal_summary.txt contains no recognized channel names")
+          print("Channel names found in summary:", found)
+          print("Causal summary OK:", len(text), "chars")
           PY
 
   app-tests:

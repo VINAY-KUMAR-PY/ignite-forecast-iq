@@ -475,6 +475,15 @@ def write_reports(report: dict[str, Any], reports_dir: str | Path = "reports") -
     out_dir.mkdir(parents=True, exist_ok=True)
     json_path = out_dir / "backtest_report.json"
     md_path = out_dir / "backtest_summary.md"
+    write_report_files(report, json_path, md_path)
+    return json_path, md_path
+
+
+def write_report_files(report: dict[str, Any], json_path: str | Path, md_path: str | Path) -> tuple[Path, Path]:
+    json_path = Path(json_path)
+    md_path = Path(md_path)
+    json_path.parent.mkdir(parents=True, exist_ok=True)
+    md_path.parent.mkdir(parents=True, exist_ok=True)
     json_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
     md_path.write_text(_summary_markdown(report), encoding="utf-8")
     return json_path, md_path
@@ -619,12 +628,20 @@ cannot be scored safely, the evaluator falls back to the deterministic safe base
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run ForecastIQ evaluator backtest.")
     parser.add_argument("--data-dir", default="data", help="Folder containing CSV training data")
+    parser.add_argument("--model", default="pickle/model.pkl", help="Accepted for evaluator CLI compatibility")
     parser.add_argument("--holdout-days", type=int, default=30, help="Final-day holdout window")
     parser.add_argument("--reports-dir", default="reports", help="Output report directory")
+    parser.add_argument("--output", default=None, help="JSON backtest report path")
+    parser.add_argument("--summary", default=None, help="Markdown backtest summary path")
     args = parser.parse_args()
 
     report = run_backtest(args.data_dir, args.holdout_days)
-    json_path, md_path = write_reports(report, args.reports_dir)
+    if args.output or args.summary:
+        json_path = Path(args.output or Path(args.reports_dir) / "backtest_report.json")
+        md_path = Path(args.summary or Path(args.reports_dir) / "backtest_summary.md")
+        json_path, md_path = write_report_files(report, json_path, md_path)
+    else:
+        json_path, md_path = write_reports(report, args.reports_dir)
     print(f"Backtest report written to {json_path}")
     print(f"Backtest summary written to {md_path}")
 

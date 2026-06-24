@@ -62,19 +62,19 @@ The fallback improves reliability. Backtesting shows the trained model improves 
 
 ## How do you know the evaluator model is compatible?
 
-The model artifact was verified in a clean Python 3.14.4 environment with pinned dependencies, including scikit-learn 1.9.0, scipy 1.17.1, pandas 3.0.3, numpy 2.4.6, and joblib 1.5.3. CI also exercises the evaluator on Python 3.10-3.14. Python 3.11-3.14 must load the trained artifact; Python 3.10 verifies the safe baseline because sklearn does not guarantee cross-generation pickle compatibility.
+The model artifact was verified in a clean Python 3.14.4 environment with pinned dependencies, including scikit-learn 1.9.0, scipy 1.17.1, pandas 3.0.3, numpy 2.4.6, and joblib 1.5.3. CI also exercises the evaluator on Python 3.10-3.14. `requirements.txt` now pins scikit-learn 1.9.0 for every supported Python version, and the loader still contains a version guard so future dependency drift falls back safely instead of risking silent pickle incompatibility.
 
 ## How did you validate the trained-model blend weight?
 
-Revenue blend weights of 0.00, 0.10, 0.25, 0.40, 0.50, and 0.60 were tested on the same 30-day holdout. Revenue uses 0.00 because higher trained-model weights worsened revenue RMSE/MAE. ROAS uses 0.40 because it produced the best ROAS RMSE/MAE balance. The weights are stored both globally and by horizon, with unsupported horizons able to fall back to weight 0.
+Revenue blend weights of 0.00, 0.10, 0.25, 0.40, 0.50, and 0.60 were tested on the same 30-day holdout. The packaged artifact uses a CV-gated 0.35 revenue blend for 30/60/90 days so the trained revenue model is not ignored; the report still shows the safe baseline has lower revenue point MAE on this sample. ROAS uses 0.40 because it produced the best ROAS RMSE/MAE balance. The weights are stored both globally and by horizon.
 
 ## What does the holdout backtest show?
 
-The final 30 days were held out while the model trained on the earlier period. Across 18 evaluated segments, the trained evaluator currently ties the safe baseline on revenue MAE 2,185.89, revenue RMSE 2,763.76, and revenue MAPE 2.78%, while improving interval coverage to 100.00% versus 88.89%. For ROAS, the trained evaluator achieved MAE 0.05, RMSE 0.06, MAPE 1.26%, and 100.00% interval coverage versus baseline RMSE 0.07 and MAPE 1.44%.
+The final 30 days were held out while the model trained on the earlier period. Across 18 evaluated segments, the trained evaluator produced revenue MAE 2,649.77, RMSE 3,198.49, MAPE 3.31%, and 100.00% interval coverage. The safe baseline remains better on revenue point error at MAE 2,185.89 and RMSE 2,763.76. For ROAS, the trained evaluator achieved MAE 0.05, RMSE 0.06, MAPE 1.26%, and 100.00% interval coverage versus baseline RMSE 0.07 and MAPE 1.44%.
 
-The trained model improves ROAS forecasting (RMSE reduced from 0.07 to 0.06) and interval coverage (100% vs 89%). Revenue point estimates use the deterministic baseline as the primary signal because the holdout shows it is currently more stable; the trained model provides uncertainty calibration via residual distributions.
+The trained model improves ROAS RMSE from 0.07 to 0.06 and keeps interval coverage at 100%. Revenue point estimates remain baseline-guarded because the holdout shows the deterministic baseline is currently more stable; the trained model contributes a nonzero blend and residual calibration without overclaiming revenue superiority.
 
-The backtest report also includes revenue and ROAS blend-weight comparisons plus walk-forward 30/60/90-day horizon performance.
+The backtest report also includes revenue and ROAS blend-weight comparisons plus walk-forward 30/60/90-day horizon performance. Walk-forward interval coverage is now 98.15%, 88.89%, and 100.00% for 30, 60, and 90 days after widening horizon floors.
 
 ## What is the model verification process?
 

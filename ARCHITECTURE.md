@@ -88,7 +88,7 @@ Each CSV file is normalized with `source_schema` and `source_file` provenance be
 
 ## Model Design
 
-The forecasting layer trains separate models for revenue and ROAS. Feature engineering includes media inputs, seasonality, trend, target lags, rolling target averages, and rolling spend. Confidence intervals are derived from residual volatility and widen over the forecast horizon. Revenue intervals and ROAS intervals are emitted together in the offline evaluator output and live API summary. If spend is absent, ROAS is marked `not_computable` with numeric zero bounds so the evaluator contract remains NaN-safe without inventing a confident efficiency metric.
+The forecasting layer trains separate models for revenue and ROAS. Feature engineering includes media inputs, seasonality, trend, target lags, rolling target averages, and rolling spend. Confidence intervals are derived from residual volatility and widen over the forecast horizon. Revenue intervals and ROAS intervals are emitted together in the offline evaluator output and live API summary. The revenue model contributes a weighted blend alongside the deterministic baseline; the exact CV-gated weight is stored per horizon in the artifact's confidence block. If spend is absent, ROAS is marked `not_computable` with numeric zero bounds so the evaluator contract remains NaN-safe without inventing a confident efficiency metric.
 
 The live and offline forecasting paths intentionally optimize for different constraints. The live API uses XGBoost-first daily forecasts for interactive charts, explainability, and budget simulation. The offline evaluator uses a compact pre-trained sklearn artifact so `run.sh` stays fast, deterministic, and independent of servers or optional AI services. They share schema normalization, 30/60/90-day horizons, non-negative outputs, uncertainty guardrails, and safe fallback principles, but exact numerical parity is neither promised nor presented because the estimators and output grains differ.
 
@@ -120,8 +120,8 @@ The latest holdout backtest trains on the earlier period and evaluates the final
 
 | Model         |      MAE |     RMSE |  MAPE | Interval coverage |
 | ------------- | -------: | -------: | ----: | ----------------: |
-| Trained model | 2,250.45 | 2,809.34 | 2.89% |           100.00% |
-| Safe baseline | 2,185.89 | 2,763.76 | 2.78% |            88.89% |
+| Trained model | 2,649.77 | 3,198.49 | 3.31% |           100.00% |
+| Safe baseline | 2,185.89 | 2,763.76 | 2.78% |           100.00% |
 
 ### ROAS
 
@@ -131,6 +131,12 @@ The latest holdout backtest trains on the earlier period and evaluates the final
 | Safe baseline | 0.05 | 0.07 | 1.44% |           100.00% |
 
 Walk-forward validation also reports 30/60/90-day horizon behavior and records whether a fold used a trained horizon model or an explicit fallback-only horizon. This is why both modes coexist: the trained model adds ML behavior where validated, while the fallback protects hidden-dataset reliability.
+
+| Horizon | Folds | Segments | Trained revenue MAE | Safe baseline MAE | Trained coverage | Revenue MAE winner |
+| ------: | ----: | -------: | ------------------: | ----------------: | ---------------: | ------------------ |
+|      30 |     3 |       54 |            3,780.22 |          3,097.88 |           98.15% | Safe baseline |
+|      60 |     3 |       54 |           19,891.14 |         11,221.15 |           88.89% | Safe baseline |
+|      90 |     2 |       36 |           22,981.64 |         22,981.64 |          100.00% | Tie |
 
 ## Deployment Model
 

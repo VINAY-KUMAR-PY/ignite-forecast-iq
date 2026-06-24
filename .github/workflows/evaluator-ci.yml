@@ -76,6 +76,17 @@ jobs:
           print(f"Validated {len(frame)} rows on Python {sys.version.split()[0]} using {sorted(modes)}")
           PY
 
+      - name: Validate causal summary
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path("output/causal_summary.txt")
+          if not p.exists() or len(p.read_text()) < 50:
+              raise SystemExit("causal_summary.txt missing or too short")
+          print("Causal summary OK:", len(p.read_text()), "chars")
+          PY
+
   app-tests:
     name: Backend application and trained artifact
     runs-on: ubuntu-latest

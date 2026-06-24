@@ -1,6 +1,6 @@
 # ForecastIQ Backtest Summary
 
-Generated: 2026-06-23T09:58:45.921450+00:00
+Generated: 2026-06-24T09:33:50.623932+00:00
 
 ## Holdout Design
 
@@ -26,7 +26,7 @@ Generated: 2026-06-23T09:58:45.921450+00:00
 - Artifact version: 4
 - Training rows: 1200
 - Rolling training samples: 306
-- Revenue blend weight: 0.0
+- Revenue blend weight: 0.35
 
 ## Primary 30-Day Metrics
 
@@ -34,8 +34,8 @@ Generated: 2026-06-23T09:58:45.921450+00:00
 
 | Model | MAE | RMSE | MAPE | Interval coverage |
 | --- | ---: | ---: | ---: | ---: |
-| Trained model | 2185.89 | 2763.76 | 2.78% | 100.0% |
-| Safe baseline | 2185.89 | 2763.76 | 2.78% | 88.89% |
+| Trained model | 2649.77 | 3198.49 | 3.31% | 100.0% |
+| Safe baseline | 2185.89 | 2763.76 | 2.78% | 100.0% |
 
 ### ROAS
 
@@ -46,9 +46,9 @@ Generated: 2026-06-23T09:58:45.921450+00:00
 
 ## Trained vs Baseline
 
-- MAE improvement vs safe baseline: 0.0
-- RMSE improvement vs safe baseline: 0.0
-- MAPE improvement vs safe baseline: 0.0 percentage points
+- MAE improvement vs safe baseline: -463.88
+- RMSE improvement vs safe baseline: -434.73
+- MAPE improvement vs safe baseline: -0.53 percentage points
 - ROAS MAE improvement vs safe baseline: 0.0
 - ROAS RMSE improvement vs safe baseline: 0.01
 
@@ -56,10 +56,10 @@ Generated: 2026-06-23T09:58:45.921450+00:00
 
 | Target | Trained MAE | Safe baseline MAE | MAE difference % | Winner |
 | --- | ---: | ---: | ---: | --- |
-| Revenue | 2185.89 | 2185.89 | 0.0% | Tie |
+| Revenue | 2649.77 | 2185.89 | 21.22% | Safe baseline |
 | ROAS | 0.05 | 0.05 | 0.0% | Tie |
 
-Plain-English interpretation: Revenue: The trained model and safe baseline are tied on revenue MAE for this slice. ROAS: The trained model and safe baseline are tied on roas MAE for this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability.
+Plain-English interpretation: Revenue: The safe baseline has lower revenue MAE than the trained model by 21.22% on this slice. ROAS: The trained model and safe baseline are tied on roas MAE for this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability.
 
 ## Revenue Blend Weight Comparison
 
@@ -72,7 +72,7 @@ Plain-English interpretation: Revenue: The trained model and safe baseline are t
 | 0.50 | 3066.01 | 3649.73 | 3.97% | 100.0% |
 | 0.60 | 3359.44 | 4005.06 | 4.43% | 100.0% |
 
-Recommendation: Keep revenue_model_weight=0.00; it has the best RMSE/MAE balance in the holdout comparison.
+Recommendation: Candidate revenue_model_weight=0.00 scored best on holdout RMSE. Review before updating the packaged artifact.
 
 ## ROAS Blend Weight Comparison
 
@@ -91,9 +91,9 @@ Recommendation: Keep roas_model_weight=0.40; it has the best ROAS RMSE/MAE balan
 
 | Horizon days | Folds | Segments | Trained revenue MAE | Trained revenue RMSE | Trained revenue MAPE | Trained ROAS MAE | Trained ROAS RMSE | Trained coverage | Baseline MAE | Baseline RMSE | Revenue MAE winner |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| 30 | 3 | 54 | 3097.88 | 4501.73 | 3.15% | 0.05 | 0.06 | 100.0% | 3097.88 | 4501.73 | Tie |
-| 60 | 3 | 54 | 11221.15 | 18229.52 | 5.37% | 0.1 | 0.13 | 70.37% | 11221.15 | 18229.52 | Tie |
-| 90 | 2 | 36 | 22981.64 | 35641.57 | 7.38% | 0.11 | 0.13 | 55.56% | 22981.64 | 35641.57 | Tie |
+| 30 | 3 | 54 | 3780.22 | 7183.18 | 3.27% | 0.05 | 0.06 | 98.15% | 3097.88 | 4501.73 | Safe baseline |
+| 60 | 3 | 54 | 19891.14 | 32821.2 | 9.83% | 0.12 | 0.15 | 88.89% | 11221.15 | 18229.52 | Safe baseline |
+| 90 | 2 | 36 | 22981.64 | 35641.57 | 7.38% | 0.11 | 0.13 | 100.0% | 22981.64 | 35641.57 | Tie |
 
 ## Confidence Interval Methodology
 

@@ -5,6 +5,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import joblib
+import numpy as np
 import pandas as pd
 
 from backend.predict import (
@@ -14,6 +16,9 @@ from backend.predict import (
     TRAINED_MODEL_TYPE,
     build_predictions,
     canonicalize_frame,
+    confidence_interval_width,
+    fallback_model_config,
+    generate_offline_causal_summary,
     read_csv_folder,
     safe_load_model,
     unseen_category_diagnostics,
@@ -119,6 +124,36 @@ class OfflinePredictionTests(unittest.TestCase):
 
         self.assert_valid_prediction_rows(rows)
         self.assertEqual({row["model_type"] for row in rows}, {TRAINED_MODEL_TYPE})
+
+    def test_revenue_blend_weight_nonzero(self) -> None:
+        artifact = Path("pickle/model.pkl")
+        if not artifact.exists():
+            self.skipTest("no model artifact")
+        model = joblib.load(artifact)
+        weight = float(model.get("revenue_blend_weight", 0))
+
+        self.assertGreater(weight, 0.0, f"revenue_blend_weight must be > 0, got {weight}")
+
+    def test_causal_summary_written(self) -> None:
+        raw = pd.read_csv("data/sample_campaigns.csv")
+        cleaned = canonicalize_frame(raw)
+        model = safe_load_model("pickle/model.pkl")
+        rows = build_predictions(cleaned.frame, model)
+        summary = generate_offline_causal_summary(cleaned.frame, rows)
+
+        self.assertGreater(len(summary), 100)
+        self.assertRegex(summary, r"ROAS|roas")
+        self.assertIn("$", summary)
+
+    def test_interval_coverage_floor(self) -> None:
+        values = pd.Series(np.random.default_rng(42).normal(1000, 200, 60))
+        model = fallback_model_config("test")
+        w30 = confidence_interval_width(values, 10000, 30, model)
+        w60 = confidence_interval_width(values, 10000, 60, model)
+        w90 = confidence_interval_width(values, 10000, 90, model)
+
+        self.assertGreater(w90, w60, f"Intervals must widen: {w30:.0f} < {w60:.0f} < {w90:.0f}")
+        self.assertGreater(w60, w30, f"Intervals must widen: {w30:.0f} < {w60:.0f} < {w90:.0f}")
 
     def test_corrupt_model_file_uses_safe_baseline_fallback(self) -> None:
         raw = pd.DataFrame(

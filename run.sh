@@ -48,4 +48,6 @@ PY
   --model "$MODEL_PATH" \
   --output "$OUTPUT_PATH"
 
+SUMMARY_PATH="$(dirname "$OUTPUT_PATH")/causal_summary.txt"
 echo "Done. Predictions written to $OUTPUT_PATH"
+echo "Causal summary written to $SUMMARY_PATH"

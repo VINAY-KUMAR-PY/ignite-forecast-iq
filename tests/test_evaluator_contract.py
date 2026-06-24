@@ -81,6 +81,32 @@ class EvaluatorContractTests(unittest.TestCase):
             self.assertIn("Prediction mode: safe_baseline_fallback", result.stdout)
             self.assert_predictions_csv(output, SAFE_BASELINE_MODEL_TYPE)
 
+    def test_causal_summary_file_exists(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "predictions.csv"
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "backend.predict",
+                    "--data-dir",
+                    "data",
+                    "--model",
+                    "pickle/model.pkl",
+                    "--output",
+                    str(output),
+                ],
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=60,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            summary = Path(tmp) / "causal_summary.txt"
+            self.assertTrue(summary.exists(), "causal_summary.txt was not produced")
+            self.assertGreater(len(summary.read_text(encoding="utf-8")), 100)
+
     def test_run_sh_contract_stays_evaluator_safe(self) -> None:
         script = Path("run.sh")
         self.assertTrue(script.exists())

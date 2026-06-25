@@ -1002,7 +1002,7 @@ def trained_forecast_segment(
         safe_float(confidence.get("revenue_residual_std"), expected_revenue * 0.12),
     )
     z = horizon_confidence_z(confidence, horizon)
-    horizon_interval_multiplier = confidence.get("horizon_interval_multiplier") or DEFAULT_HORIZON_INTERVAL_MULTIPLIER
+    horizon_interval_multiplier = _monotonic_interval_multipliers(confidence)
     horizon_multiplier = safe_float(
         horizon_interval_multiplier.get(str(horizon)),
         math.sqrt(max(horizon, 1) / 30),
@@ -1051,6 +1051,17 @@ def _horizon_model_weight(model: dict[str, Any], key: str, horizon: int, default
     horizon_weights = confidence.get(f"{key}_by_horizon") or {}
     value = horizon_weights.get(str(horizon), confidence.get(key, default))
     return min(0.8, max(0.0, safe_float(value, default)))
+
+
+def _monotonic_interval_multipliers(confidence: dict[str, Any]) -> dict[str, float]:
+    multipliers = confidence.get("horizon_interval_multiplier") or DEFAULT_HORIZON_INTERVAL_MULTIPLIER
+    values = {
+        str(horizon): safe_float(multipliers.get(str(horizon)), DEFAULT_HORIZON_INTERVAL_MULTIPLIER[str(horizon)])
+        for horizon in HORIZONS
+    }
+    if values["30"] <= values["60"] <= values["90"]:
+        return values
+    return DEFAULT_HORIZON_INTERVAL_MULTIPLIER.copy()
 
 
 def build_trained_predictions(frame: pd.DataFrame, model: dict[str, Any]) -> tuple[list[dict[str, Any]], int]:

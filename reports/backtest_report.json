@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-25T07:19:25.809964+00:00",
+  "generated_at": "2026-06-25T09:48:44.863730+00:00",
   "data_dir": "data",
   "holdout_days": 30,
   "train_rows": 2160,
@@ -43,8 +43,8 @@
       "minimum_interval_pct": 0.045,
       "horizon_interval_multiplier": {
         "30": 0.6,
-        "60": 1.45,
-        "90": 1.1
+        "60": 1.1,
+        "90": 1.45
       },
       "low_sample_training": false,
       "sample_confidence_discount": 1.0,
@@ -396,12 +396,12 @@
         "mae": 10541.64,
         "rmse": 18671.63,
         "mape": 5.04,
-        "interval_coverage": 88.89,
+        "interval_coverage": 85.19,
         "revenue": {
           "mae": 10541.64,
           "rmse": 18671.63,
           "mape": 5.04,
-          "interval_coverage": 88.89
+          "interval_coverage": 85.19
         },
         "roas": {
           "mae": 0.05,

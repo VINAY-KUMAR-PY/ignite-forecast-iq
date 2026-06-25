@@ -1,6 +1,6 @@
 # ForecastIQ Backtest Summary
 
-Generated: 2026-06-25T07:19:25.809964+00:00
+Generated: 2026-06-25T09:48:44.863730+00:00
 
 ## Holdout Design
 
@@ -26,7 +26,7 @@ Generated: 2026-06-25T07:19:25.809964+00:00
 - Artifact version: 4
 - Training rows: 2160
 - Rolling training samples: 702
-- Revenue blend weight: 0.6
+- Revenue blend weight: 0.4
 - ROAS blend weight: 0.6
 
 ## Primary 30-Day Metrics
@@ -93,7 +93,7 @@ Recommendation: Keep roas_model_weight=0.60; it has the best ROAS RMSE/MAE balan
 | Horizon days | Folds | Segments | Trained revenue MAE | Trained revenue RMSE | Trained revenue MAPE | Trained ROAS MAE | Trained ROAS RMSE | Trained coverage | Baseline MAE | Baseline RMSE | Revenue MAE winner |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 | 30 | 3 | 54 | 2462.0 | 4406.72 | 2.66% | 0.07 | 0.1 | 92.59% | 3097.88 | 4501.73 | Trained model |
-| 60 | 3 | 54 | 10541.64 | 18671.63 | 5.04% | 0.05 | 0.06 | 88.89% | 11221.15 | 18229.52 | Trained model |
+| 60 | 3 | 54 | 10541.64 | 18671.63 | 5.04% | 0.05 | 0.06 | 85.19% | 11221.15 | 18229.52 | Trained model |
 | 90 | 3 | 54 | 20891.06 | 33520.44 | 6.86% | 0.06 | 0.07 | 90.74% | 31577.72 | 49786.14 | Trained model |
 
 ## Interval Calibration Before/After
@@ -105,7 +105,7 @@ minimum-width floors. This narrows bands while preserving non-negative lower bou
 | Horizon days | Previous coverage | Current coverage | Trained revenue MAE | Baseline revenue MAE |
 | ---: | ---: | ---: | ---: | ---: |
 | 30 | 100.0% | 92.59% | 2462.0 | 3097.88 |
-| 60 | 100.0% | 88.89% | 10541.64 | 11221.15 |
+| 60 | 100.0% | 85.19% | 10541.64 | 11221.15 |
 | 90 | 100.0% | 90.74% | 20891.06 | 31577.72 |
 
 ## Confidence Interval Methodology

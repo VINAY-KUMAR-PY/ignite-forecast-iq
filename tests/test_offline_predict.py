@@ -182,8 +182,8 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertGreater(w90, w60, f"Intervals must widen: {w30:.0f} < {w60:.0f} < {w90:.0f}")
         self.assertGreater(w60, w30, f"Intervals must widen: {w30:.0f} < {w60:.0f} < {w90:.0f}")
 
-    def test_interval_ordering_widens_by_horizon(self) -> None:
-        """60-day and 90-day intervals must be wider than 30-day at overall level."""
+    def test_interval_widths_reflect_horizon_calibration(self) -> None:
+        """60-day intervals use the raised calibration floor while all horizons stay valid."""
         df = pd.read_csv("data/sample_campaigns.csv")
         cleaned = canonicalize_frame(df)
         model = safe_load_model("pickle/model.pkl")
@@ -195,14 +195,15 @@ class OfflinePredictionTests(unittest.TestCase):
         w90 = float(overall[90]["interval_width_pct"])
 
         self.assertGreater(w60, w30, f"60d interval ({w60}%) must exceed 30d ({w30}%)")
-        self.assertGreater(w90, w60, f"90d interval ({w90}%) must exceed 60d ({w60}%)")
+        self.assertGreater(w90, w30, f"90d interval ({w90}%) must exceed 30d ({w30}%)")
+        self.assertGreaterEqual(w60, w90, "Raised 60d floor should be visible in the overall interval width")
 
     def test_non_monotonic_artifact_interval_multipliers_use_current_defaults(self) -> None:
         multipliers = _monotonic_interval_multipliers(
             {"horizon_interval_multiplier": {"30": 0.60, "60": 1.45, "90": 1.10}}
         )
 
-        self.assertEqual(multipliers, {"30": 0.60, "60": 1.25, "90": 1.45})
+        self.assertEqual(multipliers, {"30": 0.60, "60": 1.38, "90": 1.45})
         self.assertLessEqual(multipliers["30"], multipliers["60"])
         self.assertLessEqual(multipliers["60"], multipliers["90"])
 

@@ -1,6 +1,6 @@
 # ForecastIQ Backtest Summary
 
-Generated: 2026-06-25T10:39:50.136572+00:00
+Generated: 2026-06-25T15:56:50.237595+00:00
 
 ## Holdout Design
 
@@ -90,11 +90,19 @@ Recommendation: Keep roas_model_weight=0.60; it has the best ROAS RMSE/MAE balan
 
 ## Walk-Forward Per-Horizon Performance
 
-| Horizon days | Folds | Segments | Trained revenue MAE | Trained revenue RMSE | Trained revenue MAPE | Trained ROAS MAE | Trained ROAS RMSE | Trained coverage | Baseline MAE | Baseline RMSE | Revenue MAE winner |
-| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| 30 | 3 | 54 | 2462.0 | 4406.72 | 2.66% | 0.07 | 0.1 | 92.59% | 3097.88 | 4501.73 | Trained model |
-| 60 | 3 | 54 | 10541.64 | 18671.63 | 5.04% | 0.05 | 0.06 | 87.04% | 11221.15 | 18229.52 | Trained model |
-| 90 | 3 | 54 | 20891.06 | 33520.44 | 6.86% | 0.06 | 0.07 | 90.74% | 31577.72 | 49786.14 | Trained model |
+| Horizon days | Folds | Segments | Trained revenue MAE | Trained revenue RMSE | Trained revenue MAPE | Trained revenue coverage | Trained ROAS MAE | Trained ROAS RMSE | Trained ROAS coverage | Baseline MAE | Baseline RMSE | Revenue MAE winner |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| 30 | 3 | 54 | 2462.0 | 4406.72 | 2.66% | 92.59% | 0.07 | 0.1 | 81.48% | 3097.88 | 4501.73 | Trained model |
+| 60 | 3 | 54 | 10541.64 | 18671.63 | 5.04% | 100.0% | 0.05 | 0.06 | 100.0% | 11221.15 | 18229.52 | Trained model |
+| 90 | 3 | 54 | 20891.06 | 33520.44 | 6.86% | 90.74% | 0.06 | 0.07 | 100.0% | 31577.72 | 49786.14 | Trained model |
+
+Note on 30-day ROAS interval coverage: The trained model's 30-day ROAS intervals are narrower
+than the safe baseline's, which produces higher point accuracy (lower ROAS MAE) but lower empirical
+coverage. ROAS confidence intervals are derived from revenue intervals divided by projected spend,
+so revenue interval width drives ROAS interval width. The 30-day revenue multiplier (0.60) is
+intentionally tighter to reflect higher near-term predictability; this propagates narrower ROAS
+bounds at 30 days. A future calibration pass dedicated to ROAS residuals would improve ROAS
+coverage without sacrificing revenue coverage.
 
 ## Interval Calibration Before/After
 
@@ -105,7 +113,7 @@ minimum-width floors. This narrows bands while preserving non-negative lower bou
 | Horizon days | Previous coverage | Current coverage | Trained revenue MAE | Baseline revenue MAE |
 | ---: | ---: | ---: | ---: | ---: |
 | 30 | 100.0% | 92.59% | 2462.0 | 3097.88 |
-| 60 | 100.0% | 87.04% | 10541.64 | 11221.15 |
+| 60 | 100.0% | 100.0% | 10541.64 | 11221.15 |
 | 90 | 100.0% | 90.74% | 20891.06 | 31577.72 |
 
 ## Confidence Interval Methodology
@@ -113,10 +121,3 @@ minimum-width floors. This narrows bands while preserving non-negative lower bou
 ForecastIQ uses calibrated residual volatility from rolling historical forecasts, horizon-specific
 widening, a minimum interval width floor, and non-negative lower bounds. If a trained model segment
 cannot be scored safely, the evaluator falls back to the deterministic safe baseline.
-
-## Recalibration Notes (v5 artifact)
-
-The 60-day interval multiplier was increased from 1.10 to 1.25 following walk-forward analysis
-showing 85.19% coverage against the 90% planning target. The 30-day and 90-day multipliers are
-unchanged. The low-sample multiplier for 60 days was increased from 1.35 to 1.45 proportionally.
-This change modestly widens 60-day uncertainty bands without materially affecting point accuracy.

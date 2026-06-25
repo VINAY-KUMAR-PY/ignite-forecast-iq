@@ -10,6 +10,7 @@ and does not predict placement or judging outcomes.
 - `requirements.txt` pins the minimal evaluator dependencies used by the packaged artifact.
 - Schema adapters cover canonical campaign CSVs plus GA4, Shopify, Google Ads, Meta Ads, and Microsoft Ads style exports.
 - Backtesting compares the trained model with the deterministic safe baseline instead of assuming the trained model always wins.
+- Walk-forward backtest tables surface both revenue and ROAS interval coverage per horizon, including the 30-day ROAS coverage note explaining the accuracy/coverage tradeoff.
 - Forecast intervals use residual calibration, horizon widening, minimum width floors, and non-negative lower bounds.
 - Gemini insights are optional; fallback executive insights prevent blank screens when the API key, network, model, or response format fails.
 - The app has a one-click judge demo path from the landing page.

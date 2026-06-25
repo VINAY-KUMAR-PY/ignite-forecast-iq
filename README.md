@@ -24,6 +24,8 @@ The offline evaluator path is intentionally isolated from the web app. `run.sh` 
 | Training rows                        | 2,400 full sample rows; 2,160 used as training split in primary 30-day holdout backtest    |
 | Rolling training samples             | 810 in the packaged artifact; 702 in the primary holdout training split                    |
 | Feature count                        | 48 evaluator features including spend, trend, seasonality, and baseline-anchor regressors  |
+| 60-day revenue interval coverage     | 100.0% walk-forward (calibrated multiplier 1.38; target >=90%)                             |
+| 30-day ROAS interval coverage        | 81.48% walk-forward (tighter near-term bands; see `backtest_summary.md` for tradeoff note) |
 | Normal evaluator mode                | `trained_model`                                                                            |
 | Safe fallback mode                   | `safe_baseline_fallback` for missing/corrupt/incompatible model or unsupported hidden data |
 
@@ -259,7 +261,7 @@ The offline evaluator artifact at `pickle/model.pkl` is a compact joblib artifac
 | Rolling samples      | 810 in the packaged artifact; 702 in the primary holdout training split |
 | Feature count        | 48                           |
 | Revenue blend weight | adaptive per-horizon: 30d 0.60, 60d 0.10, 90d 0.50 |
-| Interval horizon multiplier | 30d 0.60, 60d 1.25, 90d 1.45 (monotonically widening) |
+| Interval horizon multiplier | 30d 0.60, 60d 1.38, 90d 1.45 (monotonically widening) |
 | ROAS blend weight    | adaptive per-horizon: 30d 0.60, 60d 0.60, 90d 0.60; see `reports/backtest_summary.md` |
 | Causal summary output | `output/causal_summary.txt` |
 

@@ -573,8 +573,9 @@ def _summary_markdown(report: dict[str, Any]) -> str:
         f'| {item["horizon_days"]} | {item["fold_count"]} | {item["segments_evaluated"]} | '
         f'{item["trained_model_metrics"]["mae"]} | '
         f'{item["trained_model_metrics"]["rmse"]} | {item["trained_model_metrics"]["mape"]}% | '
-        f'{item["trained_model_metrics"]["roas_mae"]} | {item["trained_model_metrics"]["roas_rmse"]} | '
         f'{item["trained_model_metrics"]["interval_coverage"]}% | '
+        f'{item["trained_model_metrics"]["roas_mae"]} | {item["trained_model_metrics"]["roas_rmse"]} | '
+        f'{item["trained_model_metrics"]["roas_interval_coverage"]}% | '
         f'{item["safe_baseline_metrics"]["mae"]} | {item["safe_baseline_metrics"]["rmse"]} | '
         f'{_winner_label(item["model_performance_evidence"]["revenue"]["winner"])} |'
         for item in report["per_horizon_performance"]
@@ -666,9 +667,17 @@ Recommendation: {report["roas_blend_weight_recommendation"]["recommendation"]}
 
 ## Walk-Forward Per-Horizon Performance
 
-| Horizon days | Folds | Segments | Trained revenue MAE | Trained revenue RMSE | Trained revenue MAPE | Trained ROAS MAE | Trained ROAS RMSE | Trained coverage | Baseline MAE | Baseline RMSE | Revenue MAE winner |
-| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| Horizon days | Folds | Segments | Trained revenue MAE | Trained revenue RMSE | Trained revenue MAPE | Trained revenue coverage | Trained ROAS MAE | Trained ROAS RMSE | Trained ROAS coverage | Baseline MAE | Baseline RMSE | Revenue MAE winner |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 {horizon_rows}
+
+Note on 30-day ROAS interval coverage: The trained model's 30-day ROAS intervals are narrower
+than the safe baseline's, which produces higher point accuracy (lower ROAS MAE) but lower empirical
+coverage. ROAS confidence intervals are derived from revenue intervals divided by projected spend,
+so revenue interval width drives ROAS interval width. The 30-day revenue multiplier (0.60) is
+intentionally tighter to reflect higher near-term predictability; this propagates narrower ROAS
+bounds at 30 days. A future calibration pass dedicated to ROAS residuals would improve ROAS
+coverage without sacrificing revenue coverage.
 
 ## Interval Calibration Before/After
 

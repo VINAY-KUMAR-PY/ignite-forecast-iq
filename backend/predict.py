@@ -1361,7 +1361,19 @@ def generate_offline_causal_summary(frame: pd.DataFrame, rows: list[dict]) -> st
                 lines.append("=== AI Strategic Recommendation (Gemini) ===")
                 lines.append(_ai_paragraph)
         except Exception as _exc:
-            lines.append(f"[AI enrichment skipped: {type(_exc).__name__}]")
+            lines.append("")
+            lines.append("=== AI Strategic Recommendation (Gemini) ===")
+            lines.append(
+                f"[Gemini call failed: {type(_exc).__name__}. Set GEMINI_API_KEY or GOOGLE_API_KEY to enable live AI enrichment.]"
+            )
+    else:
+        lines.append("")
+        lines.append("=== AI Strategic Recommendation ===")
+        lines.append(
+            "[Live AI enrichment available: set GEMINI_API_KEY or GOOGLE_API_KEY environment variable "
+            "before running run.sh to append a Gemini-generated strategic recommendation to this summary. "
+            "The evaluator contract and predictions.csv are unaffected by this setting.]"
+        )
 
     return "\n".join(lines)
 

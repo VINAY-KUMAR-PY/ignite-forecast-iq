@@ -1221,7 +1221,6 @@ def write_predictions(rows: list[dict[str, Any]], output_path: str | Path) -> No
 def generate_offline_causal_summary(frame: pd.DataFrame, rows: list[dict]) -> str:
     """Produce a deterministic, data-grounded causal summary for the evaluator output."""
     from .anomaly import detect_anomalies
-    from .decision_support import estimate_causal_effects
 
     if frame.empty or not rows:
         return "Insufficient data for causal summary."
@@ -1264,6 +1263,8 @@ def generate_offline_causal_summary(frame: pd.DataFrame, rows: list[dict]) -> st
         anomaly_lines = ["  - No anomalies detected in the historical window."]
 
     try:
+        from .causal_lite import estimate_causal_effects
+
         causal_estimates = estimate_causal_effects(frame, [item.to_dict() for item in top_anomalies])
     except Exception:
         causal_estimates = []

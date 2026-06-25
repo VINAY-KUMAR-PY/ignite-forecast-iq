@@ -25,6 +25,23 @@ jobs:
       - name: Install evaluator dependencies
         run: python -m pip install -r requirements.txt
 
+      - name: Confirm app-only packages are absent
+        run: |
+          python - <<'PY'
+          import sys, importlib.util
+          for m in ['pydantic', 'fastapi', 'xgboost', 'slowapi', 'shap', 'httpx']:
+              if importlib.util.find_spec(m):
+                  sys.exit(f'{m} unexpectedly importable')
+          for m in ['google.genai', 'google.generativeai']:
+              try:
+                  found = importlib.util.find_spec(m)
+              except ModuleNotFoundError:
+                  found = None
+              if found:
+                  sys.exit(f'{m} unexpectedly importable')
+          print('Minimal evaluator environment confirmed.')
+          PY
+
       - name: Generate predictions through the evaluator contract
         run: |
           chmod +x run.sh
@@ -102,6 +119,12 @@ jobs:
               raise SystemExit("causal_summary.txt missing or too short")
           if "Anomaly signals" not in text and "No anomalies" not in text:
               raise SystemExit("causal_summary.txt missing anomaly section")
+          if "Causal effect estimates (observational DiD" not in text:
+              raise SystemExit("causal_summary.txt missing DiD section")
+          if "incremental revenue $" not in text:
+              raise SystemExit("causal_summary.txt missing numeric DiD estimates")
+          if "No causal estimate available" in text:
+              raise SystemExit("sample data should produce real DiD estimates, not sparse-history fallback")
           known_channels = {"Google Ads", "Meta Ads", "Microsoft Ads"}
           found = [c for c in known_channels if c in text]
           if not found:

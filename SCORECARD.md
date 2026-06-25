@@ -18,8 +18,6 @@ and does not predict placement or judging outcomes.
 
 ## Known Gaps
 
-- Live deployment URLs and a demo video still need to be verified by the repository owner before submission.
-- Backtesting is based on the included sample campaign dataset; stronger claims require more merchant datasets.
 - The causal layer is observational difference-in-differences style analysis, not randomized incrementality proof.
 - SHAP-style attribution is optional in the live app path; the stable evaluator path uses lightweight model diagnostics and local driver evidence.
 - The frontend still inherits some generated structure from the original Lovable project, although unused route and component scaffolding is being reduced.

@@ -1,6 +1,8 @@
 # Minimal, evaluator-only dependencies. Every selected version is exact.
 # scikit-learn is pinned consistently across Python versions so the committed
 # joblib artifact can load predictably in the offline evaluator.
+# Python: 3.11-3.14 (trained artifact); 3.10 accepted via safe_baseline_fallback
+# Build environment: Python 3.14.4, scikit-learn 1.9.0
 pandas==2.3.3; python_version < "3.11"
 pandas==3.0.3; python_version >= "3.11"
 numpy==2.2.6; python_version < "3.11"

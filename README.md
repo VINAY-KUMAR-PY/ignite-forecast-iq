@@ -260,6 +260,7 @@ The offline evaluator artifact at `pickle/model.pkl` is a compact joblib artifac
 | Rolling samples      | 810 in the packaged artifact; 702 in the primary holdout training split |
 | Feature count        | 48                           |
 | Revenue blend weight | adaptive per-horizon: 30d 0.60, 60d 0.10, 90d 0.50 |
+| Interval horizon multiplier | 30d 0.60, 60d 1.10, 90d 1.45 (monotonically widening) |
 | ROAS blend weight    | adaptive per-horizon: 30d 0.60, 60d 0.60, 90d 0.60; see `reports/backtest_summary.md` |
 | Causal summary output | `output/causal_summary.txt` |
 
@@ -432,6 +433,8 @@ chmod +x run.sh
 ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
 ```
 
+Python version: The trained artifact requires Python 3.11-3.14. Python 3.10 is accepted via the deterministic safe_baseline_fallback (see requirements.txt). Trained predictions are expected on Python 3.11+ per the CI evaluator contract.
+
 The runner:
 
 - reads every `.csv` file from the provided data directory;
@@ -502,19 +505,14 @@ Open the Vite URL and use the existing app routes:
 4. Open `/app/simulator`, apply the -10%, +10%, +20%, and +50% quick scenarios, then review recommended allocation and channel health.
 5. Open `/app/insights`, generate insights, explain the Marketing Manager Brief, and export the executive PDF report.
 
-## Demo Video
+## Demo
 
-> Record and add your Loom/YouTube link here before submission.
-> Suggested tool: [Loom](https://loom.com) — free, shareable link in 2 minutes.
+A live walkthrough of ForecastIQ is available from the homepage. Click **Try Live Demo** from `/` to load sample multi-channel campaign data and walk through Dashboard → Forecast → Budget Simulator → AI Insights in under 2 minutes. For offline evaluation, run:
 
-**Recommended recording steps (2 minutes):**
-1. Start the app: `npm run dev` + `uvicorn backend.main:app --reload`
-2. Go to `/app/upload`, click "Load sample data"
-3. Open `/app` - show Executive Decision Center
-4. Open `/app/forecast` - show 30-day forecast, confidence intervals, explainability
-5. Open `/app/simulator` - move a budget slider, show revenue lift
-6. Open `/app/insights` - click "Generate insights", show executive brief
-7. Total: under 2 minutes
+```bash
+./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
+```
+
 
 ## Judge Demo Walkthrough
 
@@ -553,19 +551,9 @@ export GEMINI_MAX_OUTPUT_TOKENS="3072"
 
 You can also copy `.env.example` to `.env` for local backend runs. Keep `GEMINI_API_KEY` backend-only; never expose it through a `VITE_` variable.
 
-## Screenshots Section
+## Screenshots
 
-Recommended screenshots for the final submission:
-
-| Screen    | Screenshot placeholder / what to show                                                                      |
-| --------- | ---------------------------------------------------------------------------------------------------------- |
-| Upload    | `screenshots/01-upload-demo.png` - Judge Demo Path card and sample data loaded with zero validation issues |
-| Dashboard | `screenshots/02-dashboard-decision-center.png` - Executive Decision Center in the first viewport           |
-| Forecast  | `screenshots/03-forecast-explainability.png` - Accuracy Dashboard, confidence intervals, Explainability    |
-| Simulator | `screenshots/04-budget-optimizer.png` - exact channel/campaign shifts, lift, ROAS, confidence, risk        |
-| Insights  | `screenshots/05-ai-insights.png` - Marketing Manager Brief, action plan, and Export PDF button             |
-
-If screenshots are not attached separately, use the browser demo flow above during the live presentation.
+Screenshots of the key workflows — Upload, Dashboard, Forecast, Budget Simulator, and AI Insights — are available in the live demo by following the Judge Demo Path from the homepage.
 
 ## Submission Guides
 

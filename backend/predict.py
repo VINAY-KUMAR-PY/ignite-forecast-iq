@@ -312,7 +312,7 @@ def safe_load_model(model_path: str | Path) -> dict[str, Any]:
         log(f"Model artifact is too large for evaluator-safe loading ({size} bytes); using safe baseline")
         return fallback
 
-    if sys.version_info < (3, 11):
+    if True:
         try:
             import sklearn
             from packaging.version import Version
@@ -1097,6 +1097,15 @@ def build_predictions(frame: pd.DataFrame, model: dict[str, Any]) -> list[dict[s
     ):
         for diagnostic in unseen_category_diagnostics(frame, model):
             log(f"Category diagnostic: {diagnostic}")
+        known_channels = set((model.get("preprocessing") or {}).get("category_maps", {}).get("channel", {}).keys())
+        if known_channels:
+            observed_channels = set(frame["channel"].dropna().astype(str).unique().tolist())
+            unseen = observed_channels - known_channels
+            if unseen:
+                log(
+                    f"Warning: {len(unseen)} channel(s) not seen during training will be encoded as unknown: "
+                    f"{sorted(unseen)}"
+                )
         try:
             rows, trained_count = build_trained_predictions(frame, model)
             if trained_count > 0:

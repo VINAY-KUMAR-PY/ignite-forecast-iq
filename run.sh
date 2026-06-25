@@ -50,4 +50,5 @@ PY
 
 SUMMARY_PATH="$(dirname "$OUTPUT_PATH")/causal_summary.txt"
 echo "Done. Predictions written to $OUTPUT_PATH"
+"${PYTHON_CMD[@]}" -c "import sys; print('[ForecastIQ] Python version:', sys.version.split()[0])"
 echo "Causal summary written to $SUMMARY_PATH"

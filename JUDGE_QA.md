@@ -50,7 +50,7 @@ The live XGBoost path is optimized for interactive daily charts, feature importa
 
 ## Why does a trained evaluator model exist?
 
-The trained evaluator model gives the offline scoring path real ML behavior instead of only a deterministic baseline. It is a compact joblib sklearn artifact with 35 engineered features, trained on 1,440 rows and 414 rolling forecast samples. The artifact includes dedicated horizon sample counts, residual calibration, revenue and ROAS weights, and fallback metadata while preserving the required output schema.
+The trained evaluator model gives the offline scoring path real ML behavior instead of only a deterministic baseline. It is a compact joblib sklearn artifact with 48 engineered features, trained on 2,400 sample rows and 810 rolling forecast samples. The artifact includes dedicated horizon sample counts, residual calibration, revenue and ROAS weights, and fallback metadata while preserving the required output schema.
 
 ## When does fallback activate?
 
@@ -66,15 +66,15 @@ The model artifact was verified in a clean Python 3.14.4 environment with pinned
 
 ## How did you validate the trained-model blend weight?
 
-Revenue blend weights of 0.00, 0.10, 0.25, 0.40, 0.50, and 0.60 were tested on the same 30-day holdout. The packaged artifact now uses adaptive revenue weights of 0.00 for 30/60/90 days because the chronological holdout gate and regenerated backtest show the deterministic baseline has the best revenue RMSE/MAE balance on this sample. ROAS is also gated per horizon; the rebuilt artifact validates 0.40 for 30/60/90 days, and the blend comparison confirms 0.40 has the best ROAS RMSE/MAE balance. The weights are stored both globally and by horizon.
+Revenue and ROAS blend weights of 0.00, 0.10, 0.25, 0.40, 0.50, and 0.60 were tested on the same 30-day holdout. The packaged artifact now uses adaptive revenue weights of 0.60 for 30 days, 0.10 for 60 days, and 0.50 for 90 days. ROAS is also gated per horizon and validates at 0.60 for 30/60/90 days. The weights are stored both globally and by horizon.
 
 ## What does the holdout backtest show?
 
-The final 30 days were held out while the model trained on the earlier period. Across 18 evaluated segments, the trained evaluator produced revenue MAE 2,185.89, RMSE 2,763.76, MAPE 2.78%, and 100.00% interval coverage, matching the safe baseline because revenue is baseline-guarded at weight 0.00. For ROAS, the trained evaluator achieved MAE 0.05, RMSE 0.06, MAPE 1.26%, and 100.00% interval coverage versus baseline RMSE 0.07 and MAPE 1.44%.
+The final 30 days were held out while the model trained on the earlier period. Across 18 evaluated segments, the trained evaluator produced revenue MAE 1,723.79, RMSE 2,226.80, MAPE 2.26%, and 100.00% interval coverage versus the safe baseline's revenue MAE 2,185.89, RMSE 2,763.76, MAPE 2.78%, and 88.89% coverage. For ROAS, the trained evaluator achieved MAE 0.04, RMSE 0.06, MAPE 1.05%, and 100.00% coverage versus baseline MAE 0.05, RMSE 0.07, MAPE 1.44%, and 88.89% coverage.
 
-The trained model improves ROAS RMSE from 0.07 to 0.06 and keeps interval coverage at 100%. Revenue point estimates remain baseline-guarded because the holdout shows the deterministic baseline is currently more stable; the trained artifact contributes ROAS modeling, residual calibration, and fallback metadata without overclaiming revenue superiority.
+The trained model improves the sample holdout for both revenue and ROAS. The fallback remains important because hidden evaluator data can be smaller, noisier, or shaped differently from the sample campaign data.
 
-The backtest report also includes revenue and ROAS blend-weight comparisons plus walk-forward 30/60/90-day horizon performance. Walk-forward interval coverage is now 100.00%, 100.00%, and 100.00% for 30, 60, and 90 days after widening horizon floors.
+The backtest report also includes revenue and ROAS blend-weight comparisons plus walk-forward 30/60/90-day horizon performance. Current walk-forward interval coverage is 92.59%, 88.89%, and 90.74% for 30, 60, and 90 days after tightening intervals toward a practical 90% planning target.
 
 ## What is the model verification process?
 

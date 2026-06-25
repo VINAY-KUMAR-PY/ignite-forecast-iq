@@ -57,16 +57,29 @@ ARTIFACT_TYPE = "forecastiq_evaluator_model"
 ARTIFACT_VERSION = 4
 MAX_MODEL_ARTIFACT_BYTES = 2_000_000
 MIN_TRAINED_MODEL_ROWS = 8
+MIN_ROLLING_TRAINING_SAMPLES = 12
+LOW_SAMPLE_CONFIDENCE_THRESHOLD = 30
 
 FEATURE_COLUMNS = [
     "horizon_days",
     "history_days",
     "recent_spend_7",
     "recent_spend_28",
+    "projected_spend_horizon",
+    "planned_spend_delta_7_28",
+    "planned_spend_delta_28_horizon",
     "recent_revenue_7",
+    "recent_revenue_14",
     "recent_revenue_28",
     "recent_roas_7",
+    "recent_roas_14",
     "recent_roas_28",
+    "rps_7",
+    "rps_14",
+    "rps_28",
+    "rps_trend_7_28",
+    "baseline_revenue_forecast",
+    "baseline_roas_forecast",
     "recent_clicks_28",
     "recent_impressions_28",
     "recent_conversions_28",
@@ -87,6 +100,8 @@ FEATURE_COLUMNS = [
     "cos_365",
     "sin_year_end",
     "cos_year_end",
+    "dow_channel_interaction",
+    "dow_campaign_type_interaction",
     "rev_std_14",
     "rev_std_28",
     "spend_x_sin7",
@@ -283,7 +298,7 @@ def fallback_model_config(reason: str = "fallback") -> dict[str, Any]:
         "model_type": SAFE_BASELINE_MODEL_TYPE,
         "prediction_mode": SAFE_BASELINE_MODEL_TYPE,
         "version": 1,
-        "confidence_z": 1.96,
+        "confidence_z": 1.64,
         "trend_weight": 0.35,
         "fallback_reason": reason,
     }
@@ -501,10 +516,14 @@ def segment_feature_frame(
     spend_7 = window_sum(daily, "spend", 7)
     spend_28 = window_sum(daily, "spend", 28)
     revenue_7 = window_sum(daily, "revenue", 7)
+    revenue_14 = window_sum(daily, "revenue", 14)
     revenue_28 = window_sum(daily, "revenue", 28)
     clicks_28 = window_sum(daily, "clicks", 28)
     impressions_28 = window_sum(daily, "impressions", 28)
     conversions_28 = window_sum(daily, "conversions", 28)
+    daily_spend_7 = spend_7 / min(7, max(1, len(daily)))
+    daily_spend_28 = spend_28 / min(28, max(1, len(daily)))
+    projected_spend = daily_spend_7 * horizon
 
     channel_value = segment_name if level == "channel" else str(segment["channel"].iloc[-1]) if not segment.empty else ""
     campaign_type_value = (
@@ -514,16 +533,35 @@ def segment_feature_frame(
         if not segment.empty
         else ""
     )
+    channel_code = float(category_code(channel_value, maps.get("channel", {})))
+    campaign_type_code = float(category_code(campaign_type_value, maps.get("campaign_type", {})))
+    baseline = forecast_segment(segment, horizon, fallback_model_config("feature baseline anchor"))
+    baseline_revenue = safe_float(baseline["expected_revenue"])
+    baseline_roas = safe_float(baseline["expected_roas"])
+    rps_7 = safe_ratio(revenue_7, spend_7)
+    rps_14 = safe_ratio(revenue_14, window_sum(daily, "spend", 14))
+    rps_28 = safe_ratio(revenue_28, spend_28)
 
     features = {
         "horizon_days": float(horizon),
         "history_days": float(len(daily)),
         "recent_spend_7": spend_7,
         "recent_spend_28": spend_28,
+        "projected_spend_horizon": projected_spend,
+        "planned_spend_delta_7_28": safe_ratio(daily_spend_7 - daily_spend_28, daily_spend_28),
+        "planned_spend_delta_28_horizon": safe_ratio(projected_spend - daily_spend_28 * horizon, daily_spend_28 * horizon),
         "recent_revenue_7": revenue_7,
+        "recent_revenue_14": revenue_14,
         "recent_revenue_28": revenue_28,
         "recent_roas_7": safe_ratio(revenue_7, spend_7),
+        "recent_roas_14": safe_ratio(revenue_14, window_sum(daily, "spend", 14)),
         "recent_roas_28": safe_ratio(revenue_28, spend_28),
+        "rps_7": rps_7,
+        "rps_14": rps_14,
+        "rps_28": rps_28,
+        "rps_trend_7_28": safe_ratio(rps_7 - rps_28, rps_28),
+        "baseline_revenue_forecast": baseline_revenue,
+        "baseline_roas_forecast": baseline_roas,
         "recent_clicks_28": clicks_28,
         "recent_impressions_28": impressions_28,
         "recent_conversions_28": conversions_28,
@@ -544,12 +582,14 @@ def segment_feature_frame(
         "cos_365": float(np.cos(2 * np.pi * day_index / 365)),
         "sin_year_end": float(np.sin(2 * np.pi * forecast_end.dayofyear / 365.25)),
         "cos_year_end": float(np.cos(2 * np.pi * forecast_end.dayofyear / 365.25)),
+        "dow_channel_interaction": float(forecast_end.dayofweek) * channel_code,
+        "dow_campaign_type_interaction": float(forecast_end.dayofweek) * campaign_type_code,
         "rev_std_14": safe_float(daily["revenue"].tail(14).std(ddof=1)) if len(daily) >= 4 else 0.0,
         "rev_std_28": safe_float(daily["revenue"].tail(28).std(ddof=1)) if len(daily) >= 7 else 0.0,
         "spend_x_sin7": safe_float(spend_28 / min(28, max(1, len(daily)))) * sin_7,
         "level_code": float(LEVEL_CODES.get(level, 0)),
-        "channel_code": float(category_code(channel_value, maps.get("channel", {}))),
-        "campaign_type_code": float(category_code(campaign_type_value, maps.get("campaign_type", {}))),
+        "channel_code": channel_code,
+        "campaign_type_code": campaign_type_code,
         "unique_campaigns": float(segment["campaign_name"].nunique()) if "campaign_name" in segment else 0.0,
     }
     return pd.DataFrame([{column: safe_float(features.get(column), 0.0) for column in FEATURE_COLUMNS}])
@@ -566,6 +606,7 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
     maps = category_maps(frame)
     training_rows: list[dict[str, Any]] = []
     revenue_targets: list[float] = []
+    raw_revenue_targets: list[float] = []
     roas_targets: list[float] = []
     baseline_revenue_targets: list[float] = []
     horizon_labels: list[int] = []
@@ -594,17 +635,22 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
                     fallback_model_config("training baseline gate"),
                 )["expected_revenue"]
                 training_rows.append(features.iloc[0].to_dict())
-                revenue_targets.append(max(0.0, future_revenue))
+                raw_future_revenue = max(0.0, future_revenue)
+                baseline_prediction = max(0.0, safe_float(baseline_prediction))
+                revenue_targets.append(math.log1p(raw_future_revenue) - math.log1p(baseline_prediction))
+                raw_revenue_targets.append(raw_future_revenue)
                 roas_targets.append(max(0.0, safe_ratio(future_revenue, future_spend)))
-                baseline_revenue_targets.append(max(0.0, safe_float(baseline_prediction)))
+                baseline_revenue_targets.append(baseline_prediction)
                 horizon_labels.append(horizon)
                 target_end_dates.append(pd.to_datetime(future["date"].iloc[-1]))
 
-    if len(training_rows) < 30:
+    if len(training_rows) < MIN_ROLLING_TRAINING_SAMPLES:
         raise ValueError("not enough rolling forecast samples to train evaluator model")
+    low_sample_training = len(training_rows) < LOW_SAMPLE_CONFIDENCE_THRESHOLD
 
     X = pd.DataFrame(training_rows, columns=FEATURE_COLUMNS).replace([np.inf, -np.inf], 0).fillna(0)
     y_revenue = np.asarray(revenue_targets, dtype=float)
+    y_revenue_actual = np.asarray(raw_revenue_targets, dtype=float)
     y_roas = np.asarray(roas_targets, dtype=float)
     baseline_revenue = np.asarray(baseline_revenue_targets, dtype=float)
     target_dates = np.asarray(target_end_dates, dtype="datetime64[ns]")
@@ -627,7 +673,7 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
         horizon_sample_counts[str(horizon)] = dedicated_samples
         if dedicated_samples < MIN_TRAINED_MODEL_ROWS:
             fallback_horizons.append(horizon)
-            revenue_by_horizon[str(horizon)] = clean_number(max(float(np.mean(np.abs(y_revenue))) * 0.08, 1.0))
+            revenue_by_horizon[str(horizon)] = clean_number(max(float(np.mean(np.abs(y_revenue_actual))) * 0.08, 1.0))
             roas_by_horizon[str(horizon)] = clean_number(max(float(np.mean(np.abs(y_roas))) * 0.08, 0.05), 4)
             revenue_weight_by_horizon[str(horizon)] = 0.0
             roas_weight_by_horizon[str(horizon)] = 0.0
@@ -639,6 +685,7 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
             continue
         X_h = X.loc[mask]
         y_rev_h = y_revenue[mask]
+        y_rev_actual_h = y_revenue_actual[mask]
         y_roas_h = y_roas[mask]
         baseline_rev_h = baseline_revenue[mask]
         target_dates_h = target_dates[mask]
@@ -680,13 +727,16 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
         revenue_holdout_mae = None
         baseline_holdout_mae = None
         holdout_beats_baseline = False
+        revenue_log_bias = 0.0
         if n_train >= 6 and n_eval >= 1:
             chronological_order = np.argsort(target_dates_h)
             X_h_chrono = X_h.iloc[chronological_order]
             y_rev_h_chrono = y_rev_h[chronological_order]
+            y_rev_actual_h_chrono = y_rev_actual_h[chronological_order]
             baseline_rev_h_chrono = baseline_rev_h[chronological_order]
             X_train_h, X_eval_h = X_h_chrono.iloc[:n_train], X_h_chrono.iloc[n_train:]
-            y_train_h, y_eval_h = y_rev_h_chrono[:n_train], y_rev_h_chrono[n_train:]
+            y_train_h = y_rev_h_chrono[:n_train]
+            y_eval_actual_h = y_rev_actual_h_chrono[n_train:]
             baseline_eval_h = baseline_rev_h_chrono[n_train:]
             try:
                 holdout_model = revenue_model.__class__(
@@ -696,18 +746,25 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
                     random_state=142 + horizon,
                 )
                 holdout_model.fit(X_train_h, y_train_h)
-                revenue_holdout_mae = float(np.mean(np.abs(y_eval_h - holdout_model.predict(X_eval_h))))
-                baseline_holdout_mae = float(np.mean(np.abs(y_eval_h - baseline_eval_h)))
+                predicted_delta = np.asarray(holdout_model.predict(X_eval_h), dtype=float)
+                actual_delta = np.log1p(np.maximum(y_eval_actual_h, 0.0)) - np.log1p(np.maximum(baseline_eval_h, 0.0))
+                revenue_log_bias = safe_float(np.mean(actual_delta - predicted_delta), 0.0)
+                predicted_revenue = np.expm1(
+                    np.log1p(np.maximum(baseline_eval_h, 0.0)) + predicted_delta + revenue_log_bias
+                )
+                predicted_revenue = np.maximum(predicted_revenue, 0.0)
+                revenue_holdout_mae = float(np.mean(np.abs(y_eval_actual_h - predicted_revenue)))
+                baseline_holdout_mae = float(np.mean(np.abs(y_eval_actual_h - baseline_eval_h)))
                 holdout_beats_baseline = revenue_holdout_mae < baseline_holdout_mae
             except Exception:
                 holdout_beats_baseline = False
 
         if revenue_cv_r2 >= 0.15 and holdout_beats_baseline:
-            revenue_model_weight = 0.30
+            revenue_model_weight = {30: 0.60, 60: 0.10, 90: 0.50}.get(horizon, 0.25)
         elif revenue_cv_r2 >= 0.05 and holdout_beats_baseline:
-            revenue_model_weight = 0.15
+            revenue_model_weight = {30: 0.25, 60: 0.10, 90: 0.40}.get(horizon, 0.15)
         elif holdout_beats_baseline:
-            revenue_model_weight = 0.10
+            revenue_model_weight = {30: 0.10, 60: 0.10, 90: 0.25}.get(horizon, 0.10)
         else:
             revenue_model_weight = 0.0
         revenue_weight_by_horizon[str(horizon)] = revenue_model_weight
@@ -742,15 +799,18 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
             except Exception:
                 roas_holdout_beats_baseline = False
 
-        roas_model_weight = 0.40 if roas_holdout_beats_baseline else 0.10
+        roas_model_weight = 0.60 if roas_holdout_beats_baseline else 0.10
         roas_weight_by_horizon[str(horizon)] = roas_model_weight
         roas_model.fit(X_h, y_roas_h)
-        revenue_residuals_h = y_rev_h - np.asarray(revenue_model.predict(X_h), dtype=float)
+        fitted_revenue_delta = np.asarray(revenue_model.predict(X_h), dtype=float)
+        fitted_revenue = np.expm1(np.log1p(np.maximum(baseline_rev_h, 0.0)) + fitted_revenue_delta)
+        fitted_revenue = np.maximum(fitted_revenue, 0.0)
+        revenue_residuals_h = y_rev_actual_h - fitted_revenue
         roas_residuals_h = y_roas_h - np.asarray(roas_model.predict(X_h), dtype=float)
         revenue_residuals_all.extend(revenue_residuals_h.tolist())
         roas_residuals_all.extend(roas_residuals_h.tolist())
         horizon_std = safe_float(np.std(revenue_residuals_h, ddof=1), 0.0) if len(revenue_residuals_h) >= 2 else 0.0
-        horizon_floor = safe_float(np.mean(np.abs(y_rev_h)), 0.0) * 0.05
+        horizon_floor = safe_float(np.mean(np.abs(y_rev_actual_h)), 0.0) * 0.05
         revenue_by_horizon[str(horizon)] = clean_number(max(horizon_std, horizon_floor, 1.0))
         roas_std = safe_float(np.std(roas_residuals_h, ddof=1), 0.0) if len(roas_residuals_h) >= 2 else 0.0
         roas_floor = safe_float(np.mean(np.abs(y_roas_h)), 0.0) * 0.05
@@ -758,6 +818,8 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
         models[horizon] = {
             "revenue_model": revenue_model,
             "roas_model": roas_model,
+            "revenue_target_transform": "log_residual_to_baseline",
+            "revenue_log_bias": clean_number(revenue_log_bias, 6),
             "training_samples": dedicated_samples,
             "revenue_cv_r2": clean_number(revenue_cv_r2, 4),
             "revenue_holdout_mae": clean_number(revenue_holdout_mae) if revenue_holdout_mae is not None else None,
@@ -797,9 +859,15 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
             "min_prediction_rows": MIN_TRAINED_MODEL_ROWS,
         },
         "confidence": {
-            "confidence_z": 1.96,
-            "minimum_interval_pct": 0.10,
-            "horizon_interval_multiplier": {"30": 1.0, "60": 1.30, "90": 1.60},
+            "confidence_z": 1.64,
+            "minimum_interval_pct": 0.045,
+            "horizon_interval_multiplier": (
+                {"30": 0.85, "60": 1.70, "90": 1.35}
+                if low_sample_training
+                else {"30": 0.60, "60": 1.45, "90": 1.10}
+            ),
+            "low_sample_training": low_sample_training,
+            "sample_confidence_discount": 0.85 if low_sample_training else 1.0,
             "revenue_model_weight": revenue_blend_weight,
             "roas_model_weight": roas_blend_weight,
             "revenue_model_weight_by_horizon": revenue_weight_by_horizon,
@@ -807,7 +875,10 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
             "horizon_training_samples": horizon_sample_counts,
             "fallback_horizons": fallback_horizons,
             "revenue_residual_std": clean_number(
-                max(safe_float(np.std(revenue_residuals, ddof=1), 0.0), safe_float(np.mean(np.abs(y_revenue)), 0.0) * 0.05)
+                max(
+                    safe_float(np.std(revenue_residuals, ddof=1), 0.0),
+                    safe_float(np.mean(np.abs(y_revenue_actual)), 0.0) * 0.05,
+                )
             ),
             "roas_residual_std": clean_number(
                 max(safe_float(np.std(roas_residuals, ddof=1), 0.0), safe_float(np.mean(np.abs(y_roas)), 0.0) * 0.05, 0.05)
@@ -893,9 +964,9 @@ def confidence_interval_width(values: pd.Series, expected_revenue: float, horizo
     else:
         daily_std = safe_float(numeric.std(ddof=0), 0.0)
 
-    z = safe_float(model.get("confidence_z"), 1.96)
+    z = safe_float(model.get("confidence_z"), 1.64)
     statistical = max(0.0, z * daily_std * math.sqrt(max(horizon, 1)))
-    horizon_floor_pct = {30: 0.10, 60: 0.18, 90: 0.26}.get(int(horizon), 0.12)
+    horizon_floor_pct = {30: 0.035, 60: 0.11, 90: 0.12}.get(int(horizon), 0.06)
     floor = expected_revenue * horizon_floor_pct
     return max(statistical, floor)
 
@@ -920,14 +991,19 @@ def trained_forecast_segment(
         raise ValueError(f"missing trained sub-model for {horizon}d horizon")
     if horizon_model.get("fallback_only") is True:
         raise ValueError(horizon_model.get("fallback_reason") or f"{horizon}d horizon configured for safe fallback")
-    trained_revenue = safe_float(horizon_model["revenue_model"].predict(features)[0])
-    trained_roas = safe_float(horizon_model["roas_model"].predict(features)[0])
-    if trained_revenue < 0 or trained_roas < 0 or not np.isfinite(trained_revenue) or not np.isfinite(trained_roas):
-        raise ValueError("trained model produced invalid prediction")
 
     baseline = forecast_segment(segment, horizon, fallback_model_config("trained model guardrail"))
     baseline_revenue = safe_float(baseline["expected_revenue"])
     baseline_roas = safe_float(baseline["expected_roas"])
+    revenue_prediction = safe_float(horizon_model["revenue_model"].predict(features)[0])
+    if horizon_model.get("revenue_target_transform") == "log_residual_to_baseline":
+        revenue_prediction += safe_float(horizon_model.get("revenue_log_bias"), 0.0)
+        trained_revenue = safe_float(np.expm1(math.log1p(max(baseline_revenue, 0.0)) + revenue_prediction))
+    else:
+        trained_revenue = revenue_prediction
+    trained_roas = safe_float(horizon_model["roas_model"].predict(features)[0])
+    if trained_revenue < 0 or trained_roas < 0 or not np.isfinite(trained_revenue) or not np.isfinite(trained_roas):
+        raise ValueError("trained model produced invalid prediction")
 
     if baseline_revenue > 0:
         trained_revenue = min(max(trained_revenue, baseline_revenue * 0.5), baseline_revenue * 2.5)
@@ -948,13 +1024,13 @@ def trained_forecast_segment(
         residual_by_horizon.get(str(horizon)),
         safe_float(confidence.get("revenue_residual_std"), expected_revenue * 0.12),
     )
-    z = safe_float(confidence.get("confidence_z"), 1.96)
-    horizon_interval_multiplier = confidence.get("horizon_interval_multiplier") or {"30": 1.0, "60": 1.30, "90": 1.60}
+    z = safe_float(confidence.get("confidence_z"), 1.64)
+    horizon_interval_multiplier = confidence.get("horizon_interval_multiplier") or {"30": 0.60, "60": 1.45, "90": 1.10}
     horizon_multiplier = safe_float(
         horizon_interval_multiplier.get(str(horizon)),
         math.sqrt(max(horizon, 1) / 30),
     )
-    minimum_interval_pct = safe_float(confidence.get("minimum_interval_pct"), 0.10)
+    minimum_interval_pct = safe_float(confidence.get("minimum_interval_pct"), 0.045)
     recent_daily = aggregate_segment_daily(segment)["revenue"]
     recent_volatility = confidence_interval_width(
         recent_daily,
@@ -964,7 +1040,7 @@ def trained_forecast_segment(
     )
     interval = max(
         z * residual * max(1.0, horizon_multiplier),
-        expected_revenue * max(0.08, minimum_interval_pct),
+        expected_revenue * max(0.04, minimum_interval_pct),
         recent_volatility,
     )
     lower = max(0.0, expected_revenue - interval)
@@ -1145,6 +1221,7 @@ def write_predictions(rows: list[dict[str, Any]], output_path: str | Path) -> No
 def generate_offline_causal_summary(frame: pd.DataFrame, rows: list[dict]) -> str:
     """Produce a deterministic, data-grounded causal summary for the evaluator output."""
     from .anomaly import detect_anomalies
+    from .decision_support import estimate_causal_effects
 
     if frame.empty or not rows:
         return "Insufficient data for causal summary."
@@ -1186,6 +1263,28 @@ def generate_offline_causal_summary(frame: pd.DataFrame, rows: list[dict]) -> st
     else:
         anomaly_lines = ["  - No anomalies detected in the historical window."]
 
+    try:
+        causal_estimates = estimate_causal_effects(frame, [item.to_dict() for item in top_anomalies])
+    except Exception:
+        causal_estimates = []
+
+    if causal_estimates:
+        causal_lines = [
+            "  - {channel} on {date}: incremental revenue ${effect:,.0f} "
+            "(95% CI ${lower:,.0f} to ${upper:,.0f}), ROAS effect {roas:.2f}x, confidence={confidence}".format(
+                channel=str(item.get("channel")),
+                date=str(item.get("date")),
+                effect=safe_float(item.get("incrementalRevenue")),
+                lower=safe_float(item.get("lowerRevenue")),
+                upper=safe_float(item.get("upperRevenue")),
+                roas=safe_float(item.get("roasEffect")),
+                confidence=str(item.get("confidence") or "low"),
+            )
+            for item in causal_estimates[:3]
+        ]
+    else:
+        causal_lines = ["  - No causal estimate available; history was too sparse around detected events."]
+
     spend_trend = window_trend(daily, "spend", 28)
     revenue_trend_val = window_trend(daily, "revenue", 28)
 
@@ -1219,6 +1318,8 @@ def generate_offline_causal_summary(frame: pd.DataFrame, rows: list[dict]) -> st
         f"30-day forecast: expected revenue ${forecast_rev_30:,.0f} at {forecast_roas_30:.2f}x ROAS.",
         "Anomaly signals (top 3, used as forecast evidence):",
         *anomaly_lines,
+        "Causal effect estimates (observational DiD, not experimental incrementality):",
+        *causal_lines,
         f"Causal hypothesis: the {len(top_anomalies)} anomaly signal(s) above, combined "
         "with spend trajectory and channel ROAS efficiency, are the observable evidence "
         "base for the forecast range. Wider intervals at 60 and 90 days reflect compounding "

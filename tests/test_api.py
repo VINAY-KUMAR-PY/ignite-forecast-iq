@@ -219,6 +219,7 @@ class ApiSecurityTests(unittest.TestCase):
         self.assertIn("anomalies", anomalies.json())
         self.assertIn("trendBreaks", anomalies.json())
         self.assertIn("driverEvidence", anomalies.json())
+        self.assertIn("causalEstimates", anomalies.json())
         self.assertTrue(anomalies.json()["driverEvidence"])
 
         spend_curve = self.client.post(

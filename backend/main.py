@@ -14,7 +14,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 from .data_preprocessing import validate_records
-from .decision_support import build_decision_support, compute_driver_evidence
+from .decision_support import build_decision_support, compute_driver_evidence, estimate_causal_effects
 from .anomaly import compute_trend_breaks, detect_anomalies
 from .forecasting import compute_spend_response_curve, forecast_frame, simulate_budgets
 from .gemini import generate_gemini_insights
@@ -220,7 +220,13 @@ def get_anomalies(request: dict) -> dict:
     anomalies = [item.to_dict() for item in detect_anomalies(frame)]
     trend_breaks = compute_trend_breaks(frame)
     driver_evidence = compute_driver_evidence(frame)
-    return {"anomalies": anomalies, "trendBreaks": trend_breaks, "driverEvidence": driver_evidence}
+    causal_estimates = estimate_causal_effects(frame, anomalies + trend_breaks)
+    return {
+        "anomalies": anomalies,
+        "trendBreaks": trend_breaks,
+        "driverEvidence": driver_evidence,
+        "causalEstimates": causal_estimates,
+    }
 
 
 @app.post("/api/decision-support", response_model=DecisionSupportResponse)

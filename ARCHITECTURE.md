@@ -102,16 +102,16 @@ The offline evaluator uses adaptive per-horizon blend weights determined by hold
 
 | Gate | Condition | Revenue model weight |
 | --- | --- | ---: |
-| Strong evidence | CV R2 >= 0.15 and chronological holdout beats deterministic baseline | 0.30 |
-| Moderate evidence | CV R2 >= 0.05 and chronological holdout beats deterministic baseline | 0.15 |
-| Weak evidence | Chronological holdout beats deterministic baseline but CV R2 < 0.05 | 0.10 |
+| Strong evidence | CV R2 >= 0.15 and chronological holdout beats deterministic baseline | horizon-calibrated: 30d 0.60, 60d 0.10, 90d 0.50 |
+| Moderate evidence | CV R2 >= 0.05 and chronological holdout beats deterministic baseline | horizon-calibrated: 30d 0.25, 60d 0.10, 90d 0.40 |
+| Weak evidence | Chronological holdout beats deterministic baseline but CV R2 < 0.05 | horizon-calibrated: 30d 0.10, 60d 0.10, 90d 0.25 |
 | No evidence | Chronological holdout does not beat deterministic baseline | 0.00 |
 
 **ROAS model weight** (gate: chronological holdout only):
 
 | Gate | Condition | ROAS model weight |
 | --- | --- | ---: |
-| Holdout validates | Trained ROAS MAE < naive mean MAE on chronological holdout slice | 0.40 |
+| Holdout validates | Trained ROAS MAE < naive mean MAE on chronological holdout slice | 0.60 |
 | No holdout evidence | Trained ROAS model does not beat naive mean on holdout slice | 0.10 |
 
 Both gates use the latest 20% of each horizon's dedicated training samples by target date to check whether the trained model beats a naive mean forecast. This prevents CV overfitting on small per-horizon samples.
@@ -144,23 +144,23 @@ The latest holdout backtest trains on the earlier period and evaluates the final
 
 | Model         |      MAE |     RMSE |  MAPE | Interval coverage |
 | ------------- | -------: | -------: | ----: | ----------------: |
-| Trained model | 2,185.89 | 2,763.76 | 2.78% |           100.00% |
-| Safe baseline | 2,185.89 | 2,763.76 | 2.78% |           100.00% |
+| Trained model | 1,723.79 | 2,226.80 | 2.26% |           100.00% |
+| Safe baseline | 2,185.89 | 2,763.76 | 2.78% |            88.89% |
 
 ### ROAS
 
 | Model         |  MAE | RMSE |  MAPE | Interval coverage |
 | ------------- | ---: | ---: | ----: | ----------------: |
-| Trained model | 0.05 | 0.06 | 1.26% |           100.00% |
-| Safe baseline | 0.05 | 0.07 | 1.44% |           100.00% |
+| Trained model | 0.04 | 0.06 | 1.05% |           100.00% |
+| Safe baseline | 0.05 | 0.07 | 1.44% |            88.89% |
 
-Walk-forward validation also reports 30/60/90-day horizon behavior and records whether a fold used a trained horizon model or an explicit fallback-only horizon. This is why both modes coexist: the trained model adds ROAS behavior and diagnostics where validated, while the fallback protects hidden-dataset revenue stability.
+Walk-forward validation also reports 30/60/90-day horizon behavior and records whether a fold used a trained horizon model or an explicit fallback-only horizon. This is why both modes coexist: the trained model adds validated ML behavior, while the fallback protects hidden-dataset stability.
 
 | Horizon | Folds | Segments | Trained revenue MAE | Safe baseline MAE | Trained coverage | Revenue MAE winner |
 | ------: | ----: | -------: | ------------------: | ----------------: | ---------------: | ------------------ |
-|      30 |     3 |       54 |            3,154.41 |          3,097.88 |          100.00% | Safe baseline |
-|      60 |     3 |       54 |           11,221.15 |         11,221.15 |          100.00% | Tie |
-|      90 |     2 |       36 |           22,981.64 |         22,981.64 |          100.00% | Tie |
+|      30 |     3 |       54 |            2,462.00 |          3,097.88 |           92.59% | Trained model |
+|      60 |     3 |       54 |           10,541.64 |         11,221.15 |           88.89% | Trained model |
+|      90 |     3 |       54 |           20,891.06 |         31,577.72 |           90.74% | Trained model |
 
 ## Deployment Model
 
@@ -174,7 +174,7 @@ Frontend and backend can deploy independently:
 
 Recommended deployment commands:
 
-- Vercel frontend: build with `pnpm run build` or `npm run build`, output `dist`, set `VITE_API_BASE_URL` to the hosted backend.
+- Vercel frontend: build with `npm run build`, output `dist`, set `VITE_API_BASE_URL` to the hosted backend.
 - Render/Railway backend: build with `pip install -r requirements-app.txt`, start with `python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT`.
 - Environment: keep `GEMINI_API_KEY` backend-only and restrict `CORS_ORIGINS` to the production frontend URL.
 

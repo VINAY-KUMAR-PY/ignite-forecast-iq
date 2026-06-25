@@ -481,6 +481,7 @@ def _is_retryable(kind: GeminiFailureKind) -> bool:
 def _build_prompt(summary: Dict[str, Any]) -> str:
     anomalies = summary.get("anomalies") or summary.get("trendBreaks") or []
     driver_evidence = summary.get("driverEvidence") or []
+    causal_estimates = summary.get("causalEstimates") or []
     return f"""
 {SYSTEM_PROMPT}
 
@@ -496,9 +497,13 @@ def _build_prompt(summary: Dict[str, Any]) -> str:
 {json.dumps(driver_evidence, indent=2)}
 </statistical_driver_evidence>
 
+<causal_effect_estimates>
+{json.dumps(causal_estimates, indent=2)}
+</causal_effect_estimates>
+
 Think step by step internally:
 STEP 1 - DIAGNOSE: Identify the 3 most important performance signals, strongest channel by ROAS, weakest channel by ROAS, and most significant trend. Cite exact numbers.
-STEP 2 - CAUSAL HYPOTHESES: Explain the most plausible cause-and-effect chain behind each major movement. Use causal language such as "because", "likely due to", or "consistent with", and tie each claim to at least two named metrics. Use statistical_driver_evidence when available, explicitly describing correlations as associations rather than proof of incrementality.
+STEP 2 - CAUSAL HYPOTHESES: Explain the most plausible cause-and-effect chain behind each major movement. Use causal language such as "because", "likely due to", or "consistent with", and tie each claim to at least two named metrics. Use causal_effect_estimates when available, citing incremental revenue effect and confidence interval, while explicitly stating these are observational estimates rather than proof of incrementality. Use statistical_driver_evidence as supporting association evidence only.
 Example weak framing: "ROAS is down 12%."
 Example causal framing: "ROAS is down 12% likely because CPC rose 9% while conversion rate stayed flat, consistent with rising auction competition rather than deteriorating landing-page quality."
 Example weak framing: "Revenue is up in Google Ads."

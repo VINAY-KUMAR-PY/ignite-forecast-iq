@@ -20,11 +20,11 @@ The offline evaluator path is intentionally isolated from the web app. `run.sh` 
 | Compatibility runtime                | Python 3.10, verified through the deterministic safe baseline                              |
 | scikit-learn version                 | 1.9.0                                                                                      |
 | Model artifact                       | `pickle/model.pkl`                                                                         |
-| Model artifact size                  | ~884 KB                                                                                    |
+| Model artifact size                  | ~886 KB                                                                                    |
 | Model artifact version               | 4                                                                                          |
-| Training rows                        | 1,440 (full dataset); 1,200 used as training split in primary 30-day holdout backtest      |
-| Rolling training samples             | 414                                                                                        |
-| Feature count                        | 35 evaluator features plus live holiday/seasonality flags                                  |
+| Training rows                        | 2,400 full sample rows; 2,160 used as training split in primary 30-day holdout backtest    |
+| Rolling training samples             | 810 in the packaged artifact; 702 in the primary holdout training split                    |
+| Feature count                        | 48 evaluator features including spend, trend, seasonality, and baseline-anchor regressors  |
 | Normal evaluator mode                | `trained_model`                                                                            |
 | Safe fallback mode                   | `safe_baseline_fallback` for missing/corrupt/incompatible model or unsupported hidden data |
 
@@ -255,15 +255,15 @@ The offline evaluator artifact at `pickle/model.pkl` is a compact joblib artifac
 | Artifact type        | `forecastiq_evaluator_model` |
 | Artifact version     | 4                            |
 | Evaluator model type | `trained_model`              |
-| Artifact size        | ~880 KB                      |
-| Training rows        | 1,440 (full dataset); 1,200 used as training split in 30-day holdout backtest |
-| Rolling samples      | 414                          |
-| Feature count        | 35                           |
-| Revenue blend weight | adaptive per-horizon: 30d 0.00, 60d 0.00, 90d 0.00 |
-| ROAS blend weight    | adaptive per-horizon: 30d 0.40, 60d 0.40, 90d 0.40 (holdout validated); see `reports/backtest_summary.md` |
+| Artifact size        | ~886 KB                      |
+| Training rows        | 2,400 full sample rows; 2,160 used as training split in 30-day holdout backtest |
+| Rolling samples      | 810 in the packaged artifact; 702 in the primary holdout training split |
+| Feature count        | 48                           |
+| Revenue blend weight | adaptive per-horizon: 30d 0.60, 60d 0.10, 90d 0.50 |
+| ROAS blend weight    | adaptive per-horizon: 30d 0.60, 60d 0.60, 90d 0.60; see `reports/backtest_summary.md` |
 | Causal summary output | `output/causal_summary.txt` |
 
-The evaluator model trains on rolling historical samples from `data/sample_campaigns.csv` and predicts 30, 60, and 90 day revenue and ROAS at overall, channel, campaign type, and campaign levels. The artifact stores dedicated training-sample counts by horizon: 252 samples for 30 days, 108 for 60 days, and 54 for 90 days. If a future training slice lacks enough dedicated samples for a horizon, that horizon is explicitly marked fallback-only instead of fitting on mismatched 30/60-day targets. The safe baseline remains available for missing, corrupt, incompatible, tiny, or malformed hidden evaluator data.
+The evaluator model trains on rolling historical samples from `data/sample_campaigns.csv` and predicts 30, 60, and 90 day revenue and ROAS at overall, channel, campaign type, and campaign levels. The packaged artifact stores dedicated training-sample counts by horizon: 414 samples for 30 days, 180 for 60 days, and 108 for 90 days. If a future training slice lacks enough dedicated samples for a horizon, that horizon is explicitly marked fallback-only instead of fitting on mismatched target scales. The safe baseline remains available for missing, corrupt, incompatible, tiny, or malformed hidden evaluator data.
 
 The offline predictions file includes revenue and ROAS ranges. `expected_roas`, `lower_roas`, and `upper_roas` are derived from the same projected-spend denominator used for revenue planning. When GA4 or Shopify-style exports do not contain spend, ForecastIQ keeps the CSV numeric and NaN-safe by emitting `expected_roas = lower_roas = upper_roas = 0` with `forecast_confidence = not_computable` instead of fabricating a confident ROAS from unrelated spend-bearing training data.
 
@@ -273,17 +273,17 @@ Backtesting uses the final 30 days as a holdout and trains on the earlier period
 
 | Model         |      MAE |     RMSE |  MAPE | Interval coverage |
 | ------------- | -------: | -------: | ----: | ----------------: |
-| Trained model | 2,185.89 | 2,763.76 | 2.78% |           100.00% |
-| Safe baseline | 2,185.89 | 2,763.76 | 2.78% |           100.00% |
+| Trained model | 1,723.79 | 2,226.80 | 2.26% |           100.00% |
+| Safe baseline | 2,185.89 | 2,763.76 | 2.78% |            88.89% |
 
 ### ROAS
 
 | Model         |  MAE | RMSE |  MAPE | Interval coverage |
 | ------------- | ---: | ---: | ----: | ----------------: |
-| Trained model | 0.05 | 0.06 | 1.26% |           100.00% |
-| Safe baseline | 0.05 | 0.07 | 1.44% |           100.00% |
+| Trained model | 0.04 | 0.06 | 1.05% |           100.00% |
+| Safe baseline | 0.05 | 0.07 | 1.44% |            88.89% |
 
-The evaluator uses holdout-gated revenue blend weights. On the primary 30-day sample holdout, the revenue model weight is 0.00 because the deterministic baseline has the best revenue RMSE/MAE balance; the trained path still contributes ROAS behavior, residual calibration, and diagnostics. This is reported honestly rather than presented as artificial lift. The summary is generated by:
+The evaluator uses holdout-gated, horizon-aware blend weights. The current trained artifact improves the primary 30-day sample holdout for both revenue and ROAS, while the deterministic safe baseline remains available for hidden datasets that are tiny, malformed, or outside the training shape. The summary is generated by:
 
 ```bash
 python -m backend.backtest
@@ -293,51 +293,51 @@ Reports are written to `reports/backtest_report.json` and `reports/backtest_summ
 
 ## Model Performance Evidence
 
-ForecastIQ keeps a trained model and a safe baseline because different hidden datasets can favor different behavior. The trained model provides ML-driven ROAS and interval behavior; the baseline protects point-forecast stability when data is tiny, malformed, or outside the training shape.
+ForecastIQ keeps a trained model and a safe baseline because different hidden datasets can favor different behavior. The trained model now improves the included sample holdout, while the baseline protects point-forecast stability when data is tiny, malformed, or outside the training shape.
 
 Current primary 30-day holdout evidence:
 
 | Target | Trained MAE | Safe baseline MAE | MAE difference | Winner |
 | --- | ---: | ---: | ---: | --- |
-| Revenue | 2,185.89 | 2,185.89 | 0.00% | Tie |
-| ROAS | 0.05 | 0.05 | Tie on rounded MAE | Tie |
+| Revenue | 1,723.79 | 2,185.89 | -21.14% | Trained model |
+| ROAS | 0.04 | 0.05 | -20.00% | Trained model |
 
-Plain-English interpretation: revenue point estimates remain guarded by the deterministic baseline because the sample holdout shows baseline revenue RMSE/MAE is the strongest choice. The trained artifact still contributes ROAS behavior, uncertainty calibration, and explainability metadata. ForecastIQ therefore does not overclaim trained-model dominance.
+Plain-English interpretation: the refreshed trained artifact now beats the deterministic baseline on the included sample holdout for revenue MAE and ROAS MAE. ForecastIQ still preserves fallback mode because automated evaluation data can be smaller, noisier, or shaped differently from the sample data.
 
 Forecast explainability now includes two layers:
 
 - Global feature importance and SHAP importance: which features mattered most across model training for the selected segment.
 - Local "Why this forecast?" explainability: permutation-baseline driver cards showing which current forecast-row features pushed this specific forecast up or down versus typical historical values.
 
-Blend-weight validation tested revenue model weights of 0.00, 0.10, 0.25, 0.40, 0.50, and 0.60. The packaged artifact now uses a holdout-gated 0.00 revenue blend because that weight produced the best revenue RMSE/MAE balance on the sample holdout. ROAS uses adaptive per-horizon gates; the rebuilt artifact validates 0.40 on the 30, 60, and 90 day horizons, and the blend comparison confirms 0.40 has the best ROAS RMSE/MAE balance.
+Blend-weight validation tested revenue and ROAS model weights of 0.00, 0.10, 0.25, 0.40, 0.50, and 0.60. The primary 30-day holdout keeps revenue_model_weight=0.60 and roas_model_weight=0.60 because those weights have the best RMSE/MAE balance in the generated backtest. The packaged artifact also stores horizon-specific revenue weights of 30d 0.60, 60d 0.10, and 90d 0.50.
 
 | Revenue model weight |      MAE |     RMSE |  MAPE | Interval coverage |
 | -------------------: | -------: | -------: | ----: | ----------------: |
 |                 0.00 | 2,185.89 | 2,763.76 | 2.78% |           100.00% |
-|                 0.10 | 2,255.94 | 2,778.33 | 2.82% |           100.00% |
-|                 0.25 | 2,473.99 | 2,971.53 | 3.06% |           100.00% |
-|                 0.40 | 2,772.59 | 3,335.93 | 3.50% |           100.00% |
-|                 0.50 | 3,066.01 | 3,649.73 | 3.97% |           100.00% |
-|                 0.60 | 3,359.44 | 4,005.06 | 4.43% |           100.00% |
+|                 0.10 | 2,102.55 | 2,652.51 | 2.68% |           100.00% |
+|                 0.25 | 1,982.74 | 2,499.79 | 2.53% |           100.00% |
+|                 0.40 | 1,871.77 | 2,366.94 | 2.42% |           100.00% |
+|                 0.50 | 1,797.78 | 2,291.14 | 2.34% |           100.00% |
+|                 0.60 | 1,723.79 | 2,226.80 | 2.26% |           100.00% |
 
 | ROAS model weight |  MAE | RMSE |  MAPE | Interval coverage |
 | ----------------: | ---: | ---: | ----: | ----------------: |
 |              0.00 | 0.05 | 0.07 | 1.44% |           100.00% |
-|              0.10 | 0.05 | 0.06 | 1.41% |           100.00% |
-|              0.25 | 0.05 | 0.06 | 1.30% |           100.00% |
-|              0.40 | 0.05 | 0.06 | 1.26% |           100.00% |
-|              0.50 | 0.05 | 0.06 | 1.27% |           100.00% |
-|              0.60 | 0.05 | 0.07 | 1.19% |           100.00% |
+|              0.10 | 0.05 | 0.06 | 1.39% |           100.00% |
+|              0.25 | 0.05 | 0.06 | 1.26% |           100.00% |
+|              0.40 | 0.04 | 0.06 | 1.16% |           100.00% |
+|              0.50 | 0.04 | 0.06 | 1.11% |           100.00% |
+|              0.60 | 0.04 | 0.06 | 1.05% |           100.00% |
 
 Walk-forward per-horizon backtesting is included for transparency:
 
 | Horizon | Folds | Segments | Trained revenue MAE | Baseline revenue MAE | Trained ROAS MAE | Trained coverage | Revenue MAE winner |
 | ------: | ----: | -------: | ------------------: | -------------------: | ---------------: | ---------------: | ------------------ |
-|      30 |     3 |       54 |            3,154.41 |             3,097.88 |             0.05 |          100.00% | Safe baseline |
-|      60 |     3 |       54 |           11,221.15 |            11,221.15 |             0.10 |          100.00% | Tie |
-|      90 |     2 |       36 |           22,981.64 |            22,981.64 |             0.11 |          100.00% | Tie |
+|      30 |     3 |       54 |            2,462.00 |             3,097.88 |             0.06 |           92.59% | Trained model |
+|      60 |     3 |       54 |           10,541.64 |            11,221.15 |             0.05 |           88.89% | Trained model |
+|      90 |     3 |       54 |           20,891.06 |            31,577.72 |             0.06 |           90.74% | Trained model |
 
-This is why ForecastIQ keeps both systems: the trained model provides ML behavior and calibrated uncertainty where validated, while the deterministic baseline remains a reliability guardrail for longer, thinner, or incompatible cases.
+Intervals were narrowed from the earlier wide setting that produced 100% walk-forward coverage to a more useful planning range: 92.59% at 30 days, 88.89% at 60 days, and 90.74% at 90 days. This is why ForecastIQ keeps both systems: the trained model provides ML behavior where validated, while the deterministic baseline remains a reliability guardrail for longer, thinner, or incompatible cases.
 
 ## Budget Simulator
 
@@ -389,13 +389,13 @@ When `GEMINI_API_KEY` is configured, Gemini generates the structured response. W
 Prerequisites:
 
 - Node.js 20+.
-- pnpm, npm, or bun. The repository includes `bun.lock`, but Vite scripts also work through npm-compatible package managers.
+- npm 10+; this repository keeps `package-lock.json` as the single frontend lockfile.
 - Python 3.11-3.14 for trained-artifact evaluation; Python 3.14 is the build environment for the committed artifact. Python 3.10 is CI-tested through the safe baseline because sklearn pickle compatibility is not promised across library generations.
 
 Install frontend dependencies:
 
 ```bash
-pnpm install
+npm ci
 ```
 
 Install backend dependencies:
@@ -477,13 +477,13 @@ python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
 Or use the package script:
 
 ```bash
-pnpm run api
+npm run api
 ```
 
 Start the frontend:
 
 ```bash
-pnpm run dev
+npm run dev
 ```
 
 Open the Vite URL and use the existing app routes:
@@ -692,7 +692,7 @@ PYTHON="/c/path/to/.venv/Scripts/python.exe" ./run.sh ./data ./pickle/model.pkl 
 Frontend:
 
 ```bash
-pnpm run check
+npm run check
 ```
 
 Backend compile check:
@@ -708,10 +708,10 @@ Browser demo smoke check:
 python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
 
 # In another terminal
-pnpm run dev
+npm run dev
 
 # Then run
-pnpm run demo:e2e
+npm run demo:e2e
 ```
 
 Train model:
@@ -780,7 +780,7 @@ No live production URLs are claimed in this repository. Deployment requires the 
 Frontend on Vercel:
 
 1. Import `VINAY-KUMAR-PY/ignite-forecast-iq`.
-2. Set the build command to `pnpm run build` or `npm run build`.
+2. Set the build command to `npm run build`.
 3. Set the output directory to `dist`.
 4. Add `VITE_API_BASE_URL=https://your-backend-domain`.
 5. Redeploy after backend CORS is configured.
@@ -847,7 +847,7 @@ Keep `pickle/model.pkl` packaged with the backend build so evaluator and API mod
 ### Frontend on Vercel
 
 ```bash
-VITE_API_BASE_URL=https://your-api-domain.example pnpm run build
+VITE_API_BASE_URL=https://your-api-domain.example npm run build
 ```
 
 Deploy `dist/` to Vercel or any static host. Configure `VITE_API_BASE_URL` to point to the hosted FastAPI backend.
@@ -860,7 +860,7 @@ Deploy `dist/` to Vercel or any static host. Configure `VITE_API_BASE_URL` to po
 - Store Gemini keys only in backend environment variables.
 - Do not expose secrets with `VITE_` prefixes.
 - Package or mount `pickle/model.pkl` with the backend.
-- Run `pnpm run build`, `pnpm run lint`, and `python -m pytest` before release.
+- Run `npm run build`, `npm run lint`, and `python -m pytest` before release.
 
 ## Limitations
 

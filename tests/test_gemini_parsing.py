@@ -34,6 +34,19 @@ SUMMARY = {
             "strength": "strong",
         }
     ],
+    "causalEstimates": [
+        {
+            "date": "2026-06-01",
+            "channel": "Google Ads",
+            "metric": "revenue",
+            "method": "difference_in_differences",
+            "incrementalRevenue": 12800.0,
+            "lowerRevenue": 7200.0,
+            "upperRevenue": 18400.0,
+            "roasEffect": 0.34,
+            "confidence": "medium",
+        }
+    ],
     "channels": [
         {"name": "Google Ads", "revenue": 76200.0, "spend": 15800.0, "roas": 4.82, "sharePct": 50.3},
         {"name": "Meta Ads", "revenue": 36400.0, "spend": 10400.0, "roas": 3.5, "sharePct": 33.1},
@@ -135,6 +148,8 @@ class GeminiParsingTests(unittest.TestCase):
         prompt = _build_prompt(SUMMARY)
 
         self.assertIn("statistical_driver_evidence", prompt)
+        self.assertIn("causal_effect_estimates", prompt)
+        self.assertIn('"method": "difference_in_differences"', prompt)
         self.assertIn('"spendRevenueDeltaCorrelation": 0.62', prompt)
         self.assertIn("rather than proof of incrementality", prompt)
 

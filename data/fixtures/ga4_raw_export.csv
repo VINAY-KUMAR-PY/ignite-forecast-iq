@@ -1,0 +1,7 @@
+date,sessionSource,sessionMedium,purchaseRevenue,eventValue,sessions,conversions
+2026-06-01,google,cpc,7020,7020,3100,142
+2026-06-01,facebook,paid_social,3780,3780,2100,74
+2026-06-02,google,cpc,7280,7280,3240,148
+2026-06-02,facebook,paid_social,3920,3920,2200,78
+2026-06-03,google,cpc,7540,7540,3350,153
+2026-06-03,facebook,paid_social,4060,4060,2280,81

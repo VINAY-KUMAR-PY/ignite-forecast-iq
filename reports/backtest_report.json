@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-06-24T11:27:07.537473+00:00",
+  "generated_at": "2026-06-25T04:55:46.504658+00:00",
   "data_dir": "data",
   "holdout_days": 30,
-  "train_rows": 1200,
+  "train_rows": 2160,
   "test_rows": 240,
   "segments_evaluated": 18,
   "required_output_columns": [
@@ -31,118 +31,120 @@
     "model_type": "trained_model",
     "artifact_type": "forecastiq_evaluator_model",
     "artifact_version": 4,
-    "training_samples": 306,
-    "training_rows": 1200,
+    "training_samples": 702,
+    "training_rows": 2160,
     "confidence": {
-      "confidence_z": 1.96,
-      "minimum_interval_pct": 0.1,
+      "confidence_z": 1.64,
+      "minimum_interval_pct": 0.045,
       "horizon_interval_multiplier": {
-        "30": 1.0,
-        "60": 1.3,
-        "90": 1.6
+        "30": 0.6,
+        "60": 1.45,
+        "90": 1.1
       },
-      "revenue_model_weight": 0.0,
-      "roas_model_weight": 0.4,
+      "low_sample_training": false,
+      "sample_confidence_discount": 1.0,
+      "revenue_model_weight": 0.4,
+      "roas_model_weight": 0.6,
       "revenue_model_weight_by_horizon": {
-        "30": 0.0,
-        "60": 0.0,
-        "90": 0.0
+        "30": 0.6,
+        "60": 0.1,
+        "90": 0.5
       },
       "roas_model_weight_by_horizon": {
-        "30": 0.4,
-        "60": 0.4,
-        "90": 0.4
+        "30": 0.6,
+        "60": 0.6,
+        "90": 0.6
       },
       "horizon_training_samples": {
-        "30": 198,
-        "60": 72,
-        "90": 36
+        "30": 414,
+        "60": 180,
+        "90": 108
       },
       "fallback_horizons": [],
-      "revenue_residual_std": 7164.47,
+      "revenue_residual_std": 7186.62,
       "roas_residual_std": 0.21,
       "revenue_residual_by_horizon": {
-        "30": 4892.72,
-        "60": 9710.7,
-        "90": 14566.64
+        "30": 4619.37,
+        "60": 9168.1,
+        "90": 13725.27
       },
       "roas_residual_by_horizon": {
-        "30": 0.2067,
-        "60": 0.2067,
-        "90": 0.2067
+        "30": 0.2066,
+        "60": 0.2066,
+        "90": 0.2066
       }
     }
   },
   "trained_model_metrics": {
-    "mae": 2185.89,
-    "rmse": 2763.76,
-    "mape": 2.78,
+    "mae": 1723.79,
+    "rmse": 2226.8,
+    "mape": 2.26,
     "interval_coverage": 100.0,
     "revenue": {
-      "mae": 2185.89,
-      "rmse": 2763.76,
-      "mape": 2.78,
+      "mae": 1723.79,
+      "rmse": 2226.8,
+      "mape": 2.26,
       "interval_coverage": 100.0
     },
     "roas": {
-      "mae": 0.05,
+      "mae": 0.04,
       "rmse": 0.06,
-      "mape": 1.26,
+      "mape": 1.05,
       "interval_coverage": 100.0
     },
-    "roas_mae": 0.05,
+    "roas_mae": 0.04,
     "roas_rmse": 0.06,
-    "roas_mape": 1.26,
+    "roas_mape": 1.05,
     "roas_interval_coverage": 100.0
   },
   "safe_baseline_metrics": {
     "mae": 2185.89,
     "rmse": 2763.76,
     "mape": 2.78,
-    "interval_coverage": 100.0,
+    "interval_coverage": 88.89,
     "revenue": {
       "mae": 2185.89,
       "rmse": 2763.76,
       "mape": 2.78,
-      "interval_coverage": 100.0
+      "interval_coverage": 88.89
     },
     "roas": {
       "mae": 0.05,
       "rmse": 0.07,
       "mape": 1.44,
-      "interval_coverage": 100.0
+      "interval_coverage": 88.89
     },
     "roas_mae": 0.05,
     "roas_rmse": 0.07,
     "roas_mape": 1.44,
-    "roas_interval_coverage": 100.0
+    "roas_interval_coverage": 88.89
   },
   "trained_vs_safe_baseline": {
-    "mae_delta": 0.0,
-    "rmse_delta": 0.0,
-    "mape_delta": 0.0,
-    "roas_mae_delta": 0.0,
+    "mae_delta": 462.1,
+    "rmse_delta": 536.96,
+    "mape_delta": 0.52,
+    "roas_mae_delta": 0.01,
     "roas_rmse_delta": 0.01
   },
   "model_performance_evidence": {
-    "overall_winner": "tie",
+    "overall_winner": "trained_model",
     "revenue": {
       "target": "revenue",
-      "trained_mae": 2185.89,
+      "trained_mae": 1723.79,
       "safe_baseline_mae": 2185.89,
-      "mae_difference_pct": 0.0,
-      "winner": "tie",
-      "interpretation": "The trained model and safe baseline are tied on revenue MAE for this slice."
+      "mae_difference_pct": -21.14,
+      "winner": "trained_model",
+      "interpretation": "The trained model has lower revenue MAE than the safe baseline by 21.14% on this slice."
     },
     "roas": {
       "target": "roas",
-      "trained_mae": 0.05,
+      "trained_mae": 0.04,
       "safe_baseline_mae": 0.05,
-      "mae_difference_pct": 0.0,
-      "winner": "tie",
-      "interpretation": "The trained model and safe baseline are tied on roas MAE for this slice."
+      "mae_difference_pct": -20.0,
+      "winner": "trained_model",
+      "interpretation": "The trained model has lower roas MAE than the safe baseline by 20.00% on this slice."
     },
-    "interpretation": "Revenue: The trained model and safe baseline are tied on revenue MAE for this slice. ROAS: The trained model and safe baseline are tied on roas MAE for this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+    "interpretation": "Revenue: The trained model has lower revenue MAE than the safe baseline by 21.14% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 20.00% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
   },
   "blend_weight_comparison": [
     {
@@ -154,45 +156,45 @@
     },
     {
       "revenue_model_weight": 0.1,
-      "mae": 2255.94,
-      "rmse": 2778.33,
-      "mape": 2.82,
+      "mae": 2102.55,
+      "rmse": 2652.51,
+      "mape": 2.68,
       "interval_coverage": 100.0
     },
     {
       "revenue_model_weight": 0.25,
-      "mae": 2473.99,
-      "rmse": 2971.53,
-      "mape": 3.06,
+      "mae": 1982.74,
+      "rmse": 2499.79,
+      "mape": 2.53,
       "interval_coverage": 100.0
     },
     {
       "revenue_model_weight": 0.4,
-      "mae": 2772.59,
-      "rmse": 3335.93,
-      "mape": 3.5,
+      "mae": 1871.77,
+      "rmse": 2366.94,
+      "mape": 2.42,
       "interval_coverage": 100.0
     },
     {
       "revenue_model_weight": 0.5,
-      "mae": 3066.01,
-      "rmse": 3649.73,
-      "mape": 3.97,
+      "mae": 1797.78,
+      "rmse": 2291.14,
+      "mape": 2.34,
       "interval_coverage": 100.0
     },
     {
       "revenue_model_weight": 0.6,
-      "mae": 3359.44,
-      "rmse": 4005.06,
-      "mape": 4.43,
+      "mae": 1723.79,
+      "rmse": 2226.8,
+      "mape": 2.26,
       "interval_coverage": 100.0
     }
   ],
   "blend_weight_recommendation": {
-    "current_revenue_model_weight": 0.0,
-    "recommended_revenue_model_weight": 0.0,
+    "current_revenue_model_weight": 0.6,
+    "recommended_revenue_model_weight": 0.6,
     "decision": "keep_current",
-    "recommendation": "Keep revenue_model_weight=0.00; it has the best RMSE/MAE balance in the holdout comparison.",
+    "recommendation": "Keep revenue_model_weight=0.60; it has the best RMSE/MAE balance in the holdout comparison.",
     "selection_metric": "lowest RMSE, then MAE, then MAPE"
   },
   "roas_blend_weight_comparison": [
@@ -207,43 +209,43 @@
       "roas_model_weight": 0.1,
       "mae": 0.05,
       "rmse": 0.06,
-      "mape": 1.41,
+      "mape": 1.39,
       "interval_coverage": 100.0
     },
     {
       "roas_model_weight": 0.25,
       "mae": 0.05,
       "rmse": 0.06,
-      "mape": 1.3,
-      "interval_coverage": 100.0
-    },
-    {
-      "roas_model_weight": 0.4,
-      "mae": 0.05,
-      "rmse": 0.06,
       "mape": 1.26,
       "interval_coverage": 100.0
     },
     {
-      "roas_model_weight": 0.5,
-      "mae": 0.05,
+      "roas_model_weight": 0.4,
+      "mae": 0.04,
       "rmse": 0.06,
-      "mape": 1.27,
+      "mape": 1.16,
+      "interval_coverage": 100.0
+    },
+    {
+      "roas_model_weight": 0.5,
+      "mae": 0.04,
+      "rmse": 0.06,
+      "mape": 1.11,
       "interval_coverage": 100.0
     },
     {
       "roas_model_weight": 0.6,
-      "mae": 0.05,
-      "rmse": 0.07,
-      "mape": 1.19,
+      "mae": 0.04,
+      "rmse": 0.06,
+      "mape": 1.05,
       "interval_coverage": 100.0
     }
   ],
   "roas_blend_weight_recommendation": {
-    "current_roas_model_weight": 0.4,
-    "recommended_roas_model_weight": 0.4,
+    "current_roas_model_weight": 0.6,
+    "recommended_roas_model_weight": 0.6,
     "decision": "keep_current",
-    "recommendation": "Keep roas_model_weight=0.40; it has the best ROAS RMSE/MAE balance.",
+    "recommendation": "Keep roas_model_weight=0.60; it has the best ROAS RMSE/MAE balance.",
     "selection_metric": "lowest ROAS RMSE, then MAE, then MAPE"
   },
   "per_horizon_performance": [
@@ -253,103 +255,103 @@
         {
           "start_date": "2026-05-19",
           "end_date": "2026-06-17",
-          "train_rows": 1200,
+          "train_rows": 2160,
           "test_rows": 240,
           "segments_evaluated": 18,
-          "dedicated_training_samples": 198,
+          "dedicated_training_samples": 414,
           "fallback_only": false
         },
         {
           "start_date": "2026-04-19",
           "end_date": "2026-05-18",
-          "train_rows": 960,
+          "train_rows": 1920,
           "test_rows": 240,
           "segments_evaluated": 18,
-          "dedicated_training_samples": 144,
+          "dedicated_training_samples": 360,
           "fallback_only": false
         },
         {
           "start_date": "2026-03-20",
           "end_date": "2026-04-18",
-          "train_rows": 720,
+          "train_rows": 1680,
           "test_rows": 240,
           "segments_evaluated": 18,
-          "dedicated_training_samples": 90,
+          "dedicated_training_samples": 306,
           "fallback_only": false
         }
       ],
       "fold_count": 3,
       "segments_evaluated": 54,
       "trained_model_metrics": {
-        "mae": 3154.41,
-        "rmse": 5307.3,
-        "mape": 3.03,
-        "interval_coverage": 100.0,
+        "mae": 2462.0,
+        "rmse": 4406.72,
+        "mape": 2.66,
+        "interval_coverage": 92.59,
         "revenue": {
-          "mae": 3154.41,
-          "rmse": 5307.3,
-          "mape": 3.03,
-          "interval_coverage": 100.0
+          "mae": 2462.0,
+          "rmse": 4406.72,
+          "mape": 2.66,
+          "interval_coverage": 92.59
         },
         "roas": {
-          "mae": 0.05,
-          "rmse": 0.06,
-          "mape": 1.36,
-          "interval_coverage": 100.0
+          "mae": 0.06,
+          "rmse": 0.08,
+          "mape": 1.53,
+          "interval_coverage": 85.19
         },
-        "roas_mae": 0.05,
-        "roas_rmse": 0.06,
-        "roas_mape": 1.36,
-        "roas_interval_coverage": 100.0
+        "roas_mae": 0.06,
+        "roas_rmse": 0.08,
+        "roas_mape": 1.53,
+        "roas_interval_coverage": 85.19
       },
       "safe_baseline_metrics": {
         "mae": 3097.88,
         "rmse": 4501.73,
         "mape": 3.15,
-        "interval_coverage": 100.0,
+        "interval_coverage": 64.81,
         "revenue": {
           "mae": 3097.88,
           "rmse": 4501.73,
           "mape": 3.15,
-          "interval_coverage": 100.0
+          "interval_coverage": 64.81
         },
         "roas": {
           "mae": 0.05,
           "rmse": 0.06,
           "mape": 1.46,
-          "interval_coverage": 100.0
+          "interval_coverage": 96.3
         },
         "roas_mae": 0.05,
         "roas_rmse": 0.06,
         "roas_mape": 1.46,
-        "roas_interval_coverage": 100.0
+        "roas_interval_coverage": 96.3
       },
       "model_performance_evidence": {
         "overall_winner": "mixed",
         "revenue": {
           "target": "revenue",
-          "trained_mae": 3154.41,
+          "trained_mae": 2462.0,
           "safe_baseline_mae": 3097.88,
-          "mae_difference_pct": 1.82,
-          "winner": "safe_baseline_fallback",
-          "interpretation": "The safe baseline has lower revenue MAE than the trained model by 1.82% on this slice."
+          "mae_difference_pct": -20.53,
+          "winner": "trained_model",
+          "interpretation": "The trained model has lower revenue MAE than the safe baseline by 20.53% on this slice."
         },
         "roas": {
           "target": "roas",
-          "trained_mae": 0.05,
+          "trained_mae": 0.06,
           "safe_baseline_mae": 0.05,
-          "mae_difference_pct": 0.0,
-          "winner": "tie",
-          "interpretation": "The trained model and safe baseline are tied on roas MAE for this slice."
+          "mae_difference_pct": 20.0,
+          "winner": "safe_baseline_fallback",
+          "interpretation": "The safe baseline has lower roas MAE than the trained model by 20.00% on this slice."
         },
-        "interpretation": "Revenue: The safe baseline has lower revenue MAE than the trained model by 1.82% on this slice. ROAS: The trained model and safe baseline are tied on roas MAE for this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+        "interpretation": "Revenue: The trained model has lower revenue MAE than the safe baseline by 20.53% on this slice. ROAS: The safe baseline has lower roas MAE than the trained model by 20.00% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
       },
       "trained_vs_safe_baseline": {
-        "mae_delta": -56.53,
-        "rmse_delta": -805.57,
-        "mape_delta": 0.12,
-        "roas_mae_delta": 0.0,
-        "roas_rmse_delta": 0.0
+        "mae_delta": 635.88,
+        "rmse_delta": 95.01,
+        "mape_delta": 0.49,
+        "roas_mae_delta": -0.01,
+        "roas_rmse_delta": -0.02
       }
     },
     {
@@ -358,65 +360,65 @@
         {
           "start_date": "2026-04-19",
           "end_date": "2026-06-17",
-          "train_rows": 960,
+          "train_rows": 1920,
           "test_rows": 480,
           "segments_evaluated": 18,
-          "dedicated_training_samples": 54,
+          "dedicated_training_samples": 162,
           "fallback_only": false
         },
         {
           "start_date": "2026-03-20",
           "end_date": "2026-05-18",
-          "train_rows": 720,
+          "train_rows": 1680,
           "test_rows": 480,
           "segments_evaluated": 18,
-          "dedicated_training_samples": 18,
+          "dedicated_training_samples": 126,
           "fallback_only": false
         },
         {
           "start_date": "2026-02-18",
           "end_date": "2026-04-18",
-          "train_rows": 480,
+          "train_rows": 1440,
           "test_rows": 480,
           "segments_evaluated": 18,
-          "dedicated_training_samples": 0,
-          "fallback_only": true
+          "dedicated_training_samples": 108,
+          "fallback_only": false
         }
       ],
       "fold_count": 3,
       "segments_evaluated": 54,
       "trained_model_metrics": {
-        "mae": 11221.15,
-        "rmse": 18229.52,
-        "mape": 5.37,
-        "interval_coverage": 100.0,
+        "mae": 10541.64,
+        "rmse": 18671.63,
+        "mape": 5.04,
+        "interval_coverage": 88.89,
         "revenue": {
-          "mae": 11221.15,
-          "rmse": 18229.52,
-          "mape": 5.37,
-          "interval_coverage": 100.0
+          "mae": 10541.64,
+          "rmse": 18671.63,
+          "mape": 5.04,
+          "interval_coverage": 88.89
         },
         "roas": {
-          "mae": 0.1,
-          "rmse": 0.13,
-          "mape": 2.74,
+          "mae": 0.05,
+          "rmse": 0.06,
+          "mape": 1.32,
           "interval_coverage": 100.0
         },
-        "roas_mae": 0.1,
-        "roas_rmse": 0.13,
-        "roas_mape": 2.74,
+        "roas_mae": 0.05,
+        "roas_rmse": 0.06,
+        "roas_mape": 1.32,
         "roas_interval_coverage": 100.0
       },
       "safe_baseline_metrics": {
         "mae": 11221.15,
         "rmse": 18229.52,
         "mape": 5.37,
-        "interval_coverage": 100.0,
+        "interval_coverage": 85.19,
         "revenue": {
           "mae": 11221.15,
           "rmse": 18229.52,
           "mape": 5.37,
-          "interval_coverage": 100.0
+          "interval_coverage": 85.19
         },
         "roas": {
           "mae": 0.07,
@@ -430,31 +432,31 @@
         "roas_interval_coverage": 100.0
       },
       "model_performance_evidence": {
-        "overall_winner": "mixed",
+        "overall_winner": "trained_model",
         "revenue": {
           "target": "revenue",
-          "trained_mae": 11221.15,
+          "trained_mae": 10541.64,
           "safe_baseline_mae": 11221.15,
-          "mae_difference_pct": 0.0,
-          "winner": "tie",
-          "interpretation": "The trained model and safe baseline are tied on revenue MAE for this slice."
+          "mae_difference_pct": -6.06,
+          "winner": "trained_model",
+          "interpretation": "The trained model has lower revenue MAE than the safe baseline by 6.06% on this slice."
         },
         "roas": {
           "target": "roas",
-          "trained_mae": 0.1,
+          "trained_mae": 0.05,
           "safe_baseline_mae": 0.07,
-          "mae_difference_pct": 42.86,
-          "winner": "safe_baseline_fallback",
-          "interpretation": "The safe baseline has lower roas MAE than the trained model by 42.86% on this slice."
+          "mae_difference_pct": -28.57,
+          "winner": "trained_model",
+          "interpretation": "The trained model has lower roas MAE than the safe baseline by 28.57% on this slice."
         },
-        "interpretation": "Revenue: The trained model and safe baseline are tied on revenue MAE for this slice. ROAS: The safe baseline has lower roas MAE than the trained model by 42.86% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+        "interpretation": "Revenue: The trained model has lower revenue MAE than the safe baseline by 6.06% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 28.57% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
       },
       "trained_vs_safe_baseline": {
-        "mae_delta": 0.0,
-        "rmse_delta": 0.0,
-        "mape_delta": 0.0,
-        "roas_mae_delta": -0.03,
-        "roas_rmse_delta": -0.05
+        "mae_delta": 679.51,
+        "rmse_delta": -442.11,
+        "mape_delta": 0.33,
+        "roas_mae_delta": 0.02,
+        "roas_rmse_delta": 0.02
       }
     },
     {
@@ -463,103 +465,107 @@
         {
           "start_date": "2026-03-20",
           "end_date": "2026-06-17",
-          "train_rows": 720,
+          "train_rows": 1680,
           "test_rows": 720,
           "segments_evaluated": 18,
-          "dedicated_training_samples": 0,
-          "fallback_only": true
+          "dedicated_training_samples": 72,
+          "fallback_only": false
         },
         {
           "start_date": "2026-02-18",
           "end_date": "2026-05-18",
-          "train_rows": 480,
+          "train_rows": 1440,
           "test_rows": 720,
           "segments_evaluated": 18,
-          "dedicated_training_samples": 0,
-          "fallback_only": true
+          "dedicated_training_samples": 54,
+          "fallback_only": false
         },
         {
           "start_date": "2026-01-19",
           "end_date": "2026-04-18",
-          "error": "ValueError: not enough rolling forecast samples to train evaluator model"
+          "train_rows": 1200,
+          "test_rows": 720,
+          "segments_evaluated": 18,
+          "dedicated_training_samples": 36,
+          "fallback_only": false
         }
       ],
-      "fold_count": 2,
-      "segments_evaluated": 36,
+      "fold_count": 3,
+      "segments_evaluated": 54,
       "trained_model_metrics": {
-        "mae": 22981.64,
-        "rmse": 35641.57,
-        "mape": 7.38,
-        "interval_coverage": 100.0,
+        "mae": 20891.06,
+        "rmse": 33520.44,
+        "mape": 6.86,
+        "interval_coverage": 90.74,
         "revenue": {
-          "mae": 22981.64,
-          "rmse": 35641.57,
-          "mape": 7.38,
-          "interval_coverage": 100.0
+          "mae": 20891.06,
+          "rmse": 33520.44,
+          "mape": 6.86,
+          "interval_coverage": 90.74
         },
         "roas": {
-          "mae": 0.11,
-          "rmse": 0.13,
-          "mape": 2.78,
+          "mae": 0.06,
+          "rmse": 0.07,
+          "mape": 1.6,
           "interval_coverage": 100.0
         },
-        "roas_mae": 0.11,
-        "roas_rmse": 0.13,
-        "roas_mape": 2.78,
+        "roas_mae": 0.06,
+        "roas_rmse": 0.07,
+        "roas_mape": 1.6,
         "roas_interval_coverage": 100.0
       },
       "safe_baseline_metrics": {
-        "mae": 22981.64,
-        "rmse": 35641.57,
-        "mape": 7.38,
-        "interval_coverage": 100.0,
+        "mae": 31577.72,
+        "rmse": 49786.14,
+        "mape": 10.3,
+        "interval_coverage": 51.85,
         "revenue": {
-          "mae": 22981.64,
-          "rmse": 35641.57,
-          "mape": 7.38,
-          "interval_coverage": 100.0
+          "mae": 31577.72,
+          "rmse": 49786.14,
+          "mape": 10.3,
+          "interval_coverage": 51.85
         },
         "roas": {
           "mae": 0.11,
-          "rmse": 0.13,
-          "mape": 2.78,
+          "rmse": 0.12,
+          "mape": 2.68,
           "interval_coverage": 100.0
         },
         "roas_mae": 0.11,
-        "roas_rmse": 0.13,
-        "roas_mape": 2.78,
+        "roas_rmse": 0.12,
+        "roas_mape": 2.68,
         "roas_interval_coverage": 100.0
       },
       "model_performance_evidence": {
-        "overall_winner": "tie",
+        "overall_winner": "trained_model",
         "revenue": {
           "target": "revenue",
-          "trained_mae": 22981.64,
-          "safe_baseline_mae": 22981.64,
-          "mae_difference_pct": 0.0,
-          "winner": "tie",
-          "interpretation": "The trained model and safe baseline are tied on revenue MAE for this slice."
+          "trained_mae": 20891.06,
+          "safe_baseline_mae": 31577.72,
+          "mae_difference_pct": -33.84,
+          "winner": "trained_model",
+          "interpretation": "The trained model has lower revenue MAE than the safe baseline by 33.84% on this slice."
         },
         "roas": {
           "target": "roas",
-          "trained_mae": 0.11,
+          "trained_mae": 0.06,
           "safe_baseline_mae": 0.11,
-          "mae_difference_pct": 0.0,
-          "winner": "tie",
-          "interpretation": "The trained model and safe baseline are tied on roas MAE for this slice."
+          "mae_difference_pct": -45.45,
+          "winner": "trained_model",
+          "interpretation": "The trained model has lower roas MAE than the safe baseline by 45.45% on this slice."
         },
-        "interpretation": "Revenue: The trained model and safe baseline are tied on revenue MAE for this slice. ROAS: The trained model and safe baseline are tied on roas MAE for this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+        "interpretation": "Revenue: The trained model has lower revenue MAE than the safe baseline by 33.84% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 45.45% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
       },
       "trained_vs_safe_baseline": {
-        "mae_delta": 0.0,
-        "rmse_delta": 0.0,
-        "mape_delta": 0.0,
-        "roas_mae_delta": 0.0,
-        "roas_rmse_delta": 0.0
+        "mae_delta": 10686.66,
+        "rmse_delta": 16265.7,
+        "mape_delta": 3.44,
+        "roas_mae_delta": 0.05,
+        "roas_rmse_delta": 0.05
       }
     }
   ],
-  "recommendation": "Keep revenue_model_weight=0.00; it has the best RMSE/MAE balance in the holdout comparison. Keep roas_model_weight=0.40; it has the best ROAS RMSE/MAE balance.",
+  "recommendation": "Keep revenue_model_weight=0.60; it has the best RMSE/MAE balance in the holdout comparison. Keep roas_model_weight=0.60; it has the best ROAS RMSE/MAE balance.",
   "rows": [
     {
       "level": "overall",
@@ -567,19 +573,19 @@
       "horizon_days": 30,
       "actual_revenue": 476116.68,
       "actual_roas": 4.0445,
-      "trained_expected_revenue": 482379.32,
-      "trained_lower_revenue": 434141.39,
-      "trained_upper_revenue": 530617.25,
-      "trained_expected_roas": 4.07,
-      "trained_lower_roas": 3.65,
-      "trained_upper_roas": 4.47,
+      "trained_expected_revenue": 480113.17,
+      "trained_lower_revenue": 458508.08,
+      "trained_upper_revenue": 501718.27,
+      "trained_expected_roas": 4.06,
+      "trained_lower_roas": 3.86,
+      "trained_upper_roas": 4.22,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 482379.32,
-      "safe_lower_revenue": 434141.39,
-      "safe_upper_revenue": 530617.26,
+      "safe_lower_revenue": 465496.05,
+      "safe_upper_revenue": 499262.6,
       "safe_expected_roas": 4.06,
-      "safe_lower_roas": 3.65,
-      "safe_upper_roas": 4.47
+      "safe_lower_roas": 3.92,
+      "safe_upper_roas": 4.2
     },
     {
       "level": "channel",
@@ -587,19 +593,19 @@
       "horizon_days": 30,
       "actual_revenue": 264801.33,
       "actual_roas": 4.586,
-      "trained_expected_revenue": 270817.94,
-      "trained_lower_revenue": 243736.15,
-      "trained_upper_revenue": 297899.73,
-      "trained_expected_roas": 4.61,
-      "trained_lower_roas": 4.16,
-      "trained_upper_roas": 5.09,
+      "trained_expected_revenue": 269654.62,
+      "trained_lower_revenue": 257520.16,
+      "trained_upper_revenue": 281789.08,
+      "trained_expected_roas": 4.59,
+      "trained_lower_roas": 4.4,
+      "trained_upper_roas": 4.81,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 270817.94,
-      "safe_lower_revenue": 243736.14,
-      "safe_upper_revenue": 297899.73,
+      "safe_lower_revenue": 261339.31,
+      "safe_upper_revenue": 280296.57,
       "safe_expected_roas": 4.62,
-      "safe_lower_roas": 4.16,
-      "safe_upper_roas": 5.09
+      "safe_lower_roas": 4.46,
+      "safe_upper_roas": 4.78
     },
     {
       "level": "channel",
@@ -607,19 +613,19 @@
       "horizon_days": 30,
       "actual_revenue": 139555.62,
       "actual_roas": 2.9754,
-      "trained_expected_revenue": 140404.68,
-      "trained_lower_revenue": 126364.21,
-      "trained_upper_revenue": 154445.15,
-      "trained_expected_roas": 2.99,
-      "trained_lower_roas": 2.68,
-      "trained_upper_roas": 3.27,
+      "trained_expected_revenue": 142321.8,
+      "trained_lower_revenue": 134746.03,
+      "trained_upper_revenue": 149897.57,
+      "trained_expected_roas": 3.01,
+      "trained_lower_roas": 2.85,
+      "trained_upper_roas": 3.17,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 140404.68,
-      "safe_lower_revenue": 126364.21,
-      "safe_upper_revenue": 154445.15,
+      "safe_lower_revenue": 135490.51,
+      "safe_upper_revenue": 145318.84,
       "safe_expected_roas": 2.97,
-      "safe_lower_roas": 2.68,
-      "safe_upper_roas": 3.27
+      "safe_lower_roas": 2.87,
+      "safe_upper_roas": 3.08
     },
     {
       "level": "channel",
@@ -627,19 +633,19 @@
       "horizon_days": 30,
       "actual_revenue": 71759.73,
       "actual_roas": 5.488,
-      "trained_expected_revenue": 71160.51,
-      "trained_lower_revenue": 61570.78,
-      "trained_upper_revenue": 80750.24,
-      "trained_expected_roas": 5.45,
-      "trained_lower_roas": 4.74,
-      "trained_upper_roas": 6.21,
+      "trained_expected_revenue": 70122.73,
+      "trained_lower_revenue": 62546.96,
+      "trained_upper_revenue": 77698.49,
+      "trained_expected_roas": 5.44,
+      "trained_lower_roas": 4.81,
+      "trained_upper_roas": 5.98,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 71160.51,
-      "safe_lower_revenue": 64044.46,
-      "safe_upper_revenue": 78276.56,
+      "safe_lower_revenue": 68669.89,
+      "safe_upper_revenue": 73651.13,
       "safe_expected_roas": 5.48,
-      "safe_lower_roas": 4.93,
-      "safe_upper_roas": 6.02
+      "safe_lower_roas": 5.28,
+      "safe_upper_roas": 5.67
     },
     {
       "level": "campaign_type",
@@ -647,19 +653,19 @@
       "horizon_days": 30,
       "actual_revenue": 53922.02,
       "actual_roas": 2.9848,
-      "trained_expected_revenue": 51961.55,
-      "trained_lower_revenue": 42371.82,
-      "trained_upper_revenue": 61551.28,
-      "trained_expected_roas": 2.96,
-      "trained_lower_roas": 2.38,
-      "trained_upper_roas": 3.46,
+      "trained_expected_revenue": 53242.26,
+      "trained_lower_revenue": 45666.49,
+      "trained_upper_revenue": 60818.03,
+      "trained_expected_roas": 2.99,
+      "trained_lower_roas": 2.56,
+      "trained_upper_roas": 3.41,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 51961.55,
-      "safe_lower_revenue": 46765.39,
-      "safe_upper_revenue": 57157.7,
+      "safe_lower_revenue": 49758.27,
+      "safe_upper_revenue": 54164.82,
       "safe_expected_roas": 2.92,
-      "safe_lower_roas": 2.63,
-      "safe_upper_roas": 3.21
+      "safe_lower_roas": 2.79,
+      "safe_upper_roas": 3.04
     },
     {
       "level": "campaign_type",
@@ -667,19 +673,19 @@
       "horizon_days": 30,
       "actual_revenue": 93907.13,
       "actual_roas": 4.2731,
-      "trained_expected_revenue": 96286.88,
-      "trained_lower_revenue": 86658.19,
-      "trained_upper_revenue": 105915.57,
+      "trained_expected_revenue": 95865.05,
+      "trained_lower_revenue": 88289.28,
+      "trained_upper_revenue": 103440.82,
       "trained_expected_roas": 4.29,
-      "trained_lower_roas": 3.86,
-      "trained_upper_roas": 4.72,
+      "trained_lower_roas": 3.93,
+      "trained_upper_roas": 4.61,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 96286.88,
-      "safe_lower_revenue": 86658.19,
-      "safe_upper_revenue": 105915.57,
+      "safe_lower_revenue": 92580.05,
+      "safe_upper_revenue": 99993.71,
       "safe_expected_roas": 4.29,
-      "safe_lower_roas": 3.86,
-      "safe_upper_roas": 4.72
+      "safe_lower_roas": 4.13,
+      "safe_upper_roas": 4.46
     },
     {
       "level": "campaign_type",
@@ -687,19 +693,19 @@
       "horizon_days": 30,
       "actual_revenue": 38705.24,
       "actual_roas": 2.9226,
-      "trained_expected_revenue": 42449.76,
-      "trained_lower_revenue": 32860.03,
-      "trained_upper_revenue": 52039.49,
-      "trained_expected_roas": 3.04,
-      "trained_lower_roas": 2.37,
-      "trained_upper_roas": 3.75,
+      "trained_expected_revenue": 42111.2,
+      "trained_lower_revenue": 34535.44,
+      "trained_upper_revenue": 49686.97,
+      "trained_expected_roas": 3.03,
+      "trained_lower_roas": 2.49,
+      "trained_upper_roas": 3.58,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 42449.76,
-      "safe_lower_revenue": 38204.78,
-      "safe_upper_revenue": 46694.73,
+      "safe_lower_revenue": 40817.65,
+      "safe_upper_revenue": 44081.86,
       "safe_expected_roas": 3.06,
-      "safe_lower_roas": 2.75,
-      "safe_upper_roas": 3.37
+      "safe_lower_roas": 2.94,
+      "safe_upper_roas": 3.18
     },
     {
       "level": "campaign_type",
@@ -707,19 +713,19 @@
       "horizon_days": 30,
       "actual_revenue": 46928.36,
       "actual_roas": 3.0094,
-      "trained_expected_revenue": 46006.26,
-      "trained_lower_revenue": 36416.53,
-      "trained_upper_revenue": 55595.99,
-      "trained_expected_roas": 2.99,
-      "trained_lower_roas": 2.34,
-      "trained_upper_roas": 3.58,
+      "trained_expected_revenue": 46583.48,
+      "trained_lower_revenue": 39007.71,
+      "trained_upper_revenue": 54159.24,
+      "trained_expected_roas": 3.01,
+      "trained_lower_roas": 2.51,
+      "trained_upper_roas": 3.49,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 46006.26,
-      "safe_lower_revenue": 41405.64,
-      "safe_upper_revenue": 50606.89,
+      "safe_lower_revenue": 44062.29,
+      "safe_upper_revenue": 47950.24,
       "safe_expected_roas": 2.96,
-      "safe_lower_roas": 2.67,
-      "safe_upper_roas": 3.26
+      "safe_lower_roas": 2.84,
+      "safe_upper_roas": 3.09
     },
     {
       "level": "campaign_type",
@@ -727,19 +733,19 @@
       "horizon_days": 30,
       "actual_revenue": 123975.04,
       "actual_roas": 5.5512,
-      "trained_expected_revenue": 125520.65,
-      "trained_lower_revenue": 112968.58,
-      "trained_upper_revenue": 138072.71,
-      "trained_expected_roas": 5.65,
-      "trained_lower_roas": 5.0,
-      "trained_upper_roas": 6.11,
+      "trained_expected_revenue": 124008.28,
+      "trained_lower_revenue": 116432.51,
+      "trained_upper_revenue": 131584.04,
+      "trained_expected_roas": 5.64,
+      "trained_lower_roas": 5.15,
+      "trained_upper_roas": 5.82,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 125520.65,
-      "safe_lower_revenue": 112968.58,
-      "safe_upper_revenue": 138072.71,
+      "safe_lower_revenue": 121127.43,
+      "safe_upper_revenue": 129913.87,
       "safe_expected_roas": 5.56,
-      "safe_lower_roas": 5.0,
-      "safe_upper_roas": 6.11
+      "safe_lower_roas": 5.36,
+      "safe_upper_roas": 5.75
     },
     {
       "level": "campaign_type",
@@ -747,19 +753,19 @@
       "horizon_days": 30,
       "actual_revenue": 118678.89,
       "actual_roas": 4.4772,
-      "trained_expected_revenue": 120172.26,
-      "trained_lower_revenue": 108155.03,
-      "trained_upper_revenue": 132189.49,
-      "trained_expected_roas": 4.56,
-      "trained_lower_roas": 4.07,
-      "trained_upper_roas": 4.98,
+      "trained_expected_revenue": 119997.99,
+      "trained_lower_revenue": 112422.22,
+      "trained_upper_revenue": 127573.76,
+      "trained_expected_roas": 4.53,
+      "trained_lower_roas": 4.24,
+      "trained_upper_roas": 4.81,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 120172.26,
-      "safe_lower_revenue": 108155.04,
-      "safe_upper_revenue": 132189.49,
+      "safe_lower_revenue": 115966.23,
+      "safe_upper_revenue": 124378.29,
       "safe_expected_roas": 4.53,
-      "safe_lower_roas": 4.07,
-      "safe_upper_roas": 4.98
+      "safe_lower_roas": 4.37,
+      "safe_upper_roas": 4.69
     },
     {
       "level": "campaign",
@@ -767,19 +773,19 @@
       "horizon_days": 30,
       "actual_revenue": 53922.02,
       "actual_roas": 2.9848,
-      "trained_expected_revenue": 51961.55,
-      "trained_lower_revenue": 42371.82,
-      "trained_upper_revenue": 61551.28,
-      "trained_expected_roas": 2.96,
-      "trained_lower_roas": 2.38,
-      "trained_upper_roas": 3.46,
+      "trained_expected_revenue": 53242.26,
+      "trained_lower_revenue": 45666.49,
+      "trained_upper_revenue": 60818.03,
+      "trained_expected_roas": 2.99,
+      "trained_lower_roas": 2.56,
+      "trained_upper_roas": 3.41,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 51961.55,
-      "safe_lower_revenue": 46765.39,
-      "safe_upper_revenue": 57157.7,
+      "safe_lower_revenue": 49758.27,
+      "safe_upper_revenue": 54164.82,
       "safe_expected_roas": 2.92,
-      "safe_lower_roas": 2.63,
-      "safe_upper_roas": 3.21
+      "safe_lower_roas": 2.79,
+      "safe_upper_roas": 3.04
     },
     {
       "level": "campaign",
@@ -787,19 +793,19 @@
       "horizon_days": 30,
       "actual_revenue": 36728.84,
       "actual_roas": 6.0193,
-      "trained_expected_revenue": 36892.53,
-      "trained_lower_revenue": 27302.8,
-      "trained_upper_revenue": 46482.26,
+      "trained_expected_revenue": 36387.32,
+      "trained_lower_revenue": 28811.55,
+      "trained_upper_revenue": 43963.08,
       "trained_expected_roas": 6.07,
-      "trained_lower_roas": 4.5,
-      "trained_upper_roas": 7.67,
+      "trained_lower_roas": 4.75,
+      "trained_upper_roas": 7.25,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 36892.53,
-      "safe_lower_revenue": 33203.28,
-      "safe_upper_revenue": 40581.78,
+      "safe_lower_revenue": 35519.64,
+      "safe_upper_revenue": 38265.42,
       "safe_expected_roas": 6.09,
-      "safe_lower_roas": 5.48,
-      "safe_upper_roas": 6.69
+      "safe_lower_roas": 5.86,
+      "safe_upper_roas": 6.31
     },
     {
       "level": "campaign",
@@ -807,19 +813,19 @@
       "horizon_days": 30,
       "actual_revenue": 35030.89,
       "actual_roas": 5.0231,
-      "trained_expected_revenue": 34268.01,
-      "trained_lower_revenue": 24678.28,
-      "trained_upper_revenue": 43857.74,
-      "trained_expected_roas": 4.91,
-      "trained_lower_roas": 3.56,
-      "trained_upper_roas": 6.32,
+      "trained_expected_revenue": 33857.54,
+      "trained_lower_revenue": 26281.77,
+      "trained_upper_revenue": 41433.31,
+      "trained_expected_roas": 4.89,
+      "trained_lower_roas": 3.79,
+      "trained_upper_roas": 5.97,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 34268.01,
-      "safe_lower_revenue": 30841.21,
-      "safe_upper_revenue": 37694.81,
+      "safe_lower_revenue": 32967.09,
+      "safe_upper_revenue": 35568.93,
       "safe_expected_roas": 4.94,
-      "safe_lower_roas": 4.45,
-      "safe_upper_roas": 5.44
+      "safe_lower_roas": 4.75,
+      "safe_upper_roas": 5.13
     },
     {
       "level": "campaign",
@@ -827,19 +833,19 @@
       "horizon_days": 30,
       "actual_revenue": 87246.2,
       "actual_roas": 5.3752,
-      "trained_expected_revenue": 88628.13,
-      "trained_lower_revenue": 79038.4,
-      "trained_upper_revenue": 98217.86,
+      "trained_expected_revenue": 87346.79,
+      "trained_lower_revenue": 79771.02,
+      "trained_upper_revenue": 94922.55,
       "trained_expected_roas": 5.36,
-      "trained_lower_roas": 4.78,
-      "trained_upper_roas": 5.94,
+      "trained_lower_roas": 4.83,
+      "trained_upper_roas": 5.74,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 88628.13,
-      "safe_lower_revenue": 79765.32,
-      "safe_upper_revenue": 97490.94,
+      "safe_lower_revenue": 85026.21,
+      "safe_upper_revenue": 92230.04,
       "safe_expected_roas": 5.36,
-      "safe_lower_roas": 4.83,
-      "safe_upper_roas": 5.9
+      "safe_lower_roas": 5.14,
+      "safe_upper_roas": 5.58
     },
     {
       "level": "campaign",
@@ -847,19 +853,19 @@
       "horizon_days": 30,
       "actual_revenue": 46928.36,
       "actual_roas": 3.0094,
-      "trained_expected_revenue": 46006.26,
-      "trained_lower_revenue": 36416.53,
-      "trained_upper_revenue": 55595.99,
-      "trained_expected_roas": 2.99,
-      "trained_lower_roas": 2.34,
-      "trained_upper_roas": 3.58,
+      "trained_expected_revenue": 46583.48,
+      "trained_lower_revenue": 39007.71,
+      "trained_upper_revenue": 54159.24,
+      "trained_expected_roas": 3.01,
+      "trained_lower_roas": 2.51,
+      "trained_upper_roas": 3.49,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 46006.26,
-      "safe_lower_revenue": 41405.64,
-      "safe_upper_revenue": 50606.89,
+      "safe_lower_revenue": 44062.29,
+      "safe_upper_revenue": 47950.24,
       "safe_expected_roas": 2.96,
-      "safe_lower_roas": 2.67,
-      "safe_upper_roas": 3.26
+      "safe_lower_roas": 2.84,
+      "safe_upper_roas": 3.09
     },
     {
       "level": "campaign",
@@ -867,19 +873,19 @@
       "horizon_days": 30,
       "actual_revenue": 83648.0,
       "actual_roas": 4.2823,
-      "trained_expected_revenue": 85905.37,
-      "trained_lower_revenue": 76315.64,
-      "trained_upper_revenue": 95495.1,
-      "trained_expected_roas": 4.35,
-      "trained_lower_roas": 3.89,
-      "trained_upper_roas": 4.87,
+      "trained_expected_revenue": 85678.51,
+      "trained_lower_revenue": 78102.75,
+      "trained_upper_revenue": 93254.28,
+      "trained_expected_roas": 4.34,
+      "trained_lower_roas": 3.98,
+      "trained_upper_roas": 4.76,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 85905.37,
-      "safe_lower_revenue": 77314.83,
-      "safe_upper_revenue": 94495.9,
+      "safe_lower_revenue": 82301.95,
+      "safe_upper_revenue": 89508.78,
       "safe_expected_roas": 4.38,
-      "safe_lower_roas": 3.94,
-      "safe_upper_roas": 4.82
+      "safe_lower_roas": 4.2,
+      "safe_upper_roas": 4.56
     },
     {
       "level": "campaign",
@@ -887,19 +893,19 @@
       "horizon_days": 30,
       "actual_revenue": 38705.24,
       "actual_roas": 2.9226,
-      "trained_expected_revenue": 42449.76,
-      "trained_lower_revenue": 32860.03,
-      "trained_upper_revenue": 52039.49,
-      "trained_expected_roas": 3.04,
-      "trained_lower_roas": 2.37,
-      "trained_upper_roas": 3.75,
+      "trained_expected_revenue": 42111.2,
+      "trained_lower_revenue": 34535.44,
+      "trained_upper_revenue": 49686.97,
+      "trained_expected_roas": 3.03,
+      "trained_lower_roas": 2.49,
+      "trained_upper_roas": 3.58,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 42449.76,
-      "safe_lower_revenue": 38204.78,
-      "safe_upper_revenue": 46694.73,
+      "safe_lower_revenue": 40817.65,
+      "safe_upper_revenue": 44081.86,
       "safe_expected_roas": 3.06,
-      "safe_lower_roas": 2.75,
-      "safe_upper_roas": 3.37
+      "safe_lower_roas": 2.94,
+      "safe_upper_roas": 3.18
     },
     {
       "level": "campaign",
@@ -907,19 +913,19 @@
       "horizon_days": 30,
       "actual_revenue": 93907.13,
       "actual_roas": 4.2731,
-      "trained_expected_revenue": 96286.88,
-      "trained_lower_revenue": 86658.19,
-      "trained_upper_revenue": 105915.57,
+      "trained_expected_revenue": 95865.05,
+      "trained_lower_revenue": 88289.28,
+      "trained_upper_revenue": 103440.82,
       "trained_expected_roas": 4.29,
-      "trained_lower_roas": 3.86,
-      "trained_upper_roas": 4.72,
+      "trained_lower_roas": 3.93,
+      "trained_upper_roas": 4.61,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 96286.88,
-      "safe_lower_revenue": 86658.19,
-      "safe_upper_revenue": 105915.57,
+      "safe_lower_revenue": 92580.05,
+      "safe_upper_revenue": 99993.71,
       "safe_expected_roas": 4.29,
-      "safe_lower_roas": 3.86,
-      "safe_upper_roas": 4.72
+      "safe_lower_roas": 4.13,
+      "safe_upper_roas": 4.46
     }
   ]
 }

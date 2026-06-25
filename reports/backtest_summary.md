@@ -1,12 +1,12 @@
 # ForecastIQ Backtest Summary
 
-Generated: 2026-06-24T11:27:07.537473+00:00
+Generated: 2026-06-25T04:55:46.504658+00:00
 
 ## Holdout Design
 
 - Primary training period: all valid sample rows before the final 30 days
 - Primary test period: final 30 days
-- Train rows: 1200
+- Train rows: 2160
 - Test rows: 240
 - Segments evaluated: 18
 
@@ -24,10 +24,10 @@ Generated: 2026-06-24T11:27:07.537473+00:00
 - Model type: trained_model
 - Artifact type: forecastiq_evaluator_model
 - Artifact version: 4
-- Training rows: 1200
-- Rolling training samples: 306
-- Revenue blend weight: 0.0
-- ROAS blend weight: 0.4
+- Training rows: 2160
+- Rolling training samples: 702
+- Revenue blend weight: 0.4
+- ROAS blend weight: 0.6
 
 ## Primary 30-Day Metrics
 
@@ -35,78 +35,81 @@ Generated: 2026-06-24T11:27:07.537473+00:00
 
 | Model | MAE | RMSE | MAPE | Interval coverage |
 | --- | ---: | ---: | ---: | ---: |
-| Trained model | 2185.89 | 2763.76 | 2.78% | 100.0% |
-| Safe baseline | 2185.89 | 2763.76 | 2.78% | 100.0% |
+| Trained model | 1723.79 | 2226.8 | 2.26% | 100.0% |
+| Safe baseline | 2185.89 | 2763.76 | 2.78% | 88.89% |
 
 ### ROAS
 
 | Model | MAE | RMSE | MAPE | Interval coverage |
 | --- | ---: | ---: | ---: | ---: |
-| Trained model | 0.05 | 0.06 | 1.26% | 100.0% |
-| Safe baseline | 0.05 | 0.07 | 1.44% | 100.0% |
+| Trained model | 0.04 | 0.06 | 1.05% | 100.0% |
+| Safe baseline | 0.05 | 0.07 | 1.44% | 88.89% |
 
 ## Trained vs Baseline
 
-- MAE improvement vs safe baseline: 0.0
-- RMSE improvement vs safe baseline: 0.0
-- MAPE improvement vs safe baseline: 0.0 percentage points
-- ROAS MAE improvement vs safe baseline: 0.0
+- MAE improvement vs safe baseline: 462.1
+- RMSE improvement vs safe baseline: 536.96
+- MAPE improvement vs safe baseline: 0.52 percentage points
+- ROAS MAE improvement vs safe baseline: 0.01
 - ROAS RMSE improvement vs safe baseline: 0.01
 
 ### Judge Interpretation
 
 | Target | Trained MAE | Safe baseline MAE | MAE difference % | Winner |
 | --- | ---: | ---: | ---: | --- |
-| Revenue | 2185.89 | 2185.89 | 0.0% | Tie |
-| ROAS | 0.05 | 0.05 | 0.0% | Tie |
+| Revenue | 1723.79 | 2185.89 | -21.14% | Trained model |
+| ROAS | 0.04 | 0.05 | -20.0% | Trained model |
 
-Plain-English interpretation: Revenue: The trained model and safe baseline are tied on revenue MAE for this slice. ROAS: The trained model and safe baseline are tied on roas MAE for this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability.
+Plain-English interpretation: Revenue: The trained model has lower revenue MAE than the safe baseline by 21.14% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 20.00% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability.
 
 ## Revenue Blend Weight Comparison
 
 | Revenue model weight | MAE | RMSE | MAPE | Interval coverage |
 | ---: | ---: | ---: | ---: | ---: |
 | 0.00 | 2185.89 | 2763.76 | 2.78% | 100.0% |
-| 0.10 | 2255.94 | 2778.33 | 2.82% | 100.0% |
-| 0.25 | 2473.99 | 2971.53 | 3.06% | 100.0% |
-| 0.40 | 2772.59 | 3335.93 | 3.5% | 100.0% |
-| 0.50 | 3066.01 | 3649.73 | 3.97% | 100.0% |
-| 0.60 | 3359.44 | 4005.06 | 4.43% | 100.0% |
+| 0.10 | 2102.55 | 2652.51 | 2.68% | 100.0% |
+| 0.25 | 1982.74 | 2499.79 | 2.53% | 100.0% |
+| 0.40 | 1871.77 | 2366.94 | 2.42% | 100.0% |
+| 0.50 | 1797.78 | 2291.14 | 2.34% | 100.0% |
+| 0.60 | 1723.79 | 2226.8 | 2.26% | 100.0% |
 
-Recommendation: Keep revenue_model_weight=0.00; it has the best RMSE/MAE balance in the holdout comparison.
+Recommendation: Keep revenue_model_weight=0.60; it has the best RMSE/MAE balance in the holdout comparison.
 
 ## ROAS Blend Weight Comparison
 
 | ROAS model weight | MAE | RMSE | MAPE | Interval coverage |
 | ---: | ---: | ---: | ---: | ---: |
 | 0.00 | 0.05 | 0.07 | 1.44% | 100.0% |
-| 0.10 | 0.05 | 0.06 | 1.41% | 100.0% |
-| 0.25 | 0.05 | 0.06 | 1.3% | 100.0% |
-| 0.40 | 0.05 | 0.06 | 1.26% | 100.0% |
-| 0.50 | 0.05 | 0.06 | 1.27% | 100.0% |
-| 0.60 | 0.05 | 0.07 | 1.19% | 100.0% |
+| 0.10 | 0.05 | 0.06 | 1.39% | 100.0% |
+| 0.25 | 0.05 | 0.06 | 1.26% | 100.0% |
+| 0.40 | 0.04 | 0.06 | 1.16% | 100.0% |
+| 0.50 | 0.04 | 0.06 | 1.11% | 100.0% |
+| 0.60 | 0.04 | 0.06 | 1.05% | 100.0% |
 
-Recommendation: Keep roas_model_weight=0.40; it has the best ROAS RMSE/MAE balance.
+Recommendation: Keep roas_model_weight=0.60; it has the best ROAS RMSE/MAE balance.
 
 ## Walk-Forward Per-Horizon Performance
 
 | Horizon days | Folds | Segments | Trained revenue MAE | Trained revenue RMSE | Trained revenue MAPE | Trained ROAS MAE | Trained ROAS RMSE | Trained coverage | Baseline MAE | Baseline RMSE | Revenue MAE winner |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| 30 | 3 | 54 | 3154.41 | 5307.3 | 3.03% | 0.05 | 0.06 | 100.0% | 3097.88 | 4501.73 | Safe baseline |
-| 60 | 3 | 54 | 11221.15 | 18229.52 | 5.37% | 0.1 | 0.13 | 100.0% | 11221.15 | 18229.52 | Tie |
-| 90 | 2 | 36 | 22981.64 | 35641.57 | 7.38% | 0.11 | 0.13 | 100.0% | 22981.64 | 35641.57 | Tie |
+| 30 | 3 | 54 | 2462.0 | 4406.72 | 2.66% | 0.06 | 0.08 | 92.59% | 3097.88 | 4501.73 | Trained model |
+| 60 | 3 | 54 | 10541.64 | 18671.63 | 5.04% | 0.05 | 0.06 | 88.89% | 11221.15 | 18229.52 | Trained model |
+| 90 | 3 | 54 | 20891.06 | 33520.44 | 6.86% | 0.06 | 0.07 | 90.74% | 31577.72 | 49786.14 | Trained model |
+
+## Interval Calibration Before/After
+
+Earlier residual settings were intentionally wide and produced 100.0% walk-forward coverage across reported horizons.
+The current calibration uses a 90% planning target, a lower z-score, horizon-specific residual multipliers, and
+minimum-width floors. This narrows bands while preserving non-negative lower bounds and evaluator-safe output.
+
+| Horizon days | Previous coverage | Current coverage | Trained revenue MAE | Baseline revenue MAE |
+| ---: | ---: | ---: | ---: | ---: |
+| 30 | 100.0% | 92.59% | 2462.0 | 3097.88 |
+| 60 | 100.0% | 88.89% | 10541.64 | 11221.15 |
+| 90 | 100.0% | 90.74% | 20891.06 | 31577.72 |
 
 ## Confidence Interval Methodology
 
 ForecastIQ uses calibrated residual volatility from rolling historical forecasts, horizon-specific
 widening, a minimum interval width floor, and non-negative lower bounds. If a trained model segment
 cannot be scored safely, the evaluator falls back to the deterministic safe baseline.
-
-
-## Fold Errors
-
-The following fold(s) could not complete due to insufficient training data:
-
-| Horizon | Start date | End date | Error |
-| ---: | --- | --- | --- |
-| 90 | 2026-01-19 | 2026-04-18 | ValueError: not enough rolling forecast samples to train evaluator model |

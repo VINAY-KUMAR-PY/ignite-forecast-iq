@@ -29,7 +29,7 @@ Use a tight 2-minute recording so judges see product value before technical deta
 2. Open `/app/upload` only if validation needs to be shown
    - Click **Load sample data** to reset the demo, or upload `data/sample_campaigns.csv`.
    - Mention that GA4, Shopify, and Ads exports are also supported through schema adapters.
-   - Confirm 1,440 rows and zero validation issues.
+   - Confirm 2,400 sample rows and zero validation issues.
    - Explain that backend validation protects the model from invalid inputs.
 
 3. Open `/app`

@@ -245,6 +245,20 @@ export interface AnomalyResponse {
     strength: "weak" | "moderate" | "strong";
     interpretation: string;
   }>;
+  causalEstimates: Array<{
+    date: string;
+    channel: string;
+    metric: string;
+    method: string;
+    preWindowDays: number;
+    postWindowDays: number;
+    incrementalRevenue: number;
+    lowerRevenue: number;
+    upperRevenue: number;
+    roasEffect: number;
+    confidence: "low" | "medium" | "high";
+    interpretation: string;
+  }>;
 }
 
 async function postJson<T>(path: string, body: unknown): Promise<T> {

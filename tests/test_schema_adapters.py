@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -9,7 +10,7 @@ import pandas as pd
 
 from backend.data_preprocessing import validate_records
 from backend.predict import build_predictions, canonicalize_frame, read_csv_folder, safe_load_model
-from backend.schema_adapters import normalize_marketing_frame
+from backend.schema_adapters import SOURCE_SCHEMA_COLUMN, normalize_marketing_frame
 
 
 class SchemaAdapterTests(unittest.TestCase):
@@ -141,6 +142,25 @@ class SchemaAdapterTests(unittest.TestCase):
             self.assertGreater(cleaned.valid_rows, 0)
             self.assertTrue(math.isclose(float(cleaned.frame["revenue"].sum()), total_truth, rel_tol=0.01))
             self.assertLess(float(cleaned.frame["revenue"].sum()), total_truth * 1.05)
+            self.assertIn("Google Ads", set(cleaned.frame["channel"]))
+            self.assertIn("Meta Ads", set(cleaned.frame["channel"]))
+
+    def test_raw_fixture_folder_with_ga4_shopify_and_ads_reconciles_once(self) -> None:
+        fixture_dir = Path("data/fixtures")
+        expected_revenue = pd.read_csv(fixture_dir / "shopify_raw_orders.csv")["total_price"].sum()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            data_dir = Path(tmp)
+            for name in ["ga4_raw_export.csv", "shopify_raw_orders.csv", "ads_raw_export.csv"]:
+                shutil.copyfile(fixture_dir / name, data_dir / name)
+
+            raw = read_csv_folder(data_dir)
+            cleaned = canonicalize_frame(raw)
+
+            self.assertGreater(cleaned.valid_rows, 0)
+            self.assertTrue(math.isclose(float(cleaned.frame["revenue"].sum()), float(expected_revenue), rel_tol=0.01))
+            self.assertLess(float(cleaned.frame["revenue"].sum()), float(expected_revenue) * 1.05)
+            self.assertEqual(set(raw[SOURCE_SCHEMA_COLUMN]), {"reconciled_shopify_with_media"})
             self.assertIn("Google Ads", set(cleaned.frame["channel"]))
             self.assertIn("Meta Ads", set(cleaned.frame["channel"]))
 

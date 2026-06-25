@@ -5,7 +5,7 @@ from datetime import date, timedelta
 
 import pandas as pd
 
-from backend.decision_support import build_decision_support, compute_driver_evidence
+from backend.decision_support import build_decision_support, compute_driver_evidence, estimate_causal_effects
 
 
 def decision_frame(days: int = 70) -> pd.DataFrame:
@@ -67,6 +67,49 @@ class DecisionSupportTests(unittest.TestCase):
         self.assertTrue(result["risks"])
         self.assertTrue(result["opportunities"])
         self.assertGreaterEqual(result["optimizer"].targetGapRevenue, 0)
+
+    def test_causal_estimates_report_observational_did_effect(self) -> None:
+        start = date(2026, 1, 1)
+        rows = []
+        for day in range(50):
+            current_date = (start + timedelta(days=day)).isoformat()
+            google_revenue = 400 + day * 2
+            if day >= 25:
+                google_revenue += 120
+            for channel, revenue in [
+                ("Google Ads", google_revenue),
+                ("Meta Ads", 350 + day * 2),
+                ("Microsoft Ads", 280 + day * 1.5),
+            ]:
+                rows.append(
+                    {
+                        "date": current_date,
+                        "channel": channel,
+                        "campaign_type": "Search",
+                        "campaign_name": f"{channel} Core",
+                        "spend": 100.0,
+                        "clicks": 30,
+                        "impressions": 1200,
+                        "conversions": 6,
+                        "revenue": revenue,
+                        "roas": revenue / 100.0,
+                    }
+                )
+        frame = pd.DataFrame(rows)
+
+        estimates = estimate_causal_effects(
+            frame,
+            [{"date": "2026-01-26", "channel": "Google Ads", "metric": "revenue"}],
+        )
+
+        self.assertTrue(estimates)
+        estimate = estimates[0]
+        self.assertEqual(estimate["method"], "difference_in_differences")
+        self.assertEqual(estimate["channel"], "Google Ads")
+        self.assertIn("incrementalRevenue", estimate)
+        self.assertIn("lowerRevenue", estimate)
+        self.assertIn("upperRevenue", estimate)
+        self.assertIn("not proof of incrementality", estimate["interpretation"])
 
 
 if __name__ == "__main__":

@@ -17,7 +17,6 @@ The offline evaluator path is intentionally isolated from the web app. `run.sh` 
 | Item                                 | Value                                                                                      |
 | ------------------------------------ | ------------------------------------------------------------------------------------------ |
 | Trained-artifact runtime             | Python 3.11-3.14; artifact built and fully verified on 3.14.4                              |
-| Compatibility runtime                | Python 3.10, verified through the deterministic safe baseline                              |
 | scikit-learn version                 | 1.9.0                                                                                      |
 | Model artifact                       | `pickle/model.pkl`                                                                         |
 | Model artifact size                  | ~886 KB                                                                                    |
@@ -391,7 +390,7 @@ Prerequisites:
 
 - Node.js 20+.
 - npm 10+; this repository keeps `package-lock.json` as the single frontend lockfile.
-- Python 3.11-3.14 for trained-artifact evaluation; Python 3.14 is the build environment for the committed artifact. Python 3.10 is CI-tested through the safe baseline because sklearn pickle compatibility is not promised across library generations.
+- Python 3.11-3.14 for trained-artifact evaluation; Python 3.14 is the build environment for the committed artifact.
 
 Install frontend dependencies:
 
@@ -433,7 +432,7 @@ chmod +x run.sh
 ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
 ```
 
-Python version: The trained artifact requires Python 3.11-3.14. Python 3.10 is accepted via the deterministic safe_baseline_fallback (see requirements.txt). Trained predictions are expected on Python 3.11+ per the CI evaluator contract.
+Python version: The trained artifact and evaluator CI support Python 3.11-3.14.
 
 The runner:
 
@@ -443,7 +442,7 @@ The runner:
 - does not start the frontend, backend, Vite, FastAPI, or any long-running server;
 - uses a lightweight joblib-trained sklearn artifact when compatible, with a deterministic evaluator-safe baseline as fallback.
 
-`requirements.txt` intentionally contains only the exact, evaluator-critical scientific dependencies. The live FastAPI/Gemini/test stack is isolated in `requirements-app.txt`, reducing install time and failure surface during automated scoring. CI runs the evaluator contract on Python 3.10, 3.11, 3.12, 3.13, and 3.14; trained-model output is required on 3.11-3.14 and the compatibility fallback is accepted on 3.10.
+`requirements.txt` intentionally contains only the exact, evaluator-critical scientific dependencies. The live FastAPI/Gemini/test stack is isolated in `requirements-app.txt`, reducing install time and failure surface during automated scoring. CI runs the evaluator contract on Python 3.11, 3.12, 3.13, and 3.14, matching the trained artifact's supported runtime.
 
 Expected output columns:
 

@@ -318,10 +318,10 @@ def safe_load_model(model_path: str | Path) -> dict[str, Any]:
             from packaging.version import Version
 
             model_sklearn = "1.9.0"
-            if Version(sklearn.__version__) < Version(model_sklearn):
+            if Version(sklearn.__version__) != Version(model_sklearn):
                 log(
-                    f"sklearn {sklearn.__version__} < artifact build version {model_sklearn}; "
-                    "using safe baseline to avoid silent prediction errors"
+                    f"sklearn {sklearn.__version__} != artifact build version {model_sklearn}; "
+                    "using safe baseline because artifact compatibility requires the exact sklearn version"
                 )
                 return fallback_model_config("sklearn version incompatible with artifact")
         except ImportError:

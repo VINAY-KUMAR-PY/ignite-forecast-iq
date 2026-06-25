@@ -14,6 +14,7 @@ from backend.predict import (
     MODEL_TYPE,
     SAFE_BASELINE_MODEL_TYPE,
     TRAINED_MODEL_TYPE,
+    _monotonic_interval_multipliers,
     build_predictions,
     canonicalize_frame,
     confidence_interval_width,
@@ -195,6 +196,15 @@ class OfflinePredictionTests(unittest.TestCase):
 
         self.assertGreater(w60, w30, f"60d interval ({w60}%) must exceed 30d ({w30}%)")
         self.assertGreater(w90, w60, f"90d interval ({w90}%) must exceed 60d ({w60}%)")
+
+    def test_non_monotonic_artifact_interval_multipliers_use_current_defaults(self) -> None:
+        multipliers = _monotonic_interval_multipliers(
+            {"horizon_interval_multiplier": {"30": 0.60, "60": 1.45, "90": 1.10}}
+        )
+
+        self.assertEqual(multipliers, {"30": 0.60, "60": 1.10, "90": 1.45})
+        self.assertLessEqual(multipliers["30"], multipliers["60"])
+        self.assertLessEqual(multipliers["60"], multipliers["90"])
 
     def test_causal_summary_contains_anomaly_section(self) -> None:
         """Causal summary must include an anomaly signals section."""

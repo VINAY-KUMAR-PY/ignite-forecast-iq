@@ -25,7 +25,6 @@ and does not predict placement or judging outcomes.
 
 ## Recommended Next Validation
 
-- Record and attach a short demo video with the one-click sample flow.
 - Smoke-test the deployed frontend, backend `/health`, CORS, and Gemini fallback before final submission.
 - Add merchant-specific backtests when real client data is available.
 - Add calibration plots and per-channel error tables after more holdout data is collected.

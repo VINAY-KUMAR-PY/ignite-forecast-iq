@@ -334,11 +334,11 @@ Walk-forward per-horizon backtesting is included for transparency:
 
 | Horizon | Folds | Segments | Trained revenue MAE | Baseline revenue MAE | Trained ROAS MAE | Trained coverage | Revenue MAE winner |
 | ------: | ----: | -------: | ------------------: | -------------------: | ---------------: | ---------------: | ------------------ |
-|      30 |     3 |       54 |            2,462.00 |             3,097.88 |             0.06 |           92.59% | Trained model |
-|      60 |     3 |       54 |           10,541.64 |            11,221.15 |             0.05 |           88.89% | Trained model |
+|      30 |     3 |       54 |            2,462.00 |             3,097.88 |             0.07 |           92.59% | Trained model |
+|      60 |     3 |       54 |           10,541.64 |            11,221.15 |             0.05 |           85.19% | Trained model |
 |      90 |     3 |       54 |           20,891.06 |            31,577.72 |             0.06 |           90.74% | Trained model |
 
-Intervals were narrowed from the earlier wide setting that produced 100% walk-forward coverage to a more useful planning range: 92.59% at 30 days, 88.89% at 60 days, and 90.74% at 90 days. This is why ForecastIQ keeps both systems: the trained model provides ML behavior where validated, while the deterministic baseline remains a reliability guardrail for longer, thinner, or incompatible cases.
+Intervals were narrowed from the earlier wide setting that produced 100% walk-forward coverage to a more useful planning range: 92.59% at 30 days, 85.19% at 60 days, and 90.74% at 90 days. This is why ForecastIQ keeps both systems: the trained model provides ML behavior where validated, while the deterministic baseline remains a reliability guardrail for longer, thinner, or incompatible cases.
 
 ## Budget Simulator
 

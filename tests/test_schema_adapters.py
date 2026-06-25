@@ -74,6 +74,74 @@ class SchemaAdapterTests(unittest.TestCase):
         self.assertEqual(float(cleaned.frame["revenue"].sum()), 1460.0)
         self.assertTrue(math.isclose(float(cleaned.frame["roas"].mean()), 6.512, rel_tol=0.05))
 
+    def test_google_ads_micros_are_scaled_to_account_currency(self) -> None:
+        raw = pd.DataFrame(
+            {
+                "segments_date": ["2026-04-01", "2026-04-02"],
+                "metrics_cost_micros": [123_450_000, 89_000_000],
+                "metrics_clicks": [44, 30],
+                "metrics_impressions": [2200, 1800],
+                "metrics_conversions": [5.0, 3.0],
+                "metrics_conversions_value": [700.0, 410.0],
+                "campaign_advertising_channel_type": ["SEARCH", "SEARCH"],
+                "campaign_name": ["Google Brand", "Google Nonbrand"],
+            }
+        )
+
+        cleaned = canonicalize_frame(raw)
+
+        self.assertEqual(cleaned.valid_rows, 2)
+        self.assertTrue(math.isclose(float(cleaned.frame["spend"].sum()), 212.45, rel_tol=0.001))
+        self.assertEqual(float(cleaned.frame["revenue"].sum()), 1110.0)
+        self.assertEqual(set(cleaned.frame["campaign_type"]), {"SEARCH"})
+
+    def test_microsoft_ads_export_column_names_are_supported(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            data_dir = Path(tmp)
+            (data_dir / "microsoft_ads_performance.csv").write_text(
+                "TimePeriod,CampaignName,CampaignType,Spend,Clicks,Impressions,Conversions,Revenue\n"
+                "2026-05-01,Bing Brand,Search,51.25,18,900,2,310.5\n"
+                "2026-05-02,Bing Brand,Search,64.75,23,1100,3,455.0\n",
+                encoding="utf-8",
+            )
+
+            raw = read_csv_folder(data_dir)
+            cleaned = canonicalize_frame(raw)
+
+            self.assertEqual(cleaned.valid_rows, 2)
+            self.assertEqual(set(cleaned.frame["channel"]), {"Microsoft Ads"})
+            self.assertEqual(float(cleaned.frame["spend"].sum()), 116.0)
+            self.assertEqual(float(cleaned.frame["revenue"].sum()), 765.5)
+
+    def test_ga4_plus_ads_reconciles_revenue_without_double_counting(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            data_dir = Path(tmp)
+            (data_dir / "ga4_export.csv").write_text(
+                "date,sessionSource,sessionMedium,purchaseRevenue,sessions,conversions\n"
+                "2026-06-01,google,cpc,600,1000,20\n"
+                "2026-06-01,facebook,paid_social,400,800,12\n"
+                "2026-06-02,google,cpc,660,1100,22\n"
+                "2026-06-02,facebook,paid_social,440,850,13\n",
+                encoding="utf-8",
+            )
+            (data_dir / "ads_export.csv").write_text(
+                "date,platform,campaign,cost,clicks,impressions,conversions,conversion_value\n"
+                "2026-06-01,Google Ads,Brand,120,80,5000,8,600\n"
+                "2026-06-01,Meta Ads,Prospecting,75,55,4200,5,400\n"
+                "2026-06-02,Google Ads,Brand,135,85,5300,9,660\n"
+                "2026-06-02,Meta Ads,Prospecting,80,58,4400,6,440\n",
+                encoding="utf-8",
+            )
+
+            raw = read_csv_folder(data_dir)
+            cleaned = canonicalize_frame(raw)
+
+            self.assertEqual(set(raw[SOURCE_SCHEMA_COLUMN]), {"reconciled_ga4_with_media"})
+            self.assertTrue(math.isclose(float(cleaned.frame["revenue"].sum()), 2100.0, rel_tol=0.001))
+            self.assertLess(float(cleaned.frame["revenue"].sum()), 2200.0)
+            self.assertIn("Google Ads", set(cleaned.frame["channel"]))
+            self.assertIn("Meta Ads", set(cleaned.frame["channel"]))
+
     def test_mixed_csv_folder_merges_source_schemas_safely(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             data_dir = Path(tmp)

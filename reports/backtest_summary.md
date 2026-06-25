@@ -1,6 +1,6 @@
 # ForecastIQ Backtest Summary
 
-Generated: 2026-06-25T04:55:46.504658+00:00
+Generated: 2026-06-25T07:19:25.809964+00:00
 
 ## Holdout Design
 
@@ -92,7 +92,7 @@ Recommendation: Keep roas_model_weight=0.60; it has the best ROAS RMSE/MAE balan
 
 | Horizon days | Folds | Segments | Trained revenue MAE | Trained revenue RMSE | Trained revenue MAPE | Trained ROAS MAE | Trained ROAS RMSE | Trained coverage | Baseline MAE | Baseline RMSE | Revenue MAE winner |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| 30 | 3 | 54 | 2462.0 | 4406.72 | 2.66% | 0.06 | 0.08 | 92.59% | 3097.88 | 4501.73 | Trained model |
+| 30 | 3 | 54 | 2462.0 | 4406.72 | 2.66% | 0.07 | 0.1 | 92.59% | 3097.88 | 4501.73 | Trained model |
 | 60 | 3 | 54 | 10541.64 | 18671.63 | 5.04% | 0.05 | 0.06 | 88.89% | 11221.15 | 18229.52 | Trained model |
 | 90 | 3 | 54 | 20891.06 | 33520.44 | 6.86% | 0.06 | 0.07 | 90.74% | 31577.72 | 49786.14 | Trained model |
 

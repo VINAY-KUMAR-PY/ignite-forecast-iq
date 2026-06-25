@@ -719,6 +719,12 @@ def simulate_budgets(frame: pd.DataFrame, horizon: int, budgets: Dict[str, float
 
         revenue_points = _forecast_target(daily, horizon, "revenue", forced_daily_spend=new_daily_spend)
         future = [point for point in revenue_points if not point.historical]
+        spend_uncertainty_pct = _spend_uncertainty_pct(
+            recent["spend"],
+            baseline_total_spend,
+            new_total_spend,
+        )
+        future = _apply_spend_uncertainty(future, spend_uncertainty_pct)
         projected_revenue = sum(point.value for point in future)
         lower = sum(point.lower for point in future)
         upper = sum(point.upper for point in future)
@@ -787,6 +793,35 @@ def simulate_budgets(frame: pd.DataFrame, horizon: int, budgets: Dict[str, float
             roasChangePct=round_money(pct_change(projected_roas, baseline_roas)),
         ),
     }
+
+
+def _spend_uncertainty_pct(recent_spend: pd.Series, baseline_total_spend: float, new_total_spend: float) -> float:
+    """Estimate simulator uncertainty caused by spend volatility and budget shifts."""
+    spend = pd.to_numeric(recent_spend, errors="coerce").replace([np.inf, -np.inf], np.nan).dropna()
+    if spend.empty:
+        volatility = 0.0
+    else:
+        mean_spend = max(float(spend.mean()), 1.0)
+        volatility = float(spend.std(ddof=1) if len(spend) > 1 else 0.0) / mean_spend
+    shift_pct = abs(float(new_total_spend) - float(baseline_total_spend)) / max(float(baseline_total_spend), 1.0)
+    return min(0.35, max(0.0, volatility * 0.18 + shift_pct * 0.10))
+
+
+def _apply_spend_uncertainty(points: List[ForecastPoint], uncertainty_pct: float) -> List[ForecastPoint]:
+    if uncertainty_pct <= 1e-9:
+        return points
+    adjusted: List[ForecastPoint] = []
+    for point in points:
+        margin = max(0.0, float(point.value) * uncertainty_pct)
+        adjusted.append(
+            point.model_copy(
+                update={
+                    "lower": round_money(max(0.0, float(point.lower) - margin)),
+                    "upper": round_money(float(point.upper) + margin),
+                }
+            )
+        )
+    return adjusted
 
 
 def _estimate_marginal_revenue(frame: pd.DataFrame, channel: str, horizon: int, current_total_spend: float) -> float:

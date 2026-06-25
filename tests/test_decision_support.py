@@ -109,6 +109,11 @@ class DecisionSupportTests(unittest.TestCase):
         self.assertIn("incrementalRevenue", estimate)
         self.assertIn("lowerRevenue", estimate)
         self.assertIn("upperRevenue", estimate)
+        self.assertIn("parallelTrendPct", estimate)
+        self.assertIn("parallelTrendPassed", estimate)
+        self.assertIn(estimate["ciMethod"], {"bootstrap", "analytic"})
+        self.assertGreaterEqual(estimate["bootstrapIterations"], 0)
+        self.assertIn("parallel-trends check", estimate["interpretation"])
         self.assertIn("not proof of incrementality", estimate["interpretation"])
 
 

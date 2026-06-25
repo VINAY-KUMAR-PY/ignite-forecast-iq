@@ -12,7 +12,6 @@ import argparse
 import csv
 import math
 import sys
-from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -31,34 +30,35 @@ from .schema_adapters import (
     normalize_marketing_frame,
     reconcile_normalized_frames,
 )
+from .evaluator_contract import (
+    ARTIFACT_TYPE,
+    ARTIFACT_VERSION,
+    HORIZONS,
+    LOW_SAMPLE_CONFIDENCE_THRESHOLD,
+    MAX_MODEL_ARTIFACT_BYTES,
+    MIN_ROLLING_TRAINING_SAMPLES,
+    MIN_TRAINED_MODEL_ROWS,
+    OUTPUT_COLUMNS,
+    ROAS_NOT_COMPUTABLE_CONFIDENCE,
+    SAFE_BASELINE_MODEL_TYPE,
+    TRAINED_MODEL_TYPE,
+    CleanResult,
+    clean_number,
+    empty_frame,
+    log,
+    safe_float,
+)
+from .evaluator_intervals import (
+    DEFAULT_HORIZON_CONFIDENCE_Z,
+    DEFAULT_HORIZON_INTERVAL_MULTIPLIER,
+    LOW_SAMPLE_HORIZON_INTERVAL_MULTIPLIER,
+    calibrated_z_from_residuals,
+    horizon_confidence_z,
+    horizon_floor_pct,
+)
 
 
-OUTPUT_COLUMNS = [
-    "level",
-    "segment",
-    "horizon_days",
-    "expected_revenue",
-    "lower_revenue",
-    "upper_revenue",
-    "expected_roas",
-    "lower_roas",
-    "upper_roas",
-    "model_type",
-    "interval_width_pct",
-    "forecast_confidence",
-]
-
-HORIZONS = (30, 60, 90)
-TRAINED_MODEL_TYPE = "trained_model"
-SAFE_BASELINE_MODEL_TYPE = "safe_baseline_fallback"
 MODEL_TYPE = SAFE_BASELINE_MODEL_TYPE
-ROAS_NOT_COMPUTABLE_CONFIDENCE = "not_computable"
-ARTIFACT_TYPE = "forecastiq_evaluator_model"
-ARTIFACT_VERSION = 4
-MAX_MODEL_ARTIFACT_BYTES = 2_000_000
-MIN_TRAINED_MODEL_ROWS = 8
-MIN_ROLLING_TRAINING_SAMPLES = 12
-LOW_SAMPLE_CONFIDENCE_THRESHOLD = 30
 
 FEATURE_COLUMNS = [
     "horizon_days",
@@ -112,33 +112,6 @@ FEATURE_COLUMNS = [
 ]
 
 LEVEL_CODES = {"overall": 0, "channel": 1, "campaign_type": 2, "campaign": 3}
-
-
-@dataclass
-class CleanResult:
-    frame: pd.DataFrame
-    total_rows: int
-    valid_rows: int
-    issues: list[str]
-
-
-def log(message: str) -> None:
-    print(f"[ForecastIQ] {message}", flush=True)
-
-
-def safe_float(value: Any, default: float = 0.0) -> float:
-    try:
-        numeric = float(value)
-    except (TypeError, ValueError):
-        return default
-    return numeric if math.isfinite(numeric) else default
-
-
-def clean_number(value: float, digits: int = 2) -> float:
-    value = safe_float(value)
-    if abs(value) < 0.005:
-        value = 0.0
-    return round(value, digits)
 
 
 def read_csv_folder(data_dir: str | Path) -> pd.DataFrame:
@@ -289,16 +262,13 @@ def canonicalize_frame(raw: pd.DataFrame) -> CleanResult:
     return CleanResult(frame=grouped, total_rows=total_rows, valid_rows=len(grouped), issues=issues)
 
 
-def empty_frame() -> pd.DataFrame:
-    return pd.DataFrame(columns=CANONICAL_COLUMNS)
-
-
 def fallback_model_config(reason: str = "fallback") -> dict[str, Any]:
     return {
         "model_type": SAFE_BASELINE_MODEL_TYPE,
         "prediction_mode": SAFE_BASELINE_MODEL_TYPE,
         "version": 1,
         "confidence_z": 1.64,
+        "horizon_confidence_z": DEFAULT_HORIZON_CONFIDENCE_Z,
         "trend_weight": 0.35,
         "fallback_reason": reason,
     }
@@ -377,7 +347,7 @@ def safe_load_model(model_path: str | Path) -> dict[str, Any]:
     else:
         log("Model artifact schema is unsupported for trained predictions; using safe baseline")
     legacy_fallback = fallback_model_config("unsupported model artifact")
-    for key in ("confidence_z", "trend_weight"):
+    for key in ("confidence_z", "horizon_confidence_z", "trend_weight"):
         if key in loaded:
             legacy_fallback[key] = loaded[key]
     return legacy_fallback
@@ -662,6 +632,7 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
     roas_by_horizon: dict[str, float] = {}
     revenue_weight_by_horizon: dict[str, float] = {}
     roas_weight_by_horizon: dict[str, float] = {}
+    horizon_confidence_z: dict[str, float] = {}
     horizon_sample_counts: dict[str, int] = {}
     fallback_horizons: list[int] = []
     revenue_residuals_all: list[float] = []
@@ -675,6 +646,7 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
             fallback_horizons.append(horizon)
             revenue_by_horizon[str(horizon)] = clean_number(max(float(np.mean(np.abs(y_revenue_actual))) * 0.08, 1.0))
             roas_by_horizon[str(horizon)] = clean_number(max(float(np.mean(np.abs(y_roas))) * 0.08, 0.05), 4)
+            horizon_confidence_z[str(horizon)] = DEFAULT_HORIZON_CONFIDENCE_Z[str(horizon)]
             revenue_weight_by_horizon[str(horizon)] = 0.0
             roas_weight_by_horizon[str(horizon)] = 0.0
             models[horizon] = {
@@ -812,6 +784,10 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
         horizon_std = safe_float(np.std(revenue_residuals_h, ddof=1), 0.0) if len(revenue_residuals_h) >= 2 else 0.0
         horizon_floor = safe_float(np.mean(np.abs(y_rev_actual_h)), 0.0) * 0.05
         revenue_by_horizon[str(horizon)] = clean_number(max(horizon_std, horizon_floor, 1.0))
+        horizon_confidence_z[str(horizon)] = calibrated_z_from_residuals(
+            revenue_residuals_h,
+            DEFAULT_HORIZON_CONFIDENCE_Z[str(horizon)],
+        )
         roas_std = safe_float(np.std(roas_residuals_h, ddof=1), 0.0) if len(roas_residuals_h) >= 2 else 0.0
         roas_floor = safe_float(np.mean(np.abs(y_roas_h)), 0.0) * 0.05
         roas_by_horizon[str(horizon)] = clean_number(max(roas_std, roas_floor, 0.05), 4)
@@ -860,11 +836,12 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
         },
         "confidence": {
             "confidence_z": 1.64,
+            "horizon_confidence_z": horizon_confidence_z,
             "minimum_interval_pct": 0.045,
             "horizon_interval_multiplier": (
-                {"30": 0.85, "60": 1.70, "90": 1.35}
+                LOW_SAMPLE_HORIZON_INTERVAL_MULTIPLIER
                 if low_sample_training
-                else {"30": 0.60, "60": 1.45, "90": 1.10}
+                else DEFAULT_HORIZON_INTERVAL_MULTIPLIER
             ),
             "low_sample_training": low_sample_training,
             "sample_confidence_discount": 0.85 if low_sample_training else 1.0,
@@ -964,10 +941,10 @@ def confidence_interval_width(values: pd.Series, expected_revenue: float, horizo
     else:
         daily_std = safe_float(numeric.std(ddof=0), 0.0)
 
-    z = safe_float(model.get("confidence_z"), 1.64)
+    z = horizon_confidence_z(model, horizon)
     statistical = max(0.0, z * daily_std * math.sqrt(max(horizon, 1)))
-    horizon_floor_pct = {30: 0.035, 60: 0.11, 90: 0.12}.get(int(horizon), 0.06)
-    floor = expected_revenue * horizon_floor_pct
+    floor_pct = horizon_floor_pct(horizon)
+    floor = expected_revenue * floor_pct
     return max(statistical, floor)
 
 
@@ -1024,8 +1001,8 @@ def trained_forecast_segment(
         residual_by_horizon.get(str(horizon)),
         safe_float(confidence.get("revenue_residual_std"), expected_revenue * 0.12),
     )
-    z = safe_float(confidence.get("confidence_z"), 1.64)
-    horizon_interval_multiplier = confidence.get("horizon_interval_multiplier") or {"30": 0.60, "60": 1.45, "90": 1.10}
+    z = horizon_confidence_z(confidence, horizon)
+    horizon_interval_multiplier = confidence.get("horizon_interval_multiplier") or DEFAULT_HORIZON_INTERVAL_MULTIPLIER
     horizon_multiplier = safe_float(
         horizon_interval_multiplier.get(str(horizon)),
         math.sqrt(max(horizon, 1) / 30),

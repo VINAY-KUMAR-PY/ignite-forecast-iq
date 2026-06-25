@@ -63,6 +63,26 @@ class ForecastingEngineTests(unittest.TestCase):
         self.assertTrue(curve["curve"])
         self.assertGreaterEqual(curve["saturation_spend"], 0)
 
+    def test_budget_simulator_widens_intervals_for_large_spend_changes(self) -> None:
+        rows = frame()
+        stable = simulate_budgets(
+            rows,
+            30,
+            {"Google Ads": 3120, "Meta Ads": 3120, "Microsoft Ads": 3120},
+        )
+        shifted = simulate_budgets(
+            rows,
+            30,
+            {"Google Ads": 7800, "Meta Ads": 1200, "Microsoft Ads": 1200},
+        )
+
+        stable_google = next(item for item in stable["channels"] if item.channel == "Google Ads")
+        shifted_google = next(item for item in shifted["channels"] if item.channel == "Google Ads")
+        stable_width = stable_google.projectedRevenueUpper - stable_google.projectedRevenueLower
+        shifted_width = shifted_google.projectedRevenueUpper - shifted_google.projectedRevenueLower
+
+        self.assertGreater(shifted_width, stable_width)
+
 
 if __name__ == "__main__":
     unittest.main()

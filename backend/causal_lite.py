@@ -7,6 +7,7 @@ installed.
 
 from __future__ import annotations
 
+import zlib
 from typing import List, Optional
 
 import numpy as np
@@ -111,6 +112,8 @@ def _estimate_event_effect(daily: pd.DataFrame, event: dict, window: int = 14) -
     affected_pre_roas = float(affected_pre["roas"].mean())
     affected_post_roas = float(affected_post["roas"].mean())
 
+    parallel = _parallel_trends_check(affected_pre, control_pre)
+
     if len(control_pre) >= 5 and len(control_post) >= 5 and float(control_pre["revenue"].mean()) > 0:
         control_rev_change_pct = float(control_post["revenue"].mean() / control_pre["revenue"].mean() - 1)
         control_roas_change = float(control_post["roas"].mean() - control_pre["roas"].mean())
@@ -125,10 +128,28 @@ def _estimate_event_effect(daily: pd.DataFrame, event: dict, window: int = 14) -
     incremental_revenue = incremental_daily * post_days
 
     residuals = affected_post["revenue"].to_numpy(dtype=float) - expected_post_rev
-    stderr = float(np.std(residuals, ddof=1) / np.sqrt(max(post_days, 1))) if post_days > 1 else 0.0
-    ci_half_width = 1.96 * stderr * post_days
+    lower_boot, upper_boot, bootstrap_iterations = _bootstrap_ci(
+        residuals,
+        incremental_revenue,
+        seed_text=f"{channel}:{event_date.strftime('%Y-%m-%d')}:{event.get('metric') or 'revenue'}",
+    )
+    if lower_boot is None or upper_boot is None:
+        stderr = float(np.std(residuals, ddof=1) / np.sqrt(max(post_days, 1))) if post_days > 1 else 0.0
+        ci_half_width = 1.96 * stderr * post_days
+        lower_revenue = incremental_revenue - ci_half_width
+        upper_revenue = incremental_revenue + ci_half_width
+    else:
+        lower_revenue = lower_boot
+        upper_revenue = upper_boot
     roas_effect = (affected_post_roas - affected_pre_roas) - control_roas_change
-    confidence = "high" if post_days >= 12 and ci_half_width <= abs(incremental_revenue) * 1.25 else "medium" if post_days >= 8 else "low"
+    width = abs(upper_revenue - lower_revenue)
+    confidence = (
+        "high"
+        if post_days >= 12 and parallel["passed"] and width <= abs(incremental_revenue) * 2.5
+        else "medium"
+        if post_days >= 8 and parallel["passed"]
+        else "low"
+    )
 
     return {
         "date": event_date.strftime("%Y-%m-%d"),
@@ -138,13 +159,56 @@ def _estimate_event_effect(daily: pd.DataFrame, event: dict, window: int = 14) -
         "preWindowDays": int(len(affected_pre)),
         "postWindowDays": post_days,
         "incrementalRevenue": _round_money(incremental_revenue),
-        "lowerRevenue": _round_money(incremental_revenue - ci_half_width),
-        "upperRevenue": _round_money(incremental_revenue + ci_half_width),
+        "lowerRevenue": _round_money(lower_revenue),
+        "upperRevenue": _round_money(upper_revenue),
         "roasEffect": _round_money(roas_effect),
+        "parallelTrendPct": _round_money(parallel["pct"]),
+        "parallelTrendPassed": bool(parallel["passed"]),
+        "ciMethod": "bootstrap" if bootstrap_iterations else "analytic",
+        "bootstrapIterations": bootstrap_iterations,
         "confidence": confidence,
         "interpretation": (
             f"Estimated incremental effect for {channel}: ${incremental_revenue:,.0f} "
-            f"(95% CI ${incremental_revenue - ci_half_width:,.0f} to "
-            f"${incremental_revenue + ci_half_width:,.0f}); observational DiD, not proof of incrementality."
+            f"(95% CI ${lower_revenue:,.0f} to ${upper_revenue:,.0f}); "
+            f"parallel-trends check {'passed' if parallel['passed'] else 'is weak'} "
+            f"({parallel['pct']:.1f}% pre-trend gap); observational difference-in-differences, "
+            "not proof of incrementality."
         ),
     }
+
+
+def _parallel_trends_check(affected_pre: pd.DataFrame, control_pre: pd.DataFrame) -> dict:
+    if len(affected_pre) < 5 or len(control_pre) < 5:
+        return {"passed": False, "pct": 100.0}
+    affected_slope = _slope(affected_pre["revenue"].to_numpy(dtype=float))
+    control_slope = _slope(control_pre["revenue"].to_numpy(dtype=float))
+    scale = max(abs(float(affected_pre["revenue"].mean())), abs(float(control_pre["revenue"].mean())), 1.0)
+    pct = abs(affected_slope - control_slope) / scale * 100
+    return {"passed": bool(pct <= 8.0), "pct": float(pct)}
+
+
+def _slope(values: np.ndarray) -> float:
+    clean = np.asarray(values, dtype=float)
+    clean = clean[np.isfinite(clean)]
+    if len(clean) < 2:
+        return 0.0
+    return float(np.polyfit(np.arange(len(clean)), clean, 1)[0])
+
+
+def _bootstrap_ci(
+    daily_effects: np.ndarray,
+    point_estimate: float,
+    seed_text: str,
+    iterations: int = 500,
+) -> tuple[float | None, float | None, int]:
+    clean = np.asarray(daily_effects, dtype=float)
+    clean = clean[np.isfinite(clean)]
+    if len(clean) < 5:
+        return None, None, 0
+    if float(np.std(clean, ddof=1)) <= 1e-9:
+        return point_estimate, point_estimate, iterations
+    seed = zlib.crc32(seed_text.encode("utf-8")) & 0xFFFFFFFF
+    rng = np.random.default_rng(seed)
+    draws = rng.choice(clean, size=(iterations, len(clean)), replace=True).sum(axis=1)
+    lower, upper = np.percentile(draws, [2.5, 97.5])
+    return float(lower), float(upper), iterations

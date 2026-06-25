@@ -4,6 +4,9 @@ This module is intentionally independent from the FastAPI app and XGBoost
 training stack. Hackathon scorers can replace the data folder and run
 ``./run.sh ./data ./pickle/model.pkl ./output/predictions.csv`` to get a
 deterministic predictions file without starting servers or retraining models.
+When GEMINI_API_KEY is set, the offline causal summary is optionally enriched
+with a live LLM strategic recommendation. The evaluator contract is unaffected
+if the call fails.
 """
 
 from __future__ import annotations
@@ -1325,6 +1328,41 @@ def generate_offline_causal_summary(frame: pd.DataFrame, rows: list[dict]) -> st
         "Action: if blended ROAS is above target, test incremental budget in the leading "
         "channel before reallocating away from stable performers.",
     ]
+
+    # Optional: attempt to enrich the summary with an LLM call.
+    # This is intentionally last and completely optional - the evaluator
+    # still returns the deterministic summary if the call fails.
+    _gemini_api_key = None
+    try:
+        import os
+
+        _gemini_api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    except Exception:
+        pass
+
+    if _gemini_api_key:
+        try:
+            import google.genai as genai
+
+            _client = genai.Client(api_key=_gemini_api_key)
+            _prompt = (
+                "You are a senior ecommerce marketing analyst. Based on the following data-grounded "
+                "forecast summary, write ONE additional paragraph (max 80 words) identifying the "
+                "single most important strategic action for the next 30 days. Be specific and direct.\n\n"
+                + "\n".join(lines[:10])
+            )
+            _response = _client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=_prompt,
+            )
+            _ai_paragraph = (_response.text or "").strip()
+            if _ai_paragraph:
+                lines.append("")
+                lines.append("=== AI Strategic Recommendation (Gemini) ===")
+                lines.append(_ai_paragraph)
+        except Exception as _exc:
+            lines.append(f"[AI enrichment skipped: {type(_exc).__name__}]")
+
     return "\n".join(lines)
 
 

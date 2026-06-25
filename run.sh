@@ -27,6 +27,7 @@ fi
 
 mkdir -p "$(dirname "$MODEL_PATH")" "$(dirname "$OUTPUT_PATH")"
 
+set +e
 "${PYTHON_CMD[@]}" - <<'PY'
 import importlib.util
 import sys
@@ -40,8 +41,13 @@ if missing:
         + ". Install them with: pip install -r requirements.txt",
         file=sys.stderr,
     )
-    raise SystemExit(1)
+    sys.exit(1)
 PY
+DEP_CHECK_EXIT=$?
+set -e
+if [ $DEP_CHECK_EXIT -ne 0 ]; then
+  exit $DEP_CHECK_EXIT
+fi
 
 "${PYTHON_CMD[@]}" -m backend.predict \
   --data-dir "$DATA_DIR" \

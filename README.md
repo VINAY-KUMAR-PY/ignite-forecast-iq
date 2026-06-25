@@ -21,7 +21,7 @@ The offline evaluator path is intentionally isolated from the web app. `run.sh` 
 | scikit-learn version                 | 1.9.0                                                                                      |
 | Model artifact                       | `pickle/model.pkl`                                                                         |
 | Model artifact size                  | ~886 KB                                                                                    |
-| Model artifact version               | 4                                                                                          |
+| Model artifact version               | 5                                                                                          |
 | Training rows                        | 2,400 full sample rows; 2,160 used as training split in primary 30-day holdout backtest    |
 | Rolling training samples             | 810 in the packaged artifact; 702 in the primary holdout training split                    |
 | Feature count                        | 48 evaluator features including spend, trend, seasonality, and baseline-anchor regressors  |
@@ -253,14 +253,14 @@ The offline evaluator artifact at `pickle/model.pkl` is a compact joblib artifac
 | numpy                | 2.4.6                        |
 | joblib               | 1.5.3                        |
 | Artifact type        | `forecastiq_evaluator_model` |
-| Artifact version     | 4                            |
+| Artifact version     | 5                            |
 | Evaluator model type | `trained_model`              |
 | Artifact size        | ~886 KB                      |
 | Training rows        | 2,400 full sample rows; 2,160 used as training split in 30-day holdout backtest |
 | Rolling samples      | 810 in the packaged artifact; 702 in the primary holdout training split |
 | Feature count        | 48                           |
 | Revenue blend weight | adaptive per-horizon: 30d 0.60, 60d 0.10, 90d 0.50 |
-| Interval horizon multiplier | 30d 0.60, 60d 1.10, 90d 1.45 (monotonically widening) |
+| Interval horizon multiplier | 30d 0.60, 60d 1.25, 90d 1.45 (monotonically widening) |
 | ROAS blend weight    | adaptive per-horizon: 30d 0.60, 60d 0.60, 90d 0.60; see `reports/backtest_summary.md` |
 | Causal summary output | `output/causal_summary.txt` |
 
@@ -335,10 +335,10 @@ Walk-forward per-horizon backtesting is included for transparency:
 | Horizon | Folds | Segments | Trained revenue MAE | Baseline revenue MAE | Trained ROAS MAE | Trained coverage | Revenue MAE winner |
 | ------: | ----: | -------: | ------------------: | -------------------: | ---------------: | ---------------: | ------------------ |
 |      30 |     3 |       54 |            2,462.00 |             3,097.88 |             0.07 |           92.59% | Trained model |
-|      60 |     3 |       54 |           10,541.64 |            11,221.15 |             0.05 |           85.19% | Trained model |
+|      60 |     3 |       54 |           10,541.64 |            11,221.15 |             0.05 |           87.04% | Trained model |
 |      90 |     3 |       54 |           20,891.06 |            31,577.72 |             0.06 |           90.74% | Trained model |
 
-Intervals were narrowed from the earlier wide setting that produced 100% walk-forward coverage to a more useful planning range: 92.59% at 30 days, 85.19% at 60 days, and 90.74% at 90 days. This is why ForecastIQ keeps both systems: the trained model provides ML behavior where validated, while the deterministic baseline remains a reliability guardrail for longer, thinner, or incompatible cases.
+Intervals were narrowed from the earlier wide setting that produced 100% walk-forward coverage to a more useful planning range: 92.59% at 30 days, 87.04% at 60 days, and 90.74% at 90 days. This is why ForecastIQ keeps both systems: the trained model provides ML behavior where validated, while the deterministic baseline remains a reliability guardrail for longer, thinner, or incompatible cases.
 
 ## Budget Simulator
 

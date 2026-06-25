@@ -19,7 +19,7 @@ import { KpiCard } from "@/components/kpi-card";
 import type { ChannelHealthScore, SimChannelResult } from "@/lib/backend-api";
 import { fmtCompact, fmtCurrency, fmtDate, fmtPct, fmtRoas } from "@/lib/format";
 
-export function ChannelResultCard({
+function ChannelResultCard({
   channel,
   projectedRevenue,
   projectedRoas,

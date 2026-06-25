@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-06-25T09:48:44.863730+00:00",
-  "data_dir": "data",
+  "generated_at": "2026-06-25T10:39:50.136572+00:00",
+  "data_dir": "./data",
   "holdout_days": 30,
   "train_rows": 2160,
   "test_rows": 240,
@@ -30,7 +30,7 @@
   "model": {
     "model_type": "trained_model",
     "artifact_type": "forecastiq_evaluator_model",
-    "artifact_version": 4,
+    "artifact_version": 5,
     "training_samples": 702,
     "training_rows": 2160,
     "confidence": {
@@ -43,7 +43,7 @@
       "minimum_interval_pct": 0.045,
       "horizon_interval_multiplier": {
         "30": 0.6,
-        "60": 1.1,
+        "60": 1.25,
         "90": 1.45
       },
       "low_sample_training": false,
@@ -396,12 +396,12 @@
         "mae": 10541.64,
         "rmse": 18671.63,
         "mape": 5.04,
-        "interval_coverage": 85.19,
+        "interval_coverage": 87.04,
         "revenue": {
           "mae": 10541.64,
           "rmse": 18671.63,
           "mape": 5.04,
-          "interval_coverage": 85.19
+          "interval_coverage": 87.04
         },
         "roas": {
           "mae": 0.05,

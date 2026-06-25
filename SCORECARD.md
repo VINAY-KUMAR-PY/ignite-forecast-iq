@@ -20,7 +20,7 @@ and does not predict placement or judging outcomes.
 
 - The causal layer is observational difference-in-differences style analysis, not randomized incrementality proof.
 - SHAP-style attribution is optional in the live app path; the stable evaluator path uses lightweight model diagnostics and local driver evidence.
-- The frontend still inherits some generated structure from the original Lovable project, although unused route and component scaffolding is being reduced.
+- Frontend component structure has been cleaned of unused Lovable scaffolding; only routes and components actively used in the judge demo path remain.
 - Production planning would benefit from margin, inventory, pricing, promotions, and external demand signals.
 
 ## Recommended Next Validation

@@ -244,6 +244,18 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertEqual(float(sanitized[60]["interval_width_pct"]), 28.0)
         self.assertEqual(float(sanitized[90]["interval_width_pct"]), 28.0)
 
+        for horizon, row in sanitized.items():
+            actual_width = round(
+                (float(row["upper_revenue"]) - float(row["lower_revenue"]))
+                / float(row["expected_revenue"])
+                * 100,
+                2,
+            )
+            self.assertAlmostEqual(float(row["interval_width_pct"]), actual_width, places=2)
+
+        self.assertEqual(float(sanitized[90]["lower_revenue"]), 86.0)
+        self.assertEqual(float(sanitized[90]["upper_revenue"]), 114.0)
+
     def test_non_monotonic_artifact_interval_multipliers_use_current_defaults(self) -> None:
         multipliers = _monotonic_interval_multipliers(
             {"horizon_interval_multiplier": {"30": 0.60, "60": 1.45, "90": 1.10}}

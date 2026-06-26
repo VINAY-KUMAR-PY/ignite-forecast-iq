@@ -22,6 +22,7 @@ from backend.predict import (
     generate_offline_causal_summary,
     read_csv_folder,
     safe_load_model,
+    sanitize_rows,
     unseen_category_diagnostics,
     write_predictions,
 )
@@ -182,21 +183,66 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertGreater(w90, w60, f"Intervals must widen: {w30:.0f} < {w60:.0f} < {w90:.0f}")
         self.assertGreater(w60, w30, f"Intervals must widen: {w30:.0f} < {w60:.0f} < {w90:.0f}")
 
-    def test_interval_widths_reflect_horizon_calibration(self) -> None:
-        """60-day intervals use the raised calibration floor while all horizons stay valid."""
+    def test_interval_widths_are_monotonic_by_segment(self) -> None:
+        """Reported interval_width_pct must satisfy 30d <= 60d <= 90d for every segment."""
         df = pd.read_csv("data/sample_campaigns.csv")
         cleaned = canonicalize_frame(df)
         model = safe_load_model("pickle/model.pkl")
         rows = build_predictions(cleaned.frame, model)
-        overall = {int(r["horizon_days"]): r for r in rows if r["level"] == "overall"}
+        grouped: dict[tuple[str, str], dict[int, float]] = {}
+        for row in rows:
+            key = (str(row["level"]), str(row["segment"]))
+            grouped.setdefault(key, {})[int(row["horizon_days"])] = float(row["interval_width_pct"])
 
-        w30 = float(overall[30]["interval_width_pct"])
-        w60 = float(overall[60]["interval_width_pct"])
-        w90 = float(overall[90]["interval_width_pct"])
+        for key, widths in grouped.items():
+            self.assertEqual(set(widths), {30, 60, 90})
+            self.assertLessEqual(widths[30], widths[60], f"{key} has 60d width below 30d: {widths}")
+            self.assertLessEqual(widths[60], widths[90], f"{key} has 90d width below 60d: {widths}")
 
-        self.assertGreater(w60, w30, f"60d interval ({w60}%) must exceed 30d ({w30}%)")
-        self.assertGreater(w90, w30, f"90d interval ({w90}%) must exceed 30d ({w30}%)")
-        self.assertGreaterEqual(w60, w90, "Raised 60d floor should be visible in the overall interval width")
+    def test_sanitize_rows_repairs_non_monotonic_interval_width_pct(self) -> None:
+        rows = [
+            {
+                "level": "overall",
+                "segment": "all",
+                "horizon_days": 30,
+                "expected_revenue": 100,
+                "lower_revenue": 95.5,
+                "upper_revenue": 104.5,
+                "expected_roas": 2.0,
+                "lower_roas": 1.9,
+                "upper_roas": 2.1,
+                "model_type": TRAINED_MODEL_TYPE,
+            },
+            {
+                "level": "overall",
+                "segment": "all",
+                "horizon_days": 60,
+                "expected_revenue": 100,
+                "lower_revenue": 86,
+                "upper_revenue": 114,
+                "expected_roas": 2.0,
+                "lower_roas": 1.72,
+                "upper_roas": 2.28,
+                "model_type": TRAINED_MODEL_TYPE,
+            },
+            {
+                "level": "overall",
+                "segment": "all",
+                "horizon_days": 90,
+                "expected_revenue": 100,
+                "lower_revenue": 88,
+                "upper_revenue": 112,
+                "expected_roas": 2.0,
+                "lower_roas": 1.76,
+                "upper_roas": 2.24,
+                "model_type": TRAINED_MODEL_TYPE,
+            },
+        ]
+        sanitized = {int(row["horizon_days"]): row for row in sanitize_rows(rows)}
+
+        self.assertEqual(float(sanitized[30]["interval_width_pct"]), 9.0)
+        self.assertEqual(float(sanitized[60]["interval_width_pct"]), 28.0)
+        self.assertEqual(float(sanitized[90]["interval_width_pct"]), 28.0)
 
     def test_non_monotonic_artifact_interval_multipliers_use_current_defaults(self) -> None:
         multipliers = _monotonic_interval_multipliers(

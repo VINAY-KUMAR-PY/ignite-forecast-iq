@@ -1205,7 +1205,27 @@ def sanitize_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "forecast_confidence": confidence,
             }
         )
-    return clean_rows
+    return _enforce_monotonic_interval_width_pct(clean_rows)
+
+
+def _enforce_monotonic_interval_width_pct(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Keep reported interval-width percentages non-decreasing by horizon."""
+    groups: dict[tuple[str, str], dict[int, dict[str, Any]]] = {}
+    for row in rows:
+        key = (str(row.get("level") or "overall"), str(row.get("segment") or "all"))
+        horizon = int(safe_float(row.get("horizon_days"), 30))
+        groups.setdefault(key, {})[horizon] = row
+
+    for grouped_rows in groups.values():
+        widest_so_far = 0.0
+        for horizon in sorted(HORIZONS):
+            row = grouped_rows.get(int(horizon))
+            if row is None:
+                continue
+            current = clean_number(row.get("interval_width_pct"))
+            widest_so_far = max(widest_so_far, current)
+            row["interval_width_pct"] = clean_number(widest_so_far)
+    return rows
 
 
 def write_predictions(rows: list[dict[str, Any]], output_path: str | Path) -> None:

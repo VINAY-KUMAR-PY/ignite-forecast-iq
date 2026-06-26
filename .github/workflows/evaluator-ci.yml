@@ -202,6 +202,11 @@ jobs:
           python -m pytest
           python -m backend.backtest
 
+      - name: Run tests with coverage
+        run: |
+          pip install pytest-cov
+          pytest tests/ --cov=backend --cov-report=term-missing --cov-fail-under=60
+
       - name: Verify committed trained artifact
         run: |
           python -m backend.predict --data-dir ./data --model ./pickle/model.pkl --output ./output/predictions.csv

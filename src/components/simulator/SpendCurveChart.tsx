@@ -1,7 +1,8 @@
 import {
+  Area,
   CartesianGrid,
   Line,
-  LineChart,
+  ComposedChart,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -10,8 +11,20 @@ import {
 } from "recharts";
 import { fmtCompact, fmtCurrency, fmtRoas } from "@/lib/format";
 
-type SpendCurvePoint = { spend: number; revenue: number; roas?: number };
-type TooltipPayload = { dataKey: string; name?: string; color: string; value: number };
+type SpendCurvePoint = {
+  spend: number;
+  revenue: number;
+  roas?: number;
+  lower_revenue?: number;
+  upper_revenue?: number;
+};
+type ChartPoint = SpendCurvePoint & { confidence_band: [number, number] };
+type TooltipPayload = {
+  dataKey: string;
+  name?: string;
+  color: string;
+  value: number | [number, number];
+};
 
 export function SpendCurveChart({
   data,
@@ -32,11 +45,22 @@ export function SpendCurveChart({
     );
   }
 
+  const chartData: ChartPoint[] = data.map((point) => {
+    const lower = point.lower_revenue ?? point.revenue * 0.85;
+    const upper = point.upper_revenue ?? point.revenue * 1.15;
+    return {
+      ...point,
+      lower_revenue: lower,
+      upper_revenue: upper,
+      confidence_band: [lower, upper],
+    };
+  });
+
   return (
     <>
       <div className="mt-4 h-56">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ left: -12, right: 8, top: 8 }}>
+          <ComposedChart data={chartData} margin={{ left: -12, right: 8, top: 8 }}>
             <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" />
             <XAxis
               dataKey="spend"
@@ -64,6 +88,16 @@ export function SpendCurveChart({
                 label="Diminishing returns"
               />
             )}
+            <Area
+              type="monotone"
+              dataKey="confidence_band"
+              name="Revenue confidence band"
+              stroke="var(--color-chart-1)"
+              strokeWidth={0}
+              fill="var(--color-chart-1)"
+              fillOpacity={0.15}
+              isAnimationActive={false}
+            />
             <Line
               type="monotone"
               dataKey="revenue"
@@ -72,7 +106,7 @@ export function SpendCurveChart({
               strokeWidth={2}
               dot={false}
             />
-          </LineChart>
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
       {marginalRoas !== undefined && (
@@ -98,13 +132,15 @@ function CurveTooltip({
   return (
     <div className="rounded-lg border border-border bg-popover/95 px-3 py-2 text-xs shadow-lg backdrop-blur">
       <div className="font-medium">Spend {fmtCurrency(Number(label ?? 0))}</div>
-      {payload.map((item) => (
-        <div key={item.dataKey} className="mt-1 flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full" style={{ background: item.color }} />
-          <span className="text-muted-foreground">{item.name ?? item.dataKey}:</span>
-          <span className="font-medium">{fmtCurrency(item.value)}</span>
-        </div>
-      ))}
+      {payload
+        .filter((item) => item.dataKey !== "confidence_band")
+        .map((item) => (
+          <div key={item.dataKey} className="mt-1 flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full" style={{ background: item.color }} />
+            <span className="text-muted-foreground">{item.name ?? item.dataKey}:</span>
+            <span className="font-medium">{fmtCurrency(Number(item.value))}</span>
+          </div>
+        ))}
     </div>
   );
 }

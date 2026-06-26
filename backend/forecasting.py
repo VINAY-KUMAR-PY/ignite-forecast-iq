@@ -164,18 +164,62 @@ def _feature_importance(trained: Optional[TargetModel], limit: int = 6) -> List[
 
 
 def _shap_importance(daily: pd.DataFrame, target: str, trained: Optional[TargetModel], limit: int = 10) -> list[dict[str, Any]]:
-    """Return lightweight SHAP attribution for recent training rows when available."""
+    """Return SHAP attribution or a deterministic permutation-importance fallback."""
     if trained is None or daily.empty:
         return []
+
+    X, y = feature_frame(daily, target)
+    if X.empty:
+        return []
+    sample = X[trained.feature_columns].tail(min(50, len(X))).astype(float)
+    sample_target = y.tail(len(sample)).astype(float)
+    if sample.empty or sample_target.empty:
+        return []
+
+    def attribution_item(index: int, importance: float, direction: str) -> dict[str, Any]:
+        feature = trained.feature_columns[index]
+        rounded_importance = round(float(importance), 6)
+        return {
+            "feature": feature,
+            "shap_value": rounded_importance,
+            "importance": rounded_importance,
+            "label": _feature_label(feature),
+            "direction": direction,
+        }
+
+    def permutation_fallback() -> list[dict[str, Any]]:
+        try:
+            from sklearn.inspection import permutation_importance
+
+            result = permutation_importance(
+                trained.model,
+                sample,
+                sample_target,
+                n_repeats=5,
+                random_state=42,
+                n_jobs=1,
+            )
+            importances = np.asarray(result.importances_mean, dtype=float)
+            ranked = np.argsort(importances)[::-1][:limit]
+            items: list[dict[str, Any]] = []
+            for index in ranked:
+                importance = importances[int(index)]
+                if not np.isfinite(importance) or importance <= 0:
+                    continue
+                feature_values = sample.iloc[:, int(index)].to_numpy(dtype=float)
+                direction = "positive"
+                if np.std(feature_values) > 1e-9 and np.std(sample_target) > 1e-9:
+                    correlation = float(np.corrcoef(feature_values, sample_target)[0, 1])
+                    if np.isfinite(correlation) and correlation < 0:
+                        direction = "negative"
+                items.append(attribution_item(int(index), importance, direction))
+            return items
+        except Exception as exc:
+            logger.info("Permutation forecast attribution unavailable: %s", exc)
+            return []
+
     try:
         import shap
-
-        X, _ = feature_frame(daily, target)
-        if X.empty:
-            return []
-        sample = X[trained.feature_columns].tail(min(100, len(X))).astype(float)
-        if sample.empty:
-            return []
 
         explainer = shap.TreeExplainer(trained.model)
         shap_values = explainer.shap_values(sample)
@@ -191,17 +235,20 @@ def _shap_importance(daily: pd.DataFrame, target: str, trained: Optional[TargetM
         directions = values.mean(axis=0)
         ranked = np.argsort(global_shap)[::-1][:limit]
         return [
-            {
-                "feature": trained.feature_columns[int(index)],
-                "shap_value": round(float(global_shap[int(index)]), 6),
-                "direction": "positive" if directions[int(index)] >= 0 else "negative",
-            }
+            attribution_item(
+                int(index),
+                global_shap[int(index)],
+                "positive" if directions[int(index)] >= 0 else "negative",
+            )
             for index in ranked
             if np.isfinite(global_shap[int(index)]) and global_shap[int(index)] > 0
         ]
+    except (ImportError, ModuleNotFoundError):
+        logger.info("SHAP is unavailable; using permutation importance for forecast attribution")
+        return permutation_fallback()
     except Exception as exc:
-        logger.info("SHAP forecast attribution unavailable: %s", exc)
-        return []
+        logger.info("SHAP forecast attribution failed: %s; using permutation importance", exc)
+        return permutation_fallback()
 
 
 def _feature_label(feature: str) -> str:

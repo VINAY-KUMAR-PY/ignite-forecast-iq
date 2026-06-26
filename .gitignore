@@ -10,7 +10,9 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
-output/
+output/*
+!output/.gitkeep
+!output/predictions.csv
 __pycache__/
 *.py[cod]
 .pytest_cache/

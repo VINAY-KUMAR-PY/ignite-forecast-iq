@@ -129,6 +129,7 @@ function ForecastPage() {
   const summaryRoas = apiForecast?.summary.avgRoas ?? avgRoasFc;
   const revenueIntervalWidth = upperRev - lowerRev;
   const revenueIntervalWidthPct = expectedRev > 0 ? (revenueIntervalWidth / expectedRev) * 100 : 0;
+  const forecastConfidence = revenueIntervalWidthPct > 25 ? "medium" : "high";
   const avgRoasLower = forecastRoasOnly.length
     ? forecastRoasOnly.reduce((s, p) => s + p.lower, 0) / forecastRoasOnly.length
     : 0;
@@ -250,9 +251,19 @@ function ForecastPage() {
               Forecast spread shown as total revenue range and average ROAS uncertainty.
             </p>
           </div>
-          <span className="rounded-full border border-border/60 bg-background/60 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            {revenueIntervalWidthPct.toFixed(1)}% revenue spread
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full border border-border/60 bg-background/60 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              {revenueIntervalWidthPct.toFixed(1)}% revenue spread
+            </span>
+            {forecastConfidence === "medium" && (
+              <span
+                title="Interval width >25% of expected revenue - wider uncertainty due to fewer historical rows for this segment."
+                className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-amber-600 dark:text-amber-400"
+              >
+                Medium confidence
+              </span>
+            )}
+          </div>
         </div>
         <div className="grid gap-4 md:grid-cols-4">
           <DiagnosticStat
@@ -809,17 +820,23 @@ function FeatureList({
 function ShapImportanceList({
   features,
 }: {
-  features: Array<{ feature: string; shap_value: number; direction: "positive" | "negative" }>;
+  features: Array<{
+    feature: string;
+    shap_value: number;
+    importance?: number;
+    label?: string;
+    direction: "positive" | "negative";
+  }>;
 }) {
   const maxImpact = Math.max(1, ...features.map((feature) => Math.abs(feature.shap_value)));
 
   return (
     <div className="rounded-lg border border-border/40 bg-background/40 p-4 lg:col-span-2">
       <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        SHAP importance
+        Global feature attribution
       </h4>
       <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-        Why this forecast - global SHAP values (avg |impact| across recent samples).
+        SHAP values when available, with a permutation-importance fallback on unsupported runtimes.
       </p>
       <div className="mt-3 space-y-2">
         {features.length ? (
@@ -828,7 +845,9 @@ function ShapImportanceList({
             return (
               <div key={`${feature.feature}-${feature.direction}`}>
                 <div className="mb-1 flex items-center justify-between gap-3 text-xs">
-                  <span className="capitalize">{feature.feature.replaceAll("_", " ")}</span>
+                  <span className="capitalize">
+                    {(feature.label || feature.feature).replaceAll("_", " ")}
+                  </span>
                   <span className={positive ? "text-success" : "text-amber-500"}>
                     {feature.shap_value.toFixed(3)}
                   </span>
@@ -849,7 +868,7 @@ function ShapImportanceList({
           })
         ) : (
           <p className="text-sm text-muted-foreground">
-            SHAP attribution is unavailable for this segment, so the page shows local permutation
+            Global attribution is unavailable for this segment, so the page shows local permutation
             drivers instead.
           </p>
         )}

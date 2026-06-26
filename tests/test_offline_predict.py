@@ -14,6 +14,7 @@ from backend.predict import (
     MODEL_TYPE,
     SAFE_BASELINE_MODEL_TYPE,
     TRAINED_MODEL_TYPE,
+    THIN_CAMPAIGN_CONFIDENCE,
     _monotonic_interval_multipliers,
     build_predictions,
     canonicalize_frame,
@@ -279,12 +280,31 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertEqual(float(sanitized[90]["lower_revenue"]), 86.0)
         self.assertEqual(float(sanitized[90]["upper_revenue"]), 114.0)
 
+    def test_thin_campaign_confidence_note_is_preserved(self) -> None:
+        row = {
+            "level": "campaign",
+            "segment": "Thin Campaign",
+            "horizon_days": 30,
+            "expected_revenue": 100.0,
+            "lower_revenue": 80.0,
+            "upper_revenue": 120.0,
+            "expected_roas": 2.0,
+            "lower_roas": 1.6,
+            "upper_roas": 2.4,
+            "model_type": TRAINED_MODEL_TYPE,
+            "forecast_confidence": THIN_CAMPAIGN_CONFIDENCE,
+        }
+
+        sanitized = sanitize_rows([row])[0]
+
+        self.assertEqual(sanitized["forecast_confidence"], THIN_CAMPAIGN_CONFIDENCE)
+
     def test_non_monotonic_artifact_interval_multipliers_use_current_defaults(self) -> None:
         multipliers = _monotonic_interval_multipliers(
             {"horizon_interval_multiplier": {"30": 0.60, "60": 1.45, "90": 1.10}}
         )
 
-        self.assertEqual(multipliers, {"30": 1.38, "60": 1.38, "90": 1.45})
+        self.assertEqual(multipliers, {"30": 1.38, "60": 1.38, "90": 1.65})
         self.assertLessEqual(multipliers["30"], multipliers["60"])
         self.assertLessEqual(multipliers["60"], multipliers["90"])
 

@@ -115,6 +115,7 @@ FEATURE_COLUMNS = [
 ]
 
 LEVEL_CODES = {"overall": 0, "channel": 1, "campaign_type": 2, "campaign": 3}
+THIN_CAMPAIGN_CONFIDENCE = "medium – thin segment, pooled with channel residuals"
 
 
 def read_csv_folder(data_dir: str | Path) -> pd.DataFrame:
@@ -1003,6 +1004,17 @@ def confidence_interval_width(values: pd.Series, expected_revenue: float, horizo
     return max(statistical, floor)
 
 
+def revenue_residuals(segment: pd.DataFrame) -> np.ndarray:
+    """Return recent daily revenue residuals for local interval calibration."""
+    daily = aggregate_segment_daily(segment)
+    values = pd.to_numeric(daily.get("revenue"), errors="coerce").replace([np.inf, -np.inf], np.nan).dropna()
+    if len(values) < 2:
+        return np.asarray([], dtype=float)
+    baseline = values.shift(1).rolling(min(7, len(values)), min_periods=1).mean()
+    residuals = (values - baseline).dropna().to_numpy(dtype=float)
+    return residuals[np.isfinite(residuals)]
+
+
 def trained_forecast_segment(
     segment: pd.DataFrame,
     horizon: int,
@@ -1010,6 +1022,7 @@ def trained_forecast_segment(
     segment_name: str,
     model: dict[str, Any],
     planned_budgets: dict[str, float] | None = None,
+    parent_channel_segment: pd.DataFrame | None = None,
 ) -> dict[str, float]:
     if len(segment) < int(model.get("preprocessing", {}).get("min_prediction_rows", MIN_TRAINED_MODEL_ROWS)):
         raise ValueError("segment is too small for trained-model prediction")
@@ -1063,6 +1076,14 @@ def trained_forecast_segment(
         safe_float(confidence.get("revenue_residual_std"), expected_revenue * 0.12),
     )
     z = horizon_confidence_z(confidence, horizon)
+    pooled_channel_residuals = False
+    if level == "campaign" and len(segment) < 30 and parent_channel_segment is not None:
+        campaign_residuals = revenue_residuals(segment)
+        channel_residuals = revenue_residuals(parent_channel_segment)
+        pooled_residuals = np.concatenate([campaign_residuals, channel_residuals])
+        if len(pooled_residuals) >= 8:
+            z = max(z, calibrated_z_from_residuals(pooled_residuals, z))
+            pooled_channel_residuals = True
     horizon_interval_multiplier = _monotonic_interval_multipliers(confidence)
     horizon_multiplier = safe_float(
         horizon_interval_multiplier.get(str(horizon)),
@@ -1099,6 +1120,10 @@ def trained_forecast_segment(
         expected_roas = spend_based_roas
     else:
         expected_roas = min(max(expected_roas, lower_roas), upper_roas)
+    width_pct = safe_ratio(upper - lower, expected_revenue) * 100 if expected_revenue > 0 else 0.0
+    confidence_label = roas_confidence
+    if pooled_channel_residuals and width_pct > 35:
+        confidence_label = THIN_CAMPAIGN_CONFIDENCE
     return {
         "expected_revenue": clean_number(expected_revenue),
         "lower_revenue": clean_number(lower),
@@ -1106,7 +1131,7 @@ def trained_forecast_segment(
         "expected_roas": clean_number(expected_roas),
         "lower_roas": clean_number(lower_roas),
         "upper_roas": clean_number(upper_roas),
-        "forecast_confidence": roas_confidence,
+        "forecast_confidence": confidence_label,
     }
 
 
@@ -1139,6 +1164,10 @@ def build_trained_predictions(
     fallback = fallback_model_config("segment not compatible with trained model")
 
     for level, segment, segment_frame in segment_specs(frame):
+        parent_channel_segment: pd.DataFrame | None = None
+        if level == "campaign" and len(segment_frame) < 30 and "channel" in segment_frame:
+            channel_name = str(segment_frame["channel"].iloc[0])
+            parent_channel_segment = frame[frame["channel"].astype(str) == channel_name].copy()
         for horizon in HORIZONS:
             try:
                 forecast = trained_forecast_segment(
@@ -1148,6 +1177,7 @@ def build_trained_predictions(
                     segment,
                     model,
                     planned_budgets,
+                    parent_channel_segment,
                 )
                 model_type = TRAINED_MODEL_TYPE
                 trained_count += 1
@@ -1263,7 +1293,9 @@ def sanitize_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
             upper_roas = expected_roas
         width_pct = clean_number(((upper - lower) / expected) * 100 if expected > 0 else 0.0)
         confidence = str(row.get("forecast_confidence") or "")
-        if confidence != ROAS_NOT_COMPUTABLE_CONFIDENCE:
+        if confidence == THIN_CAMPAIGN_CONFIDENCE:
+            pass
+        elif confidence != ROAS_NOT_COMPUTABLE_CONFIDENCE:
             confidence = "high" if width_pct < 30 else "medium" if width_pct <= 60 else "low"
         clean_rows.append(
             {
@@ -1572,4 +1604,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    np.random.seed(42)
     main()

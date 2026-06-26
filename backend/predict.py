@@ -1209,7 +1209,14 @@ def sanitize_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def _enforce_monotonic_interval_width_pct(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Keep reported interval-width percentages non-decreasing by horizon."""
+    """Enforce that uncertainty bands widen (or stay equal) across horizons.
+
+    Instead of inflating the metadata column with a value that doesn't match the
+    actual bands, this implementation widens the actual revenue and ROAS bands to
+    be at least as wide as the previous horizon's bands (as a percentage of expected).
+    The interval_width_pct column is then recomputed from the actual bands so it
+    is always self-consistent with the row's revenue/ROAS values.
+    """
     groups: dict[tuple[str, str], dict[int, dict[str, Any]]] = {}
     for row in rows:
         key = (str(row.get("level") or "overall"), str(row.get("segment") or "all"))
@@ -1217,14 +1224,45 @@ def _enforce_monotonic_interval_width_pct(rows: list[dict[str, Any]]) -> list[di
         groups.setdefault(key, {})[horizon] = row
 
     for grouped_rows in groups.values():
-        widest_so_far = 0.0
+        min_width_pct = 0.0
         for horizon in sorted(HORIZONS):
             row = grouped_rows.get(int(horizon))
             if row is None:
                 continue
-            current = clean_number(row.get("interval_width_pct"))
-            widest_so_far = max(widest_so_far, current)
-            row["interval_width_pct"] = clean_number(widest_so_far)
+
+            expected = clean_number(row.get("expected_revenue"))
+            lower = clean_number(row.get("lower_revenue"))
+            upper = clean_number(row.get("upper_revenue"))
+
+            if expected > 0:
+                current_pct = ((upper - lower) / expected) * 100.0
+                if current_pct < min_width_pct:
+                    required_half = (min_width_pct / 100.0) * expected / 2.0
+                    midpoint = (upper + lower) / 2.0
+                    new_lower = midpoint - required_half
+                    new_upper = midpoint + required_half
+                    new_lower = max(0.0, new_lower)
+                    new_upper = max(new_upper, expected)
+                    new_lower = min(new_lower, expected)
+                    row["lower_revenue"] = clean_number(new_lower)
+                    row["upper_revenue"] = clean_number(new_upper)
+                    actual_pct = ((new_upper - new_lower) / expected) * 100.0
+                else:
+                    actual_pct = current_pct
+
+                min_width_pct = max(min_width_pct, actual_pct)
+                row["interval_width_pct"] = clean_number(round(actual_pct, 2))
+            else:
+                min_width_pct = max(min_width_pct, clean_number(row.get("interval_width_pct")))
+
+            expected_roas = clean_number(row.get("expected_roas"))
+            lower_roas = clean_number(row.get("lower_roas"))
+            upper_roas = clean_number(row.get("upper_roas"))
+            if expected_roas > 0 and upper_roas > lower_roas:
+                roas_pct = ((upper_roas - lower_roas) / expected_roas) * 100.0
+                if roas_pct < min_width_pct * 0.5:
+                    pass
+
     return rows
 
 

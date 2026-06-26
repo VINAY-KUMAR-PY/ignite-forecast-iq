@@ -16,11 +16,13 @@ and does not predict placement or judging outcomes.
 - The app has a one-click judge demo path from the landing page.
 - Forecast diagnostics include local positive and negative drivers for the selected forecast.
 - Offline evaluator output writes `output/causal_summary.txt` with anomaly and observational effect notes when enough data exists.
+- Planned budget input is supported via an optional fourth CLI argument to `run.sh`: `./run.sh ./data ./pickle/model.pkl ./output/predictions.csv '{"Google Ads":60000}'`. When provided, projected spend features are scaled to match the planned budgets channel by channel, and the causal summary notes the received budget input.
 
 ## Known Gaps
 
 - The causal layer is observational difference-in-differences style analysis, not randomized incrementality proof.
-- SHAP-style attribution is optional in the live app path; the stable evaluator path uses lightweight model diagnostics and local driver evidence.
+- SHAP-style attribution is used in the live app path; the offline evaluator path uses lightweight model diagnostics and local driver evidence instead of SHAP to avoid the dependency.
+- Planned budget input affects projected spend and revenue scaling in the offline evaluator; it does not retrain the model or recompute ROAS intervals from scratch, so interval widths reflect historical volatility, not scenario-specific uncertainty.
 - Frontend component structure has been cleaned of unused Lovable scaffolding; only routes and components actively used in the judge demo path remain.
 - Production planning would benefit from margin, inventory, pricing, promotions, and external demand signals.
 

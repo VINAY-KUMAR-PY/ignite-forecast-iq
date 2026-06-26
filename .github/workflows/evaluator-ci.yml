@@ -46,6 +46,18 @@ jobs:
         run: |
           chmod +x run.sh
           ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
+          echo "--- Testing budget-json path ---"
+          ./run.sh ./data ./pickle/model.pkl ./output/predictions_budget.csv '{"Google Ads":60000,"Meta Ads":35000,"Microsoft Ads":18000}'
+          python - <<'PY'
+          import pandas as pd
+
+          df = pd.read_csv("output/predictions_budget.csv")
+          if df.empty or df.isna().any().any():
+              raise SystemExit("Budget predictions.csv is empty or contains NaN")
+          if set(df["horizon_days"].astype(int)) != {30, 60, 90}:
+              raise SystemExit(f"Unexpected horizons in budget run: {sorted(df['horizon_days'].unique().tolist())}")
+          print("Budget-json offline path: OK,", len(df), "rows")
+          PY
 
       - name: Validate evaluator output contract
         run: |
@@ -104,6 +116,41 @@ jobs:
           if not modes <= {"trained_model", "safe_baseline_fallback"}:
               raise SystemExit(f"Unexpected model_type values: {sorted(modes)}")
           print(f"Validated {len(frame)} rows on Python {sys.version.split()[0]} using {sorted(modes)}")
+          PY
+
+      - name: Validate causal summary with budget path
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          text = Path("output/causal_summary.txt").read_text(encoding="utf-8")
+          if len(text) < 100:
+              raise SystemExit("causal_summary.txt is too short or missing")
+          print("Causal summary OK:", len(text), "chars")
+          PY
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+
+          result = subprocess.run(
+              [
+                  "bash",
+                  "run.sh",
+                  "./data",
+                  "./pickle/model.pkl",
+                  "./output/predictions_budget2.csv",
+                  '{"Google Ads":55000,"Meta Ads":28000}',
+              ],
+              capture_output=True,
+              text=True,
+          )
+          if result.returncode != 0:
+              print(result.stderr)
+              raise SystemExit("Budget run failed in causal summary validation")
+          summary = Path("output/causal_summary.txt").read_text(encoding="utf-8")
+          if "Planned budget input received" not in summary:
+              raise SystemExit("causal_summary.txt does not contain budget note when budget provided")
+          print("Budget causal summary OK")
           PY
 
       - name: Validate causal summary

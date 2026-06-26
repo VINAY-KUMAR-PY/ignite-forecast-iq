@@ -26,6 +26,7 @@ def valid_row(day: int = 1) -> dict:
     }
 
 
+# TODO: migrate to conftest.py sample_campaign_rows fixture
 def sample_rows(days: int = 75) -> list[dict]:
     channels = [
         ("Google Ads", "Search", "Brand Search", 4.8),

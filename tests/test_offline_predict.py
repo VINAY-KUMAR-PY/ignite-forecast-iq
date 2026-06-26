@@ -173,6 +173,29 @@ class OfflinePredictionTests(unittest.TestCase):
             f"Summary start: {summary[:200]}",
         )
 
+    def test_planned_budgets_scale_channel_projection_and_summary(self) -> None:
+        raw = pd.read_csv("data/sample_campaigns.csv")
+        cleaned = canonicalize_frame(raw)
+        model = fallback_model_config("planned budget test")
+        baseline_rows = build_predictions(cleaned.frame, model)
+        planned_budgets = {"Google Ads": 60000.0}
+        planned_rows = build_predictions(cleaned.frame, model, planned_budgets)
+
+        def forecast_value(rows: list[dict], level: str, segment: str, horizon: int) -> float:
+            row = next(
+                item
+                for item in rows
+                if item["level"] == level and item["segment"] == segment and item["horizon_days"] == horizon
+            )
+            return float(row["expected_revenue"])
+
+        self.assertGreater(
+            forecast_value(planned_rows, "channel", "Google Ads", 30),
+            forecast_value(baseline_rows, "channel", "Google Ads", 30),
+        )
+        summary = generate_offline_causal_summary(cleaned.frame, planned_rows, planned_budgets)
+        self.assertIn("Planned budget input received: Google Ads: $60,000.", summary)
+
     def test_interval_coverage_floor(self) -> None:
         values = pd.Series(np.random.default_rng(42).normal(1000, 200, 60))
         model = fallback_model_config("test")
@@ -261,7 +284,7 @@ class OfflinePredictionTests(unittest.TestCase):
             {"horizon_interval_multiplier": {"30": 0.60, "60": 1.45, "90": 1.10}}
         )
 
-        self.assertEqual(multipliers, {"30": 0.60, "60": 1.38, "90": 1.45})
+        self.assertEqual(multipliers, {"30": 1.38, "60": 1.38, "90": 1.45})
         self.assertLessEqual(multipliers["30"], multipliers["60"])
         self.assertLessEqual(multipliers["60"], multipliers["90"])
 

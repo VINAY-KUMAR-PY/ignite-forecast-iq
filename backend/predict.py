@@ -468,12 +468,47 @@ def window_trend(daily: pd.DataFrame, column: str, window: int = 28) -> float:
     return min(2.0, max(-0.9, (second - first) / first))
 
 
+def planned_projected_spend(
+    segment: pd.DataFrame,
+    horizon: int,
+    historical_projection: float,
+    planned_budgets: dict[str, float] | None = None,
+) -> float:
+    """Apply optional channel budgets while retaining historical spend for omitted channels."""
+    if not planned_budgets or segment.empty or "channel" not in segment:
+        return max(0.0, safe_float(historical_projection))
+
+    normalized_budgets = {
+        str(channel).strip().casefold(): max(0.0, safe_float(budget))
+        for channel, budget in planned_budgets.items()
+        if str(channel).strip()
+    }
+    if not normalized_budgets:
+        return max(0.0, safe_float(historical_projection))
+
+    projected_total = 0.0
+    matched_budget = False
+    for channel, channel_segment in segment.groupby("channel", dropna=False):
+        channel_daily = aggregate_segment_daily(channel_segment)
+        history_days = max(1, min(7, len(channel_daily)))
+        historical_channel_projection = window_sum(channel_daily, "spend", 7) / history_days * horizon
+        budget = normalized_budgets.get(str(channel).strip().casefold())
+        if budget is None:
+            projected_total += historical_channel_projection
+        else:
+            projected_total += budget * (horizon / 30.0)
+            matched_budget = True
+
+    return max(0.0, projected_total) if matched_budget else max(0.0, safe_float(historical_projection))
+
+
 def segment_feature_frame(
     segment: pd.DataFrame,
     horizon: int,
     level: str,
     segment_name: str,
     maps: dict[str, dict[str, int]],
+    planned_budgets: dict[str, float] | None = None,
 ) -> pd.DataFrame:
     daily = aggregate_segment_daily(segment)
     if daily.empty:
@@ -496,7 +531,12 @@ def segment_feature_frame(
     conversions_28 = window_sum(daily, "conversions", 28)
     daily_spend_7 = spend_7 / min(7, max(1, len(daily)))
     daily_spend_28 = spend_28 / min(28, max(1, len(daily)))
-    projected_spend = daily_spend_7 * horizon
+    projected_spend = planned_projected_spend(
+        segment,
+        horizon,
+        daily_spend_7 * horizon,
+        planned_budgets,
+    )
 
     channel_value = segment_name if level == "channel" else str(segment["channel"].iloc[-1]) if not segment.empty else ""
     campaign_type_value = (
@@ -508,7 +548,12 @@ def segment_feature_frame(
     )
     channel_code = float(category_code(channel_value, maps.get("channel", {})))
     campaign_type_code = float(category_code(campaign_type_value, maps.get("campaign_type", {})))
-    baseline = forecast_segment(segment, horizon, fallback_model_config("feature baseline anchor"))
+    baseline = forecast_segment(
+        segment,
+        horizon,
+        fallback_model_config("feature baseline anchor"),
+        planned_budgets,
+    )
     baseline_revenue = safe_float(baseline["expected_revenue"])
     baseline_roas = safe_float(baseline["expected_roas"])
     rps_7 = safe_ratio(revenue_7, spend_7)
@@ -870,7 +915,12 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
     }
 
 
-def forecast_segment(segment: pd.DataFrame, horizon: int, model: dict[str, Any]) -> dict[str, float]:
+def forecast_segment(
+    segment: pd.DataFrame,
+    horizon: int,
+    model: dict[str, Any],
+    planned_budgets: dict[str, float] | None = None,
+) -> dict[str, float]:
     if segment.empty:
         return {
             "expected_revenue": 0.0,
@@ -901,8 +951,10 @@ def forecast_segment(segment: pd.DataFrame, horizon: int, model: dict[str, Any])
     trend_multiplier = 1.0 + (trend * trend_weight * min(horizon / 90.0, 1.0))
     trend_multiplier = min(1.35, max(0.65, trend_multiplier))
 
-    expected_revenue = max(0.0, daily_revenue * horizon * trend_multiplier)
-    expected_spend = max(0.0, daily_spend * horizon)
+    historical_spend = max(0.0, daily_spend * horizon)
+    expected_spend = planned_projected_spend(segment, horizon, historical_spend, planned_budgets)
+    spend_scale = safe_ratio(expected_spend, historical_spend) if historical_spend > 0 else 1.0
+    expected_revenue = max(0.0, daily_revenue * horizon * trend_multiplier * spend_scale)
     interval = confidence_interval_width(daily["revenue"], expected_revenue, horizon, model)
     lower = max(0.0, expected_revenue - interval)
     upper = max(lower, expected_revenue + interval)
@@ -957,12 +1009,13 @@ def trained_forecast_segment(
     level: str,
     segment_name: str,
     model: dict[str, Any],
+    planned_budgets: dict[str, float] | None = None,
 ) -> dict[str, float]:
     if len(segment) < int(model.get("preprocessing", {}).get("min_prediction_rows", MIN_TRAINED_MODEL_ROWS)):
         raise ValueError("segment is too small for trained-model prediction")
 
     maps = model.get("preprocessing", {}).get("category_maps") or {}
-    features = segment_feature_frame(segment, horizon, level, segment_name, maps)
+    features = segment_feature_frame(segment, horizon, level, segment_name, maps, planned_budgets)
     if list(features.columns) != FEATURE_COLUMNS:
         raise ValueError("trained-model feature schema mismatch")
 
@@ -972,7 +1025,12 @@ def trained_forecast_segment(
     if horizon_model.get("fallback_only") is True:
         raise ValueError(horizon_model.get("fallback_reason") or f"{horizon}d horizon configured for safe fallback")
 
-    baseline = forecast_segment(segment, horizon, fallback_model_config("trained model guardrail"))
+    baseline = forecast_segment(
+        segment,
+        horizon,
+        fallback_model_config("trained model guardrail"),
+        planned_budgets,
+    )
     baseline_revenue = safe_float(baseline["expected_revenue"])
     baseline_roas = safe_float(baseline["expected_roas"])
     revenue_prediction = safe_float(horizon_model["revenue_model"].predict(features)[0])
@@ -1025,9 +1083,12 @@ def trained_forecast_segment(
     )
     lower = max(0.0, expected_revenue - interval)
     upper = max(lower, expected_revenue + interval)
-    daily = aggregate_segment_daily(segment)
-    lookback = min(28, len(daily))
-    expected_spend = safe_float(daily["spend"].tail(lookback).sum()) / max(lookback, 1) * horizon
+    if planned_budgets:
+        expected_spend = safe_float(features["projected_spend_horizon"].iloc[0])
+    else:
+        daily = aggregate_segment_daily(segment)
+        lookback = min(28, len(daily))
+        expected_spend = safe_float(daily["spend"].tail(lookback).sum()) / max(lookback, 1) * horizon
     lower_roas, spend_based_roas, upper_roas, roas_confidence = roas_interval_from_revenue(
         lower,
         expected_revenue,
@@ -1067,7 +1128,11 @@ def _monotonic_interval_multipliers(confidence: dict[str, Any]) -> dict[str, flo
     return DEFAULT_HORIZON_INTERVAL_MULTIPLIER.copy()
 
 
-def build_trained_predictions(frame: pd.DataFrame, model: dict[str, Any]) -> tuple[list[dict[str, Any]], int]:
+def build_trained_predictions(
+    frame: pd.DataFrame,
+    model: dict[str, Any],
+    planned_budgets: dict[str, float] | None = None,
+) -> tuple[list[dict[str, Any]], int]:
     rows: list[dict[str, Any]] = []
     trained_count = 0
     segment_fallback_count = 0
@@ -1076,13 +1141,20 @@ def build_trained_predictions(frame: pd.DataFrame, model: dict[str, Any]) -> tup
     for level, segment, segment_frame in segment_specs(frame):
         for horizon in HORIZONS:
             try:
-                forecast = trained_forecast_segment(segment_frame, horizon, level, segment, model)
+                forecast = trained_forecast_segment(
+                    segment_frame,
+                    horizon,
+                    level,
+                    segment,
+                    model,
+                    planned_budgets,
+                )
                 model_type = TRAINED_MODEL_TYPE
                 trained_count += 1
             except Exception as exc:
                 segment_fallback_count += 1
                 log(f"Segment fallback for {level}:{segment}:{horizon}d - {type(exc).__name__}: {exc}")
-                forecast = forecast_segment(segment_frame, horizon, fallback)
+                forecast = forecast_segment(segment_frame, horizon, fallback, planned_budgets)
                 model_type = SAFE_BASELINE_MODEL_TYPE
             rows.append(
                 {
@@ -1105,7 +1177,11 @@ def build_trained_predictions(frame: pd.DataFrame, model: dict[str, Any]) -> tup
     return rows, trained_count
 
 
-def build_predictions(frame: pd.DataFrame, model: dict[str, Any]) -> list[dict[str, Any]]:
+def build_predictions(
+    frame: pd.DataFrame,
+    model: dict[str, Any],
+    planned_budgets: dict[str, float] | None = None,
+) -> list[dict[str, Any]]:
     if is_trained_model_artifact(model) and len(frame) >= int(
         model.get("preprocessing", {}).get("min_prediction_rows", MIN_TRAINED_MODEL_ROWS)
     ):
@@ -1121,7 +1197,7 @@ def build_predictions(frame: pd.DataFrame, model: dict[str, Any]) -> list[dict[s
                     f"{sorted(unseen)}"
                 )
         try:
-            rows, trained_count = build_trained_predictions(frame, model)
+            rows, trained_count = build_trained_predictions(frame, model, planned_budgets)
             if trained_count > 0:
                 log(f"Prediction mode: {TRAINED_MODEL_TYPE}")
                 return sanitize_rows(rows)
@@ -1135,7 +1211,7 @@ def build_predictions(frame: pd.DataFrame, model: dict[str, Any]) -> list[dict[s
     model_type = str(model.get("model_type") or MODEL_TYPE)
     for level, segment, segment_frame in segment_specs(frame):
         for horizon in HORIZONS:
-            forecast = forecast_segment(segment_frame, horizon, model)
+            forecast = forecast_segment(segment_frame, horizon, model, planned_budgets)
             rows.append(
                 {
                     "level": level,
@@ -1276,7 +1352,11 @@ def write_predictions(rows: list[dict[str, Any]], output_path: str | Path) -> No
         writer.writerows(rows)
 
 
-def generate_offline_causal_summary(frame: pd.DataFrame, rows: list[dict]) -> str:
+def generate_offline_causal_summary(
+    frame: pd.DataFrame,
+    rows: list[dict],
+    planned_budgets: dict[str, float] | None = None,
+) -> str:
     """Produce a deterministic, data-grounded causal summary for the evaluator output."""
     from .anomaly import detect_anomalies
 
@@ -1366,12 +1446,18 @@ def generate_offline_causal_summary(frame: pd.DataFrame, rows: list[dict]) -> st
         if spend_trend < -0.05
         else "stable (spend and revenue trends within +/-5% over recent 28 days)"
     )
+    planned_budget_note = ""
+    if planned_budgets:
+        planned_budget_note = "Planned budget input received: " + ", ".join(
+            f"{channel}: ${safe_float(budget):,.0f}" for channel, budget in planned_budgets.items()
+        ) + "."
 
     lines = [
         "=== ForecastIQ Causal Summary (offline, deterministic) ===",
         f"Historical period: {daily['date'].iloc[0]} to {daily['date'].iloc[-1]} ({len(daily)} days)",
         f"Total spend: ${total_spend:,.0f} | Total revenue: ${total_revenue:,.0f} | Blended ROAS: {blended_roas:.2f}x",
         f"Performance is {trend_note}.",
+        *([planned_budget_note] if planned_budget_note else []),
         f"Leading channel by ROAS: {top_channel} at {top_roas:.2f}x - "
         "likely driven by stronger conversion quality or lower CPC in this channel.",
         f"30-day forecast: expected revenue ${forecast_rev_30:,.0f} at {forecast_roas_30:.2f}x ROAS.",
@@ -1422,7 +1508,9 @@ def generate_offline_causal_summary(frame: pd.DataFrame, rows: list[dict]) -> st
             lines.append("")
             lines.append("=== AI Strategic Recommendation (Gemini) ===")
             lines.append(
-                f"[Gemini call failed: {type(_exc).__name__}. Set GEMINI_API_KEY or GOOGLE_API_KEY to enable live AI enrichment.]"
+                f"[Gemini enrichment could not complete ({type(_exc).__name__}). "
+                "The predictions.csv evaluator contract is unaffected. "
+                "Re-run with a valid GEMINI_API_KEY to enable live strategic recommendations.]"
             )
     else:
         lines.append("")
@@ -1441,7 +1529,30 @@ def main() -> None:
     parser.add_argument("--data-dir", default="data", help="Folder containing input CSV files")
     parser.add_argument("--model", default="pickle/model.pkl", help="Lightweight joblib model metadata path")
     parser.add_argument("--output", default="output/predictions.csv", help="Output predictions CSV path")
+    parser.add_argument(
+        "--budget-json",
+        default="",
+        help=(
+            "Optional JSON mapping channel names to planned spend, e.g. '{\"Google Ads\":50000}'. "
+            "When provided, planned spend features are scaled to match these budgets."
+        ),
+    )
     args = parser.parse_args()
+
+    planned_budgets: dict[str, float] = {}
+    if args.budget_json and args.budget_json.strip():
+        try:
+            import json as _json
+
+            parsed_budgets = _json.loads(args.budget_json)
+            if not isinstance(parsed_budgets, dict):
+                raise ValueError("budget JSON must be an object")
+            planned_budgets = {
+                str(channel): max(0.0, float(budget)) for channel, budget in parsed_budgets.items()
+            }
+            log(f"Planned budgets provided: {planned_budgets}")
+        except Exception as exc:
+            log(f"Warning: could not parse --budget-json ({exc}); using historical spend as proxy")
 
     log(f"Reading CSV data from {args.data_dir}")
     raw = read_csv_folder(args.data_dir)
@@ -1451,10 +1562,10 @@ def main() -> None:
     log(f"Validation complete: {cleaned.valid_rows}/{cleaned.total_rows} usable rows")
 
     model = safe_load_model(args.model)
-    rows = build_predictions(cleaned.frame, model)
+    rows = build_predictions(cleaned.frame, model, planned_budgets)
     write_predictions(rows, args.output)
     summary_path = Path(args.output).with_name("causal_summary.txt")
-    summary = generate_offline_causal_summary(cleaned.frame, rows)
+    summary = generate_offline_causal_summary(cleaned.frame, rows, planned_budgets)
     summary_path.write_text(summary, encoding="utf-8")
     log(f"Wrote {len(rows)} rows to {args.output}")
     log(f"Causal summary written to {summary_path}")

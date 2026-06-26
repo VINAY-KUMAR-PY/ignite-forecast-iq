@@ -25,7 +25,7 @@ The offline evaluator path is intentionally isolated from the web app. `run.sh` 
 | Rolling training samples             | 810 in the packaged artifact; 702 in the primary holdout training split                    |
 | Feature count                        | 48 evaluator features including spend, trend, seasonality, and baseline-anchor regressors  |
 | 60-day revenue interval coverage     | 100.0% walk-forward (calibrated multiplier 1.38; target >=90%)                             |
-| 30-day ROAS interval coverage        | 81.48% walk-forward (tighter near-term bands; see `backtest_summary.md` for tradeoff note) |
+| 30-day ROAS interval coverage        | 100.0% walk-forward (calibrated multiplier 1.38; target >=90%)                               |
 | Normal evaluator mode                | `trained_model`                                                                            |
 | Safe fallback mode                   | `safe_baseline_fallback` for missing/corrupt/incompatible model or unsupported hidden data |
 
@@ -445,6 +445,16 @@ The runner:
 - uses a lightweight joblib-trained sklearn artifact when compatible, with a deterministic evaluator-safe baseline as fallback.
 
 `requirements.txt` intentionally contains only the exact, evaluator-critical scientific dependencies. The live FastAPI/Gemini/test stack is isolated in `requirements-app.txt`, reducing install time and failure surface during automated scoring. CI runs the evaluator contract on Python 3.11, 3.12, 3.13, and 3.14, matching the trained artifact's supported runtime.
+
+## Optional: Planned Budget Input
+
+Pass an optional fourth argument with channel budgets as a JSON string:
+
+```bash
+./run.sh ./data ./pickle/model.pkl ./output/predictions.csv '{"Google Ads":60000,"Meta Ads":35000,"Microsoft Ads":18000}'
+```
+
+When provided, the offline evaluator scales projected spend features to match the planned budgets, allowing budget scenario evaluation without starting the live app. Omit the argument or pass an empty string to use historical spend patterns as the projection basis.
 
 Expected output columns:
 

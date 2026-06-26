@@ -7,6 +7,7 @@ cd "$SCRIPT_DIR"
 DATA_DIR="${1:-./data}"
 MODEL_PATH="${2:-./pickle/model.pkl}"
 OUTPUT_PATH="${3:-./output/predictions.csv}"
+BUDGET_JSON="${4:-}"
 PYTHON_BIN="${PYTHON:-}"
 
 if [[ -z "$PYTHON_BIN" ]]; then
@@ -49,12 +50,21 @@ if [ $DEP_CHECK_EXIT -ne 0 ]; then
   exit $DEP_CHECK_EXIT
 fi
 
+PREDICT_EXIT=0
 "${PYTHON_CMD[@]}" -m backend.predict \
   --data-dir "$DATA_DIR" \
   --model "$MODEL_PATH" \
-  --output "$OUTPUT_PATH"
+  --output "$OUTPUT_PATH" \
+  --budget-json "$BUDGET_JSON" || PREDICT_EXIT=$?
+
+if [ $PREDICT_EXIT -ne 0 ]; then
+  echo "[ForecastIQ] Prediction step failed with exit code $PREDICT_EXIT" >&2
+  exit $PREDICT_EXIT
+fi
 
 SUMMARY_PATH="$(dirname "$OUTPUT_PATH")/causal_summary.txt"
 echo "Done. Predictions written to $OUTPUT_PATH"
 "${PYTHON_CMD[@]}" -c "import sys; print('[ForecastIQ] Python version:', sys.version.split()[0])"
-echo "Causal summary written to $SUMMARY_PATH"
+if [ -f "$SUMMARY_PATH" ]; then
+  echo "Causal summary written to $SUMMARY_PATH"
+fi

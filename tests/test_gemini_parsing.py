@@ -12,6 +12,7 @@ from backend.gemini import (
     _build_prompt,
     _safe_exception_message,
     _validate_insights_payload,
+    generate_gemini_insights_live,
     generate_gemini_insights_with_source,
 )
 
@@ -187,6 +188,32 @@ class GeminiParsingTests(unittest.TestCase):
             self.assertEqual(source, "fallback")
             self.assertTrue(insights.executiveSummary)
             self.assertTrue(insights.budgetAllocation)
+
+    def test_live_generation_returns_fallback_for_transient_503_without_legacy_sdk(self) -> None:
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "configured", "GEMINI_MAX_ATTEMPTS": "1"}, clear=False):
+            with patch(
+                "backend.gemini._generate_with_google_genai",
+                new=AsyncMock(side_effect=RuntimeError("HTTP/1.1 503 Service Unavailable")),
+            ):
+                with patch("backend.gemini._legacy_generativeai_available", return_value=False):
+                    with patch("backend.gemini._generate_with_legacy_sdk", new=AsyncMock()) as legacy:
+                        insights = asyncio.run(generate_gemini_insights_live(SUMMARY))
+
+        legacy.assert_not_called()
+        self.assertEqual(insights.model_dump(mode="json"), _fallback_insights(SUMMARY).model_dump(mode="json"))
+        self.assertTrue(insights.executiveSummary)
+
+    def test_live_generation_returns_fallback_when_current_and_legacy_sdks_are_unavailable(self) -> None:
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "configured", "GEMINI_MAX_ATTEMPTS": "1"}, clear=False):
+            with patch(
+                "backend.gemini._generate_with_google_genai",
+                new=AsyncMock(side_effect=ModuleNotFoundError("No module named 'google.genai'")),
+            ):
+                with patch("backend.gemini._legacy_generativeai_available", return_value=False):
+                    insights = asyncio.run(generate_gemini_insights_live(SUMMARY))
+
+        self.assertEqual(insights.model_dump(mode="json"), _fallback_insights(SUMMARY).model_dump(mode="json"))
+        self.assertTrue(insights.actionPlan)
 
 
 if __name__ == "__main__":

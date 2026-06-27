@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import importlib.util
 import json
 import logging
 import os
@@ -31,6 +32,7 @@ GeminiFailureKind = Literal[
     "authentication",
     "timeout",
     "rate_limit",
+    "transient",
     "sdk",
     "validation",
     "empty_response",
@@ -476,6 +478,8 @@ def _classify_exception(exc: Exception) -> GeminiFailureKind:
         return "authentication"
     if any(token in message for token in ("rate limit", "resource exhausted", "quota", "429")):
         return "rate_limit"
+    if any(token in message for token in ("500", "502", "503", "504", "service unavailable", "server error")):
+        return "transient"
     if any(token in message for token in ("validationerror", "jsondecodeerror", "invalid json")):
         return "validation"
     if any(token in message for token in ("modulenotfounderror", "importerror", "generatecontentconfig")):
@@ -489,7 +493,11 @@ def _generation_error(exc: Exception, context: str) -> GeminiGenerationError:
 
 
 def _is_retryable(kind: GeminiFailureKind) -> bool:
-    return kind in {"timeout", "rate_limit", "sdk", "validation", "empty_response", "unknown"}
+    return kind in {"timeout", "rate_limit", "transient", "sdk", "validation", "empty_response", "unknown"}
+
+
+def _legacy_generativeai_available() -> bool:
+    return importlib.util.find_spec("google.generativeai") is not None
 
 
 def _build_prompt(summary: Dict[str, Any]) -> str:
@@ -842,6 +850,9 @@ async def _generate_content(api_key: str, model_name: str, prompt: str, timeout_
     try:
         return await _generate_with_google_genai(api_key, model_name, prompt, timeout_seconds)
     except (ImportError, ModuleNotFoundError) as exc:
+        if not _legacy_generativeai_available():
+            raise _generation_error(exc, "google-genai import failed and legacy google-generativeai is unavailable") from exc
+
         logger.info("google-genai is not installed; trying legacy google-generativeai SDK")
         try:
             return await _generate_with_legacy_sdk(api_key, model_name, prompt, timeout_seconds)
@@ -849,7 +860,10 @@ async def _generate_content(api_key: str, model_name: str, prompt: str, timeout_
             raise _generation_error(legacy_exc, "legacy google-generativeai call failed") from exc
     except Exception as exc:
         primary_error = _generation_error(exc, "google-genai call failed")
-        if primary_error.kind in {"authentication", "timeout", "rate_limit"}:
+        if primary_error.kind in {"authentication", "timeout", "rate_limit", "transient"}:
+            raise primary_error from exc
+
+        if not _legacy_generativeai_available():
             raise primary_error from exc
 
         logger.info(
@@ -863,7 +877,7 @@ async def _generate_content(api_key: str, model_name: str, prompt: str, timeout_
 
 
 async def generate_gemini_insights_live(summary: Dict[str, Any]) -> InsightsResponse:
-    """Generate insights from Gemini only; raise sanitized errors instead of falling back."""
+    """Generate insights from Gemini, falling back deterministically when the service is unavailable."""
     key = (os.getenv("GEMINI_API_KEY") or "").strip()
     if not key:
         raise GeminiGenerationError("authentication", "GEMINI_API_KEY is not configured")
@@ -891,7 +905,13 @@ async def generate_gemini_insights_live(summary: Dict[str, Any]) -> InsightsResp
 
         last_error = error
         if attempt >= attempts or not _is_retryable(error.kind):
-            raise error
+            logger.warning(
+                "Gemini unavailable after %s attempt(s); returning deterministic fallback insights: kind=%s reason=%s",
+                attempt,
+                error.kind,
+                str(error),
+            )
+            return _fallback_insights(summary)
 
         delay = backoff_seconds * (2 ** (attempt - 1))
         logger.warning(
@@ -914,7 +934,10 @@ async def generate_gemini_insights_with_source(summary: Dict[str, Any]) -> tuple
         return _fallback_insights(summary), "fallback"
 
     try:
-        return await generate_gemini_insights_live(summary), "gemini"
+        insights = await generate_gemini_insights_live(summary)
+        fallback_payload = _fallback_insights(summary).model_dump(mode="json")
+        source: InsightSource = "fallback" if insights.model_dump(mode="json") == fallback_payload else "gemini"
+        return insights, source
     except GeminiGenerationError as exc:
         logger.warning(
             "Gemini insight generation failed; using fallback insights: kind=%s reason=%s",

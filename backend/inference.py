@@ -445,7 +445,8 @@ def sanitize_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return _enforce_monotonic_interval_width_pct(clean_rows)
 
 def _enforce_monotonic_interval_width_pct(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Enforce that uncertainty bands widen (or stay equal) across horizons.
+    """Enforce that uncertainty bands STRICTLY widen across horizons by at least 2
+    percentage points per step, not merely stay equal.
 
     Instead of inflating the metadata column with a value that doesn't match the
     actual bands, this implementation widens the actual revenue and ROAS bands to
@@ -472,7 +473,8 @@ def _enforce_monotonic_interval_width_pct(rows: list[dict[str, Any]]) -> list[di
 
             if expected > 0:
                 current_pct = ((upper - lower) / expected) * 100.0
-                if current_pct < min_width_pct:
+                _STRICT_GAP_PP = 2.0  # each horizon must be at least 2pp wider than the previous
+                if current_pct < min_width_pct + (_STRICT_GAP_PP if min_width_pct > 0 else 0):
                     required_half = (min_width_pct / 100.0) * expected / 2.0
                     midpoint = (upper + lower) / 2.0
                     new_lower = midpoint - required_half

@@ -1,61 +1,227 @@
-# ForecastIQ - Technical Reference
+---
+# ForecastIQ — Technical Reference
 
 ## Forecasting Methodology
 
-ForecastIQ trains supervised regressors on validated campaign rows aggregated to daily grain per segment (overall, channel, campaign type, campaign). The primary estimator is XGBoost (`reg:squarederror`); if XGBoost is unavailable, the code falls back to scikit-learn GradientBoostingRegressor.
+ForecastIQ trains supervised regressors on validated campaign rows aggregated
+to daily grain per segment (overall, channel, campaign type, campaign).
 
-Feature engineering (48 features) includes:
-- **Media inputs**: spend, clicks, impressions, conversions, CPC, CTR, conversion rate, revenue-per-conversion, revenue-per-spend (7-day, 14-day, 28-day windows).
-- **Trend signals**: rolling spend trend, revenue trend, ROAS trend over 28 days; short-window vs long-window spend delta.
-- **Seasonality**: cyclic sin/cos encodings for 7-day, 30-day, 365-day, and year-end periods; day-of-week and month-end indicators; Q4 and holiday-week flag; Black Friday proximity.
-- **Interaction terms**: day-of-week x channel, day-of-week x campaign type.
-- **Baseline anchor**: a deterministic exponential-smoothing baseline forecast is included as a regressor, so the trained model learns a residual correction over the baseline rather than learning from raw revenue directly.
-- **Categorical codes**: level, channel, campaign type encoded as integers from a training-time category map.
+### Live API Path (XGBoost)
+The live `/api/forecast` endpoint uses XGBoost (`reg:squarederror`) because it
+handles non-linear spend-revenue relationships, provides native feature
+importance for the Explainability Center, and is fast enough for interactive
+forecasting. A scikit-learn GradientBoostingRegressor is the fallback when
+XGBoost is unavailable.
 
-The offline evaluator artifact stores a compact sklearn GradientBoostingRegressor trained on log1p(actual - baseline) targets. At inference time the residual correction is exponentiated and added back to the baseline to produce the final revenue forecast. The artifact also stores per-horizon revenue and ROAS blend weights determined by holdout gate.
+### Offline Evaluator Path (sklearn GBR)
+The offline `run.sh` path uses a compact joblib sklearn GradientBoostingRegressor
+artifact at `pickle/model.pkl`. The evaluator model is trained on
+`log1p(actual_revenue - deterministic_baseline)` targets so the model learns a
+residual correction over the baseline rather than raw revenue. At inference time:
 
-## Model Selection
+  predicted_revenue = baseline(x) + expm1(gbr.predict(x)) * blend_weight
+                    + baseline(x) * (1 - blend_weight)
 
-XGBoost was selected for the live API path because it handles non-linear spend-revenue relationships, provides native feature importance for the Explainability Center, and runs fast enough for interactive forecasting. A sklearn GradientBoostingRegressor is used for the offline evaluator artifact to minimize dependency footprint and ensure pickle compatibility across Python 3.11-3.14.
+This residual-correction architecture means the model needs fewer samples to
+generalize and degrades gracefully to the baseline when ML evidence is weak.
 
-Blend weights (0.0 to 0.60 tested in 0.10 steps) are determined by a 30-day holdout gate. The artifact uses the blend weight with the best holdout RMSE while preserving >=90% interval coverage.
+### Blend Weight Gate
+Revenue and ROAS blend weights are determined by a two-gate holdout test stored
+in the artifact's `confidence` block:
+
+| Gate | Revenue condition | Revenue weight |
+|---|---|---|
+| Strong | CV R2 >= 0.15 AND holdout beats baseline | 0.60 (30d), 0.10 (60d), 0.50 (90d) |
+| Moderate | CV R2 >= 0.05 AND holdout beats baseline | 0.25 (30d), 0.10 (60d), 0.40 (90d) |
+| Weak | Holdout beats baseline but CV R2 < 0.05 | 0.10 all horizons |
+| None | Holdout does not beat baseline | 0.00 all horizons |
+
+| Gate | ROAS condition | ROAS weight |
+|---|---|---|
+| Holdout validates | Trained ROAS MAE < naive mean MAE | 0.60 |
+| No evidence | Trained ROAS MAE >= naive mean MAE | 0.10 |
+
+The gate uses the latest 20% of each horizon's dedicated training samples by
+target date. This prevents CV overfitting on small per-horizon slices.
+
+### Horizon-Dedicated Sample Counts
+The artifact stores dedicated training-sample counts by horizon:
+- 30-day: 414 samples
+- 60-day: 180 samples
+- 90-day: 108 samples
+
+If a horizon has fewer than the minimum required samples, it is marked
+`fallback_only` instead of training on mismatched target scales.
+
+## Feature Engineering — All 48 Features
+
+| Feature | Category | Description |
+|---|---|---|
+| spend | Media Input | Daily channel/campaign spend |
+| clicks | Media Input | Daily clicks |
+| impressions | Media Input | Daily impressions |
+| conversions | Media Input | Daily conversions |
+| cpc | Media Input | Cost per click (spend/clicks) |
+| ctr | Media Input | Click-through rate (clicks/impressions) |
+| conv_rate | Media Input | Conversion rate (conversions/clicks) |
+| rev_per_conv | Media Input | Revenue per conversion |
+| rev_per_spend | Media Input | Revenue per spend dollar (raw ROAS) |
+| spend_7d | Media Input | 7-day rolling average spend |
+| spend_14d | Media Input | 14-day rolling average spend |
+| spend_28d | Media Input | 28-day rolling average spend |
+| revenue_lag1 | Trend Signal | Revenue 1 day ago |
+| revenue_lag7 | Trend Signal | Revenue 7 days ago |
+| revenue_lag14 | Trend Signal | Revenue 14 days ago |
+| roas_lag1 | Trend Signal | ROAS 1 day ago |
+| roas_lag7 | Trend Signal | ROAS 7 days ago |
+| revenue_rolling7 | Trend Signal | 7-day rolling mean revenue |
+| revenue_rolling28 | Trend Signal | 28-day rolling mean revenue |
+| spend_rolling7 | Trend Signal | 7-day rolling mean spend |
+| spend_rolling28 | Trend Signal | 28-day rolling mean spend |
+| spend_trend | Trend Signal | 28-day linear spend trend slope |
+| revenue_trend | Trend Signal | 28-day linear revenue trend slope |
+| roas_trend | Trend Signal | 28-day linear ROAS trend slope |
+| spend_delta_short_long | Trend Signal | Short vs long spend window delta |
+| day_of_week | Seasonality | Day of week (0-6) |
+| month | Seasonality | Month of year (1-12) |
+| trend | Seasonality | Linear time trend index |
+| sin_7 | Seasonality | Cyclic sine encoding, 7-day period |
+| cos_7 | Seasonality | Cyclic cosine encoding, 7-day period |
+| sin_30 | Seasonality | Cyclic sine encoding, 30-day period |
+| cos_30 | Seasonality | Cyclic cosine encoding, 30-day period |
+| sin_365 | Seasonality | Cyclic sine encoding, 365-day period |
+| cos_365 | Seasonality | Cyclic cosine encoding, 365-day period |
+| sin_year_end | Seasonality | Cyclic sine for year-end ramp |
+| cos_year_end | Seasonality | Cyclic cosine for year-end ramp |
+| is_q4 | Seasonality | Boolean: Q4 (Oct-Dec) |
+| is_holiday_week | Seasonality | Boolean: major US retail weeks |
+| is_month_end | Seasonality | Boolean: last 3 days of month |
+| bf_proximity | Seasonality | Days to/from Black Friday (clamped) |
+| dow_x_level | Interaction | Day-of-week × level category code |
+| dow_x_channel | Interaction | Day-of-week × channel category code |
+| dow_x_campaign_type | Interaction | Day-of-week × campaign_type code |
+| baseline_forecast | Baseline Anchor | Exponential-smoothing deterministic forecast |
+| level_code | Categorical | Integer code: overall/channel/campaign_type/campaign |
+| channel_code | Categorical | Integer code for channel name |
+| campaign_type_code | Categorical | Integer code for campaign_type |
+| residual_volatility | Derived | Rolling std of recent revenue residuals |
 
 ## Data Preprocessing Logic
 
-1. **Schema normalization** (`schema_adapters.py`): each CSV file is classified as canonical campaign, GA4, Shopify, or Ads export. Column aliases are resolved. Google Ads micros are converted to currency units. Shopify revenue is treated as revenue-of-record when present; GA4 revenue is the fallback; Ads files provide spend and delivery signals.
-2. **Multi-source reconciliation**: when multiple CSV files are present, overlapping revenue is deduplicated by source type priority (Shopify > GA4 > Ads).
-3. **Validation** (`data_preprocessing.py`): invalid dates, empty strings in required fields, negative spend, negative revenue, and duplicate date/channel/campaign records are flagged and excluded before modeling.
-4. **Aggregation**: validated rows are grouped to date x channel x campaign_type x campaign_name grain for feature engineering.
+1. **Schema normalization** (`schema_adapters.py`): each CSV in `data/` is
+   classified as canonical campaign, GA4, Shopify, or Ads export. Column aliases
+   are resolved. Google Ads micros (`metrics_cost_micros`) are divided by 1e6.
+
+2. **Multi-source priority** (Shopify > GA4 > Ads for revenue-of-record):
+   - If Shopify/order data is present, it becomes revenue-of-record. GA4 and
+     Ads rows contribute spend, delivery, and conversion shape only.
+   - If only GA4 + Ads are present, GA4 revenue is the revenue source and Ads
+     rows provide media cost signals.
+   - If only Ads files are present, each Ads file's `conversion_value` /
+     `metrics_conversions_value` is used as revenue.
+   - Each CSV is tagged with `source_schema` and `source_file` provenance before
+     merging to prevent duplicate revenue counting.
+
+3. **Validation** (`data_preprocessing.py`): invalid dates, empty strings in
+   required fields, negative spend, negative revenue, and duplicate
+   date/channel/campaign records are flagged and excluded before modeling.
+
+4. **Aggregation**: validated rows are grouped to
+   `date × channel × campaign_type × campaign_name` grain for feature engineering.
+
+## Interval Calibration Methodology
+
+Confidence intervals use calibrated residual volatility from rolling historical
+forecasts:
+
+| Horizon | Interval Multiplier | Floor (% of expected) | Confidence Z |
+|---|---|---|---|
+| 30 days | 1.38 | 10% | 1.58 |
+| 60 days | 1.55 | 17% | 1.64 |
+| 90 days | 1.80 | 25% | 1.70 |
+
+The monotonic enforcement pass (in `backend/inference.py`) ensures that each
+horizon's `interval_width_pct` is strictly larger than the previous horizon's
+by at least 2 percentage points. Lower bounds are clamped to zero; upper bounds
+are always >= expected revenue.
+
+For ROAS intervals: `lower_roas = lower_revenue / projected_spend`,
+`upper_roas = upper_revenue / projected_spend`. When projected spend is zero,
+ROAS is set to `expected_roas = lower_roas = upper_roas = 0` and
+`forecast_confidence = not_computable`.
+
+## Evaluator Contract Compliance
+
+| Column | Type | Valid Range | CI Check |
+|---|---|---|---|
+| level | str | overall, channel, campaign_type, campaign | schema match |
+| segment | str | any non-null | schema match |
+| horizon_days | int | 30, 60, 90 | all three present |
+| expected_revenue | float | >= 0, finite | isfinite + >= 0 |
+| lower_revenue | float | >= 0, finite | isfinite + <= expected |
+| upper_revenue | float | >= 0, finite | isfinite + >= expected |
+| expected_roas | float | >= 0, finite | isfinite |
+| lower_roas | float | >= 0, finite | isfinite + <= expected_roas |
+| upper_roas | float | >= 0, finite | isfinite + >= expected_roas |
+| model_type | str | trained_model, safe_baseline_fallback | trained_model on Py3.11+ |
+| interval_width_pct | float | >= 0, finite | monotonic across horizons |
+| forecast_confidence | str | high, medium, low, not_computable | non-null |
 
 ## Assumptions
 
-- Existing channel-level attribution is treated as the source of truth; no custom attribution engine is built.
-- ROAS is computed as `revenue / spend`; if spend is zero, ROAS is marked `not_computable` and numeric bounds are set to zero.
-- Confidence intervals use calibrated residual volatility from rolling holdout forecasts and widen monotonically over the forecast horizon.
-- Historical spend patterns are used as the baseline projected spend when no budget override is provided.
-- The offline evaluator path does not call Gemini or any external network service.
+- Existing channel-level attribution is treated as the source of truth; no
+  custom attribution engine is built.
+- ROAS is `revenue / spend`; zero spend → `not_computable`.
+- Historical spend patterns are used as projected spend when no budget override
+  is provided.
+- The offline evaluator does not call Gemini or any external network service.
+- Seasonality flags use US calendar; non-US holiday patterns are not modeled.
 
 ## Limitations
 
-- The model does not ingest promotions, inventory levels, pricing changes, competitor activity, or macroeconomic signals.
-- Confidence intervals are residual-based and should be recalibrated with production holdout data before real budget commitments.
-- The causal inference layer is observational difference-in-differences style analysis, not experimental incrementality.
-- SHAP attribution is used in the live API path only; the offline evaluator uses lightweight model diagnostics to avoid the dependency.
-- Forecast quality degrades for segments with fewer than 45 days of history; those segments fall back to the deterministic baseline.
+- The model does not ingest promotions, inventory levels, pricing changes,
+  competitor activity, or macroeconomic signals.
+- Confidence intervals are residual-based and should be recalibrated with
+  production holdout data before real budget commitments.
+- The causal inference layer is observational DiD-style analysis, not
+  experimental incrementality. No randomization was performed.
+- SHAP attribution is only available in the live API path on Python < 3.14;
+  the offline evaluator uses lightweight model diagnostics.
+- The offline GBR estimator and live XGBoost estimator are not numerically
+  identical; exact point-for-point parity is not claimed.
+- Forecast quality degrades for segments with fewer than 45 days of history;
+  those segments fall back to the deterministic baseline.
+- The model does not support multi-touch attribution across channels.
 
 ## AI Integration Strategy
 
-- **Live API path** (`backend/gemini.py`): a structured summary of forecast metrics, anomalies, trend breaks, channel performance, driver evidence, and budget recommendations is assembled and sent to Gemini via the Google Gen AI SDK with a senior-analyst system prompt. The response is parsed into a typed `InsightsResponse` object.
-- **Deterministic fallback**: if Gemini is unavailable (missing API key, rate limit, timeout, or malformed response), a pure-Python fallback produces a complete causal-hypothesis executive brief using the same summary data. The fallback uses the same schema as the Gemini response so the frontend is unaffected.
-- **Offline evaluator path** (`backend/causal_lite.py`, `backend/evaluator_io.py`): a difference-in-differences style analysis compares each affected channel's post-anomaly revenue movement against unaffected channels. Results are written to `output/causal_summary.txt` without starting Gemini or any network service.
+**Live API path** (`backend/gemini.py`): a structured summary of forecast
+metrics, anomalies, trend breaks, channel performance, driver evidence, and
+budget recommendations is assembled and sent to Gemini via the Google Gen AI
+SDK with a senior-analyst system prompt. The response is parsed into a typed
+`InsightsResponse` Pydantic object. Retry logic handles rate limits, timeouts,
+and transient SDK errors with exponential backoff.
 
-## Architecture Overview
+**Deterministic fallback**: if Gemini is unavailable for any reason (missing
+API key, rate limit, timeout, malformed response, network failure), a
+pure-Python fallback produces a complete causal-hypothesis executive brief
+using the same summary data and the same `InsightsResponse` schema.
+
+**Offline evaluator path** (`backend/causal_lite.py`, `backend/evaluator_io.py`):
+a difference-in-differences style analysis compares each affected channel's
+post-anomaly revenue movement against unaffected channels. Results are written
+to `output/causal_summary.txt` alongside `predictions.csv` without calling
+any external service.
+
+## Architecture Summary
 
 | Layer | Technology |
 |---|---|
 | Frontend | React 19, TypeScript, TanStack Router, Recharts, Tailwind CSS, shadcn/ui |
-| Backend | FastAPI, Pydantic v2, SlowAPI rate limiting, python-dotenv |
-| Forecasting | XGBoost (live), scikit-learn GradientBoostingRegressor (evaluator), joblib |
-| AI insights | Google Gemini (gemini-2.5-flash-lite) via google-genai SDK, deterministic fallback |
-| Evaluator pipeline | run.sh -> backend.predict -> predictions.csv + causal_summary.txt |
-| Deployment | Vercel (frontend), Render (backend), render.yaml + vercel.json configured |
+| Backend | FastAPI, Pydantic v2, SlowAPI rate limiting (in main.py), python-dotenv |
+| Forecasting (live) | XGBoost, scikit-learn GBR fallback, joblib |
+| Forecasting (offline) | scikit-learn GBR, joblib, pinned scipy/numpy/pandas |
+| AI insights | Google Gemini (gemini-2.5-flash-lite) via google-genai SDK |
+| Evaluator pipeline | run.sh → backend.predict → predictions.csv + causal_summary.txt |
+| Deployment | Vercel (frontend), Render/Railway (backend) |
+---

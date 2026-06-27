@@ -1,0 +1,78 @@
+"""Tests that interval_width_pct strictly widens across forecast horizons."""
+from __future__ import annotations
+
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+import pandas as pd
+
+
+def test_overall_interval_width_strictly_monotonic():
+    """interval_width_pct must be strictly increasing: 30d < 60d < 90d."""
+    with tempfile.TemporaryDirectory() as tmp:
+        output = Path(tmp) / "predictions.csv"
+        result = subprocess.run(
+            [
+                sys.executable, "-m", "backend.predict",
+                "--data-dir", "./data",
+                "--model", "./pickle/model.pkl",
+                "--output", str(output),
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=120,
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+
+        df = pd.read_csv(output)
+        overall = df[df["level"] == "overall"].set_index("horizon_days")
+
+        w30 = float(overall.loc[30, "interval_width_pct"])
+        w60 = float(overall.loc[60, "interval_width_pct"])
+        w90 = float(overall.loc[90, "interval_width_pct"])
+
+        assert w60 > w30, (
+            f"60d interval ({w60:.1f}%) must be STRICTLY wider than 30d ({w30:.1f}%)"
+        )
+        assert w90 > w60, (
+            f"90d interval ({w90:.1f}%) must be STRICTLY wider than 60d ({w60:.1f}%)"
+        )
+
+
+def test_all_segments_interval_width_non_decreasing():
+    """For every (level, segment), interval_width_pct must not decrease across horizons."""
+    with tempfile.TemporaryDirectory() as tmp:
+        output = Path(tmp) / "predictions.csv"
+        result = subprocess.run(
+            [
+                sys.executable, "-m", "backend.predict",
+                "--data-dir", "./data",
+                "--model", "./pickle/model.pkl",
+                "--output", str(output),
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=120,
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+
+        df = pd.read_csv(output)
+        violations = []
+        for (level, segment), group in df.groupby(["level", "segment"]):
+            g = group.set_index("horizon_days").sort_index()
+            horizons = sorted(g.index.tolist())
+            for i in range(len(horizons) - 1):
+                h_prev = horizons[i]
+                h_next = horizons[i + 1]
+                if h_prev in g.index and h_next in g.index:
+                    w_prev = float(g.loc[h_prev, "interval_width_pct"])
+                    w_next = float(g.loc[h_next, "interval_width_pct"])
+                    if w_next < w_prev:
+                        violations.append(
+                            f"{level}/{segment}: {h_next}d ({w_next:.1f}%) < {h_prev}d ({w_prev:.1f}%)"
+                        )
+        assert not violations, "Interval widths decreased:\n" + "\n".join(violations)

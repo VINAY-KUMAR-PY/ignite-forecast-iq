@@ -764,7 +764,6 @@ python -m backend.backtest
 |   |-- predict.py
 |   |-- data_preprocessing.py
 |   |-- gemini.py
-|   |-- rate_limit.py
 |   |-- schemas.py
 |   `-- utils.py
 |-- data/

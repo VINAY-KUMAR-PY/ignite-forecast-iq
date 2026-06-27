@@ -102,7 +102,7 @@ function InsightsPage() {
         }
       />
 
-      <div className="mb-6 grid gap-4 md:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Stat label="Revenue (all time)" value={fmtCurrency(summary.totalRevenue)} />
         <Stat label="Avg ROAS" value={fmtRoas(summary.avgRoas)} delta={summary.roasTrendPct} />
         <Stat label="30d revenue forecast" value={fmtCurrency(summary.forecast30dRevenue)} />
@@ -110,7 +110,7 @@ function InsightsPage() {
       </div>
 
       {!insights && !loading && (
-        <Card className="bg-gradient-card border-border/60 p-10 text-center">
+        <Card className="bg-gradient-card border-border/60 min-w-0 p-6 text-center sm:p-10">
           <div className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-gradient-brand shadow-glow">
             <Brain className="h-5 w-5 text-primary-foreground" />
           </div>
@@ -127,7 +127,7 @@ function InsightsPage() {
       )}
 
       {loading && (
-        <Card className="bg-gradient-card border-border/60 p-10 text-center">
+        <Card className="bg-gradient-card border-border/60 min-w-0 p-6 text-center sm:p-10">
           <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           <p className="mt-4 text-sm text-muted-foreground">
             Analyzing {rows.length.toLocaleString()} rows across {summary.channels.length} channels
@@ -141,16 +141,18 @@ function InsightsPage() {
 
       {insights && (
         <div className="grid gap-6">
-          <Card className="bg-gradient-hero border-border/60 p-6">
+          <Card className="bg-gradient-hero border-border/60 min-w-0 p-6">
             <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-primary-glow">
               <Brain className="h-4 w-4" /> Executive summary
             </div>
-            <p className="mt-3 text-base leading-relaxed">{insights.executiveSummary}</p>
+            <p className="mt-3 break-words text-base leading-relaxed">
+              {insights.executiveSummary}
+            </p>
           </Card>
 
           {managerBrief && (
             <SectionCard icon={Target} title="Marketing manager brief" accent="primary">
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 {managerBrief.map((item) => (
                   <BriefCard key={item.title} title={item.title} detail={item.detail} />
                 ))}
@@ -160,18 +162,21 @@ function InsightsPage() {
 
           {/* Revenue drivers */}
           <SectionCard icon={TrendingUp} title="Revenue drivers" accent="success">
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {insights.revenueDrivers?.map((d, i) => (
-                <div key={i} className="rounded-lg border border-border/40 bg-background/40 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <h4 className="text-sm font-semibold">{d.title}</h4>
+                <div
+                  key={i}
+                  className="min-w-0 rounded-lg border border-border/40 bg-background/40 p-4"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <h4 className="min-w-0 break-words text-sm font-semibold">{d.title}</h4>
                     {d.metric && (
                       <span className="rounded-full bg-success/15 px-2 py-0.5 text-[11px] font-medium text-success">
                         {d.metric}
                       </span>
                     )}
                   </div>
-                  <p className="mt-2 text-sm text-muted-foreground">{d.detail}</p>
+                  <p className="mt-2 break-words text-sm text-muted-foreground">{d.detail}</p>
                 </div>
               ))}
             </div>
@@ -179,11 +184,14 @@ function InsightsPage() {
 
           {/* Channel performance */}
           <SectionCard icon={Target} title="Channel performance analysis" accent="primary">
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
               {insights.channelPerformance?.map((c, i) => (
-                <div key={i} className="rounded-lg border border-border/40 bg-background/40 p-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <h4 className="text-sm font-semibold">{c.channel}</h4>
+                <div
+                  key={i}
+                  className="min-w-0 rounded-lg border border-border/40 bg-background/40 p-4"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h4 className="min-w-0 break-words text-sm font-semibold">{c.channel}</h4>
                     <VerdictBadge verdict={c.verdict} />
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">{c.insight}</p>
@@ -198,16 +206,19 @@ function InsightsPage() {
 
           {/* Campaign performance */}
           <SectionCard icon={Sparkles} title="Campaign performance analysis" accent="primary">
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <div>
                 <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-success">
                   <TrendingUp className="h-3.5 w-3.5" /> Top performers
                 </div>
                 <ul className="space-y-2">
                   {insights.campaignPerformance?.top?.map((c, i) => (
-                    <li key={i} className="rounded-md border border-border/40 bg-background/40 p-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm font-medium">{c.name}</span>
+                    <li
+                      key={i}
+                      className="min-w-0 rounded-md border border-border/40 bg-background/40 p-3"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="min-w-0 break-words text-sm font-medium">{c.name}</span>
                         <span className="text-[11px] text-muted-foreground">{c.channel}</span>
                       </div>
                       <p className="mt-1 text-xs text-muted-foreground">{c.insight}</p>
@@ -221,9 +232,12 @@ function InsightsPage() {
                 </div>
                 <ul className="space-y-2">
                   {insights.campaignPerformance?.bottom?.map((c, i) => (
-                    <li key={i} className="rounded-md border border-border/40 bg-background/40 p-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm font-medium">{c.name}</span>
+                    <li
+                      key={i}
+                      className="min-w-0 rounded-md border border-border/40 bg-background/40 p-3"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="min-w-0 break-words text-sm font-medium">{c.name}</span>
                         <span className="text-[11px] text-muted-foreground">{c.channel}</span>
                       </div>
                       <p className="mt-1 text-xs text-muted-foreground">
@@ -247,10 +261,15 @@ function InsightsPage() {
               {insights.budgetAllocation?.map((b, i) => {
                 const delta = b.recommendedSharePct - b.currentSharePct;
                 return (
-                  <div key={i} className="rounded-lg border border-border/40 bg-background/40 p-4">
+                  <div
+                    key={i}
+                    className="min-w-0 rounded-lg border border-border/40 bg-background/40 p-4"
+                  >
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <span className="text-sm font-semibold">{b.channel}</span>
+                        <span className="min-w-0 break-words text-sm font-semibold">
+                          {b.channel}
+                        </span>
                         <span className="text-xs text-muted-foreground">
                           {fmtPct(b.currentSharePct / 100)} →{" "}
                           <span className="font-medium text-foreground">
@@ -277,7 +296,7 @@ function InsightsPage() {
                         style={{ width: `${Math.min(100, Math.max(0, b.recommendedSharePct))}%` }}
                       />
                     </div>
-                    <p className="mt-3 text-xs text-muted-foreground">{b.rationale}</p>
+                    <p className="mt-3 break-words text-xs text-muted-foreground">{b.rationale}</p>
                     <p className="mt-1 text-xs">
                       <span className="font-medium text-success">Expected impact: </span>
                       <span className="text-muted-foreground">{b.expectedImpact}</span>
@@ -290,11 +309,14 @@ function InsightsPage() {
 
           {/* Risks */}
           <SectionCard icon={AlertTriangle} title="Risk analysis" accent="destructive">
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {insights.risks?.map((r, i) => (
-                <div key={i} className="rounded-lg border border-border/40 bg-background/40 p-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <h4 className="text-sm font-semibold">{r.title}</h4>
+                <div
+                  key={i}
+                  className="min-w-0 rounded-lg border border-border/40 bg-background/40 p-4"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h4 className="min-w-0 break-words text-sm font-semibold">{r.title}</h4>
                     <SeverityBadge severity={r.severity} />
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">{r.description}</p>
@@ -309,11 +331,14 @@ function InsightsPage() {
 
           {/* Growth opportunities */}
           <SectionCard icon={Lightbulb} title="Growth opportunities" accent="primary">
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {insights.growthOpportunities?.map((g, i) => (
-                <div key={i} className="rounded-lg border border-border/40 bg-background/40 p-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <h4 className="text-sm font-semibold">{g.title}</h4>
+                <div
+                  key={i}
+                  className="min-w-0 rounded-lg border border-border/40 bg-background/40 p-4"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h4 className="min-w-0 break-words text-sm font-semibold">{g.title}</h4>
                     <EffortBadge effort={g.effort} />
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">{g.description}</p>
@@ -330,7 +355,10 @@ function InsightsPage() {
           <SectionCard icon={ListChecks} title="Action plan" accent="success">
             <div className="space-y-3">
               {insights.actionPlan?.map((item, i) => (
-                <div key={i} className="rounded-lg border border-border/40 bg-background/40 p-4">
+                <div
+                  key={i}
+                  className="min-w-0 rounded-lg border border-border/40 bg-background/40 p-4"
+                >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
                       <PriorityBadge priority={item.priority} />
@@ -338,7 +366,7 @@ function InsightsPage() {
                     </div>
                     <span className="text-xs font-medium text-muted-foreground">{item.owner}</span>
                   </div>
-                  <p className="mt-3 text-sm">{item.action}</p>
+                  <p className="mt-3 break-words text-sm">{item.action}</p>
                   <p className="mt-2 text-xs">
                     <span className="font-medium text-success">KPI: </span>
                     <span className="text-muted-foreground">{item.kpi}</span>
@@ -604,10 +632,10 @@ function buildManagerBrief(summary: Summary, insights: InsightsResponse) {
 
 function Stat({ label, value, delta }: { label: string; value: string; delta?: number }) {
   return (
-    <Card className="bg-gradient-card border-border/60 p-4">
+    <Card className="bg-gradient-card border-border/60 min-w-0 p-4">
       <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
       <div className="mt-1 flex items-baseline gap-2">
-        <div className="text-xl font-bold">{value}</div>
+        <div className="break-words text-xl font-bold">{value}</div>
         {typeof delta === "number" && delta !== 0 && (
           <span
             className={`text-[11px] font-medium ${delta > 0 ? "text-success" : "text-destructive"}`}
@@ -623,9 +651,9 @@ function Stat({ label, value, delta }: { label: string; value: string; delta?: n
 
 function BriefCard({ title, detail }: { title: string; detail: string }) {
   return (
-    <div className="rounded-lg border border-border/40 bg-background/40 p-4">
+    <div className="min-w-0 rounded-lg border border-border/40 bg-background/40 p-4">
       <h4 className="text-sm font-semibold">{title}</h4>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{detail}</p>
+      <p className="mt-2 break-words text-sm leading-relaxed text-muted-foreground">{detail}</p>
     </div>
   );
 }
@@ -648,7 +676,7 @@ function SectionCard({
     destructive: "bg-destructive/15 text-destructive",
   };
   return (
-    <Card className="bg-gradient-card border-border/60 p-5">
+    <Card className="bg-gradient-card border-border/60 min-w-0 p-5">
       <div className="mb-4 flex items-center gap-3">
         <div className={`grid h-9 w-9 place-items-center rounded-lg ${accentBg[accent]}`}>
           <Icon className="h-4 w-4" />

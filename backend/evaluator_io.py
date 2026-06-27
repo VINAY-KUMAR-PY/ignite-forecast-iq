@@ -315,6 +315,13 @@ def generate_offline_causal_summary(
 
     top_channel = channel_summary.index[0] if not channel_summary.empty else "primary channel"
     top_roas = safe_float(channel_summary["roas"].iloc[0]) if not channel_summary.empty else 0.0
+    weakest_channel = channel_summary.index[-1] if not channel_summary.empty else top_channel
+    weakest_roas = safe_float(channel_summary["roas"].iloc[-1]) if not channel_summary.empty else 0.0
+    top_revenue_channel = (
+        frame.groupby("channel")[["revenue"]].sum().sort_values("revenue", ascending=False).index[0]
+        if "channel" in frame and not frame.empty
+        else top_channel
+    )
 
     try:
         anomalies = detect_anomalies(frame)
@@ -392,6 +399,8 @@ def generate_offline_causal_summary(
         *([planned_budget_note] if planned_budget_note else []),
         f"Leading channel by ROAS: {top_channel} at {top_roas:.2f}x - "
         "likely driven by stronger conversion quality or lower CPC in this channel.",
+        f"Leading channel by revenue: {top_revenue_channel}; highest-risk channel by ROAS: "
+        f"{weakest_channel} at {weakest_roas:.2f}x.",
         f"30-day forecast: expected revenue ${forecast_rev_30:,.0f} at {forecast_roas_30:.2f}x ROAS.",
         "Anomaly signals (top 3, used as forecast evidence):",
         *anomaly_lines,
@@ -403,6 +412,10 @@ def generate_offline_causal_summary(
         "uncertainty from these detected signals and auction dynamics.",
         "Action: if blended ROAS is above target, test incremental budget in the leading "
         "channel before reallocating away from stable performers.",
+        f"Budget recommendation: test a controlled shift toward {top_channel} while reviewing "
+        f"{weakest_channel} campaigns for wasted spend, weak conversion quality, or rising CPC.",
+        "Uncertainty warning: treat wider 60 and 90-day intervals as planning ranges, not exact "
+        "targets, because thinner segment history and residual volatility compound over longer horizons.",
     ]
 
     # Optional: attempt to enrich the summary with an LLM call.
@@ -448,9 +461,11 @@ def generate_offline_causal_summary(
         lines.append("")
         lines.append("=== AI Strategic Recommendation ===")
         lines.append(
-            "[Live AI enrichment available: set GEMINI_API_KEY or GOOGLE_API_KEY environment variable "
-            "before running run.sh to append a Gemini-generated strategic recommendation to this summary. "
-            "The evaluator contract and predictions.csv are unaffected by this setting.]"
+            f"Offline recommendation: prioritize {top_channel}, the strongest ROAS channel, while "
+            f"tightening {weakest_channel}, the highest-risk channel in this dataset. Keep the next "
+            "budget move small enough to validate inside the 30-day forecast band before using the "
+            "wider 60 and 90-day planning ranges. Live Gemini enrichment is optional and does not "
+            "affect predictions.csv."
         )
 
     return "\n".join(lines)

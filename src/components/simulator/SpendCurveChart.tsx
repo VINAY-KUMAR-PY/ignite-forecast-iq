@@ -58,7 +58,7 @@ export function SpendCurveChart({
 
   return (
     <>
-      <div className="mt-4 h-56">
+      <div className="mt-4 h-56 min-w-0 max-w-full overflow-hidden">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={chartData} margin={{ left: -12, right: 8, top: 8 }}>
             <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" />
@@ -115,6 +115,9 @@ export function SpendCurveChart({
           <span className="font-semibold text-foreground">{fmtRoas(marginalRoas)}</span>
         </p>
       )}
+      <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+        Shaded band shows estimated uncertainty from historical volatility and segment sample size.
+      </p>
     </>
   );
 }

@@ -89,9 +89,12 @@ function UploadPage() {
         }
       />
 
-      <Card data-testid="judge-demo-path" className="mb-6 border-primary/20 bg-primary/5 p-5">
+      <Card
+        data-testid="judge-demo-path"
+        className="mb-6 min-w-0 border-primary/20 bg-primary/5 p-5"
+      >
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2 text-sm font-semibold">
               <PlayCircle className="h-4 w-4 text-primary" /> Judge demo path
             </div>
@@ -100,7 +103,7 @@ function UploadPage() {
               Simulator, and AI Insights. This gives judges the full story in under two minutes.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex min-w-0 flex-wrap gap-2">
             <Button
               variant="hero"
               onClick={() => {
@@ -118,7 +121,7 @@ function UploadPage() {
       </Card>
 
       <Card
-        className={`bg-gradient-card border-2 border-dashed p-10 text-center transition ${
+        className={`bg-gradient-card min-w-0 border-2 border-dashed p-6 text-center transition sm:p-10 ${
           dragging ? "border-primary bg-accent/30" : "border-border/60"
         }`}
         onDragOver={(e) => {
@@ -157,15 +160,15 @@ function UploadPage() {
         </Button>
       </Card>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
-        <Card className="bg-gradient-card border-border/60 p-4">
+      <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Card className="bg-gradient-card border-border/60 min-w-0 p-4">
           <div className="text-xs uppercase tracking-wider text-muted-foreground">Loaded rows</div>
           <div className="mt-1 text-2xl font-bold">{rows.length.toLocaleString()}</div>
           <div className="mt-1 text-xs text-muted-foreground">
             {isDemo ? "Demo dataset" : "Uploaded dataset"}
           </div>
         </Card>
-        <Card className="bg-gradient-card border-border/60 p-4">
+        <Card className="bg-gradient-card border-border/60 min-w-0 p-4">
           <div className="text-xs uppercase tracking-wider text-muted-foreground">
             Last import — valid
           </div>
@@ -174,7 +177,7 @@ function UploadPage() {
             of {result?.totalRows ?? "—"} parsed
           </div>
         </Card>
-        <Card className="bg-gradient-card border-border/60 p-4">
+        <Card className="bg-gradient-card border-border/60 min-w-0 p-4">
           <div className="text-xs uppercase tracking-wider text-muted-foreground">
             Issues detected
           </div>
@@ -192,12 +195,12 @@ function UploadPage() {
       </div>
 
       {result && result.issues.length > 0 && (
-        <Card className="mt-6 border-warning/40 bg-warning/5 p-5">
+        <Card className="mt-6 min-w-0 border-warning/40 bg-warning/5 p-5">
           <div className="flex items-center gap-2 text-sm font-semibold text-warning">
             <AlertCircle className="h-4 w-4" /> {result.issues.length} validation issues
           </div>
-          <div className="mt-3 max-h-56 overflow-y-auto rounded-md border border-border/60 bg-background/50">
-            <table className="w-full text-xs">
+          <div className="mt-3 max-h-56 overflow-x-auto overflow-y-auto rounded-md border border-border/60 bg-background/50">
+            <table className="min-w-[520px] w-full text-xs">
               <thead className="sticky top-0 bg-muted/50">
                 <tr>
                   <th className="px-3 py-2 text-left">Row</th>
@@ -220,12 +223,12 @@ function UploadPage() {
       )}
 
       {rows.length > 0 && (
-        <Card className="mt-6 bg-gradient-card border-border/60 p-5">
+        <Card className="mt-6 bg-gradient-card border-border/60 min-w-0 p-5">
           <div className="flex items-center gap-2 text-sm font-semibold">
             <CheckCircle2 className="h-4 w-4 text-success" /> Data preview (first 20 rows)
           </div>
           <div className="mt-3 max-h-96 overflow-auto rounded-md border border-border/60">
-            <table className="w-full text-xs">
+            <table className="min-w-[860px] w-full text-xs">
               <thead className="sticky top-0 bg-muted/50">
                 <tr>
                   {[

@@ -346,7 +346,7 @@ function Dashboard() {
         />
       </div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
         <ExecutiveMetric
           label="30d forecasted revenue"
           value={fmtCurrency(stats.executive.forecast30Revenue)}
@@ -411,7 +411,7 @@ function Dashboard() {
             </span>
           </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-6">
           <ImpactMetric
             label="Best budget action"
             value={stats.executive.bestBudgetAction}
@@ -443,7 +443,7 @@ function Dashboard() {
             hint="based on history and trend stability"
           />
         </div>
-        <div className="mt-5 grid gap-4 lg:grid-cols-3">
+        <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
           <div className="rounded-lg border border-border/40 bg-background/40 p-4 lg:col-span-1">
             <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
               <CheckCircle2 className="h-3.5 w-3.5" /> Top next actions
@@ -487,7 +487,7 @@ function Dashboard() {
           </div>
           <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
         </div>
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <ImpactMetric
             label="30d revenue impact"
             value={fmtCurrency(stats.businessImpact.last30Revenue)}
@@ -511,7 +511,7 @@ function Dashboard() {
         </div>
       </Card>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+      <div className="mt-6 grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
         <ChartCard title="Revenue trend" subtitle="Daily revenue over time">
           <ResponsiveContainer width="100%" height={260}>
             <AreaChart data={dailySample} margin={{ left: -10, right: 8, top: 8 }}>
@@ -627,28 +627,30 @@ function Dashboard() {
         </ChartCard>
       </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-3">
+      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
         {stats.channels.map((c, i) => (
-          <Card key={c.name} className="bg-gradient-card border-border/60 p-5">
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-semibold">{c.name}</div>
+          <Card key={c.name} className="bg-gradient-card border-border/60 min-w-0 p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0 break-words text-sm font-semibold">{c.name}</div>
               <div
                 className="h-2 w-2 rounded-full"
                 style={{ background: COLORS[i % COLORS.length] }}
               />
             </div>
-            <div className="mt-3 grid grid-cols-3 gap-3 text-xs">
-              <div>
+            <div className="mt-3 grid grid-cols-1 gap-3 text-xs sm:grid-cols-3">
+              <div className="min-w-0">
                 <div className="text-muted-foreground">Revenue</div>
-                <div className="mt-1 text-sm font-semibold">{fmtCompact(c.revenue)}</div>
+                <div className="mt-1 break-words text-sm font-semibold">
+                  {fmtCompact(c.revenue)}
+                </div>
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="text-muted-foreground">Spend</div>
-                <div className="mt-1 text-sm font-semibold">{fmtCompact(c.spend)}</div>
+                <div className="mt-1 break-words text-sm font-semibold">{fmtCompact(c.spend)}</div>
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="text-muted-foreground">ROAS</div>
-                <div className="mt-1 text-sm font-semibold">{fmtRoas(c.roas)}</div>
+                <div className="mt-1 break-words text-sm font-semibold">{fmtRoas(c.roas)}</div>
               </div>
             </div>
           </Card>
@@ -670,12 +672,12 @@ function ExecutiveMetric({
   icon: LucideIcon;
 }) {
   return (
-    <Card className="bg-gradient-card border-border/60 p-4">
+    <Card className="bg-gradient-card border-border/60 min-w-0 p-4">
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
-          <div className="mt-1 text-lg font-semibold leading-tight">{value}</div>
-          <div className="mt-1 text-xs text-muted-foreground">{hint}</div>
+          <div className="mt-1 break-words text-lg font-semibold leading-tight">{value}</div>
+          <div className="mt-1 break-words text-xs text-muted-foreground">{hint}</div>
         </div>
         <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
           <Icon className="h-4 w-4" />
@@ -687,10 +689,10 @@ function ExecutiveMetric({
 
 function ImpactMetric({ label, value, hint }: { label: string; value: string; hint: string }) {
   return (
-    <div className="rounded-lg border border-border/40 bg-background/40 p-4">
+    <div className="min-w-0 rounded-lg border border-border/40 bg-background/40 p-4">
       <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className="mt-1 text-lg font-semibold leading-tight">{value}</div>
-      <div className="mt-1 text-xs text-muted-foreground">{hint}</div>
+      <div className="mt-1 break-words text-lg font-semibold leading-tight">{value}</div>
+      <div className="mt-1 break-words text-xs text-muted-foreground">{hint}</div>
     </div>
   );
 }
@@ -710,7 +712,7 @@ function AlertList({
 }) {
   const color = tone === "risk" ? "text-warning" : "text-success";
   return (
-    <div className="rounded-lg border border-border/40 bg-background/40 p-4">
+    <div className="min-w-0 rounded-lg border border-border/40 bg-background/40 p-4">
       <div
         className={`mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider ${color}`}
       >
@@ -718,7 +720,7 @@ function AlertList({
       </div>
       <div className="space-y-2">
         {(items.length ? items : [empty]).map((item) => (
-          <div key={item} className="text-sm text-muted-foreground">
+          <div key={item} className="break-words text-sm text-muted-foreground">
             {item}
           </div>
         ))}
@@ -757,7 +759,7 @@ function ChartCard({
   children: React.ReactNode;
 }) {
   return (
-    <Card className="bg-gradient-card border-border/60 p-5">
+    <Card className="bg-gradient-card border-border/60 min-w-0 overflow-hidden p-5">
       <div className="mb-4">
         <h3 className="text-sm font-semibold">{title}</h3>
         {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}

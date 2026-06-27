@@ -30,6 +30,7 @@ const currency = (value: number) =>
 
 const roas = (value: number) => `${value.toFixed(2)}x`;
 const today = () => new Date().toISOString().slice(0, 10);
+const timestamp = () => new Date().toISOString();
 
 export function exportExecutivePdfReport(
   summary: ExecutiveReportSummary,
@@ -129,12 +130,27 @@ export function exportExecutivePdfReport(
 }
 
 function downloadTextReport(summary: ExecutiveReportSummary, insights: InsightsResponse) {
+  const primaryRecommendation =
+    insights.actionPlan?.[0]?.action ??
+    insights.budgetAllocation?.[0]?.rationale ??
+    "Review budget scenarios and monitor forecast interval width before changing spend.";
   const lines = [
     "ForecastIQ Executive Briefing",
-    `Date: ${today()}`,
+    `Generated: ${timestamp()}`,
     "",
     "Executive Summary",
     insights.executiveSummary,
+    "",
+    "Forecast Summary",
+    `30-day revenue forecast: ${currency(summary.forecast30dRevenue)}`,
+    `60-day revenue forecast: ${currency(summary.forecast60dRevenue ?? 0)}`,
+    `90-day revenue forecast: ${currency(summary.forecast90dRevenue ?? 0)}`,
+    `Average ROAS: ${roas(summary.avgRoas)}`,
+    `Revenue trend: ${summary.revenueTrendPct.toFixed(1)}%`,
+    `ROAS trend: ${summary.roasTrendPct.toFixed(1)}%`,
+    "",
+    "Key Recommendation",
+    primaryRecommendation,
     "",
     "KPI Summary",
     `Revenue: ${currency(summary.totalRevenue)}`,

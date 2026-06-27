@@ -17,17 +17,17 @@ export function KpiCard({
 }) {
   const positive = (delta ?? 0) >= 0;
   return (
-    <Card className="bg-gradient-card border-border/60 p-5">
-      <div className="flex items-start justify-between">
-        <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+    <Card className="bg-gradient-card border-border/60 min-w-0 p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 break-words text-xs font-medium uppercase tracking-wider text-muted-foreground">
           {label}
         </div>
         <div className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-brand shadow-glow">
           <Icon className="h-4 w-4 text-primary-foreground" />
         </div>
       </div>
-      <div className="mt-3 text-3xl font-bold tracking-tight">{value}</div>
-      <div className="mt-2 flex items-center gap-2 text-xs">
+      <div className="mt-3 break-words text-3xl font-bold tracking-tight">{value}</div>
+      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
         {delta !== undefined && (
           <span
             className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium ${
@@ -38,7 +38,7 @@ export function KpiCard({
             {Math.abs(delta).toFixed(1)}%
           </span>
         )}
-        {hint && <span className="text-muted-foreground">{hint}</span>}
+        {hint && <span className="min-w-0 break-words text-muted-foreground">{hint}</span>}
       </div>
     </Card>
   );

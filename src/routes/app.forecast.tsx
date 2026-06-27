@@ -152,9 +152,9 @@ function ForecastPage() {
         }
       />
 
-      <Card className="bg-gradient-card border-border/60 mb-6 p-5">
-        <div className="grid gap-4 md:grid-cols-3">
-          <div>
+      <Card className="bg-gradient-card border-border/60 mb-6 min-w-0 p-5">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="min-w-0">
             <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Horizon
             </label>
@@ -172,7 +172,7 @@ function ForecastPage() {
               </SelectContent>
             </Select>
           </div>
-          <div>
+          <div className="min-w-0">
             <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Level
             </label>
@@ -194,7 +194,7 @@ function ForecastPage() {
               </SelectContent>
             </Select>
           </div>
-          <div>
+          <div className="min-w-0">
             <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Filter
             </label>
@@ -242,7 +242,7 @@ function ForecastPage() {
 
       <Card
         data-testid="confidence-intervals"
-        className="mt-6 bg-gradient-card border-border/60 p-5"
+        className="mt-6 bg-gradient-card border-border/60 min-w-0 p-5"
       >
         <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -265,7 +265,7 @@ function ForecastPage() {
             )}
           </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <DiagnosticStat
             label="Revenue interval width"
             value={fmtCurrency(revenueIntervalWidth)}
@@ -284,7 +284,7 @@ function ForecastPage() {
       </Card>
 
       <div className="mt-6 grid gap-4">
-        <Card className="bg-gradient-card border-border/60 p-5">
+        <Card className="bg-gradient-card border-border/60 min-w-0 overflow-hidden p-5">
           <div className="mb-3 flex items-start justify-between gap-3">
             <div>
               <h3 className="text-sm font-semibold">Revenue forecast</h3>
@@ -296,85 +296,87 @@ function ForecastPage() {
               95% CI
             </span>
           </div>
-          <ResponsiveContainer width="100%" height={340}>
-            <ComposedChart data={revData} margin={{ left: -10, right: 8, top: 8 }}>
-              <defs>
-                <linearGradient id="revBand" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stopColor="var(--color-chart-1)" stopOpacity={0.32} />
-                  <stop offset="100%" stopColor="var(--color-chart-1)" stopOpacity={0.06} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" />
-              <XAxis
-                dataKey="date"
-                tickFormatter={fmtDate}
-                stroke="var(--color-muted-foreground)"
-                fontSize={11}
-                minTickGap={50}
-              />
-              <YAxis
-                stroke="var(--color-muted-foreground)"
-                fontSize={11}
-                tickFormatter={(v) => fmtCompact(v as number)}
-              />
-              <Tooltip content={<TT formatter={fmtCurrency} />} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Area
-                type="monotone"
-                dataKey="range"
-                stroke="none"
-                fill="url(#revBand)"
-                name="95% confidence band"
-                isAnimationActive={false}
-                activeDot={false}
-                legendType="rect"
-              />
-              <Line
-                type="monotone"
-                dataKey="historical"
-                stroke="var(--color-chart-2)"
-                strokeWidth={2}
-                dot={false}
-                isAnimationActive={false}
-                name="Historical"
-              />
-              <Line
-                type="monotone"
-                dataKey="forecast"
-                stroke="var(--color-chart-1)"
-                strokeWidth={2}
-                strokeDasharray="5 4"
-                dot={false}
-                isAnimationActive={false}
-                name="Expected forecast"
-              />
-              <Line
-                type="monotone"
-                dataKey="upper"
-                stroke="var(--color-chart-1)"
-                strokeWidth={1}
-                strokeDasharray="2 3"
-                strokeOpacity={0.6}
-                dot={false}
-                isAnimationActive={false}
-                name="Upper bound"
-              />
-              <Line
-                type="monotone"
-                dataKey="lower"
-                stroke="var(--color-chart-1)"
-                strokeWidth={1}
-                strokeDasharray="2 3"
-                strokeOpacity={0.6}
-                dot={false}
-                isAnimationActive={false}
-                name="Lower bound"
-              />
-            </ComposedChart>
-          </ResponsiveContainer>
+          <div className="min-w-0 max-w-full overflow-hidden">
+            <ResponsiveContainer width="100%" height={340}>
+              <ComposedChart data={revData} margin={{ left: -10, right: 8, top: 8 }}>
+                <defs>
+                  <linearGradient id="revBand" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor="var(--color-chart-1)" stopOpacity={0.32} />
+                    <stop offset="100%" stopColor="var(--color-chart-1)" stopOpacity={0.06} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={fmtDate}
+                  stroke="var(--color-muted-foreground)"
+                  fontSize={11}
+                  minTickGap={50}
+                />
+                <YAxis
+                  stroke="var(--color-muted-foreground)"
+                  fontSize={11}
+                  tickFormatter={(v) => fmtCompact(v as number)}
+                />
+                <Tooltip content={<TT formatter={fmtCurrency} />} />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
+                <Area
+                  type="monotone"
+                  dataKey="range"
+                  stroke="none"
+                  fill="url(#revBand)"
+                  name="95% confidence band"
+                  isAnimationActive={false}
+                  activeDot={false}
+                  legendType="rect"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="historical"
+                  stroke="var(--color-chart-2)"
+                  strokeWidth={2}
+                  dot={false}
+                  isAnimationActive={false}
+                  name="Historical"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="forecast"
+                  stroke="var(--color-chart-1)"
+                  strokeWidth={2}
+                  strokeDasharray="5 4"
+                  dot={false}
+                  isAnimationActive={false}
+                  name="Expected forecast"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="upper"
+                  stroke="var(--color-chart-1)"
+                  strokeWidth={1}
+                  strokeDasharray="2 3"
+                  strokeOpacity={0.6}
+                  dot={false}
+                  isAnimationActive={false}
+                  name="Upper bound"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="lower"
+                  stroke="var(--color-chart-1)"
+                  strokeWidth={1}
+                  strokeDasharray="2 3"
+                  strokeOpacity={0.6}
+                  dot={false}
+                  isAnimationActive={false}
+                  name="Lower bound"
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
         </Card>
 
-        <Card className="bg-gradient-card border-border/60 p-5">
+        <Card className="bg-gradient-card border-border/60 min-w-0 overflow-hidden p-5">
           <div className="mb-3 flex items-start justify-between gap-3">
             <div>
               <h3 className="text-sm font-semibold">ROAS forecast</h3>
@@ -386,82 +388,84 @@ function ForecastPage() {
               95% CI
             </span>
           </div>
-          <ResponsiveContainer width="100%" height={280}>
-            <ComposedChart data={roasData} margin={{ left: -10, right: 8, top: 8 }}>
-              <defs>
-                <linearGradient id="roasBand" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stopColor="var(--color-chart-2)" stopOpacity={0.28} />
-                  <stop offset="100%" stopColor="var(--color-chart-2)" stopOpacity={0.05} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" />
-              <XAxis
-                dataKey="date"
-                tickFormatter={fmtDate}
-                stroke="var(--color-muted-foreground)"
-                fontSize={11}
-                minTickGap={50}
-              />
-              <YAxis
-                stroke="var(--color-muted-foreground)"
-                fontSize={11}
-                tickFormatter={(v) => `${(v as number).toFixed(1)}x`}
-              />
-              <Tooltip content={<TT formatter={(v: number) => `${v.toFixed(2)}x`} />} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Area
-                type="monotone"
-                dataKey="range"
-                stroke="none"
-                fill="url(#roasBand)"
-                name="95% confidence band"
-                isAnimationActive={false}
-                activeDot={false}
-                legendType="rect"
-              />
-              <Line
-                type="monotone"
-                dataKey="historical"
-                stroke="var(--color-chart-3)"
-                strokeWidth={2}
-                dot={false}
-                isAnimationActive={false}
-                name="Historical"
-              />
-              <Line
-                type="monotone"
-                dataKey="forecast"
-                stroke="var(--color-chart-2)"
-                strokeWidth={2}
-                strokeDasharray="5 4"
-                dot={false}
-                isAnimationActive={false}
-                name="Expected forecast"
-              />
-              <Line
-                type="monotone"
-                dataKey="upper"
-                stroke="var(--color-chart-2)"
-                strokeWidth={1}
-                strokeDasharray="2 3"
-                strokeOpacity={0.6}
-                dot={false}
-                isAnimationActive={false}
-                name="Upper bound"
-              />
-              <Line
-                type="monotone"
-                dataKey="lower"
-                stroke="var(--color-chart-2)"
-                strokeWidth={1}
-                strokeDasharray="2 3"
-                strokeOpacity={0.6}
-                dot={false}
-                isAnimationActive={false}
-                name="Lower bound"
-              />
-            </ComposedChart>
-          </ResponsiveContainer>
+          <div className="min-w-0 max-w-full overflow-hidden">
+            <ResponsiveContainer width="100%" height={280}>
+              <ComposedChart data={roasData} margin={{ left: -10, right: 8, top: 8 }}>
+                <defs>
+                  <linearGradient id="roasBand" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor="var(--color-chart-2)" stopOpacity={0.28} />
+                    <stop offset="100%" stopColor="var(--color-chart-2)" stopOpacity={0.05} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={fmtDate}
+                  stroke="var(--color-muted-foreground)"
+                  fontSize={11}
+                  minTickGap={50}
+                />
+                <YAxis
+                  stroke="var(--color-muted-foreground)"
+                  fontSize={11}
+                  tickFormatter={(v) => `${(v as number).toFixed(1)}x`}
+                />
+                <Tooltip content={<TT formatter={(v: number) => `${v.toFixed(2)}x`} />} />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
+                <Area
+                  type="monotone"
+                  dataKey="range"
+                  stroke="none"
+                  fill="url(#roasBand)"
+                  name="95% confidence band"
+                  isAnimationActive={false}
+                  activeDot={false}
+                  legendType="rect"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="historical"
+                  stroke="var(--color-chart-3)"
+                  strokeWidth={2}
+                  dot={false}
+                  isAnimationActive={false}
+                  name="Historical"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="forecast"
+                  stroke="var(--color-chart-2)"
+                  strokeWidth={2}
+                  strokeDasharray="5 4"
+                  dot={false}
+                  isAnimationActive={false}
+                  name="Expected forecast"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="upper"
+                  stroke="var(--color-chart-2)"
+                  strokeWidth={1}
+                  strokeDasharray="2 3"
+                  strokeOpacity={0.6}
+                  dot={false}
+                  isAnimationActive={false}
+                  name="Upper bound"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="lower"
+                  stroke="var(--color-chart-2)"
+                  strokeWidth={1}
+                  strokeDasharray="2 3"
+                  strokeOpacity={0.6}
+                  dot={false}
+                  isAnimationActive={false}
+                  name="Lower bound"
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
         </Card>
       </div>
 
@@ -469,7 +473,7 @@ function ForecastPage() {
         <>
           <Card
             data-testid="accuracy-dashboard"
-            className="mt-6 bg-gradient-card border-border/60 p-5"
+            className="mt-6 bg-gradient-card border-border/60 min-w-0 p-5"
           >
             <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
               <div>
@@ -482,7 +486,7 @@ function ForecastPage() {
                 {diagnostics.trainingDays} training days
               </span>
             </div>
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <AccuracyPanel title="Revenue model" metrics={diagnostics.revenueAccuracy} money />
               <AccuracyPanel title="ROAS model" metrics={diagnostics.roasAccuracy} />
             </div>
@@ -490,7 +494,7 @@ function ForecastPage() {
 
           <Card
             data-testid="explainability-center"
-            className="mt-6 bg-gradient-card border-border/60 p-5"
+            className="mt-6 bg-gradient-card border-border/60 min-w-0 p-5"
           >
             <div className="mb-4 flex items-center gap-2">
               <Brain className="h-4 w-4 text-primary" />
@@ -501,7 +505,7 @@ function ForecastPage() {
                 </p>
               </div>
             </div>
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <ExplanationCard title="Revenue explanation" text={diagnostics.revenueExplanation} />
               <ExplanationCard title="ROAS explanation" text={diagnostics.roasExplanation} />
               <FeatureList title="Top revenue drivers" features={diagnostics.topRevenueFeatures} />
@@ -512,7 +516,7 @@ function ForecastPage() {
 
           <Card
             data-testid="why-this-forecast"
-            className="mt-6 bg-gradient-card border-border/60 p-5"
+            className="mt-6 bg-gradient-card border-border/60 min-w-0 p-5"
           >
             <div className="mb-4 flex items-center gap-2">
               <Brain className="h-4 w-4 text-primary" />
@@ -529,7 +533,7 @@ function ForecastPage() {
               {diagnostics.whyThisForecastSummary ||
                 "Local driver estimates are unavailable for this segment."}
             </p>
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <LocalDriverList
                 title="Top positive drivers"
                 direction="positive"
@@ -545,7 +549,7 @@ function ForecastPage() {
 
           <Card
             data-testid="executive-business-brief"
-            className="mt-6 bg-gradient-card border-border/60 p-5"
+            className="mt-6 bg-gradient-card border-border/60 min-w-0 p-5"
           >
             <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
               <div>
@@ -558,7 +562,7 @@ function ForecastPage() {
                 model brief
               </span>
             </div>
-            <div className="grid gap-4 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
               <BriefList
                 title="Risks"
                 icon={AlertTriangle}
@@ -582,7 +586,7 @@ function ForecastPage() {
 
           <Card
             data-testid="model-diagnostics"
-            className="mt-6 bg-gradient-card border-border/60 p-5"
+            className="mt-6 bg-gradient-card border-border/60 min-w-0 p-5"
           >
             <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
               <div>
@@ -595,7 +599,7 @@ function ForecastPage() {
                 XGBoost diagnostics
               </span>
             </div>
-            <div className="grid gap-4 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               <DiagnosticStat
                 label="Revenue MAPE"
                 value={`${diagnostics.revenueFitMapePct.toFixed(1)}%`}
@@ -703,11 +707,11 @@ function AccuracyPanel({
 }) {
   const formatValue = (value: number) => (money ? fmtCurrency(value) : value.toFixed(2));
   return (
-    <div className="rounded-lg border border-border/40 bg-background/40 p-4">
+    <div className="min-w-0 rounded-lg border border-border/40 bg-background/40 p-4">
       <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         {title}
       </h4>
-      <div className="mt-3 grid grid-cols-2 gap-3">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <MiniMetric label="MAE" value={formatValue(metrics.mae)} />
         <MiniMetric label="RMSE" value={formatValue(metrics.rmse)} />
         <MiniMetric label="MAPE" value={`${metrics.mapePct.toFixed(1)}%`} />
@@ -719,20 +723,20 @@ function AccuracyPanel({
 
 function MiniMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div>
+    <div className="min-w-0">
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className="mt-0.5 text-base font-semibold">{value}</div>
+      <div className="mt-0.5 break-words text-base font-semibold">{value}</div>
     </div>
   );
 }
 
 function ExplanationCard({ title, text }: { title: string; text: string }) {
   return (
-    <div className="rounded-lg border border-border/40 bg-background/40 p-4">
+    <div className="min-w-0 rounded-lg border border-border/40 bg-background/40 p-4">
       <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         {title}
       </h4>
-      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{text}</p>
+      <p className="mt-3 break-words text-sm leading-relaxed text-muted-foreground">{text}</p>
     </div>
   );
 }
@@ -754,7 +758,7 @@ function BriefList({
     destructive: "bg-destructive/15 text-destructive",
   }[tone];
   return (
-    <div className="rounded-lg border border-border/40 bg-background/40 p-4">
+    <div className="min-w-0 rounded-lg border border-border/40 bg-background/40 p-4">
       <div className="flex items-center gap-2">
         <span className={`grid h-8 w-8 place-items-center rounded-lg ${toneClass}`}>
           <Icon className="h-4 w-4" />
@@ -776,9 +780,9 @@ function BriefList({
 
 function DiagnosticStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-border/40 bg-background/40 p-3">
+    <div className="min-w-0 rounded-lg border border-border/40 bg-background/40 p-3">
       <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className="mt-1 text-lg font-semibold">{value}</div>
+      <div className="mt-1 break-words text-lg font-semibold">{value}</div>
     </div>
   );
 }
@@ -791,7 +795,7 @@ function FeatureList({
   features: Array<{ feature: string; importance: number; label?: string | null }>;
 }) {
   return (
-    <div className="rounded-lg border border-border/40 bg-background/40 p-4">
+    <div className="min-w-0 rounded-lg border border-border/40 bg-background/40 p-4">
       <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         {title}
       </h4>
@@ -799,7 +803,7 @@ function FeatureList({
         {features.map((feature) => (
           <div key={feature.feature}>
             <div className="mb-1 flex items-center justify-between gap-3 text-xs">
-              <span className="capitalize">
+              <span className="min-w-0 break-words capitalize">
                 {(feature.label || feature.feature).replaceAll("_", " ")}
               </span>
               <span className="font-medium">{feature.importance.toFixed(1)}%</span>
@@ -831,7 +835,7 @@ function ShapImportanceList({
   const maxImpact = Math.max(1, ...features.map((feature) => Math.abs(feature.shap_value)));
 
   return (
-    <div className="rounded-lg border border-border/40 bg-background/40 p-4 lg:col-span-2">
+    <div className="min-w-0 rounded-lg border border-border/40 bg-background/40 p-4 lg:col-span-2">
       <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         Global feature attribution
       </h4>
@@ -845,7 +849,7 @@ function ShapImportanceList({
             return (
               <div key={`${feature.feature}-${feature.direction}`}>
                 <div className="mb-1 flex items-center justify-between gap-3 text-xs">
-                  <span className="capitalize">
+                  <span className="min-w-0 break-words capitalize">
                     {(feature.label || feature.feature).replaceAll("_", " ")}
                   </span>
                   <span className={positive ? "text-success" : "text-amber-500"}>
@@ -901,7 +905,7 @@ function LocalDriverList({
   const maxImpact = Math.max(1, ...filtered.map((driver) => driver.impact));
 
   return (
-    <div className="rounded-lg border border-border/40 bg-background/40 p-4">
+    <div className="min-w-0 rounded-lg border border-border/40 bg-background/40 p-4">
       <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         {title}
       </h4>
@@ -909,9 +913,9 @@ function LocalDriverList({
         {filtered.length ? (
           filtered.map((driver) => (
             <div key={`${driver.direction}-${driver.feature}`}>
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="text-sm font-medium">{driver.label}</div>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="break-words text-sm font-medium">{driver.label}</div>
                   <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                     {driver.explanation}
                   </p>

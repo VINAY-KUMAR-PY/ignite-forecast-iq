@@ -67,9 +67,12 @@ def _fallback_insights(summary: Dict[str, Any]) -> InsightsResponse:
     driver_evidence = summary.get("driverEvidence") or []
 
     ranked_channels = sorted(channels, key=lambda c: float(c.get("roas") or 0), reverse=True)
+    revenue_ranked_channels = sorted(channels, key=lambda c: float(c.get("revenue") or 0), reverse=True)
     under_channels = sorted(channels, key=lambda c: float(c.get("roas") or 0))
     best = ranked_channels[0] if ranked_channels else {"name": "Primary channel", "roas": 0, "revenue": 0}
+    top_revenue_channel = revenue_ranked_channels[0] if revenue_ranked_channels else best
     weakest = under_channels[0] if under_channels else best
+    riskiest_segment = bottom_campaigns[0] if bottom_campaigns else weakest
     strongest_evidence = driver_evidence[0] if driver_evidence else None
 
     current_total_share = sum(float(c.get("sharePct") or 0) for c in channels) or 100
@@ -96,12 +99,23 @@ def _fallback_insights(summary: Dict[str, Any]) -> InsightsResponse:
         total_recommended = sum(item["recommendedSharePct"] for item in allocation) or 1
         for item in allocation:
             item["recommendedSharePct"] = round(item["recommendedSharePct"] * 100 / total_recommended, 1)
+    budget_candidate = (
+        max(allocation, key=lambda item: item["recommendedSharePct"] - item["currentSharePct"])
+        if allocation
+        else {"channel": best.get("name", "Primary channel"), "currentSharePct": 0, "recommendedSharePct": 0}
+    )
+    uncertainty_warning = (
+        "Treat 60 and 90-day views as planning ranges, not exact targets, because residual volatility "
+        "and thinner segment history widen uncertainty as the horizon extends."
+    )
 
     payload = {
         "executiveSummary": (
             f"Revenue is {_money(total_revenue)} on {_money(total_spend)} spend with blended ROAS of {avg_roas:.2f}x. "
             f"The next 30-day forecast is {_money(forecast30)}, with revenue trend at {revenue_trend:.1f}%, spend trend at {spend_trend:.1f}%, and ROAS trend at {roas_trend:.1f}%. "
-            f"The main decision is to protect {best.get('name')} while correcting spend in {weakest.get('name')}."
+            f"{top_revenue_channel.get('name')} leads revenue at {_money(float(top_revenue_channel.get('revenue') or 0))}, while {weakest.get('name')} is the highest-risk channel by ROAS at {float(weakest.get('roas') or 0):.2f}x. "
+            f"Recommended action: move share toward {budget_candidate.get('channel')} from weaker segments and review {riskiest_segment.get('name', riskiest_segment.get('channel', 'the lowest-efficiency segment'))}. "
+            f"{uncertainty_warning}"
         ),
         "revenueDrivers": [
             {
@@ -169,7 +183,7 @@ def _fallback_insights(summary: Dict[str, Any]) -> InsightsResponse:
                 "title": "Forecast uncertainty",
                 "severity": "medium",
                 "description": "Revenue intervals widen with longer horizons and budget changes because compounding spend, conversion-rate, and seasonality assumptions have more time to drift.",
-                "mitigation": "Use 30-day checks before committing to larger 60 or 90-day reallocations.",
+                "mitigation": uncertainty_warning,
             },
             {
                 "title": "Attribution dependency",

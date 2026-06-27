@@ -242,6 +242,8 @@ Forecast outputs include:
 
 Confidence intervals are residual-based and widen over the forecast horizon. They are shown both as chart bands and as planning-case summaries so users can distinguish conservative, expected, and upside outcomes.
 
+Medium confidence does not mean model failure. It indicates wider uncertainty bands caused by thinner segment history, longer forecast horizons, or higher residual volatility. ForecastIQ surfaces this honestly so marketers can treat those forecasts as planning ranges rather than exact numbers.
+
 Supported horizons are 30, 60, and 90 days. Supported levels are overall, channel, campaign type, and campaign.
 
 ## Evaluator Model Validation

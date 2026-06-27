@@ -35,31 +35,31 @@ function ChannelResultCard({
   color?: string;
 }) {
   return (
-    <Card className="border-border/50 bg-background/45 p-4">
+    <Card className="border-border/50 min-w-0 bg-background/45 p-4">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           <span
-            className="h-2.5 w-2.5 rounded-full"
+            className="h-2.5 w-2.5 shrink-0 rounded-full"
             style={{ background: color ?? "var(--color-primary)" }}
           />
-          <div className="text-sm font-medium">{channel}</div>
+          <div className="min-w-0 break-words text-sm font-medium">{channel}</div>
         </div>
         <span className="rounded-full border border-border/50 px-2 py-0.5 text-[10px] text-muted-foreground">
           {Math.round(efficiency)}/100
         </span>
       </div>
-      <div className="mt-4 grid grid-cols-3 gap-3 text-xs">
-        <div>
+      <div className="mt-4 grid grid-cols-1 gap-3 text-xs sm:grid-cols-3">
+        <div className="min-w-0">
           <div className="text-muted-foreground">Spend</div>
-          <div className="mt-1 font-semibold">{fmtCurrency(spend)}</div>
+          <div className="mt-1 break-words font-semibold">{fmtCurrency(spend)}</div>
         </div>
-        <div>
+        <div className="min-w-0">
           <div className="text-muted-foreground">Revenue</div>
-          <div className="mt-1 font-semibold">{fmtCurrency(projectedRevenue)}</div>
+          <div className="mt-1 break-words font-semibold">{fmtCurrency(projectedRevenue)}</div>
         </div>
-        <div>
+        <div className="min-w-0">
           <div className="text-muted-foreground">ROAS</div>
-          <div className="mt-1 font-semibold">{fmtRoas(projectedRoas)}</div>
+          <div className="mt-1 break-words font-semibold">{fmtRoas(projectedRoas)}</div>
         </div>
       </div>
     </Card>
@@ -114,7 +114,7 @@ export function SimulatorResultsPanel({
   const dailyTrend = buildDailyTrend(sims);
 
   return (
-    <div className="space-y-4 lg:col-span-3">
+    <div className="min-w-0 space-y-4 lg:col-span-3">
       <div className="grid gap-4 sm:grid-cols-2">
         <KpiCard
           label={`Projected revenue (${horizon}d)`}
@@ -144,39 +144,44 @@ export function SimulatorResultsPanel({
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-5">
-        <Card className="bg-gradient-card border-border/60 p-5 lg:col-span-3">
-          <div className="mb-3 flex items-center justify-between">
-            <div>
+      <div className="grid min-w-0 gap-4 lg:grid-cols-5">
+        <Card className="bg-gradient-card border-border/60 min-w-0 p-5 lg:col-span-3">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0">
               <h3 className="text-sm font-semibold">Channel contribution</h3>
               <p className="text-xs text-muted-foreground">Share of projected revenue</p>
             </div>
             <Brain className="h-4 w-4 text-muted-foreground" />
           </div>
-          <ResponsiveContainer width="100%" height={220}>
-            <PieChart>
-              <Pie
-                data={contributionData}
-                dataKey="value"
-                nameKey="name"
-                innerRadius={55}
-                outerRadius={85}
-                paddingAngle={2}
-                isAnimationActive={false}
-              >
-                {contributionData.map((item) => (
-                  <Cell key={item.name} fill={item.color} stroke="var(--color-background)" />
-                ))}
-              </Pie>
-              <Tooltip content={<PieTT />} />
-            </PieChart>
-          </ResponsiveContainer>
+          <div className="min-w-0 max-w-full overflow-hidden">
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie
+                  data={contributionData}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={55}
+                  outerRadius={85}
+                  paddingAngle={2}
+                  isAnimationActive={false}
+                >
+                  {contributionData.map((item) => (
+                    <Cell key={item.name} fill={item.color} stroke="var(--color-background)" />
+                  ))}
+                </Pie>
+                <Tooltip content={<PieTT />} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
           <div className="mt-2 space-y-1.5">
             {contributionData.map((item) => (
               <div key={item.name} className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full" style={{ background: item.color }} />
-                  <span>{item.name}</span>
+                <div className="flex min-w-0 items-center gap-2">
+                  <span
+                    className="h-2 w-2 shrink-0 rounded-full"
+                    style={{ background: item.color }}
+                  />
+                  <span className="min-w-0 break-words">{item.name}</span>
                 </div>
                 <span className="font-medium tabular-nums">{fmtPct(item.share)}</span>
               </div>
@@ -184,102 +189,109 @@ export function SimulatorResultsPanel({
           </div>
         </Card>
 
-        <Card className="bg-gradient-card border-border/60 p-5 lg:col-span-2">
+        <Card className="bg-gradient-card border-border/60 min-w-0 p-5 lg:col-span-2">
           <h3 className="mb-3 text-sm font-semibold">Baseline vs projected</h3>
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={chartData} margin={{ left: -10, right: 8, top: 8 }}>
-              <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" />
-              <XAxis
-                dataKey="name"
-                stroke="var(--color-muted-foreground)"
-                fontSize={10}
-                tickFormatter={(value: string) => value.replace(" Ads", "")}
-              />
-              <YAxis
-                stroke="var(--color-muted-foreground)"
-                fontSize={11}
-                tickFormatter={(value) => fmtCompact(value as number)}
-              />
-              <Tooltip content={<TT formatter={fmtCurrency} />} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Bar
-                dataKey="Baseline revenue"
-                fill="var(--color-muted)"
-                radius={[6, 6, 0, 0]}
-                isAnimationActive={false}
-              />
-              <Bar
-                dataKey="Projected revenue"
-                fill="var(--color-chart-1)"
-                radius={[6, 6, 0, 0]}
-                isAnimationActive={false}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="min-w-0 max-w-full overflow-hidden">
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={chartData} margin={{ left: -10, right: 8, top: 8 }}>
+                <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="name"
+                  stroke="var(--color-muted-foreground)"
+                  fontSize={10}
+                  tickFormatter={(value: string) => value.replace(" Ads", "")}
+                />
+                <YAxis
+                  stroke="var(--color-muted-foreground)"
+                  fontSize={11}
+                  tickFormatter={(value) => fmtCompact(value as number)}
+                />
+                <Tooltip content={<TT formatter={fmtCurrency} />} />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Bar
+                  dataKey="Baseline revenue"
+                  fill="var(--color-muted)"
+                  radius={[6, 6, 0, 0]}
+                  isAnimationActive={false}
+                />
+                <Bar
+                  dataKey="Projected revenue"
+                  fill="var(--color-chart-1)"
+                  radius={[6, 6, 0, 0]}
+                  isAnimationActive={false}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </Card>
       </div>
 
       {dailyTrend.length > 0 && (
-        <Card className="bg-gradient-card border-border/60 p-5">
+        <Card className="bg-gradient-card border-border/60 min-w-0 p-5">
           <h3 className="text-sm font-semibold">Forecast trajectory</h3>
           <p className="mb-3 text-xs text-muted-foreground">
             Daily projected revenue across all channels
           </p>
-          <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={dailyTrend} margin={{ left: -10, right: 8, top: 8 }}>
-              <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" />
-              <XAxis
-                dataKey="date"
-                tickFormatter={fmtDate}
-                stroke="var(--color-muted-foreground)"
-                fontSize={11}
-                minTickGap={40}
-              />
-              <YAxis
-                stroke="var(--color-muted-foreground)"
-                fontSize={11}
-                tickFormatter={(value) => fmtCompact(value as number)}
-              />
-              <Tooltip content={<TT formatter={fmtCurrency} />} />
-              <Line
-                type="monotone"
-                dataKey="revenue"
-                stroke="var(--color-chart-1)"
-                strokeWidth={2}
-                dot={false}
-                isAnimationActive={false}
-                name="Expected"
-              />
-              <Line
-                type="monotone"
-                dataKey="upper"
-                stroke="var(--color-chart-1)"
-                strokeWidth={1}
-                strokeDasharray="2 3"
-                strokeOpacity={0.5}
-                dot={false}
-                isAnimationActive={false}
-                name="Upper 95%"
-              />
-              <Line
-                type="monotone"
-                dataKey="lower"
-                stroke="var(--color-chart-1)"
-                strokeWidth={1}
-                strokeDasharray="2 3"
-                strokeOpacity={0.5}
-                dot={false}
-                isAnimationActive={false}
-                name="Lower 95%"
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <div className="min-w-0 max-w-full overflow-hidden">
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={dailyTrend} margin={{ left: -10, right: 8, top: 8 }}>
+                <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={fmtDate}
+                  stroke="var(--color-muted-foreground)"
+                  fontSize={11}
+                  minTickGap={40}
+                />
+                <YAxis
+                  stroke="var(--color-muted-foreground)"
+                  fontSize={11}
+                  tickFormatter={(value) => fmtCompact(value as number)}
+                />
+                <Tooltip content={<TT formatter={fmtCurrency} />} />
+                <Line
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="var(--color-chart-1)"
+                  strokeWidth={2}
+                  dot={false}
+                  isAnimationActive={false}
+                  name="Expected"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="upper"
+                  stroke="var(--color-chart-1)"
+                  strokeWidth={1}
+                  strokeDasharray="2 3"
+                  strokeOpacity={0.5}
+                  dot={false}
+                  isAnimationActive={false}
+                  name="Upper 95%"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="lower"
+                  stroke="var(--color-chart-1)"
+                  strokeWidth={1}
+                  strokeDasharray="2 3"
+                  strokeOpacity={0.5}
+                  dot={false}
+                  isAnimationActive={false}
+                  name="Lower 95%"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </Card>
       )}
 
-      <Card data-testid="channel-breakdown" className="bg-gradient-card border-border/60 p-5">
+      <Card
+        data-testid="channel-breakdown"
+        className="bg-gradient-card border-border/60 min-w-0 p-5"
+      >
         <h3 className="mb-3 text-sm font-semibold">Channel breakdown</h3>
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           {sims.map((item) => (
             <ChannelResultCard
               key={item.channel}

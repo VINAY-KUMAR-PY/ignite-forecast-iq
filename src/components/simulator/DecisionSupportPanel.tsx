@@ -59,8 +59,11 @@ export function DecisionSupportPanel({
   );
 
   return (
-    <div data-testid="decision-support" className="mt-6 grid gap-4">
-      <Card data-testid="ai-budget-optimizer" className="bg-gradient-card border-border/60 p-5">
+    <div data-testid="decision-support" className="mt-6 grid min-w-0 gap-4">
+      <Card
+        data-testid="ai-budget-optimizer"
+        className="bg-gradient-card border-border/60 min-w-0 p-5"
+      >
         <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
@@ -72,7 +75,7 @@ export function DecisionSupportPanel({
               budgets.
             </p>
           </div>
-          <div className="grid gap-2 sm:grid-cols-[140px_120px_auto]">
+          <div className="grid min-w-0 gap-2 sm:grid-cols-[140px_120px_auto]">
             <Input
               type="number"
               min={0}
@@ -97,7 +100,7 @@ export function DecisionSupportPanel({
           </div>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
           <DecisionStat
             label="Recommended budget"
             value={fmtCurrency(optimizer.recommendedBudget)}
@@ -122,10 +125,10 @@ export function DecisionSupportPanel({
 
         <div
           data-testid="optimizer-executive-brief"
-          className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-4"
+          className="mt-4 min-w-0 rounded-lg border border-primary/20 bg-primary/5 p-4"
         >
           <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
-            <div>
+            <div className="min-w-0">
               <div className="text-xs font-semibold uppercase tracking-wider text-primary">
                 Optimizer recommendation
               </div>
@@ -143,7 +146,7 @@ export function DecisionSupportPanel({
               </Badge>
             </div>
           </div>
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
             <DecisionStat label="Channel shift" value={brief.channelMove} hint="exact media move" />
             <DecisionStat
               label="Wasted spend reduction"
@@ -163,9 +166,9 @@ export function DecisionSupportPanel({
           </div>
         </div>
 
-        <div className="mt-4 rounded-lg border border-border/40 bg-background/40 p-4">
+        <div className="mt-4 min-w-0 rounded-lg border border-border/40 bg-background/40 p-4">
           <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
-            <div>
+            <div className="min-w-0">
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Recommended allocation
               </div>
@@ -173,7 +176,7 @@ export function DecisionSupportPanel({
                 Channel-level action plan for the next {horizon} days.
               </p>
             </div>
-            <div className="text-right text-xs">
+            <div className="min-w-0 text-left text-xs sm:text-right">
               <div className="font-medium text-success">
                 {formatMoneyDelta(optimizer.expectedRevenue - currentRevenue)}
               </div>
@@ -182,21 +185,23 @@ export function DecisionSupportPanel({
               </div>
             </div>
           </div>
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             {optimizer.recommendations.map((recommendation) => (
               <div
                 key={recommendation.channel}
-                className="rounded-md border border-border/40 bg-background/50 p-3"
+                className="min-w-0 rounded-md border border-border/40 bg-background/50 p-3"
               >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="text-sm font-medium">{recommendation.channel}</div>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="min-w-0 break-words text-sm font-medium">
+                    {recommendation.channel}
+                  </div>
                   <span
                     className={`text-xs font-semibold ${deltaClass(recommendation.deltaBudget)}`}
                   >
                     {formatMoneyDelta(recommendation.deltaBudget)}
                   </span>
                 </div>
-                <div className="mt-2 text-lg font-semibold">
+                <div className="mt-2 break-words text-lg font-semibold">
                   {fmtCurrency(recommendation.recommendedBudget)}
                 </div>
                 <div className="mt-1 text-xs text-muted-foreground">
@@ -209,8 +214,11 @@ export function DecisionSupportPanel({
         </div>
       </Card>
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        <Card data-testid="what-if-engine" className="bg-gradient-card border-border/60 p-5">
+      <div className="grid min-w-0 gap-4 xl:grid-cols-2">
+        <Card
+          data-testid="what-if-engine"
+          className="bg-gradient-card border-border/60 min-w-0 p-5"
+        >
           <div className="mb-4 flex items-center gap-2">
             <ArrowRightLeft className="h-4 w-4 text-primary" />
             <h3 className="text-sm font-semibold">What-if scenario engine</h3>
@@ -235,7 +243,10 @@ export function DecisionSupportPanel({
           </div>
         </Card>
 
-        <Card data-testid="channel-health" className="bg-gradient-card border-border/60 p-5">
+        <Card
+          data-testid="channel-health"
+          className="bg-gradient-card border-border/60 min-w-0 p-5"
+        >
           <div className="mb-4 flex items-center gap-2">
             <Gauge className="h-4 w-4 text-primary" />
             <h3 className="text-sm font-semibold">Channel health score</h3>
@@ -252,7 +263,7 @@ export function DecisionSupportPanel({
         </Card>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid min-w-0 gap-4 xl:grid-cols-2">
         <DetectionPanel
           title="Risk detection engine"
           icon={AlertTriangle}
@@ -325,10 +336,10 @@ function buildOptimizerBrief(
 
 function DecisionStat({ label, value, hint }: { label: string; value: string; hint: string }) {
   return (
-    <div className="rounded-lg border border-border/40 bg-background/40 p-3">
+    <div className="min-w-0 rounded-lg border border-border/40 bg-background/40 p-3">
       <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className="mt-1 text-lg font-semibold">{value}</div>
-      <div className="mt-1 text-xs text-muted-foreground">{hint}</div>
+      <div className="mt-1 break-words text-lg font-semibold">{value}</div>
+      <div className="mt-1 break-words text-xs text-muted-foreground">{hint}</div>
     </div>
   );
 }
@@ -350,15 +361,15 @@ function ScenarioRow({ scenario }: { scenario: WhatIfScenarioResult }) {
 function HealthRow({ item }: { item: ChannelHealthScore }) {
   return (
     <div>
-      <div className="mb-1 flex items-center justify-between gap-3">
-        <div>
-          <div className="text-sm font-medium">{item.channel}</div>
+      <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <div className="break-words text-sm font-medium">{item.channel}</div>
           <div className="mt-0.5 text-[11px] text-muted-foreground">
             Revenue share {item.revenueSharePct.toFixed(1)}% - Spend share{" "}
             {item.spendSharePct.toFixed(1)}%
           </div>
         </div>
-        <Badge variant="outline" className={healthBadgeClass(item.status)}>
+        <Badge variant="outline" className={`shrink-0 ${healthBadgeClass(item.status)}`}>
           {item.score.toFixed(0)}/100 - {item.status}
         </Badge>
       </div>
@@ -394,7 +405,7 @@ function DetectionPanel({
   testId: string;
 }) {
   return (
-    <Card data-testid={testId} className="bg-gradient-card border-border/60 p-5">
+    <Card data-testid={testId} className="bg-gradient-card border-border/60 min-w-0 p-5">
       <div className="mb-4 flex items-center gap-2">
         <Icon className="h-4 w-4 text-primary" />
         <h3 className="text-sm font-semibold">{title}</h3>
@@ -406,7 +417,7 @@ function DetectionPanel({
             className="rounded-lg border border-border/40 bg-background/40 p-3"
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="text-sm font-medium">
+              <div className="min-w-0 break-words text-sm font-medium">
                 {item.channel ?? item.type.replaceAll("_", " ")}
               </div>
               <Badge variant="outline" className={severityBadgeClass(item.severity)}>

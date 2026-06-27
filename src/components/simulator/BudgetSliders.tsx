@@ -29,13 +29,13 @@ export function BudgetSliders({
         const delta = baseline > 0 ? ((value - baseline) / baseline) * 100 : 0;
         return (
           <div key={channel.name}>
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+              <div className="flex min-w-0 items-center gap-2">
                 <span
-                  className="h-2.5 w-2.5 rounded-full"
+                  className="h-2.5 w-2.5 shrink-0 rounded-full"
                   style={{ background: channel.color ?? "var(--color-primary)" }}
                 />
-                <Label className="font-medium">{channel.name}</Label>
+                <Label className="min-w-0 break-words font-medium">{channel.name}</Label>
               </div>
               <span
                 className={`text-xs font-medium ${
@@ -50,14 +50,14 @@ export function BudgetSliders({
                 {delta.toFixed(0)}% vs baseline
               </span>
             </div>
-            <div className="mt-3 flex items-center gap-3">
+            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
               <Slider
                 value={[value]}
                 min={0}
                 max={max}
                 step={Math.max(100, Math.round(max / 200))}
                 onValueChange={(next) => onChange(channel.name, next[0])}
-                className="flex-1"
+                className="min-w-0 flex-1"
               />
               <Input
                 type="number"
@@ -65,7 +65,7 @@ export function BudgetSliders({
                 onChange={(event) =>
                   onChange(channel.name, Math.max(0, Number(event.target.value)))
                 }
-                className="w-28"
+                className="w-full sm:w-28"
               />
             </div>
             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">

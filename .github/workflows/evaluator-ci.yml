@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+env:
+  PYTHONPATH: .
+
 jobs:
   evaluator:
     name: Offline evaluator / Python ${{ matrix.python-version }}

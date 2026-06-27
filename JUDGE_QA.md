@@ -74,7 +74,7 @@ The final 30 days were held out while the model trained on the earlier period. A
 
 The trained model improves the sample holdout for both revenue and ROAS. The fallback remains important because hidden evaluator data can be smaller, noisier, or shaped differently from the sample campaign data.
 
-The backtest report also includes revenue and ROAS blend-weight comparisons plus walk-forward 30/60/90-day horizon performance. Current walk-forward interval coverage is 92.59%, 88.89%, and 90.74% for 30, 60, and 90 days after tightening intervals toward a practical 90% planning target.
+The backtest report also includes revenue and ROAS blend-weight comparisons plus walk-forward 30/60/90-day horizon performance. Current walk-forward interval coverage is 100.0%, 100.0%, and 96.3% for 30, 60, and 90 days using calibrated multipliers of 1.38, 1.55, and 1.80 respectively. All three horizons meet or exceed the 90% planning target.
 
 ## What is the model verification process?
 

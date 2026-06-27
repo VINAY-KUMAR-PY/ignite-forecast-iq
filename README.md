@@ -26,9 +26,9 @@ The offline evaluator path is intentionally isolated from the web app. `run.sh` 
 | Training rows                        | 2,400 full sample rows; 2,160 used as training split in primary 30-day holdout backtest    |
 | Rolling training samples             | 810 in the packaged artifact; 702 in the primary holdout training split                    |
 | Feature count                        | 48 evaluator features including spend, trend, seasonality, and baseline-anchor regressors  |
-| 60-day revenue interval coverage     | 100.0% walk-forward (calibrated multiplier 1.38; target >=90%)                             |
-| 90-day revenue interval coverage     | 96.3% walk-forward (recalibrated multiplier 1.75; target >=90%)                            |
-| 30-day ROAS interval coverage        | 100.0% walk-forward (calibrated multiplier 1.38; target >=90%)                               |
+| 60-day revenue interval coverage     | 100.0% walk-forward (calibrated multiplier 1.55; target >=90%)                             |
+| 90-day revenue interval coverage     | 96.3% walk-forward (recalibrated multiplier 1.80; target >=90%)                            |
+| 30-day ROAS interval coverage        | 100.0% walk-forward (calibrated multiplier 1.38; target >=90%)                             |
 | 60-day revenue MAPE (walk-forward)   | 5.04% trained model vs 5.37% safe baseline                                                  |
 | 90-day revenue MAPE (walk-forward)   | 6.86% trained model vs 10.30% safe baseline                                                 |
 | Normal evaluator mode                | `trained_model`                                                                            |
@@ -756,16 +756,25 @@ python -m backend.backtest
 ```text
 .
 |-- backend/
-|   |-- backtest.py
-|   |-- schema_adapters.py
-|   |-- main.py
-|   |-- forecasting.py
-|   |-- train.py
-|   |-- predict.py
-|   |-- data_preprocessing.py
-|   |-- gemini.py
-|   |-- schemas.py
-|   `-- utils.py
+|   |-- main.py                  # FastAPI app, CORS, rate limiting, API routes
+|   |-- schemas.py               # Pydantic request/response contracts
+|   |-- schema_adapters.py       # GA4, Shopify, Ads CSV normalization
+|   |-- data_preprocessing.py    # Validation, aggregation, feature engineering
+|   |-- forecasting.py           # XGBoost live forecasting, budget simulation
+|   |-- decision_support.py      # Budget optimizer, what-if, risks, opportunities
+|   |-- gemini.py                # Gemini insights with deterministic fallback
+|   |-- anomaly.py               # Anomaly detection and trend break analysis
+|   |-- causal_lite.py           # Observational DiD causal analysis (offline)
+|   |-- train.py                 # Evaluator model training pipeline
+|   |-- predict.py               # Offline CLI entry point (run.sh target)
+|   |-- inference.py             # Segment forecasting, interval enforcement
+|   |-- evaluator_contract.py    # Shared constants and output schema
+|   |-- evaluator_intervals.py   # Interval calibration and horizon multipliers
+|   |-- evaluator_io.py          # CSV reading, model loading, output writing
+|   |-- segment_utils.py         # Feature frames, category maps, segment specs
+|   |-- backtest.py              # Walk-forward backtesting and blend weight grid
+|   |-- utils.py                 # Shared filesystem and formatting helpers
+|   `-- __init__.py
 |-- data/
 |   `-- sample_campaigns.csv
 |-- pickle/

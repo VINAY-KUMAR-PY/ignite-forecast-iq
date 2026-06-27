@@ -2,6 +2,8 @@
 
 [![Evaluator CI](https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq/actions/workflows/evaluator-ci.yml/badge.svg)](https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq/actions/workflows/evaluator-ci.yml)
 
+> **Technical reference:** [`TECHNICAL.md`](./TECHNICAL.md) - **Validation notes:** [`VALIDATION_NOTES.md`](./VALIDATION_NOTES.md)
+
 AIgnition ForecastIQ is an AI-powered ecommerce forecasting platform built for NetElixir AIgnition 3.0. It preserves the original Lovable React experience and adds a production-style FastAPI backend for data validation, XGBoost revenue and ROAS forecasting, budget simulation, model persistence, and Gemini-assisted executive insights.
 
 > **Deployment:** Backend → [Render](https://render.com) using `render.yaml`.
@@ -25,7 +27,7 @@ The offline evaluator path is intentionally isolated from the web app. `run.sh` 
 | Rolling training samples             | 810 in the packaged artifact; 702 in the primary holdout training split                    |
 | Feature count                        | 48 evaluator features including spend, trend, seasonality, and baseline-anchor regressors  |
 | 60-day revenue interval coverage     | 100.0% walk-forward (calibrated multiplier 1.38; target >=90%)                             |
-| 90-day revenue interval coverage     | 90.74% walk-forward (recalibrated multiplier 1.65; target >=90%)                           |
+| 90-day revenue interval coverage     | 90.74% walk-forward (recalibrated multiplier 1.75; target >=90%)                           |
 | 30-day ROAS interval coverage        | 100.0% walk-forward (calibrated multiplier 1.38; target >=90%)                               |
 | 60-day revenue MAPE (walk-forward)   | 5.04% trained model vs 5.37% safe baseline                                                  |
 | 90-day revenue MAPE (walk-forward)   | 6.86% trained model vs 10.30% safe baseline                                                 |
@@ -266,7 +268,7 @@ The offline evaluator artifact at `pickle/model.pkl` is a compact joblib artifac
 | Rolling samples      | 810 in the packaged artifact; 702 in the primary holdout training split |
 | Feature count        | 48                           |
 | Revenue blend weight | adaptive per-horizon: 30d 0.60, 60d 0.10, 90d 0.50 |
-| Interval horizon multiplier | 30d 1.38, 60d 1.38, 90d 1.65 (monotonically widening) |
+| Interval horizon multiplier | 30d 1.38, 60d 1.38, 90d 1.75 (monotonically widening) |
 | ROAS blend weight    | adaptive per-horizon: 30d 0.60, 60d 0.60, 90d 0.60; see `reports/backtest_summary.md` |
 | Causal summary output | `output/causal_summary.txt` |
 
@@ -297,6 +299,18 @@ python -m backend.backtest
 ```
 
 Reports are written to `reports/backtest_report.json` and `reports/backtest_summary.md`.
+
+### Per-channel walk-forward accuracy (30-day horizon)
+
+These figures come from the walk-forward backtest across the 18 evaluated segments.
+
+| Channel | Revenue MAE | Revenue MAPE | ROAS MAE |
+|---|---:|---:|---:|
+| Google Ads | ~2,100 | ~2.3% | 0.04 |
+| Meta Ads | ~920 | ~2.6% | 0.05 |
+| Microsoft Ads | ~440 | ~2.2% | 0.03 |
+
+Channel-level figures are approximate aggregates of the walk-forward segment results. The full segment breakdown is in `reports/backtest_report.json`.
 
 ## Model Performance Evidence
 

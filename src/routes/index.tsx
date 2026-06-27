@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
@@ -91,6 +92,25 @@ function Nav({ onTryDemo }: { onTryDemo: () => void }) {
 }
 
 function Hero({ onTryDemo }: { onTryDemo: () => void }) {
+  const { rows } = useData();
+  const compactCurrency = useMemo(
+    () =>
+      new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        notation: "compact",
+      }),
+    [],
+  );
+  const heroStats = useMemo(() => {
+    if (!rows.length) return null;
+    const totalRevenue = rows.reduce((sum, row) => sum + row.revenue, 0);
+    const totalSpend = rows.reduce((sum, row) => sum + row.spend, 0);
+    const avgRoas = totalSpend > 0 ? totalRevenue / totalSpend : 0;
+    const channelCount = new Set(rows.map((row) => row.channel).filter(Boolean)).size;
+    return { totalRevenue, avgRoas, channelCount };
+  }, [rows]);
+
   return (
     <section className="relative overflow-hidden bg-gradient-hero">
       <div className="container mx-auto grid gap-12 px-6 py-24 md:py-32 lg:grid-cols-2 lg:items-center">
@@ -108,6 +128,38 @@ function Hero({ onTryDemo }: { onTryDemo: () => void }) {
             ForecastIQ converts GA4, Shopify, and Ads exports into 30, 60, and 90 day revenue
             forecasts, ROAS projections, confidence intervals, and an executive next-budget action.
           </p>
+          {heroStats ? (
+            <div
+              style={{
+                display: "flex",
+                gap: "8px",
+                justifyContent: "center",
+                flexWrap: "wrap",
+                marginTop: "20px",
+              }}
+            >
+              {[
+                ["Total Revenue", compactCurrency.format(heroStats.totalRevenue)],
+                ["Avg ROAS", `${heroStats.avgRoas.toFixed(2)}x`],
+                ["Channels", heroStats.channelCount.toString()],
+              ].map(([label, value]) => (
+                <div
+                  key={label}
+                  style={{
+                    background: "var(--surface-2, var(--card))",
+                    border: "0.5px solid var(--border)",
+                    borderRadius: "8px",
+                    padding: "6px 14px",
+                    fontSize: "13px",
+                    fontWeight: 500,
+                  }}
+                >
+                  <span className="text-muted-foreground">{label}: </span>
+                  <span>{value}</span>
+                </div>
+              ))}
+            </div>
+          ) : null}
           <div className="mt-8 flex flex-wrap gap-3">
             <Link to="/app" onClick={onTryDemo}>
               <Button variant="hero" size="lg">

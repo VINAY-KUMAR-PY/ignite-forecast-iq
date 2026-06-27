@@ -77,6 +77,7 @@ def _parse_budget_json(raw_budget_json: str) -> dict[str, float]:
 
 
 def main() -> None:
+    np.random.seed(42)
     parser = argparse.ArgumentParser(description="Generate evaluator-safe ForecastIQ predictions.")
     parser.add_argument("--data-dir", default="data", help="Folder containing input CSV files")
     parser.add_argument("--model", default="pickle/model.pkl", help="Lightweight joblib model metadata path")
@@ -105,5 +106,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    np.random.seed(42)
     main()

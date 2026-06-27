@@ -158,6 +158,16 @@ function UploadPage() {
         <Button variant="hero" className="mt-6" onClick={() => inputRef.current?.click()}>
           Choose file
         </Button>
+        <p style={{ fontSize: "13px", color: "var(--muted-foreground)", marginTop: "8px" }}>
+          Need sample data?{" "}
+          <a
+            href="/data/sample_campaigns.csv"
+            download="sample_campaigns.csv"
+            style={{ color: "var(--primary)" }}
+          >
+            Download sample CSV
+          </a>
+        </p>
       </Card>
 
       <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">

@@ -14,6 +14,35 @@ from backend.schema_adapters import SOURCE_SCHEMA_COLUMN, normalize_marketing_fr
 
 
 class SchemaAdapterTests(unittest.TestCase):
+    def assert_fixture_parses(self, name: str) -> None:
+        expected_columns = [
+            "date",
+            "channel",
+            "campaign_type",
+            "campaign_name",
+            "spend",
+            "clicks",
+            "impressions",
+            "conversions",
+            "revenue",
+            "roas",
+        ]
+        raw = pd.read_csv(Path("data/fixtures") / name)
+        adapted = normalize_marketing_frame(raw)
+
+        self.assertEqual(list(adapted.frame.columns[: len(expected_columns)]), expected_columns)
+        self.assertGreater(len(adapted.frame), 0)
+        self.assertFalse(adapted.frame[expected_columns].empty)
+
+    def test_ads_raw_fixture_parses_correctly(self) -> None:
+        self.assert_fixture_parses("ads_raw_export.csv")
+
+    def test_ga4_raw_fixture_parses_correctly(self) -> None:
+        self.assert_fixture_parses("ga4_raw_export.csv")
+
+    def test_shopify_raw_fixture_parses_correctly(self) -> None:
+        self.assert_fixture_parses("shopify_raw_orders.csv")
+
     def test_ga4_export_normalizes_to_campaign_rows(self) -> None:
         raw = pd.DataFrame(
             {

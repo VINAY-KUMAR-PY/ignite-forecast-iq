@@ -20,6 +20,7 @@ from .forecasting import compute_spend_response_curve, forecast_frame, simulate_
 from .gemini import generate_gemini_insights
 from .train import train_evaluator_model
 from .schemas import (
+    AnomalyRequest,
     DecisionSupportRequest,
     DecisionSupportResponse,
     ForecastRequest,
@@ -28,6 +29,7 @@ from .schemas import (
     InsightsResponse,
     SimulationRequest,
     SimulationResponse,
+    SpendCurveRequest,
     TrainRequest,
     TrainResponse,
     ValidationRequest,
@@ -202,21 +204,18 @@ def simulate(request: Request, body: SimulationRequest) -> SimulationResponse:
 
 
 @app.post("/api/spend-curve")
-def spend_curve(request: dict) -> dict:
+@limiter.limit("30/minute")
+def spend_curve(request: Request, body: SpendCurveRequest) -> dict:
     """Return channel-level spend response curve and saturation estimate."""
-    rows = request.get("rows") or []
-    frame, _ = _validated_frame(rows, "spend curve")
-    channel = str(request.get("channel") or "Google Ads")
-    horizon = int(request.get("horizon") or 30)
-    current_budget = float(request.get("current_budget") or request.get("currentBudget") or 0)
-    return compute_spend_response_curve(frame, channel, horizon, current_budget)
+    frame, _ = _validated_frame([row.model_dump() for row in body.rows], "spend curve")
+    return compute_spend_response_curve(frame, body.channel, int(body.horizon), float(body.current_budget))
 
 
 @app.post("/api/anomalies")
-def get_anomalies(request: dict) -> dict:
+@limiter.limit("30/minute")
+def get_anomalies(request: Request, body: AnomalyRequest) -> dict:
     """Detect performance anomalies and structural trend breaks."""
-    rows = request.get("rows") or []
-    frame, _ = _validated_frame(rows, "anomaly detection")
+    frame, _ = _validated_frame([row.model_dump() for row in body.rows], "anomaly detection")
     anomalies = [item.to_dict() for item in detect_anomalies(frame)]
     trend_breaks = compute_trend_breaks(frame)
     driver_evidence = compute_driver_evidence(frame)

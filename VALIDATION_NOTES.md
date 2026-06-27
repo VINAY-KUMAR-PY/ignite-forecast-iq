@@ -15,9 +15,9 @@ This file records objective verification evidence for reviewers. It documents wh
 
 | Horizon | Trained revenue MAPE | Baseline revenue MAPE | Interval coverage |
 |---:|---:|---:|---:|
-| 30 days | 2.66% | ~3.1% | 100.0% |
-| 60 days | 5.04% | 5.37% | 100.0% |
-| 90 days | 6.86% | 10.30% | >=90% |
+| 30 days | 2.66% | ~3.1% | see `reports/backtest_summary.md` for current values |
+| 60 days | 5.04% | 5.37% | see `reports/backtest_summary.md` for current values |
+| 90 days | 6.86% | 10.30% | see `reports/backtest_summary.md` for current values |
 
 ## Known gaps
 

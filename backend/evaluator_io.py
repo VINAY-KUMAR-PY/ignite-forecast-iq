@@ -469,3 +469,20 @@ def generate_offline_causal_summary(
         )
 
     return "\n".join(lines)
+
+
+def write_causal_summary(
+    frame: pd.DataFrame,
+    rows: list[dict],
+    output_dir: str | Path | None = None,
+    planned_budgets: dict[str, float] | None = None,
+) -> Path:
+    """Write causal_summary.txt beside predictions.csv or an explicit output directory."""
+    target_dir = Path(output_dir or "output")
+    target_dir.mkdir(parents=True, exist_ok=True)
+    summary_path = target_dir / "causal_summary.txt"
+    summary_path.write_text(
+        generate_offline_causal_summary(frame, rows, planned_budgets),
+        encoding="utf-8",
+    )
+    return summary_path

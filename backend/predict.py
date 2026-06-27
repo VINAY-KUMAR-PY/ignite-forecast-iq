@@ -27,6 +27,7 @@ from .evaluator_io import (
     is_trained_model_artifact,
     read_csv_folder,
     safe_load_model,
+    write_causal_summary,
     write_predictions,
 )
 from .inference import (
@@ -99,8 +100,12 @@ def main() -> None:
     model = safe_load_model(args.model)
     rows = build_predictions(cleaned.frame, model, planned_budgets)
     write_predictions(rows, args.output)
-    summary_path = Path(args.output).with_name("causal_summary.txt")
-    summary_path.write_text(generate_offline_causal_summary(cleaned.frame, rows, planned_budgets), encoding="utf-8")
+    summary_path = write_causal_summary(
+        cleaned.frame,
+        rows,
+        output_dir=Path(args.output).parent,
+        planned_budgets=planned_budgets,
+    )
     log(f"Wrote {len(rows)} rows to {args.output}")
     log(f"Causal summary written to {summary_path}")
 

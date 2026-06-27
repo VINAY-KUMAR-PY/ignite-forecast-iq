@@ -208,6 +208,8 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
             except Exception:
                 holdout_beats_baseline = False
 
+        # The summary/reporting path logs the 30d revenue weight by default; the
+        # artifact still stores the full per-horizon map below.
         if revenue_cv_r2 >= 0.15 and holdout_beats_baseline:
             revenue_model_weight = {30: 0.60, 60: 0.10, 90: 0.50}.get(horizon, 0.25)
         elif revenue_cv_r2 >= 0.05 and holdout_beats_baseline:

@@ -10,6 +10,13 @@ OUTPUT_PATH="${3:-./output/predictions.csv}"
 BUDGET_JSON="${4:-}"
 PYTHON_BIN="${PYTHON:-}"
 
+if [[ -n "$BUDGET_JSON" ]]; then
+  if ! echo "$BUDGET_JSON" | python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null; then
+    echo "[ForecastIQ] WARNING: budget-json argument is not valid JSON; ignoring it." >&2
+    BUDGET_JSON=""
+  fi
+fi
+
 if [[ -z "$PYTHON_BIN" ]]; then
   if [[ -x ".venv/Scripts/python.exe" ]]; then
     PYTHON_CMD=(".venv/Scripts/python.exe")
@@ -63,6 +70,10 @@ if [ $PREDICT_EXIT -ne 0 ]; then
 fi
 
 SUMMARY_PATH="$(dirname "$OUTPUT_PATH")/causal_summary.txt"
+# Co-location contract: causal_summary.txt should live beside predictions.csv.
+if [ ! -f "$SUMMARY_PATH" ] && [ -f "./output/causal_summary.txt" ]; then
+  cp "./output/causal_summary.txt" "$SUMMARY_PATH"
+fi
 echo "Done. Predictions written to $OUTPUT_PATH"
 "${PYTHON_CMD[@]}" -c "import sys; print('[ForecastIQ] Python version:', sys.version.split()[0])"
 if [ -f "$SUMMARY_PATH" ]; then

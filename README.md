@@ -27,7 +27,7 @@ The offline evaluator path is intentionally isolated from the web app. `run.sh` 
 | Rolling training samples             | 810 in the packaged artifact; 702 in the primary holdout training split                    |
 | Feature count                        | 48 evaluator features including spend, trend, seasonality, and baseline-anchor regressors  |
 | 60-day revenue interval coverage     | 100.0% walk-forward (calibrated multiplier 1.38; target >=90%)                             |
-| 90-day revenue interval coverage     | 90.74% walk-forward (recalibrated multiplier 1.75; target >=90%)                           |
+| 90-day revenue interval coverage     | 96.3% walk-forward (recalibrated multiplier 1.75; target >=90%)                            |
 | 30-day ROAS interval coverage        | 100.0% walk-forward (calibrated multiplier 1.38; target >=90%)                               |
 | 60-day revenue MAPE (walk-forward)   | 5.04% trained model vs 5.37% safe baseline                                                  |
 | 90-day revenue MAPE (walk-forward)   | 6.86% trained model vs 10.30% safe baseline                                                 |
@@ -330,7 +330,7 @@ Forecast explainability now includes two layers:
 - Global feature importance and SHAP importance: which features mattered most across model training for the selected segment.
 - Local "Why this forecast?" explainability: permutation-baseline driver cards showing which current forecast-row features pushed this specific forecast up or down versus typical historical values.
 
-Blend-weight validation tested revenue and ROAS model weights of 0.00, 0.10, 0.25, 0.40, 0.50, and 0.60. The primary 30-day holdout keeps revenue_model_weight=0.60 and roas_model_weight=0.60 because those weights have the best RMSE/MAE balance in the generated backtest. The packaged artifact also stores horizon-specific revenue weights of 30d 0.60, 60d 0.10, and 90d 0.50.
+Blend-weight validation tested revenue and ROAS model weights of 0.00, 0.10, 0.25, 0.40, 0.50, and 0.60. Revenue weighting is adaptive per-horizon: 30d 0.60, 60d 0.10, 90d 0.50 (stored in artifact; the best-overall holdout weight is 0.60 as shown in the blend-weight grid). The ROAS model weight remains 0.60 because it has the best RMSE/MAE balance in the generated backtest.
 
 | Revenue model weight |      MAE |     RMSE |  MAPE | Interval coverage |
 | -------------------: | -------: | -------: | ----: | ----------------: |
@@ -356,9 +356,9 @@ Walk-forward per-horizon backtesting is included for transparency:
 | ------: | ----: | -------: | ------------------: | -------------------: | ---------------: | ---------------: | ------------------ |
 |      30 |     3 |       54 |            2,462.00 |             3,097.88 |             0.05 |          100.00% | Trained model |
 |      60 |     3 |       54 |           10,541.64 |            11,221.15 |             0.05 |          100.00% | Trained model |
-|      90 |     3 |       54 |           20,891.06 |            31,577.72 |             0.06 |           90.74% | Trained model |
+|      90 |     3 |       54 |           20,891.06 |            31,577.72 |             0.06 |            96.3% | Trained model |
 
-Intervals were recalibrated from the earlier wide setting to preserve useful planning ranges: 100.0% coverage at 30 days, 100.0% at 60 days, and 90.74% at 90 days. This is why ForecastIQ keeps both systems: the trained model provides ML behavior where validated, while the deterministic baseline remains a reliability guardrail for longer, thinner, or incompatible cases.
+Intervals were recalibrated from the earlier wide setting to preserve useful planning ranges: 100.0% coverage at 30 days, 100.0% at 60 days, and 96.3% at 90 days. This is why ForecastIQ keeps both systems: the trained model provides ML behavior where validated, while the deterministic baseline remains a reliability guardrail for longer, thinner, or incompatible cases.
 
 ## Budget Simulator
 

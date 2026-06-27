@@ -163,18 +163,23 @@ def _feature_importance(trained: Optional[TargetModel], limit: int = 6) -> List[
     ]
 
 
-def _shap_importance(daily: pd.DataFrame, target: str, trained: Optional[TargetModel], limit: int = 10) -> list[dict[str, Any]]:
-    """Return SHAP attribution or a deterministic permutation-importance fallback."""
+def _shap_importance(
+    daily: pd.DataFrame,
+    target: str,
+    trained: Optional[TargetModel],
+    limit: int = 10,
+) -> tuple[list[dict[str, Any]], str]:
+    """Return SHAP attribution or a deterministic feature-importance fallback."""
     if trained is None or daily.empty:
-        return []
+        return [], "feature_importances_fallback"
 
     X, y = feature_frame(daily, target)
     if X.empty:
-        return []
+        return [], "feature_importances_fallback"
     sample = X[trained.feature_columns].tail(min(50, len(X))).astype(float)
     sample_target = y.tail(len(sample)).astype(float)
     if sample.empty or sample_target.empty:
-        return []
+        return [], "feature_importances_fallback"
 
     def attribution_item(index: int, importance: float, direction: str) -> dict[str, Any]:
         feature = trained.feature_columns[index]
@@ -187,36 +192,30 @@ def _shap_importance(daily: pd.DataFrame, target: str, trained: Optional[TargetM
             "direction": direction,
         }
 
-    def permutation_fallback() -> list[dict[str, Any]]:
-        try:
-            from sklearn.inspection import permutation_importance
-
-            result = permutation_importance(
-                trained.model,
-                sample,
-                sample_target,
-                n_repeats=5,
-                random_state=42,
-                n_jobs=1,
+    def feature_importances_fallback(log_unavailable: bool = False) -> list[dict[str, Any]]:
+        if log_unavailable:
+            logger.info(
+                "[ForecastIQ] SHAP unavailable (Python 3.14+); using XGBoost feature_importances_ for explainability."
             )
-            importances = np.asarray(result.importances_mean, dtype=float)
-            ranked = np.argsort(importances)[::-1][:limit]
-            items: list[dict[str, Any]] = []
-            for index in ranked:
-                importance = importances[int(index)]
-                if not np.isfinite(importance) or importance <= 0:
-                    continue
-                feature_values = sample.iloc[:, int(index)].to_numpy(dtype=float)
-                direction = "positive"
-                if np.std(feature_values) > 1e-9 and np.std(sample_target) > 1e-9:
-                    correlation = float(np.corrcoef(feature_values, sample_target)[0, 1])
-                    if np.isfinite(correlation) and correlation < 0:
-                        direction = "negative"
-                items.append(attribution_item(int(index), importance, direction))
-            return items
-        except Exception as exc:
-            logger.info("Permutation forecast attribution unavailable: %s", exc)
+        if not hasattr(trained.model, "feature_importances_"):
             return []
+        importances = np.asarray(trained.model.feature_importances_, dtype=float)
+        if importances.ndim != 1 or importances.shape[0] != len(trained.feature_columns):
+            return []
+        ranked = np.argsort(importances)[::-1][:limit]
+        items: list[dict[str, Any]] = []
+        for index in ranked:
+            importance = float(importances[int(index)])
+            if not np.isfinite(importance) or importance <= 0:
+                continue
+            feature_values = sample.iloc[:, int(index)].to_numpy(dtype=float)
+            direction = "positive"
+            if np.std(feature_values) > 1e-9 and np.std(sample_target) > 1e-9:
+                correlation = float(np.corrcoef(feature_values, sample_target)[0, 1])
+                if np.isfinite(correlation) and correlation < 0:
+                    direction = "negative"
+            items.append(attribution_item(int(index), importance, direction))
+        return items
 
     try:
         import shap
@@ -229,7 +228,7 @@ def _shap_importance(daily: pd.DataFrame, target: str, trained: Optional[TargetM
         if values.ndim == 3:
             values = values[:, :, 0]
         if values.ndim != 2 or values.shape[1] != len(trained.feature_columns):
-            return []
+            return feature_importances_fallback(), "feature_importances_fallback"
 
         global_shap = np.abs(values).mean(axis=0)
         directions = values.mean(axis=0)
@@ -242,13 +241,12 @@ def _shap_importance(daily: pd.DataFrame, target: str, trained: Optional[TargetM
             )
             for index in ranked
             if np.isfinite(global_shap[int(index)]) and global_shap[int(index)] > 0
-        ]
+        ], "shap"
     except (ImportError, ModuleNotFoundError):
-        logger.info("SHAP is unavailable; using permutation importance for forecast attribution")
-        return permutation_fallback()
+        return feature_importances_fallback(log_unavailable=True), "feature_importances_fallback"
     except Exception as exc:
-        logger.info("SHAP forecast attribution failed: %s; using permutation importance", exc)
-        return permutation_fallback()
+        logger.info("SHAP forecast attribution failed: %s; using feature importances", exc)
+        return feature_importances_fallback(), "feature_importances_fallback"
 
 
 def _feature_label(feature: str) -> str:
@@ -466,6 +464,7 @@ def forecast_diagnostics(
     revenue_features = _feature_importance(revenue_model)
     roas_features = _feature_importance(roas_model)
     local_drivers, local_summary = _local_permutation_explanations(daily, revenue_model, "revenue")
+    shap_importance, shap_method = _shap_importance(daily, "revenue", revenue_model)
     return ForecastDiagnostics(
         revenueFitMapePct=revenue_accuracy.mapePct,
         roasFitMapePct=roas_accuracy.mapePct,
@@ -479,7 +478,8 @@ def forecast_diagnostics(
         revenueExplanation=_explain_features("revenue", revenue_features),
         roasExplanation=_explain_features("ROAS", roas_features),
         explainabilityMethod="permutation_baseline",
-        shap_importance=_shap_importance(daily, "revenue", revenue_model),
+        shap_importance=shap_importance,
+        shap_method=shap_method,
         whyThisForecast=local_drivers,
         whyThisForecastSummary=local_summary,
         businessBrief=_business_brief(daily, future_revenue, future_roas, revenue_accuracy, roas_accuracy),

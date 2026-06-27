@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   Select,
@@ -141,6 +143,19 @@ function ForecastPage() {
   const roasData = buildForecastChartSeries(roasFc);
   const diagnostics = apiForecast?.summary.diagnostics;
 
+  function retryForecast() {
+    setApiError(null);
+    setApiForecast(null);
+    fetchForecastApi(rows, horizon, level, selectedValue)
+      .then((response) => {
+        setApiForecast(response);
+      })
+      .catch((error: Error) => {
+        setApiForecast(null);
+        setApiError(error.message);
+      });
+  }
+
   return (
     <>
       <PageHeader
@@ -151,6 +166,34 @@ function ForecastPage() {
             : "XGBoost backend model with 95% confidence intervals."
         }
       />
+
+      {apiError && !apiForecast && (
+        <Card className="mb-6 border-warning/40 bg-warning/5 p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 gap-3">
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-warning/15 text-warning">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="font-semibold">
+                    Forecast backend unavailable — showing local estimate
+                  </h3>
+                  <Badge variant="outline" className="border-warning/50 text-warning">
+                    Local fallback
+                  </Badge>
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Tip: run <code>npm run api</code> to start the backend.
+                </p>
+              </div>
+            </div>
+            <Button type="button" variant="outline" onClick={retryForecast}>
+              Retry
+            </Button>
+          </div>
+        </Card>
+      )}
 
       <Card className="bg-gradient-card border-border/60 mb-6 min-w-0 p-5">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">

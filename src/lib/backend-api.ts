@@ -30,6 +30,7 @@ export interface ForecastApiResponse {
       revenueExplanation: string;
       roasExplanation: string;
       explainabilityMethod?: string;
+      shap_method?: "shap" | "feature_importances_fallback";
       shap_importance?: Array<{
         feature: string;
         shap_value: number;
@@ -140,6 +141,11 @@ export interface WhatIfScenarioResult {
   budgets: Record<string, number>;
 }
 
+export interface WhatIfScenarioInput {
+  name: string;
+  budgetMultipliers: Record<string, number>;
+}
+
 export interface DetectionItem {
   type: string;
   channel?: string | null;
@@ -216,6 +222,13 @@ export interface SpendCurveResponse {
   marginal_roas: number;
 }
 
+interface SpendCurveRequest {
+  rows: CampaignRow[];
+  channel: string;
+  horizon: 30 | 60 | 90;
+  currentBudget: number;
+}
+
 export interface AnomalyItem {
   date: string;
   channel: string;
@@ -261,6 +274,10 @@ export interface AnomalyResponse {
   }>;
 }
 
+interface AnomalyRequest {
+  rows: CampaignRow[];
+}
+
 async function postJson<T>(path: string, body: unknown): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     method: "POST",
@@ -300,6 +317,7 @@ export function decisionSupportApi(
   horizon: 30 | 60 | 90,
   budgets: Record<string, number>,
   targets: { targetRevenue?: number; targetRoas?: number } = {},
+  scenarios: WhatIfScenarioInput[] = [],
 ) {
   return postJson<DecisionSupportResponse>("/api/decision-support", {
     rows,
@@ -307,6 +325,7 @@ export function decisionSupportApi(
     budgets,
     targetRevenue: targets.targetRevenue,
     targetRoas: targets.targetRoas,
+    scenarios,
   });
 }
 
@@ -320,14 +339,16 @@ export function fetchSpendCurveApi(
   horizon: 30 | 60 | 90,
   currentBudget: number,
 ) {
-  return postJson<SpendCurveResponse>("/api/spend-curve", {
+  const body: SpendCurveRequest = {
     rows,
     channel,
     horizon,
-    current_budget: currentBudget,
-  });
+    currentBudget,
+  };
+  return postJson<SpendCurveResponse>("/api/spend-curve", body);
 }
 
 export function fetchAnomaliesApi(rows: CampaignRow[]) {
-  return postJson<AnomalyResponse>("/api/anomalies", { rows });
+  const body: AnomalyRequest = { rows };
+  return postJson<AnomalyResponse>("/api/anomalies", body);
 }

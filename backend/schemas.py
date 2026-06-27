@@ -99,6 +99,7 @@ class ForecastDiagnostics(BaseModel):
     roasExplanation: str
     explainabilityMethod: str = "permutation_baseline"
     shap_importance: List[Dict[str, Any]] = Field(default_factory=list)
+    shap_method: Literal["shap", "feature_importances_fallback"] = "feature_importances_fallback"
     whyThisForecast: List[ForecastContribution] = Field(default_factory=list)
     whyThisForecastSummary: str = ""
     businessBrief: ForecastBusinessBrief
@@ -183,6 +184,17 @@ class SimulationResponse(BaseModel):
     totals: SimulationTotals
     validation: ValidationResponse
     roas_decomposition: List[RoasDecompositionItem] = Field(default_factory=list)
+
+
+class SpendCurveRequest(BaseModel):
+    rows: List[CampaignRow]
+    channel: str = "Google Ads"
+    horizon: int = 30
+    current_budget: float = Field(default=0.0, alias="currentBudget")
+
+
+class AnomalyRequest(BaseModel):
+    rows: List[CampaignRow]
 
 
 class WhatIfScenarioInput(BaseModel):

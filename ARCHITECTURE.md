@@ -98,6 +98,8 @@ The offline evaluator model uses a compact joblib sklearn artifact at `pickle/mo
 
 The offline evaluator uses adaptive per-horizon blend weights determined by holdout gates applied during training.
 
+Current artifact revenue weighting is adaptive per-horizon: 30d 0.60, 60d 0.10, 90d 0.50 (stored in artifact; the best-overall holdout weight is 0.60 as shown in the blend-weight grid).
+
 **Revenue model weight** (gate: CV R2 threshold and chronological holdout):
 
 | Gate | Condition | Revenue model weight |
@@ -158,9 +160,11 @@ Walk-forward validation also reports 30/60/90-day horizon behavior and records w
 
 | Horizon | Folds | Segments | Trained revenue MAE | Safe baseline MAE | Trained coverage | Revenue MAE winner |
 | ------: | ----: | -------: | ------------------: | ----------------: | ---------------: | ------------------ |
-|      30 |     3 |       54 |            2,462.00 |          3,097.88 |           92.59% | Trained model |
-|      60 |     3 |       54 |           10,541.64 |         11,221.15 |           88.89% | Trained model |
-|      90 |     3 |       54 |           20,891.06 |         31,577.72 |           90.74% | Trained model |
+|      30 |     3 |       54 |            2,462.00 |          3,097.88 |          100.0% | Trained model |
+|      60 |     3 |       54 |           10,541.64 |         11,221.15 |          100.0% | Trained model |
+|      90 |     3 |       54 |           20,891.06 |         31,577.72 |           96.3% | Trained model |
+
+Coverage figures are from the walk-forward backtest in `reports/backtest_summary.md`; re-run `python -m backend.backtest` to refresh.
 
 ## Deployment Model
 

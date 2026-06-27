@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Sparkles } from "lucide-react";
+import { AlertTriangle, Sparkles } from "lucide-react";
 import { BudgetSliders, type BudgetSliderChannel } from "@/components/simulator/BudgetSliders";
 import { SimulatorResultsPanel } from "@/components/simulator/ChannelResultCard";
 import { DecisionSupportPanel } from "@/components/simulator/DecisionSupportPanel";
@@ -8,6 +8,7 @@ import { SpendCurveChart } from "@/components/simulator/SpendCurveChart";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import {
   Select,
@@ -23,8 +24,10 @@ import {
   type DecisionSupportResponse,
   type SimChannelResult,
   type SpendCurveResponse,
+  type WhatIfScenarioInput,
 } from "@/lib/backend-api";
 import { useData } from "@/lib/data-store";
+import { fmtCurrency, fmtRoas } from "@/lib/format";
 
 export const Route = createFileRoute("/app/simulator")({
   head: () => ({ meta: [{ title: "Budget simulator - ForecastIQ" }] }),
@@ -37,14 +40,21 @@ const CHANNEL_COLORS: Record<string, string> = {
   "Meta Ads": "var(--color-chart-2)",
   "Microsoft Ads": "var(--color-chart-3)",
 };
+const WHAT_IF_PRESETS = [
+  { name: "Conservative (−20% all)", multiplier: 0.8 },
+  { name: "Base (0%)", multiplier: 1 },
+  { name: "Aggressive (+30% all)", multiplier: 1.3 },
+];
 
 function SimulatorPage() {
   const { rows } = useData();
   const [horizon, setHorizon] = useState<30 | 60 | 90>(30);
   const [budgets, setBudgets] = useState<Record<string, number>>({});
   const [apiSims, setApiSims] = useState<SimChannelResult[] | null>(null);
+  const [apiSimError, setApiSimError] = useState<string | null>(null);
   const [decisionSupport, setDecisionSupport] = useState<DecisionSupportResponse | null>(null);
   const [decisionError, setDecisionError] = useState<string | null>(null);
+  const [whatIfScenarios, setWhatIfScenarios] = useState<WhatIfScenarioInput[]>([]);
   const [targetRevenueDraft, setTargetRevenueDraft] = useState("");
   const [targetRoasDraft, setTargetRoasDraft] = useState("");
   const [targets, setTargets] = useState<{ targetRevenue?: number; targetRoas?: number }>({});
@@ -114,12 +124,18 @@ function SimulatorPage() {
   useEffect(() => {
     if (!rows.length || !baselines) return;
     let active = true;
+    setApiSimError(null);
     simulateBudgetsApi(rows, horizon, budgetPayload)
       .then((response) => {
-        if (active) setApiSims(response.channels);
+        if (active) {
+          setApiSims(response.channels);
+        }
       })
-      .catch(() => {
-        if (active) setApiSims(null);
+      .catch((error: Error) => {
+        if (active) {
+          setApiSims(null);
+          setApiSimError(error.message);
+        }
       });
     return () => {
       active = false;
@@ -130,7 +146,7 @@ function SimulatorPage() {
     if (!rows.length || !baselines) return;
     let active = true;
     setDecisionError(null);
-    decisionSupportApi(rows, horizon, budgetPayload, targets)
+    decisionSupportApi(rows, horizon, budgetPayload, targets, whatIfScenarios)
       .then((response) => {
         if (active) setDecisionSupport(response);
       })
@@ -142,7 +158,7 @@ function SimulatorPage() {
     return () => {
       active = false;
     };
-  }, [baselines, budgetPayload, horizon, rows, targets]);
+  }, [baselines, budgetPayload, horizon, rows, targets, whatIfScenarios]);
 
   useEffect(() => {
     if (!rows.length || !baselines) return;
@@ -212,12 +228,67 @@ function SimulatorPage() {
     );
   }
 
+  function retrySimulation() {
+    setApiSimError(null);
+    setApiSims(null);
+    simulateBudgetsApi(rows, horizon, budgetPayload)
+      .then((response) => {
+        setApiSims(response.channels);
+      })
+      .catch((error: Error) => {
+        setApiSims(null);
+        setApiSimError(error.message);
+      });
+  }
+
+  function buildWhatIfScenarios(): WhatIfScenarioInput[] {
+    return WHAT_IF_PRESETS.map((preset) => ({
+      name: preset.name,
+      budgetMultipliers: Object.fromEntries(
+        CHANNELS.map((channel) => [channel, preset.multiplier]),
+      ),
+    }));
+  }
+
+  function runWhatIfPreset(multiplier: number) {
+    setWhatIfScenarios(buildWhatIfScenarios());
+    applyBudgetScenario(multiplier);
+  }
+
   return (
     <>
       <PageHeader
         title="Budget simulator"
         description="Live budget planning for Google Ads, Meta Ads and Microsoft Ads."
       />
+
+      {apiSimError && !apiSims && (
+        <Card className="mb-6 border-warning/40 bg-warning/5 p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 gap-3">
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-warning/15 text-warning">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="font-semibold">
+                    Forecast backend unavailable — showing local estimate
+                  </h3>
+                  <Badge variant="outline" className="border-warning/50 text-warning">
+                    Local fallback
+                  </Badge>
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Tip: run <code>npm run api</code> to start the backend.
+                </p>
+              </div>
+            </div>
+            <Button type="button" variant="outline" onClick={retrySimulation}>
+              Retry
+            </Button>
+          </div>
+        </Card>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-5">
         <Card className="bg-gradient-card border-border/60 p-6 lg:col-span-2">
@@ -362,6 +433,65 @@ function SimulatorPage() {
           onApplyTargets={applyTargets}
         />
       )}
+
+      <Card className="bg-gradient-card border-border/60 mt-6 min-w-0 overflow-hidden p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h3 className="text-sm font-semibold">What-If Scenarios</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Compare conservative, base and aggressive budget moves with the decision-support
+              engine.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {WHAT_IF_PRESETS.map((preset) => (
+              <Button
+                key={preset.name}
+                type="button"
+                variant="outline"
+                className="h-8 text-xs"
+                onClick={() => runWhatIfPreset(preset.multiplier)}
+              >
+                {preset.name}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {decisionSupport?.scenarios?.length ? (
+          <div className="mt-4 overflow-x-auto">
+            <table className="min-w-[560px] w-full text-sm">
+              <thead>
+                <tr className="border-b border-border/60 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                  <th className="py-2 pr-3">Scenario</th>
+                  <th className="px-3 py-2 text-right">Projected revenue</th>
+                  <th className="px-3 py-2 text-right">Projected ROAS</th>
+                  <th className="py-2 pl-3 text-right">Revenue delta</th>
+                </tr>
+              </thead>
+              <tbody>
+                {decisionSupport.scenarios.map((scenario) => (
+                  <tr key={scenario.name} className="border-b border-border/40 last:border-0">
+                    <td className="py-2 pr-3 font-medium">{scenario.name}</td>
+                    <td className="px-3 py-2 text-right">
+                      {fmtCurrency(scenario.projectedRevenue)}
+                    </td>
+                    <td className="px-3 py-2 text-right">{fmtRoas(scenario.projectedRoas)}</td>
+                    <td className="py-2 pl-3 text-right">
+                      {scenario.revenueDeltaPct >= 0 ? "+" : ""}
+                      {scenario.revenueDeltaPct.toFixed(1)}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="mt-4 text-sm text-muted-foreground">
+            Select a preset to request scenario comparisons from the backend.
+          </p>
+        )}
+      </Card>
     </>
   );
 }

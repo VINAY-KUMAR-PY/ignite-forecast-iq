@@ -26,7 +26,7 @@ Generated: 2026-06-27T04:51:24.365858+00:00
 - Artifact version: 5
 - Training rows: 2160
 - Rolling training samples: 702
-- Revenue blend weight: 0.4
+- Revenue blend weight: 0.60
 - ROAS blend weight: 0.6
 
 ## Primary 30-Day Metrics

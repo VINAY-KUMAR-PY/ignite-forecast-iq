@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import unittest
+import builtins
 from datetime import date, timedelta
+from unittest.mock import patch
 
 import pandas as pd
 
@@ -49,6 +51,22 @@ class ForecastingEngineTests(unittest.TestCase):
                 {driver.direction for driver in summary.diagnostics.whyThisForecast}
             )
         )
+
+    def test_shap_unavailable_uses_feature_importance_fallback(self) -> None:
+        original_import = builtins.__import__
+
+        def import_without_shap(name, *args, **kwargs):
+            if name == "shap":
+                raise ImportError("SHAP unavailable in test")
+            return original_import(name, *args, **kwargs)
+
+        with patch("builtins.__import__", side_effect=import_without_shap):
+            result = forecast_frame(frame(), 30, "overall")
+
+        diagnostics = result["summary"].diagnostics
+        self.assertIsNotNone(diagnostics)
+        self.assertEqual(diagnostics.shap_method, "feature_importances_fallback")
+        self.assertTrue(diagnostics.shap_importance)
 
     def test_simulate_budgets_and_spend_curve_are_sane(self) -> None:
         rows = frame()

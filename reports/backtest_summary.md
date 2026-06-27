@@ -1,6 +1,6 @@
 # ForecastIQ Backtest Summary
 
-Generated: 2026-06-26T10:19:08.674761+00:00
+Generated: 2026-06-27T04:51:24.365858+00:00
 
 ## Holdout Design
 
@@ -94,7 +94,7 @@ Recommendation: Keep roas_model_weight=0.60; it has the best ROAS RMSE/MAE balan
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 | 30 | 3 | 54 | 2462.0 | 4406.72 | 2.66% | 100.0% | 0.05 | 0.06 | 100.0% | 3097.88 | 4501.73 | Trained model |
 | 60 | 3 | 54 | 10541.64 | 18671.63 | 5.04% | 100.0% | 0.05 | 0.06 | 100.0% | 11221.15 | 18229.52 | Trained model |
-| 90 | 3 | 54 | 20891.06 | 33520.44 | 6.86% | 90.74% | 0.06 | 0.07 | 100.0% | 31577.72 | 49786.14 | Trained model |
+| 90 | 3 | 54 | 20891.06 | 33520.44 | 6.86% | 96.3% | 0.06 | 0.07 | 100.0% | 31577.72 | 49786.14 | Trained model |
 
 Note on 30-day ROAS interval coverage: ROAS confidence intervals are derived from revenue intervals
 divided by projected spend, so revenue interval width drives ROAS interval width. The 30-day revenue
@@ -112,7 +112,7 @@ minimum-width floors. This narrows bands while preserving non-negative lower bou
 | ---: | ---: | ---: | ---: | ---: |
 | 30 | 100.0% | 100.0% | 2462.0 | 3097.88 |
 | 60 | 100.0% | 100.0% | 10541.64 | 11221.15 |
-| 90 | 100.0% | 90.74% | 20891.06 | 31577.72 |
+| 90 | 100.0% | 96.3% | 20891.06 | 31577.72 |
 
 ## Confidence Interval Methodology
 

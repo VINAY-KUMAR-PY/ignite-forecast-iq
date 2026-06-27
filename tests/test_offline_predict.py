@@ -21,6 +21,7 @@ from backend.predict import (
     confidence_interval_width,
     fallback_model_config,
     generate_offline_causal_summary,
+    planned_projected_spend,
     read_csv_folder,
     safe_load_model,
     sanitize_rows,
@@ -59,6 +60,89 @@ class OfflinePredictionTests(unittest.TestCase):
 
         self.assertGreater(cleaned.valid_rows, 0)
         self.assert_valid_prediction_rows(rows)
+
+    def test_empty_data_folder_returns_safe_baseline_rows_for_all_horizons(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            raw = read_csv_folder(tmp)
+            cleaned = canonicalize_frame(raw)
+            rows = build_predictions(cleaned.frame, safe_load_model(Path(tmp) / "missing.pkl"))
+
+            self.assertEqual(cleaned.valid_rows, 0)
+            self.assertEqual({row["horizon_days"] for row in rows}, {30, 60, 90})
+            self.assertEqual({row["model_type"] for row in rows}, {SAFE_BASELINE_MODEL_TYPE})
+            self.assertEqual({row["level"] for row in rows}, {"overall"})
+
+    def test_ga4_headers_only_normalize_and_predict(self) -> None:
+        raw = pd.DataFrame(
+            {
+                "sessionSource": ["google", "facebook", "bing"],
+                "sessionMedium": ["cpc", "paid_social", "cpc"],
+                "purchaseRevenue": [1200.0, 800.0, 500.0],
+            }
+        )
+
+        cleaned = canonicalize_frame(raw)
+        rows = build_predictions(cleaned.frame, fallback_model_config("ga4 headers only"))
+
+        self.assertGreater(cleaned.valid_rows, 0)
+        self.assertIn("Google Ads", set(cleaned.frame["channel"]))
+        self.assert_valid_prediction_rows(rows)
+
+    def test_negative_spend_rows_are_removed_from_clean_frame(self) -> None:
+        raw = pd.DataFrame(
+            {
+                "date": ["2026-01-01", "2026-01-02", "2026-01-03"],
+                "channel": ["Google Ads", "Google Ads", "Meta Ads"],
+                "campaign": ["Brand", "Brand", "Prospecting"],
+                "spend": [100.0, -25.0, 80.0],
+                "revenue": [500.0, 125.0, 240.0],
+            }
+        )
+
+        cleaned = canonicalize_frame(raw)
+
+        self.assertEqual(cleaned.valid_rows, 2)
+        self.assertTrue((cleaned.frame["spend"] >= 0).all())
+        self.assertNotIn(-25.0, set(cleaned.frame["spend"].astype(float)))
+
+    def test_planned_projected_spend_uses_history_when_no_budget_override(self) -> None:
+        segment = pd.DataFrame(
+            {
+                "date": pd.date_range("2026-01-01", periods=3, freq="D").strftime("%Y-%m-%d"),
+                "channel": ["Google Ads", "Google Ads", "Google Ads"],
+                "campaign_type": ["Search", "Search", "Search"],
+                "campaign_name": ["Brand", "Brand", "Brand"],
+                "spend": [100.0, 120.0, 130.0],
+                "clicks": [10.0, 12.0, 13.0],
+                "impressions": [1000.0, 1200.0, 1300.0],
+                "conversions": [2.0, 3.0, 3.0],
+                "revenue": [500.0, 620.0, 700.0],
+                "roas": [5.0, 5.17, 5.38],
+            }
+        )
+
+        self.assertEqual(planned_projected_spend(segment, 30, 1234.5, None), 1234.5)
+
+    def test_sanitize_rows_enforces_roas_interval_invariant(self) -> None:
+        rows = sanitize_rows(
+            [
+                {
+                    "level": "overall",
+                    "segment": "all",
+                    "horizon_days": 30,
+                    "expected_revenue": 100.0,
+                    "lower_revenue": 90.0,
+                    "upper_revenue": 110.0,
+                    "expected_roas": 2.0,
+                    "lower_roas": 3.0,
+                    "upper_roas": 1.0,
+                    "model_type": SAFE_BASELINE_MODEL_TYPE,
+                }
+            ]
+        )
+
+        self.assertLessEqual(rows[0]["lower_roas"], rows[0]["expected_roas"])
+        self.assertLessEqual(rows[0]["expected_roas"], rows[0]["upper_roas"])
 
     def test_negative_spend_and_revenue_do_not_crash(self) -> None:
         raw = pd.DataFrame(

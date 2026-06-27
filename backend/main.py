@@ -18,7 +18,7 @@ from .decision_support import build_decision_support, compute_driver_evidence, e
 from .anomaly import compute_trend_breaks, detect_anomalies
 from .forecasting import compute_spend_response_curve, forecast_frame, simulate_budgets
 from .gemini import generate_gemini_insights
-from .predict import train_evaluator_model
+from .train import train_evaluator_model
 from .schemas import (
     DecisionSupportRequest,
     DecisionSupportResponse,

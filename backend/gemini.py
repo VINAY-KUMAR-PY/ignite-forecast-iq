@@ -776,11 +776,14 @@ async def _generate_with_google_genai(
         temperature=_gemini_temperature(),
     )
 
-    response = await asyncio.to_thread(
-        client.models.generate_content,
-        model=model_name,
-        contents=prompt,
-        config=config,
+    response = await asyncio.wait_for(
+        asyncio.to_thread(
+            client.models.generate_content,
+            model=model_name,
+            contents=prompt,
+            config=config,
+        ),
+        timeout=timeout_seconds,
     )
     try:
         parsed = getattr(response, "parsed", None)
@@ -811,9 +814,12 @@ async def _generate_with_legacy_sdk(
             "temperature": _gemini_temperature(),
         },
     )
-    response = await model.generate_content_async(
-        prompt,
-        request_options={"timeout": timeout_seconds},
+    response = await asyncio.wait_for(
+        model.generate_content_async(
+            prompt,
+            request_options={"timeout": timeout_seconds},
+        ),
+        timeout=timeout_seconds,
     )
     return response.text or ""
 

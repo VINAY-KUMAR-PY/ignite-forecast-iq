@@ -38,7 +38,7 @@ def pct_change(new: float, old: float) -> float:
 
 def read_csv_folder(data_dir: str | Path) -> pd.DataFrame:
     """Read CSV files using the same schema-safe path as the evaluator."""
-    from .predict import read_csv_folder as read_evaluator_csv_folder
+    from .evaluator_io import read_csv_folder as read_evaluator_csv_folder
 
     return read_evaluator_csv_folder(data_dir)
 

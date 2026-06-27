@@ -578,16 +578,17 @@ Screenshots of the key workflows — Upload, Dashboard, Forecast, Budget Simulat
 
 ## API Documentation
 
-The backend uses lightweight in-memory rate limiting on the heavier planning endpoints. `/health` is not rate limited. Defaults are intentionally generous for demos: 90 requests/minute for forecast and simulation, 45 requests/minute for insights.
+The backend uses lightweight in-memory rate limiting on the heavier planning endpoints. `/health` is not rate limited. The documented defaults match the `slowapi` decorator limits in `backend/main.py`: 30 requests/minute for forecast, simulation, decision-support, and insights.
 
 Optional rate-limit environment variables:
 
 | Variable | Default | Purpose |
 | --- | ---: | --- |
 | `API_RATE_LIMIT_ENABLED` | `true` | Set to `false` only for controlled local debugging. |
-| `RATE_LIMIT_FORECAST_PER_MINUTE` | `90` | Limit for `POST /api/forecast`. |
-| `RATE_LIMIT_SIMULATE_PER_MINUTE` | `90` | Limit for `POST /api/simulate`. |
-| `RATE_LIMIT_INSIGHTS_PER_MINUTE` | `45` | Limit for `POST /api/insights`. |
+| `RATE_LIMIT_FORECAST_PER_MINUTE` | `30` | Limit for `POST /api/forecast`, matching the `30/minute` decorator. |
+| `RATE_LIMIT_SIMULATE_PER_MINUTE` | `30` | Limit for `POST /api/simulate`, matching the `30/minute` decorator. |
+| `RATE_LIMIT_DECISION_SUPPORT_PER_MINUTE` | `30` | Limit for `POST /api/decision-support`, matching the `30/minute` decorator. |
+| `RATE_LIMIT_INSIGHTS_PER_MINUTE` | `30` | Limit for `POST /api/insights`, matching the `30/minute` decorator. |
 
 Health:
 
@@ -823,9 +824,10 @@ Deployment environment variables:
 | `TRAINING_ADMIN_TOKEN` | Backend only | Required token for `POST /api/train`.                       |
 | `MAX_UPLOAD_ROWS`      | Backend only | Optional max rows accepted by data-ingesting endpoints.     |
 | `API_RATE_LIMIT_ENABLED` | Backend only | Enables protective rate limiting for heavy endpoints.       |
-| `RATE_LIMIT_FORECAST_PER_MINUTE` | Backend only | Optional forecast endpoint limit override.         |
-| `RATE_LIMIT_SIMULATE_PER_MINUTE` | Backend only | Optional simulator endpoint limit override.        |
-| `RATE_LIMIT_INSIGHTS_PER_MINUTE` | Backend only | Optional insights endpoint limit override.         |
+| `RATE_LIMIT_FORECAST_PER_MINUTE` | Backend only | `30/minute` default for `POST /api/forecast`.      |
+| `RATE_LIMIT_SIMULATE_PER_MINUTE` | Backend only | `30/minute` default for `POST /api/simulate`.      |
+| `RATE_LIMIT_DECISION_SUPPORT_PER_MINUTE` | Backend only | `30/minute` default for `POST /api/decision-support`. |
+| `RATE_LIMIT_INSIGHTS_PER_MINUTE` | Backend only | `30/minute` default for `POST /api/insights`.      |
 
 ### Backend on Render or Railway
 

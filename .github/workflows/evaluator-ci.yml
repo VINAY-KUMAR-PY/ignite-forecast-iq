@@ -205,7 +205,7 @@ jobs:
       - name: Run tests with coverage
         run: |
           pip install pytest-cov
-          pytest tests/ --cov=backend --cov-report=term-missing --cov-fail-under=60
+          pytest tests/ --cov=backend --cov-report=term-missing --cov-fail-under=80
 
       - name: Verify committed trained artifact
         run: |

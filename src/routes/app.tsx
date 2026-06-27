@@ -1,3 +1,4 @@
+import React from "react";
 import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { BarChart3, Brain, Calculator, LineChart, Moon, Sparkles, Sun, Upload } from "lucide-react";
 import { useTheme } from "@/lib/theme";
@@ -22,6 +23,37 @@ const NAV: NavItem[] = [
   { to: "/app/simulator", label: "Budget Simulator", icon: Calculator },
   { to: "/app/insights", label: "AI Insights", icon: Brain },
 ];
+
+class RouteErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: "2rem", textAlign: "center" }}>
+          <p style={{ color: "var(--text-danger)", fontWeight: 500 }}>
+            Something went wrong in this view.
+          </p>
+          <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>
+            {this.state.error?.message ?? "Unknown error"}
+          </p>
+          <button onClick={() => this.setState({ hasError: false, error: null })}>Try again</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 function AppLayout() {
   const { theme, toggle } = useTheme();
@@ -107,7 +139,9 @@ function AppLayout() {
           })}
         </div>
         <main className="flex-1 px-6 py-8">
-          <Outlet />
+          <RouteErrorBoundary>
+            <Outlet />
+          </RouteErrorBoundary>
         </main>
       </div>
     </div>

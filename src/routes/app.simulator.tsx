@@ -46,6 +46,13 @@ const WHAT_IF_PRESETS = [
   { name: "Aggressive (+30% all)", multiplier: 1.3 },
 ];
 
+function buildWhatIfScenarios(): WhatIfScenarioInput[] {
+  return WHAT_IF_PRESETS.map((preset) => ({
+    name: preset.name,
+    budgetMultipliers: Object.fromEntries(CHANNELS.map((channel) => [channel, preset.multiplier])),
+  }));
+}
+
 function SimulatorPage() {
   const { rows } = useData();
   const [horizon, setHorizon] = useState<30 | 60 | 90>(30);
@@ -55,6 +62,7 @@ function SimulatorPage() {
   const [decisionSupport, setDecisionSupport] = useState<DecisionSupportResponse | null>(null);
   const [decisionError, setDecisionError] = useState<string | null>(null);
   const [whatIfScenarios, setWhatIfScenarios] = useState<WhatIfScenarioInput[]>([]);
+  const [selectedWhatIfMultiplier, setSelectedWhatIfMultiplier] = useState(1);
   const [targetRevenueDraft, setTargetRevenueDraft] = useState("");
   const [targetRoasDraft, setTargetRoasDraft] = useState("");
   const [targets, setTargets] = useState<{ targetRevenue?: number; targetRoas?: number }>({});
@@ -86,6 +94,13 @@ function SimulatorPage() {
     () => Object.fromEntries(CHANNELS.map((channel) => [channel, totalBudget(channel)])),
     [totalBudget],
   );
+
+  useEffect(() => {
+    if (rows.length > 0 && baselines && whatIfScenarios.length === 0) {
+      setSelectedWhatIfMultiplier(1);
+      setWhatIfScenarios(buildWhatIfScenarios());
+    }
+  }, [baselines, rows.length, whatIfScenarios.length]);
 
   const baselineSims = useMemo<SimChannelResult[]>(() => {
     if (!rows.length || !baselines) return [];
@@ -146,6 +161,7 @@ function SimulatorPage() {
     if (!rows.length || !baselines) return;
     let active = true;
     setDecisionError(null);
+    setDecisionSupport(null);
     decisionSupportApi(rows, horizon, budgetPayload, targets, whatIfScenarios)
       .then((response) => {
         if (active) setDecisionSupport(response);
@@ -241,16 +257,8 @@ function SimulatorPage() {
       });
   }
 
-  function buildWhatIfScenarios(): WhatIfScenarioInput[] {
-    return WHAT_IF_PRESETS.map((preset) => ({
-      name: preset.name,
-      budgetMultipliers: Object.fromEntries(
-        CHANNELS.map((channel) => [channel, preset.multiplier]),
-      ),
-    }));
-  }
-
   function runWhatIfPreset(multiplier: number) {
+    setSelectedWhatIfMultiplier(multiplier);
     setWhatIfScenarios(buildWhatIfScenarios());
     applyBudgetScenario(multiplier);
   }
@@ -449,7 +457,11 @@ function SimulatorPage() {
                 key={preset.name}
                 type="button"
                 variant="outline"
-                className="h-8 text-xs"
+                className={`h-8 text-xs ${
+                  selectedWhatIfMultiplier === preset.multiplier
+                    ? "border-primary bg-muted text-foreground"
+                    : ""
+                }`}
                 onClick={() => runWhatIfPreset(preset.multiplier)}
               >
                 {preset.name}
@@ -486,6 +498,8 @@ function SimulatorPage() {
               </tbody>
             </table>
           </div>
+        ) : !decisionSupport && whatIfScenarios.length > 0 ? (
+          <p className="mt-4 text-sm text-muted-foreground">Loading scenario comparisons...</p>
         ) : (
           <p className="mt-4 text-sm text-muted-foreground">
             Select a preset to request scenario comparisons from the backend.

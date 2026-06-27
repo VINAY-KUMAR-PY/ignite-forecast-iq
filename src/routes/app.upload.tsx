@@ -204,31 +204,59 @@ function UploadPage() {
         </Card>
       </div>
 
-      {result && result.issues.length > 0 && (
-        <Card className="mt-6 min-w-0 border-warning/40 bg-warning/5 p-5">
-          <div className="flex items-center gap-2 text-sm font-semibold text-warning">
-            <AlertCircle className="h-4 w-4" /> {result.issues.length} validation issues
+      {result && (
+        <Card className="mt-6 min-w-0 border-border/60 bg-gradient-card p-5">
+          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Validation details
           </div>
-          <div className="mt-3 max-h-56 overflow-x-auto overflow-y-auto rounded-md border border-border/60 bg-background/50">
-            <table className="min-w-[520px] w-full text-xs">
-              <thead className="sticky top-0 bg-muted/50">
-                <tr>
-                  <th className="px-3 py-2 text-left">Row</th>
-                  <th className="px-3 py-2 text-left">Type</th>
-                  <th className="px-3 py-2 text-left">Message</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.issues.slice(0, 200).map((i, idx) => (
-                  <tr key={idx} className="border-t border-border/40">
-                    <td className="px-3 py-1.5">{i.row}</td>
-                    <td className="px-3 py-1.5 capitalize">{i.type.replace("_", " ")}</td>
-                    <td className="px-3 py-1.5 text-muted-foreground">{i.message}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {result.issues.length > 0 ? (
+            <>
+              <div className="mt-3 flex items-center gap-2 text-sm font-semibold text-warning">
+                <AlertCircle className="h-4 w-4" /> {result.issues.length} validation issues
+              </div>
+              <div className="mt-3 max-h-[200px] overflow-x-auto overflow-y-auto rounded-md border border-border/60 bg-background/50">
+                <table className="min-w-[520px] w-full text-xs">
+                  <thead className="sticky top-0 bg-muted/50">
+                    <tr>
+                      <th className="px-3 py-2 text-left">Row</th>
+                      <th className="px-3 py-2 text-left">Type</th>
+                      <th className="px-3 py-2 text-left">Message</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {result.issues.map((issue, idx) => {
+                      const severity = getIssueSeverity(issue.type);
+                      return (
+                        <tr
+                          key={`${issue.row}-${issue.type}-${idx}`}
+                          className="border-t border-border/40"
+                        >
+                          <td className="px-3 py-1.5">{issue.row}</td>
+                          <td className="px-3 py-1.5">
+                            <Badge
+                              variant={severity === "error" ? "destructive" : "outline"}
+                              className={
+                                severity === "warning"
+                                  ? "border-warning/50 bg-warning/10 text-warning"
+                                  : "capitalize"
+                              }
+                            >
+                              {issue.type.replace("_", " ")}
+                            </Badge>
+                          </td>
+                          <td className="px-3 py-1.5 text-muted-foreground">{issue.message}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ) : (
+            <div className="mt-3 flex items-center gap-2 rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
+              <CheckCircle2 className="h-4 w-4" /> All rows passed validation.
+            </div>
+          )}
         </Card>
       )}
 
@@ -281,4 +309,10 @@ function UploadPage() {
       )}
     </>
   );
+}
+
+function getIssueSeverity(type: string) {
+  const normalized = type.toLowerCase();
+  if (normalized.includes("warning") || normalized === "duplicate") return "warning";
+  return "error";
 }

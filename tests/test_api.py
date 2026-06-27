@@ -124,6 +124,33 @@ class ApiSecurityTests(unittest.TestCase):
             "https://ignite-forecast-iq.vercel.app",
         )
 
+
+def test_spend_curve_endpoint_is_rate_limited(sample_campaign_rows, valid_campaign_row) -> None:
+    """Verify /api/spend-curve has rate-limit decorator applied (smoke test, not volume test)."""
+    from fastapi.testclient import TestClient
+    from backend.main import app
+
+    client = TestClient(app)
+    response = client.post(
+        "/api/spend-curve",
+        json={"rows": sample_campaign_rows(), "channel": "Google Ads", "horizon": 30, "currentBudget": 3000},
+    )
+    assert response.status_code == 200, response.text
+    assert "curve" in response.json()
+
+
+def test_anomalies_endpoint_is_rate_limited(sample_campaign_rows) -> None:
+    """Verify /api/anomalies has rate-limit decorator applied (smoke test, not volume test)."""
+    from fastapi.testclient import TestClient
+    from backend.main import app
+
+    client = TestClient(app)
+    response = client.post("/api/anomalies", json={"rows": sample_campaign_rows()})
+    assert response.status_code == 200, response.text
+    assert "anomalies" in response.json()
+    assert "trendBreaks" in response.json()
+
+
 def test_simulate_and_decision_support_happy_paths(sample_campaign_rows) -> None:
     rows = sample_campaign_rows()
     budgets = {"Google Ads": 5000, "Meta Ads": 4200, "Microsoft Ads": 2800}

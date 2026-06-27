@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-27T04:51:24.365858+00:00",
+  "generated_at": "2026-06-27T13:07:17.454524+00:00",
   "data_dir": "data",
   "holdout_days": 30,
   "train_rows": 2160,
@@ -43,8 +43,8 @@
       "minimum_interval_pct": 0.045,
       "horizon_interval_multiplier": {
         "30": 1.38,
-        "60": 1.38,
-        "90": 1.65
+        "60": 1.55,
+        "90": 1.8
       },
       "low_sample_training": false,
       "sample_confidence_discount": 1.0,
@@ -501,12 +501,12 @@
         "mae": 20891.06,
         "rmse": 33520.44,
         "mape": 6.86,
-        "interval_coverage": 96.3,
+        "interval_coverage": 100.0,
         "revenue": {
           "mae": 20891.06,
           "rmse": 33520.44,
           "mape": 6.86,
-          "interval_coverage": 96.3
+          "interval_coverage": 100.0
         },
         "roas": {
           "mae": 0.06,
@@ -523,12 +523,12 @@
         "mae": 31577.72,
         "rmse": 49786.14,
         "mape": 10.3,
-        "interval_coverage": 70.37,
+        "interval_coverage": 98.15,
         "revenue": {
           "mae": 31577.72,
           "rmse": 49786.14,
           "mape": 10.3,
-          "interval_coverage": 70.37
+          "interval_coverage": 98.15
         },
         "roas": {
           "mae": 0.11,

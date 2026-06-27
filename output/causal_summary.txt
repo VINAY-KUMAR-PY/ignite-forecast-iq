@@ -1,0 +1,22 @@
+=== ForecastIQ Causal Summary (offline, deterministic) ===
+Historical period: 2025-08-22 to 2026-06-17 (300 days)
+Total spend: $1,027,759 | Total revenue: $4,170,596 | Blended ROAS: 4.06x
+Performance is stable (spend and revenue trends within +/-5% over recent 28 days).
+Leading channel by ROAS: Microsoft Ads at 5.44x - likely driven by stronger conversion quality or lower CPC in this channel.
+Leading channel by revenue: Google Ads; highest-risk channel by ROAS: Meta Ads at 3.00x.
+30-day forecast: expected revenue $463,257 at 4.05x ROAS.
+Anomaly signals (top 3, used as forecast evidence):
+  - 2026-06-11 | Google Ads | roas: actual=4.12, expected=4.65, z=-2.5 (warning)
+  - 2026-06-08 | Meta Ads | roas: actual=3.31, expected=2.94, z=2.5 (warning)
+  - 2026-05-29 | Meta Ads | roas: actual=3.29, expected=2.94, z=2.8 (warning)
+Causal effect estimates (observational DiD, not experimental incrementality):
+  - Google Ads on 2026-06-11: incremental revenue $-2,892 (95% CI $-6,306 to $1,192), ROAS effect -0.23x, confidence=low
+  - Meta Ads on 2026-06-08: incremental revenue $2,238 (95% CI $-1,105 to $5,400), ROAS effect 0.16x, confidence=medium
+  - Meta Ads on 2026-05-29: incremental revenue $1,344 (95% CI $-2,143 to $4,797), ROAS effect 0.13x, confidence=medium
+Causal hypothesis: the 3 anomaly signal(s) above, combined with spend trajectory and channel ROAS efficiency, are the observable evidence base for the forecast range. Wider intervals at 60 and 90 days reflect compounding uncertainty from these detected signals and auction dynamics.
+Action: if blended ROAS is above target, test incremental budget in the leading channel before reallocating away from stable performers.
+Budget recommendation: test a controlled shift toward Microsoft Ads while reviewing Meta Ads campaigns for wasted spend, weak conversion quality, or rising CPC.
+Uncertainty warning: treat wider 60 and 90-day intervals as planning ranges, not exact targets, because thinner segment history and residual volatility compound over longer horizons.
+
+=== AI Strategic Recommendation ===
+Offline recommendation: prioritize Microsoft Ads, the strongest ROAS channel, while tightening Meta Ads, the highest-risk channel in this dataset. Keep the next budget move small enough to validate inside the 30-day forecast band before using the wider 60 and 90-day planning ranges. Live Gemini enrichment is optional and does not affect predictions.csv.

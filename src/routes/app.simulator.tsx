@@ -53,7 +53,7 @@ function buildWhatIfScenarios(): WhatIfScenarioInput[] {
   }));
 }
 
-function SimulatorPage() {
+export function SimulatorPage() {
   const { rows } = useData();
   const [horizon, setHorizon] = useState<30 | 60 | 90>(30);
   const [budgets, setBudgets] = useState<Record<string, number>>({});

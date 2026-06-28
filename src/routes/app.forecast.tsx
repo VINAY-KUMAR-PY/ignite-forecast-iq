@@ -51,7 +51,7 @@ export const Route = createFileRoute("/app/forecast")({
 type Level = "overall" | "channel" | "campaign_type" | "campaign";
 type ForecastTarget = "revenue" | "roas";
 
-function ForecastPage() {
+export function ForecastPage() {
   const { rows } = useData();
   const [horizon, setHorizon] = useState<30 | 60 | 90>(30);
   const [level, setLevel] = useState<Level>("overall");

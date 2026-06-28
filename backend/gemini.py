@@ -52,6 +52,135 @@ def _money(value: float) -> str:
     return f"${value:,.0f}"
 
 
+def _build_causal_hypotheses(summary: Dict[str, Any]) -> list[dict[str, Any]]:
+    """Rank competing observational causal hypotheses from DiD/anomaly evidence."""
+    causal_estimates = summary.get("causalEstimates") or []
+    anomalies = summary.get("anomalies") or []
+    trend_breaks = summary.get("trendBreaks") or []
+    driver_evidence = summary.get("driverEvidence") or []
+    channels = summary.get("channels") or []
+    avg_roas = float(summary.get("avgRoas") or 0)
+    roas_trend = float(summary.get("roasTrendPct") or 0)
+
+    hypotheses: list[dict[str, Any]] = []
+    for estimate in causal_estimates[:3]:
+        channel = _string(estimate.get("channel"), "Affected channel")
+        confidence = _enum(estimate.get("confidence"), {"low", "medium", "high"}, "medium")
+        incremental = float(estimate.get("incrementalRevenue") or 0)
+        lower = float(estimate.get("lowerRevenue") or 0)
+        upper = float(estimate.get("upperRevenue") or 0)
+        parallel = bool(estimate.get("parallelTrendPassed", True))
+        hypotheses.append(
+            {
+                "rank": len(hypotheses) + 1,
+                "title": f"{channel} budget or demand shift",
+                "confidence": confidence,
+                "hypothesis": (
+                    f"{channel} revenue changed because a spend, demand, or campaign-mix shift produced "
+                    f"an observational DiD effect of {_money(incremental)}."
+                ),
+                "supportingEvidence": [
+                    f"DiD estimate for {channel}: {_money(incremental)} incremental revenue.",
+                    f"95% interval spans {_money(lower)} to {_money(upper)}.",
+                    f"Method: {estimate.get('method', 'difference_in_differences')}; confidence={confidence}.",
+                ],
+                "contradictingEvidence": [
+                    "Parallel-trends check is weak, so this is a hypothesis rather than proof."
+                    if not parallel
+                    else "No randomized incrementality test is available; attribution remains observational."
+                ],
+                "recommendedTest": "Run a controlled budget holdout or staged budget ramp and compare actual revenue against the forecast interval.",
+            }
+        )
+
+    if driver_evidence:
+        evidence = driver_evidence[0]
+        channel = _string(evidence.get("channel"), "Primary channel")
+        corr = float(evidence.get("spendRevenueDeltaCorrelation") or 0)
+        hypotheses.append(
+            {
+                "rank": len(hypotheses) + 1,
+                "title": f"{channel} spend-response relationship",
+                "confidence": _enum(evidence.get("strength"), {"low", "medium", "high"}, "medium"),
+                "hypothesis": (
+                    f"{channel} may be driving incremental revenue because spend deltas and revenue deltas "
+                    f"move together with correlation {corr:.2f}."
+                ),
+                "supportingEvidence": [
+                    f"Spend/revenue delta correlation for {channel}: {corr:.2f}.",
+                    f"Direction={evidence.get('direction', 'mixed')} across {int(evidence.get('observations') or 0)} observations.",
+                ],
+                "contradictingEvidence": [
+                    "Correlation evidence cannot separate channel causality from seasonality, promotions, or tracking mix."
+                ],
+                "recommendedTest": "Scale the channel in staged increments and monitor marginal ROAS versus the forecast baseline.",
+            }
+        )
+
+    if anomalies or trend_breaks:
+        signal = (anomalies or trend_breaks)[0]
+        channel = _string(signal.get("channel"), "Anomalous segment")
+        hypotheses.append(
+            {
+                "rank": len(hypotheses) + 1,
+                "title": f"{channel} anomaly or trend break",
+                "confidence": _enum(signal.get("severity"), {"low", "medium", "high", "warning", "critical"}, "medium").replace("warning", "medium").replace("critical", "high"),
+                "hypothesis": (
+                    f"{channel} performance may have shifted because an anomaly or trend break changed the recent baseline used for forecasting."
+                ),
+                "supportingEvidence": [
+                    f"Signal date={signal.get('date', 'unknown')}, metric={signal.get('metric', signal.get('direction', 'revenue'))}.",
+                    f"Detected anomaly count={len(anomalies)} and trend-break count={len(trend_breaks)}.",
+                ],
+                "contradictingEvidence": [
+                    "A single anomaly may be a tracking or reporting artifact unless it repeats across adjacent days."
+                ],
+                "recommendedTest": "Audit tracking and campaign changes around the signal date, then rerun the forecast after excluding confirmed data errors.",
+            }
+        )
+
+    if len(hypotheses) < 2:
+        best = max(channels, key=lambda c: float(c.get("roas") or 0), default={"name": "Primary channel", "roas": 0})
+        weakest = min(channels, key=lambda c: float(c.get("roas") or 0), default={"name": "Lower-efficiency channel", "roas": 0})
+        hypotheses.extend(
+            [
+                {
+                    "rank": len(hypotheses) + 1,
+                    "title": f"{best.get('name')} efficiency-led growth",
+                    "confidence": "medium",
+                    "hypothesis": f"{best.get('name')} is likely supporting revenue because ROAS is {float(best.get('roas') or 0):.2f}x versus blended {avg_roas:.2f}x.",
+                    "supportingEvidence": [
+                        f"{best.get('name')} ROAS={float(best.get('roas') or 0):.2f}x.",
+                        f"Blended ROAS={avg_roas:.2f}x.",
+                    ],
+                    "contradictingEvidence": [
+                        "High historical ROAS can saturate if incremental spend reaches lower-intent traffic."
+                    ],
+                    "recommendedTest": "Use the budget simulator to test a staged increase and monitor marginal ROAS weekly.",
+                },
+                {
+                    "rank": len(hypotheses) + 2,
+                    "title": f"{weakest.get('name')} efficiency drag",
+                    "confidence": "medium" if roas_trend < 0 else "low",
+                    "hypothesis": f"{weakest.get('name')} may be constraining blended ROAS because it sits below the portfolio benchmark.",
+                    "supportingEvidence": [
+                        f"{weakest.get('name')} ROAS={float(weakest.get('roas') or 0):.2f}x.",
+                        f"Portfolio ROAS trend={roas_trend:.1f}%.",
+                    ],
+                    "contradictingEvidence": [
+                        "Lower ROAS channels may still be valuable if they create assisted conversions not represented in last-touch revenue."
+                    ],
+                    "recommendedTest": "Refresh creative or bids, then compare conversion-rate and ROAS movement before adding budget.",
+                },
+            ]
+        )
+
+    for index, item in enumerate(hypotheses[:5], start=1):
+        item["rank"] = index
+        item["confidence"] = _enum(item.get("confidence"), {"low", "medium", "high"}, "medium")
+    return hypotheses[:5]
+
+
 def _fallback_insights(summary: Dict[str, Any]) -> InsightsResponse:
     """Create data-grounded insights when Gemini is unavailable."""
     channels: List[Dict[str, Any]] = summary.get("channels") or []
@@ -250,6 +379,7 @@ def _fallback_insights(summary: Dict[str, Any]) -> InsightsResponse:
                 "kpi": "Revenue growth with ROAS at or above target",
             },
         ],
+        "causalHypotheses": _build_causal_hypotheses(summary),
     }
     return InsightsResponse.model_validate(payload)
 
@@ -525,7 +655,7 @@ def _build_prompt(summary: Dict[str, Any]) -> str:
 
 Think step by step internally:
 STEP 1 - DIAGNOSE: Identify the 3 most important performance signals, strongest channel by ROAS, weakest channel by ROAS, and most significant trend. Cite exact numbers.
-STEP 2 - CAUSAL HYPOTHESES: Explain the most plausible cause-and-effect chain behind each major movement. Use causal language such as "because", "likely due to", or "consistent with", and tie each claim to at least two named metrics. Use causal_effect_estimates when available, citing incremental revenue effect and confidence interval, while explicitly stating these are observational estimates rather than proof of incrementality. Use statistical_driver_evidence as supporting association evidence only.
+STEP 2 - CAUSAL HYPOTHESES: Return a ranked list of at least two competing causal hypotheses. Explain the most plausible cause-and-effect chain behind each major movement. Use causal language such as "because", "likely due to", or "consistent with", and tie each claim to at least two named metrics. Use causal_effect_estimates when available, citing incremental revenue effect and confidence interval, while explicitly stating these are observational estimates rather than proof of incrementality. Use statistical_driver_evidence as supporting association evidence only. For each hypothesis, include evidence that supports it and evidence that could contradict it.
 Example weak framing: "ROAS is down 12%."
 Example causal framing: "ROAS is down 12% likely because CPC rose 9% while conversion rate stayed flat, consistent with rising auction competition rather than deteriorating landing-page quality."
 Example weak framing: "Revenue is up in Google Ads."
@@ -544,10 +674,12 @@ Return strict JSON matching this ForecastIQ app schema:
   "budgetAllocation": [{{"channel": "...", "currentSharePct": 0, "recommendedSharePct": 0, "rationale": "...", "expectedImpact": "..."}}],
   "risks": [{{"title": "...", "severity": "low|medium|high", "description": "...", "mitigation": "..."}}],
   "growthOpportunities": [{{"title": "...", "description": "...", "expectedImpact": "...", "effort": "low|medium|high"}}],
-  "actionPlan": [{{"priority": "high|medium|low", "timeline": "...", "owner": "...", "action": "...", "kpi": "..."}}]
+  "actionPlan": [{{"priority": "high|medium|low", "timeline": "...", "owner": "...", "action": "...", "kpi": "..."}}],
+  "causalHypotheses": [{{"rank": 1, "title": "...", "confidence": "low|medium|high", "hypothesis": "...", "supportingEvidence": ["..."], "contradictingEvidence": ["..."], "recommendedTest": "..."}}]
 }}
 Recommended budget shares must sum to 100. Cite specific revenue, ROAS, forecast and campaign numbers.
 Every risk, growth opportunity, and revenue driver must contain a causal connective tied to named metrics.
+Return at least two causalHypotheses when anomaly, driver, or causal_effect evidence exists.
 Return JSON only, with no Markdown.
 """
 
@@ -765,6 +897,42 @@ def _merge_with_fallback(payload: dict[str, Any], summary: Dict[str, Any]) -> di
         )
     if actions:
         repaired["actionPlan"] = actions
+
+    hypotheses = []
+    for index, item in enumerate(_list(payload.get("causalHypotheses"))):
+        data = _dict(item)
+        default = _fallback_item(
+            fallback["causalHypotheses"],
+            index,
+            {
+                "rank": index + 1,
+                "title": "Causal hypothesis",
+                "confidence": "medium",
+                "hypothesis": "Performance changed because media mix, demand, or tracking shifted.",
+                "supportingEvidence": ["ForecastIQ received insufficient structured evidence."],
+                "contradictingEvidence": ["No randomized lift test is available."],
+                "recommendedTest": "Validate with a controlled budget test.",
+            },
+        )
+        hypotheses.append(
+            {
+                "rank": int(_number(data.get("rank"), default.get("rank", index + 1))),
+                "title": _string(data.get("title"), default["title"]),
+                "confidence": _enum(data.get("confidence"), {"low", "medium", "high"}, default["confidence"]),
+                "hypothesis": _string(data.get("hypothesis"), default["hypothesis"]),
+                "supportingEvidence": [
+                    _string(value, "Evidence reference unavailable.")
+                    for value in (_list(data.get("supportingEvidence")) or default["supportingEvidence"])
+                ],
+                "contradictingEvidence": [
+                    _string(value, "Contradicting evidence unavailable.")
+                    for value in (_list(data.get("contradictingEvidence")) or default["contradictingEvidence"])
+                ],
+                "recommendedTest": _string(data.get("recommendedTest"), default["recommendedTest"]),
+            }
+        )
+    if hypotheses:
+        repaired["causalHypotheses"] = hypotheses
 
     return repaired
 

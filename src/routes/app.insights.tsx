@@ -33,7 +33,7 @@ export const Route = createFileRoute("/app/insights")({
   component: InsightsPage,
 });
 
-function InsightsPage() {
+export function InsightsPage() {
   const { rows } = useData();
   const [insights, setInsights] = useState<InsightsResponse | null>(null);
   const [loading, setLoading] = useState(false);

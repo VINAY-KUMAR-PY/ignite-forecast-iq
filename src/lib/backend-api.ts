@@ -214,6 +214,15 @@ export interface InsightsResponse {
     action: string;
     kpi: string;
   }>;
+  causalHypotheses?: Array<{
+    rank: number;
+    title: string;
+    confidence: "low" | "medium" | "high";
+    hypothesis: string;
+    supportingEvidence: string[];
+    contradictingEvidence: string[];
+    recommendedTest: string;
+  }>;
 }
 
 export interface SpendCurveResponse {

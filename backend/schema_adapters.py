@@ -237,6 +237,8 @@ def normalize_marketing_frame(raw: pd.DataFrame) -> AdapterResult:
         frame.loc[missing_channel, "channel"] = source_medium[missing_channel]
 
     frame["channel"] = frame["channel"].map(_friendly_channel)
+    if _looks_like_microsoft_ads(raw.columns):
+        frame["channel"] = frame["channel"].mask(_is_blank(frame["channel"]), "Microsoft Ads")
 
     missing_campaign_type = _is_blank(frame["campaign_type"])
     if missing_campaign_type.any():
@@ -353,6 +355,11 @@ def _coalesce_aliases(raw: pd.DataFrame, canonical: str, default: Any) -> pd.Ser
 
 def _has_cost_micros_column(columns: Iterable[str]) -> bool:
     return any(normalize_column(column) in {"metrics_cost_micros", "cost_micros"} for column in columns)
+
+
+def _looks_like_microsoft_ads(columns: Iterable[str]) -> bool:
+    normalized = {normalize_column(column) for column in columns}
+    return {"timeperiod", "campaigntype", "campaignname"}.issubset(normalized)
 
 
 def _reconcile_with_revenue_authority(combined: pd.DataFrame, authority_schema: str) -> pd.DataFrame:

@@ -17,7 +17,7 @@ export const Route = createFileRoute("/app/upload")({
   component: UploadPage,
 });
 
-function UploadPage() {
+export function UploadPage() {
   const { setRows, loadDemo, rows, isDemo } = useData();
   const [result, setResult] = useState<ValidationResult | null>(null);
   const [dragging, setDragging] = useState(false);

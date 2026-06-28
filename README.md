@@ -1,451 +1,70 @@
-# AIgnition ForecastIQ
+# ForecastIQ
 
-[![Evaluator CI](https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq/actions/workflows/evaluator-ci.yml/badge.svg)](https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq/actions/workflows/evaluator-ci.yml)
+ForecastIQ is an AI-powered ecommerce forecasting and budget-decision platform built for NetElixir AIgnition 3.0. It turns GA4, Shopify, Google Ads, Meta Ads, and Microsoft/Bing Ads CSV exports into revenue forecasts, ROAS forecasts, confidence intervals, budget simulations, anomaly signals, and an executive action brief.
 
-> **Technical reference:** [`TECHNICAL.md`](./TECHNICAL.md) - **Validation notes:** [`VALIDATION_NOTES.md`](./VALIDATION_NOTES.md)
+## 30-Second Judge Summary
 
-AIgnition ForecastIQ is an AI-powered ecommerce forecasting platform built for NetElixir AIgnition 3.0. It preserves the original Lovable React experience and adds a production-style FastAPI backend for data validation, XGBoost revenue and ROAS forecasting, budget simulation, model persistence, and Gemini-assisted executive insights.
+Marketing teams often know what happened in campaigns, but not what budget action to take next. ForecastIQ closes that gap:
 
-> **Deployment:** Backend → [Render](https://render.com) using `render.yaml`.
-> Frontend → [Vercel](https://vercel.com) using `vercel.json`.
-> Set `VITE_API_BASE_URL` in Vercel to your Render backend URL.
-> Set `GEMINI_API_KEY` and comma-separated `CORS_ORIGINS` as Render environment secrets.
-> One-click deploy path is fully configured. See `ARCHITECTURE.md` for self-hosting instructions.
+- Upload or load demo ecommerce marketing data.
+- Validate rows and normalize common GA4, Shopify, and Ads schemas.
+- Forecast 30, 60, and 90-day revenue and ROAS at overall, channel, campaign type, and campaign levels.
+- Simulate budget moves across Google Ads, Meta Ads, and Microsoft Ads.
+- Generate AI insights with Gemini when available and deterministic fallback when unavailable.
+- Export an executive-ready decision brief.
 
-## Evaluator Reliability Snapshot
+The offline evaluator path is intentionally isolated: it uses `run.sh`, a compact sklearn model artifact, and no servers, Gemini, frontend, or internet.
 
-The offline evaluator path is intentionally isolated from the web app. `run.sh` reads CSV files, loads the packaged model when compatible, writes `predictions.csv`, and exits without starting frontend/backend servers or calling Gemini.
-
-| Item                                 | Value                                                                                      |
-| ------------------------------------ | ------------------------------------------------------------------------------------------ |
-| Trained-artifact runtime             | Python 3.11-3.14; artifact built and fully verified on 3.14.4                              |
-| scikit-learn version                 | 1.9.0                                                                                      |
-| Model artifact                       | `pickle/model.pkl`                                                                         |
-| Model artifact size                  | ~886 KB                                                                                    |
-| Model artifact version               | 5                                                                                          |
-| Training rows                        | 2,400 full sample rows; 2,160 used as training split in primary 30-day holdout backtest    |
-| Rolling training samples             | 810 in the packaged artifact; 702 in the primary holdout training split                    |
-| Feature count                        | 48 evaluator features including spend, trend, seasonality, and baseline-anchor regressors  |
-| 60-day revenue interval coverage     | 100.0% walk-forward (calibrated multiplier 1.55; target >=90%)                             |
-| 90-day revenue interval coverage     | 96.3% walk-forward (recalibrated multiplier 1.80; target >=90%)                            |
-| 30-day ROAS interval coverage        | 100.0% walk-forward (calibrated multiplier 1.38; target >=90%)                             |
-| 60-day revenue MAPE (walk-forward)   | 5.04% trained model vs 5.37% safe baseline                                                  |
-| 90-day revenue MAPE (walk-forward)   | 6.86% trained model vs 10.30% safe baseline                                                 |
-| Normal evaluator mode                | `trained_model`                                                                            |
-| Safe fallback mode                   | `safe_baseline_fallback` for missing/corrupt/incompatible model or unsupported hidden data |
-
-## 30-Second Product Summary
-
-ForecastIQ helps ecommerce marketing teams decide where the next budget dollar should go. A judge can click **Try Live Demo** from the homepage and land directly in a populated Decision Center, or upload campaign history manually. The product then shows 30/60/90-day revenue and ROAS forecasts, budget scenarios, and a plain-language executive brief. The offline evaluator path remains fast and deterministic, while the live app gives judges a polished planning experience for Google Ads, Meta Ads, and Microsoft Ads investments.
-
-## Problem Statement
-
-Ecommerce marketing teams need to understand how paid media spend across Google Ads, Meta Ads, and Microsoft Ads will affect revenue and ROAS over the next 30, 60, and 90 days. Static dashboards show what happened, but they do not reliably answer planning questions such as:
-
-- Which channel should receive incremental budget?
-- What revenue range should leadership expect?
-- Which campaigns are creating or destroying efficiency?
-- What risks should be addressed before reallocating spend?
-
-ForecastIQ turns historical campaign data into forward-looking forecasts, confidence intervals, and business recommendations.
-
-## Business Context
-
-Digital marketing decisions are made under uncertainty. A useful planning product must connect predictive modeling with practical media operations: validation of uploaded data, explainable forecasts, scenario planning, and executive-level recommendations. This project focuses on the workflows a growth, analytics, or performance marketing team would use before weekly or monthly budget decisions.
-
-## Solution Overview
-
-The application contains four core flows:
-
-- Dashboard: campaign performance overview and analytics charts.
-- CSV Upload: client-side parsing plus backend validation for missing values, invalid dates, duplicate records, negative spend, and invalid revenue.
-- Forecast: backend-powered 30, 60, and 90-day forecasts for overall, channel, campaign type, and campaign-level planning.
-- Budget Simulator: dynamic revenue and ROAS projections when Google Ads, Meta Ads, or Microsoft Ads budgets change.
-- Decision Intelligence: AI budget optimization, what-if scenario comparison, risk and opportunity detection, and channel health scoring.
-- AI Insights: Gemini-generated, or deterministic fallback, causal-hypothesis executive summaries, risks, opportunities, revenue drivers, budget recommendations, and action plans.
-
-The frontend keeps the existing pages, routes, components, and styling. Backend APIs replace the mock forecast and insight paths while frontend fallbacks remain available for local resilience.
-
-## For Judges
-
-Use this path for the fastest evaluation:
-
-1. Start at `/` and click **Try Live Demo**. ForecastIQ loads sample multi-channel campaign data automatically and opens the app.
-2. Review `/app` for the Executive Decision Center: recommended budget action, expected impact, confidence, and risk.
-3. Open `/app/upload` only if you want to inspect validation or upload your own GA4, Shopify, or Ads CSV.
-4. Open `/app/forecast` to review 30/60/90-day forecasts, confidence intervals, model accuracy, and feature-driver explanations.
-5. Open `/app/simulator` to test budget increases/decreases and review channel recommendations.
-6. Open `/app/insights`, generate the executive brief, and export the report.
-7. Optionally verify the offline evaluator with `./run.sh ./data ./pickle/model.pkl ./output/predictions.csv`.
-
-Judge-demo checklist:
-
-| Check | Where to verify |
-| --- | --- |
-| One-click demo | Homepage **Try Live Demo** button |
-| Upload CSV | `/app/upload`, sample CSV or custom GA4/Shopify/Ads export |
-| Forecast generation | `/app/forecast`, 30/60/90-day forecast selector |
-| Why this forecast? | `/app/forecast`, local explainability panel |
-| Budget simulator | `/app/simulator`, quick scenarios and recommended allocation |
-| AI insights | `/app/insights`, Gemini or deterministic fallback brief |
-| Export/report | `/app/insights`, Export PDF |
-| Offline evaluator | `./run.sh ./data ./pickle/model.pkl ./output/predictions.csv` |
-| Health check | `GET /health` |
-| Deployment instructions | Live Demo Deployment section below |
-
-## Dashboard Features
-
-- Executive summary cards for forecasted revenue, expected ROAS, best channel, weakest channel, and confidence score.
-- Executive Decision Center with recommended budget action, expected revenue impact, ROAS impact, risk level, and top next actions.
-- Risk and opportunity alerts written in business language.
-- Revenue, spend, ROAS, channel contribution, and campaign performance charts.
-- Empty, loading, and fallback states so the demo remains usable even when backend AI services are unavailable.
-
-## Feature Highlights
-
-- Production-style FastAPI backend with CORS and typed API contracts.
-- CSV validation for missing values, invalid dates, duplicates, negative spend, and invalid revenue.
-- XGBoost revenue and ROAS forecasting for 30, 60, and 90 day horizons.
-- Horizon-specific evaluator sub-models for 30, 60, and 90 day revenue targets.
-- Holiday and seasonality feature flags for Q4, major US retail weeks, cyclical month/week signals, and Black Friday proximity.
-- Anomaly detection for revenue, spend, ROAS, CTR, and structural trend breaks.
-- Forecast Accuracy Dashboard with MAE, RMSE, MAPE, and R2.
-- Forecast Explainability Center with XGBoost feature importance and natural-language driver explanations.
-- Confidence interval visualization and planning-case summaries.
-- Budget Simulator for Google Ads, Meta Ads, and Microsoft Ads with spend response curves and diminishing-returns markers.
-- Decision intelligence: AI budget optimizer, what-if scenarios, risk detection, opportunity detection, and channel health scoring.
-- Gemini-backed AI insights with deterministic fallback output and anomaly-aware causal-hypothesis framing.
-- Executive PDF report export from the AI Insights workflow, with a jsPDF path when dependencies are installed and a browser-safe fallback.
-
-## Business Impact
-
-ForecastIQ is designed for weekly and monthly marketing planning. It helps teams:
-
-- Quantify revenue and ROAS expectations before budgets are committed.
-- Compare conservative, expected, and upside planning cases.
-- Identify budget inefficiency and over-spending risk.
-- Find high-growth or underinvested channels.
-- Convert technical forecast output into executive-ready actions.
-- Export a PDF-ready business report for leadership review.
-
-## GA4, Shopify, and Ads Compatibility
-
-ForecastIQ accepts canonical campaign CSVs and common ecommerce exports. The schema adapter layer auto-detects source columns, normalizes each CSV before merging, and produces the required modeling shape:
-
-`date, channel, campaign_type, campaign_name, spend, clicks, impressions, conversions, revenue, roas`
-
-Supported examples:
-
-| Source        | Supported fields                                                                                   | Normalization behavior                                                                                           |
-| ------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| GA4           | `sessionSource`, `sessionMedium`, `purchaseRevenue`, `eventValue`, `sessions`, `conversions`       | Maps source/medium to channel and campaign context, uses sessions as traffic volume, defaults missing spend to 0 |
-| Shopify       | `created_at`, `total_price`, `sales`, `orders`, `product_type`                                     | Maps order revenue and product type into ecommerce campaign rows, defaults missing media spend to 0              |
-| Ads platforms | `spend`, `cost`, `metrics_cost_micros`, `clicks`, `metrics_clicks`, `impressions`, `metrics_impressions`, `conversions`, `metrics_conversions`, `conversion_value`, `metrics_conversions_value`, `conversion`, `revenue`, `campaign`, `campaign_name` | Maps platform exports into paid media rows, converts Google Ads micros to currency units, and calculates ROAS when absent |
-
-Multiple CSV files can be placed in the same `data/` folder. Each file is normalized with source provenance, then reconciled before modeling. If Shopify/order data is present, it is treated as revenue-of-record; GA4 and Ads rows are used for attribution, spend, clicks, impressions, and conversion shape instead of adding duplicate revenue. If GA4 and Ads are present without Shopify, GA4 revenue is treated as the revenue source and Ads rows provide media cost and delivery signals.
-
-The public AIgnition Drive resource was inspected for visible file metadata and headers. It currently exposes Ads-shaped files named `google_ads_campaign_stats.csv`, `meta_ads_campaign_stats.csv`, and `bing_campaign_stats.csv`; the adapter supports their observed columns including `segments_date`, `metrics_cost_micros`, `metrics_conversions_value`, `date_start`, `conversion`, `TimePeriod`, `CampaignType`, and `CampaignName`.
-
-## Why This Solution Stands Out
-
-- It is evaluator-safe: `run.sh` produces predictions offline without starting servers or using external APIs.
-- It is product-ready: the React app turns forecasts into decisions, not just charts.
-- It is business-aware: every technical output is tied to a marketing action, budget move, risk, or opportunity.
-- It is resilient: Gemini insights are supported, but deterministic fallback insights keep demos reliable.
-- It is explainable: forecast metrics, confidence intervals, feature importance, and executive summaries are all visible to the user.
-
-## Architecture
+## Architecture At A Glance
 
 ```mermaid
 flowchart LR
-  UI["React + TypeScript frontend"] --> API["FastAPI backend"]
-  UI --> LocalStore["Browser data store"]
-  API --> Validation["Validation and preprocessing"]
-  API --> Forecasting["XGBoost forecasting"]
-  API --> Decision["Decision intelligence"]
-  API --> Gemini["Gemini or fallback insights"]
-  Forecasting --> Model["pickle/model.pkl"]
-  API --> UI
+  CSV["CSV exports"] --> Adapter["Schema adapters"]
+  Adapter --> Validation["Validation + feature engineering"]
+  Validation --> Offline["Offline evaluator: run.sh -> backend.predict"]
+  Validation --> API["FastAPI backend"]
+  Offline --> Predictions["predictions.csv + causal_summary.txt"]
+  API --> Forecast["Forecast API"]
+  API --> Simulator["Budget simulator"]
+  API --> Gemini["Gemini insights + fallback"]
+  Forecast --> UI["React dashboard"]
+  Simulator --> UI
+  Gemini --> UI
 ```
+
+Key technical details:
+
+- Frontend: React 19, TypeScript, TanStack Router, Tailwind, Recharts.
+- Backend: FastAPI, Pydantic v2, SlowAPI rate limiting.
+- Live forecast path: XGBoost with sklearn fallback.
+- Offline evaluator path: joblib sklearn GradientBoostingRegressor artifact at `pickle/model.pkl`.
+- AI layer: Gemini via `google-genai`, with deterministic fallback and ranked causal hypotheses.
+- Reliability: evaluator-only dependencies are separate from app dependencies.
+
+## One-Click Demo
+
+1. Start backend and frontend:
+
+```bash
+pip install -r requirements-app.txt
+npm install
+npm run api
+npm run dev
+```
+
+2. Open the frontend and click **Try Live Demo**.
+
+3. Walk through:
 
 ```text
-React + TypeScript frontend
-  |
-  | HTTP JSON
-  v
-FastAPI backend
-  |
-  +-- schema_adapters.py: GA4, Shopify, Ads, and canonical CSV normalization
-  +-- data_preprocessing.py: validation, aggregation, feature engineering
-  +-- forecasting.py: XGBoost training, prediction, intervals, simulation
-  +-- decision_support.py: budget optimizer, what-if, risks, opportunities, health scores
-  +-- gemini.py: Gemini insights with deterministic fallback
-  +-- train.py / predict.py: offline model and submission workflows
-  |
-  v
-pickle/model.pkl
+Homepage -> Dashboard -> Forecast -> Budget Simulator -> AI Insights
 ```
 
-Key design choices:
+The demo uses built-in sample campaign data, so judges do not need to upload a CSV manually.
 
-- FastAPI provides typed request and response contracts through Pydantic.
-- The backend accepts normalized campaign rows from the frontend and CSV-driven CLI workflows.
-- `pickle/model.pkl` stores a model bundle containing revenue and ROAS estimators.
-- The offline `run.sh` path does not require Gemini or internet access.
-- CORS defaults support Vite development on ports 5173 and 3000.
+## Offline Evaluator Command
 
-## Data Flow Diagram
-
-```mermaid
-sequenceDiagram
-  participant User
-  participant Frontend
-  participant API as FastAPI
-  participant Model as XGBoost
-  participant AI as Gemini/Fallback
-
-  User->>Frontend: Upload campaign CSV
-  Frontend->>API: POST /api/validate
-  API-->>Frontend: Valid rows and issues
-  Frontend->>API: POST /api/forecast
-  API->>Model: Train and forecast revenue/ROAS
-  API-->>Frontend: Forecasts, intervals, diagnostics, brief
-  Frontend->>API: POST /api/simulate
-  Frontend->>API: POST /api/decision-support
-  API-->>Frontend: Budget, risk, opportunity, health analytics
-  Frontend->>API: POST /api/insights
-  API->>AI: Generate or fallback
-  API-->>Frontend: Executive insights
-  Frontend-->>User: Export PDF report
-```
-
-## Forecasting Methodology
-
-ForecastIQ aggregates validated campaign rows to the requested planning grain and trains supervised time-series regressors. The primary estimator is XGBoost; if XGBoost is unavailable, the code can fall back to a scikit-learn gradient boosting regressor.
-
-Feature engineering includes:
-
-- Spend, clicks, impressions, and conversions.
-- Day of week, month, trend, and yearly seasonality.
-- Revenue or ROAS lag features at 1, 7, and 14 days.
-- Rolling target and spend averages at 7 and 28 days.
-- Recursive future features for multi-day forecasting.
-
-Forecast outputs include:
-
-- Historical points for chart continuity.
-- Future predicted values.
-- Lower and upper confidence bounds derived from residual volatility.
-- Forecast accuracy metrics: MAE, RMSE, MAPE, and R2 score for revenue and ROAS.
-- Model diagnostics: interval coverage, training days, XGBoost feature importance, and top feature drivers.
-- Natural-language explainability for revenue and ROAS drivers.
-- Channel-level spend/revenue delta correlations that ground causal hypotheses while explicitly avoiding incrementality claims.
-- Executive business brief with summary, risks, opportunities, and recommended actions.
-
-Confidence intervals are residual-based and widen over the forecast horizon. They are shown both as chart bands and as planning-case summaries so users can distinguish conservative, expected, and upside outcomes.
-
-Medium confidence does not mean model failure. It indicates wider uncertainty bands caused by thinner segment history, longer forecast horizons, or higher residual volatility. ForecastIQ surfaces this honestly so marketers can treat those forecasts as planning ranges rather than exact numbers.
-
-Supported horizons are 30, 60, and 90 days. Supported levels are overall, channel, campaign type, and campaign.
-
-## Evaluator Model Validation
-
-The offline evaluator artifact at `pickle/model.pkl` is a compact joblib artifact trained with the pinned environment below:
-
-| Item                 | Value                        |
-| -------------------- | ---------------------------- |
-| Python               | 3.14.4                       |
-| scikit-learn         | 1.9.0                        |
-| scipy                | 1.17.1                       |
-| pandas               | 3.0.3                        |
-| numpy                | 2.4.6                        |
-| joblib               | 1.5.3                        |
-| Artifact type        | `forecastiq_evaluator_model` |
-| Artifact version     | 5                            |
-| Evaluator model type | `trained_model`              |
-| Artifact size        | ~886 KB                      |
-| Training rows        | 2,400 full sample rows; 2,160 used as training split in 30-day holdout backtest |
-| Rolling samples      | 810 in the packaged artifact; 702 in the primary holdout training split |
-| Feature count        | 48                           |
-| Revenue blend weight | adaptive per-horizon: 30d 0.60, 60d 0.10, 90d 0.50 |
-| Interval horizon multiplier | 30d 1.38, 60d 1.38, 90d 1.75 (monotonically widening) |
-| ROAS blend weight    | adaptive per-horizon: 30d 0.60, 60d 0.60, 90d 0.60; see `reports/backtest_summary.md` |
-| Causal summary output | `output/causal_summary.txt` |
-
-The evaluator model trains on rolling historical samples from `data/sample_campaigns.csv` and predicts 30, 60, and 90 day revenue and ROAS at overall, channel, campaign type, and campaign levels. The packaged artifact stores dedicated training-sample counts by horizon: 414 samples for 30 days, 180 for 60 days, and 108 for 90 days. If a future training slice lacks enough dedicated samples for a horizon, that horizon is explicitly marked fallback-only instead of fitting on mismatched target scales. The safe baseline remains available for missing, corrupt, incompatible, tiny, or malformed hidden evaluator data.
-
-The offline predictions file includes revenue and ROAS ranges. `expected_roas`, `lower_roas`, and `upper_roas` are derived from the same projected-spend denominator used for revenue planning. When GA4 or Shopify-style exports do not contain spend, ForecastIQ keeps the CSV numeric and NaN-safe by emitting `expected_roas = lower_roas = upper_roas = 0` with `forecast_confidence = not_computable` instead of fabricating a confident ROAS from unrelated spend-bearing training data.
-
-Backtesting uses the final 30 days as a holdout and trains on the earlier period. Current primary holdout metrics are:
-
-### Revenue
-
-| Model         |      MAE |     RMSE |  MAPE | Interval coverage |
-| ------------- | -------: | -------: | ----: | ----------------: |
-| Trained model | 1,723.79 | 2,226.80 | 2.26% |           100.00% |
-| Safe baseline | 2,185.89 | 2,763.76 | 2.78% |            88.89% |
-
-### ROAS
-
-| Model         |  MAE | RMSE |  MAPE | Interval coverage |
-| ------------- | ---: | ---: | ----: | ----------------: |
-| Trained model | 0.04 | 0.06 | 1.05% |           100.00% |
-| Safe baseline | 0.05 | 0.07 | 1.44% |            88.89% |
-
-The evaluator uses holdout-gated, horizon-aware blend weights. The current trained artifact improves the primary 30-day sample holdout for both revenue and ROAS, while the deterministic safe baseline remains available for hidden datasets that are tiny, malformed, or outside the training shape. The summary is generated by:
-
-```bash
-python -m backend.backtest
-```
-
-Reports are written to `reports/backtest_report.json` and `reports/backtest_summary.md`.
-
-### Per-channel walk-forward accuracy (30-day horizon)
-
-These figures come from the walk-forward backtest across the 18 evaluated segments.
-
-| Channel | Revenue MAE | Revenue MAPE | ROAS MAE |
-|---|---:|---:|---:|
-| Google Ads | ~2,100 | ~2.3% | 0.04 |
-| Meta Ads | ~920 | ~2.6% | 0.05 |
-| Microsoft Ads | ~440 | ~2.2% | 0.03 |
-
-Channel-level figures are approximate aggregates of the walk-forward segment results. The full segment breakdown is in `reports/backtest_report.json`.
-
-## Model Performance Evidence
-
-ForecastIQ keeps a trained model and a safe baseline because different hidden datasets can favor different behavior. The trained model now improves the included sample holdout, while the baseline protects point-forecast stability when data is tiny, malformed, or outside the training shape.
-
-Current primary 30-day holdout evidence:
-
-| Target | Trained MAE | Safe baseline MAE | MAE difference | Winner |
-| --- | ---: | ---: | ---: | --- |
-| Revenue | 1,723.79 | 2,185.89 | -21.14% | Trained model |
-| ROAS | 0.04 | 0.05 | -20.00% | Trained model |
-
-Plain-English interpretation: the refreshed trained artifact now beats the deterministic baseline on the included sample holdout for revenue MAE and ROAS MAE. ForecastIQ still preserves fallback mode because automated evaluation data can be smaller, noisier, or shaped differently from the sample data.
-
-Forecast explainability now includes two layers:
-
-- Global feature importance and SHAP importance: which features mattered most across model training for the selected segment.
-- Local "Why this forecast?" explainability: permutation-baseline driver cards showing which current forecast-row features pushed this specific forecast up or down versus typical historical values.
-
-Blend-weight validation tested revenue and ROAS model weights of 0.00, 0.10, 0.25, 0.40, 0.50, and 0.60. Revenue weighting is adaptive per-horizon: 30d 0.60, 60d 0.10, 90d 0.50 (stored in artifact; the best-overall holdout weight is 0.60 as shown in the blend-weight grid). The ROAS model weight remains 0.60 because it has the best RMSE/MAE balance in the generated backtest.
-
-| Revenue model weight |      MAE |     RMSE |  MAPE | Interval coverage |
-| -------------------: | -------: | -------: | ----: | ----------------: |
-|                 0.00 | 2,185.89 | 2,763.76 | 2.78% |           100.00% |
-|                 0.10 | 2,102.55 | 2,652.51 | 2.68% |           100.00% |
-|                 0.25 | 1,982.74 | 2,499.79 | 2.53% |           100.00% |
-|                 0.40 | 1,871.77 | 2,366.94 | 2.42% |           100.00% |
-|                 0.50 | 1,797.78 | 2,291.14 | 2.34% |           100.00% |
-|                 0.60 | 1,723.79 | 2,226.80 | 2.26% |           100.00% |
-
-| ROAS model weight |  MAE | RMSE |  MAPE | Interval coverage |
-| ----------------: | ---: | ---: | ----: | ----------------: |
-|              0.00 | 0.05 | 0.07 | 1.44% |           100.00% |
-|              0.10 | 0.05 | 0.06 | 1.39% |           100.00% |
-|              0.25 | 0.05 | 0.06 | 1.26% |           100.00% |
-|              0.40 | 0.04 | 0.06 | 1.16% |           100.00% |
-|              0.50 | 0.04 | 0.06 | 1.11% |           100.00% |
-|              0.60 | 0.04 | 0.06 | 1.05% |           100.00% |
-
-Walk-forward per-horizon backtesting is included for transparency:
-
-| Horizon | Folds | Segments | Trained revenue MAE | Baseline revenue MAE | Trained ROAS MAE | Trained coverage | Revenue MAE winner |
-| ------: | ----: | -------: | ------------------: | -------------------: | ---------------: | ---------------: | ------------------ |
-|      30 |     3 |       54 |            2,462.00 |             3,097.88 |             0.05 |          100.00% | Trained model |
-|      60 |     3 |       54 |           10,541.64 |            11,221.15 |             0.05 |          100.00% | Trained model |
-|      90 |     3 |       54 |           20,891.06 |            31,577.72 |             0.06 |            96.3% | Trained model |
-
-Intervals were recalibrated from the earlier wide setting to preserve useful planning ranges: 100.0% coverage at 30 days, 100.0% at 60 days, and 96.3% at 90 days. This is why ForecastIQ keeps both systems: the trained model provides ML behavior where validated, while the deterministic baseline remains a reliability guardrail for longer, thinner, or incompatible cases.
-
-## Budget Simulator
-
-The simulator accepts planned budget totals by channel and reprojects future daily media activity. For each channel it returns:
-
-- Baseline daily and total spend.
-- New daily and total spend.
-- Baseline revenue.
-- Projected revenue with lower and upper bounds.
-- Baseline and projected ROAS.
-- Daily forecast points for charting.
-
-The simulator is dynamic: changing budgets in the UI triggers a backend forecast call and recalculates projected revenue, ROAS, and expected lift.
-
-The simulator also includes a decision intelligence layer:
-
-- AI budget optimizer with target revenue and target ROAS inputs.
-- Recommended Google Ads, Meta Ads, and Microsoft Ads budgets.
-- What-if scenario comparisons for revenue, ROAS, and profit impact.
-- Risk detection for revenue decline, ROAS decline, budget inefficiency, and overspending.
-- Opportunity detection for high-growth and underinvested channels.
-- Channel health scores out of 100 with score drivers.
-
-## AI Insights
-
-The `/api/insights` endpoint converts performance summaries into structured executive guidance:
-
-- Executive summary.
-- Revenue drivers.
-- Channel performance.
-- Top and bottom campaign observations.
-- Budget allocation recommendations.
-- Risks and mitigations.
-- Growth opportunities.
-- Prioritized action plan with owners, timelines, and KPIs.
-
-When `GEMINI_API_KEY` is configured, Gemini generates the structured response. Without a key, the backend returns deterministic data-grounded insights so the application remains demo-ready and offline-safe. Both paths frame recommendations as causal hypotheses grounded in metrics such as spend trend, revenue trend, ROAS trend, channel ROAS, anomalies, and trend breaks. This is not a formal media-mix or incrementality model; it is an executive reasoning layer that explains plausible mechanisms to test.
-
-## Technology Stack
-
-- Frontend: React 19, TypeScript, Vite, TanStack Router, Recharts, Tailwind CSS, Radix UI, shadcn-style components.
-- Backend: Python, FastAPI, Pydantic, Uvicorn.
-- Machine learning: XGBoost, scikit-learn, pandas, NumPy, joblib.
-- AI insights: Google Gemini via the Google Gen AI SDK, with legacy SDK compatibility.
-- Tooling: ESLint, Prettier, TypeScript, shell-based offline runner.
-
-## Installation Guide
-
-Prerequisites:
-
-- Node.js 20+.
-- npm 10+; this repository keeps `package-lock.json` as the single frontend lockfile.
-- Python 3.11-3.14 for trained-artifact evaluation; Python 3.14 is the build environment for the committed artifact.
-
-Install frontend dependencies:
-
-```bash
-npm ci
-```
-
-Install backend dependencies:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements-app.txt
-```
-
-Windows PowerShell:
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements-app.txt
-```
-
-Copy environment defaults if needed:
-
-```bash
-cp .env.example .env
-```
-
-## Usage Guide
-
-### Automated Evaluation Command
-
-For NetElixir AIgnition automated evaluation, use the offline runner only:
+Use this exact submission-safe path:
 
 ```bash
 pip install -r requirements.txt
@@ -453,456 +72,142 @@ chmod +x run.sh
 ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
 ```
 
-Python version: The trained artifact and evaluator CI support Python 3.11-3.14.
-
-The runner:
-
-- reads every `.csv` file from the provided data directory;
-- creates the output directory automatically;
-- writes `predictions.csv` at the requested output path;
-- does not start the frontend, backend, Vite, FastAPI, or any long-running server;
-- uses a lightweight joblib-trained sklearn artifact when compatible, with a deterministic evaluator-safe baseline as fallback.
-
-`requirements.txt` intentionally contains only the exact, evaluator-critical scientific dependencies. The live FastAPI/Gemini/test stack is isolated in `requirements-app.txt`, reducing install time and failure surface during automated scoring. CI runs the evaluator contract on Python 3.11, 3.12, 3.13, and 3.14, matching the trained artifact's supported runtime.
-
-## Optional: Planned Budget Input
-
-Pass an optional fourth argument with channel budgets as a JSON string:
-
-```bash
-./run.sh ./data ./pickle/model.pkl ./output/predictions.csv '{"Google Ads":60000,"Meta Ads":35000,"Microsoft Ads":18000}'
-```
-
-When provided, the offline evaluator scales projected spend features to match the planned budgets, allowing budget scenario evaluation without starting the live app. Omit the argument or pass an empty string to use historical spend patterns as the projection basis.
-
-Expected output columns:
-
-| Column             | Meaning                                                                                 |
-| ------------------ | --------------------------------------------------------------------------------------- |
-| `level`            | Forecast grain: `overall`, `channel`, `campaign_type`, or `campaign`                    |
-| `segment`          | Segment name, or `all` for the overall forecast                                         |
-| `horizon_days`     | Forecast horizon: `30`, `60`, or `90`                                                   |
-| `expected_revenue` | Point estimate for revenue                                                              |
-| `lower_revenue`    | Conservative revenue interval bound                                                     |
-| `upper_revenue`    | Upside revenue interval bound                                                           |
-| `expected_roas`    | Expected revenue divided by projected spend                                             |
-| `lower_roas`       | Conservative ROAS interval bound, or `0` when spend is not computable                   |
-| `upper_roas`       | Upside ROAS interval bound, or `0` when spend is not computable                         |
-| `model_type`       | `trained_model` for compatible artifact predictions, otherwise `safe_baseline_fallback` |
-| `interval_width_pct` | Revenue interval width as a percentage of expected revenue                            |
-| `forecast_confidence` | `high`, `medium`, `low`, or `not_computable` for zero-spend ROAS cases              |
-
-Assumptions and fallback behavior:
-
-- Hidden evaluator data may use common marketing aliases such as `cost`, `sales`, `source`, `platform`, or `campaign`; these are normalized automatically.
-- GA4, Shopify, and Ads exports are auto-detected and normalized per file before merging.
-- Optional columns such as clicks, impressions, conversions, campaign type, campaign name, and ROAS are filled safely when absent.
-- Rows with negative spend or negative revenue are removed; malformed dates are logged and repaired when possible.
-- If the model artifact is missing, corrupt, incompatible, or the hidden dataset is too small for model features, the runner uses `safe_baseline_fallback` instead of retraining.
-- The output file is always non-empty and numeric fields are cleaned to avoid `NaN` or infinite values.
-
-Start the backend:
-
-```bash
-python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
-```
-
-Or use the package script:
-
-```bash
-npm run api
-```
-
-Start the frontend:
-
-```bash
-npm run dev
-```
-
-Open the Vite URL and use the existing app routes:
-
-- `/app` for the dashboard.
-- `/app/upload` for CSV upload and validation.
-- `/app/forecast` for forecasting.
-- `/app/simulator` for budget simulation.
-- `/app/insights` for AI recommendations.
-
-## Demo Workflow
-
-1. Open `/app/upload` and click the sample/demo data action if no CSV is ready.
-2. Open `/app` and show the Executive Decision Center, forecasted revenue, expected ROAS, confidence score, risk alerts, and opportunity alerts.
-3. Open `/app/forecast` and show the 30/60/90-day forecast, confidence intervals, accuracy metrics, explainability, and executive business brief.
-4. Open `/app/simulator`, apply the -10%, +10%, +20%, and +50% quick scenarios, then review recommended allocation and channel health.
-5. Open `/app/insights`, generate insights, explain the Marketing Manager Brief, and export the executive PDF report.
-
-## Demo
-
-A live walkthrough of ForecastIQ is available from the homepage. Click **Try Live Demo** from `/` to load sample multi-channel campaign data and walk through Dashboard → Forecast → Budget Simulator → AI Insights in under 2 minutes. For offline evaluation, run:
-
-```bash
-./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
-```
-
-
-## Judge Demo Walkthrough
-
-Use this sequence for a short live demo:
-
-1. "Here is the problem: marketers need budget decisions, not just historical charts."
-2. "I can click Try Live Demo from the homepage and load sample data with no manual CSV setup."
-3. "The dashboard summarizes forecasted revenue, expected ROAS, risk, opportunity, and the recommended action."
-4. "The forecast page shows model quality, confidence intervals, and explainability."
-5. "The simulator compares budget changes and recommends allocation across Google, Meta, and Microsoft."
-6. "The insights page converts the analysis into an executive brief and a PDF-ready report."
-
-## Judge Demo Path (30 Seconds)
-
-Use this if a judge asks, "Show me the product quickly."
-
-1. Start at `/` and click **Try Live Demo**.
-2. Land on `/app` and point to the Executive Decision Center: best budget action, business impact, wasted spend reduction, growth opportunity, confidence, and risk.
-3. Go to `/app/simulator` and show the AI Budget Optimizer: exact channel shift, campaign shift, revenue lift, ROAS improvement, confidence score, and risk level.
-4. Go to `/app/forecast` and show confidence intervals, accuracy metrics, and explainability.
-5. Go to `/app/insights`, generate insights, and show the Marketing Manager Brief plus PDF export.
-
-The first 30 seconds should communicate: "ForecastIQ turns campaign history into an executive budget decision."
-
-Optional Gemini configuration:
-
-```bash
-export GEMINI_API_KEY="your-key"
-export GEMINI_MODEL="gemini-2.5-flash-lite"
-export GEMINI_TEMPERATURE="0.2"
-export GEMINI_TIMEOUT_SECONDS="45"
-export GEMINI_MAX_ATTEMPTS="3"
-export GEMINI_RETRY_BACKOFF_SECONDS="1.5"
-export GEMINI_MAX_OUTPUT_TOKENS="3072"
-```
-
-You can also copy `.env.example` to `.env` for local backend runs. Keep `GEMINI_API_KEY` backend-only; never expose it through a `VITE_` variable.
-
-## Screenshots
-
-Screenshots of the key workflows — Upload, Dashboard, Forecast, Budget Simulator, and AI Insights — are available in the live demo by following the Judge Demo Path from the homepage.
-
-## Submission Guides
-
-- [Architecture](./ARCHITECTURE.md)
-- [Demo Guide](./DEMO_GUIDE.md)
-- [Presentation Guide](./PRESENTATION_GUIDE.md)
-- [Judge Q&A](./JUDGE_QA.md)
-
-## API Documentation
-
-The backend uses lightweight in-memory rate limiting on the heavier planning endpoints. `/health` is not rate limited. The documented defaults match the `slowapi` decorator limits in `backend/main.py`: 30 requests/minute for forecast, simulation, decision-support, and insights.
-
-Optional rate-limit environment variables:
-
-| Variable | Default | Purpose |
-| --- | ---: | --- |
-| `API_RATE_LIMIT_ENABLED` | `true` | Set to `false` only for controlled local debugging. |
-| `RATE_LIMIT_FORECAST_PER_MINUTE` | `30` | Limit for `POST /api/forecast`, matching the `30/minute` decorator. |
-| `RATE_LIMIT_SIMULATE_PER_MINUTE` | `30` | Limit for `POST /api/simulate`, matching the `30/minute` decorator. |
-| `RATE_LIMIT_DECISION_SUPPORT_PER_MINUTE` | `30` | Limit for `POST /api/decision-support`, matching the `30/minute` decorator. |
-| `RATE_LIMIT_INSIGHTS_PER_MINUTE` | `30` | Limit for `POST /api/insights`, matching the `30/minute` decorator. |
-
-Health:
-
-```http
-GET /health
-```
-
-Validate campaign rows:
-
-```http
-POST /api/validate
-```
-
-Generate forecasts:
-
-```http
-POST /api/forecast
-```
-
-Request body fields:
-
-- `rows`: validated campaign rows.
-- `horizon`: `30`, `60`, or `90`.
-- `level`: `overall`, `channel`, `campaign_type`, or `campaign`.
-- `value`: optional segment name.
-
-Response highlights:
-
-- `summary.diagnostics.revenueAccuracy` and `summary.diagnostics.roasAccuracy` include MAE, RMSE, MAPE, and R2.
-- `summary.diagnostics.topRevenueFeatures` and `summary.diagnostics.topRoasFeatures` expose XGBoost feature importance.
-- `summary.diagnostics.businessBrief` contains an executive summary, risks, opportunities, and recommended actions.
-
-Simulate budgets:
-
-```http
-POST /api/simulate
-```
-
-Request body fields:
-
-- `rows`: validated campaign rows.
-- `horizon`: `30`, `60`, or `90`.
-- `budgets`: channel-to-budget map.
-
-Generate decision-support analytics:
-
-```http
-POST /api/decision-support
-```
-
-Request body fields:
-
-- `rows`: validated campaign rows.
-- `horizon`: `30`, `60`, or `90`.
-- `budgets`: channel-to-budget map.
-- `targetRevenue`: optional target revenue.
-- `targetRoas`: optional target ROAS.
-
-Generate insights:
-
-```http
-POST /api/insights
-```
-
-Train model:
-
-```http
-POST /api/train
-```
-
-Training is admin-only. Set `TRAINING_ADMIN_TOKEN` on the backend and send it as the `X-Training-Admin-Token` header. The endpoint only writes `.pkl` artifacts inside the project `pickle/` directory and uses the evaluator-safe v3 artifact format expected by `run.sh`.
-
-Interactive OpenAPI docs are available at:
+Expected output:
 
 ```text
-http://127.0.0.1:8000/docs
+output/predictions.csv
+output/causal_summary.txt
 ```
 
-## Offline Submission Command
+Required evaluator schema:
 
-The repository includes the root-level command expected by a scoring workflow:
+```text
+level, segment, horizon_days, expected_revenue, lower_revenue, upper_revenue,
+expected_roas, lower_roas, upper_roas, model_type, interval_width_pct,
+forecast_confidence
+```
+
+The committed sample output has 54 rows, all horizons `{30, 60, 90}`, no NaN, no infinite values, and `model_type=trained_model` on supported Python runtimes.
+
+## Evaluator Reproduction
+
+CI includes a dedicated job named **Hackathon 5-step evaluator protocol** that mirrors the organizer-style evaluation:
+
+1. Fresh checkout.
+2. Install only `requirements.txt`.
+3. Replace `data/` with a held-out-style synthetic fixture.
+4. Run `./run.sh ./data ./pickle/model.pkl ./output/predictions.csv`.
+5. Validate exact schema, horizons, finite non-negative numeric values, and non-empty output.
+
+This job is separate from broader backend, frontend, and Playwright checks so the evaluator contract remains easy to audit.
+
+## Validation Evidence
+
+Current automated evidence includes:
+
+- Python evaluator matrix: 3.11, 3.12, 3.13, 3.14.
+- Backend pytest coverage gate: 90%.
+- Frontend unit tests: Vitest + React Testing Library.
+- Playwright demo flow: Try Live Demo -> Forecast -> Simulator -> Insights.
+- Large-data evaluator stress test: synthetic ~50,000-row CSV through `run.sh`.
+- Schema adapter edge tests for GA4, Shopify, Google Ads micros, Meta Ads, and Bing/Microsoft Ads.
+- Gemini parsing tests with mocked responses and ranked causal hypotheses.
+
+See [EVALUATION.md](./EVALUATION.md) for judge Q&A and scorecard evidence.
+
+## Forecasting Methodology
+
+The offline evaluator model is trained on a residual correction over a deterministic baseline. This keeps the model useful while preserving safe fallback behavior for tiny, malformed, or hidden datasets.
+
+Confidence intervals use residual calibration with horizon-specific widening:
+
+| Horizon | Multiplier | Floor |
+|---|---:|---:|
+| 30 days | 1.38 | 10% |
+| 60 days | 1.55 | 17% |
+| 90 days | 1.80 | 25% |
+
+The interval enforcement layer ensures uncertainty bands widen across horizons and that `interval_width_pct` matches the actual revenue bands.
+
+For full methodology, feature list, assumptions, and limitations, see [TECHNICAL.md](./TECHNICAL.md).
+
+## Data Sources Supported
+
+- GA4: `sessionSource`, `sessionMedium`, `purchaseRevenue`, `eventValue`, `sessions`, `conversions`.
+- Shopify: `created_at`, `total_price`, `sales`, `orders`, `product_type`.
+- Google Ads: `metrics_cost_micros`, `metrics_clicks`, `metrics_impressions`, `metrics_conversions`, `metrics_conversions_value`, `segments_date`.
+- Meta Ads: `date_start`, `spend`, `clicks`, `impressions`, `conversion`, `conversion_value`.
+- Microsoft/Bing Ads: `TimePeriod`, `CampaignType`, `CampaignName`, `Spend`, `Revenue`.
+
+Mixed-source folders are reconciled to avoid double-counting revenue. Shopify/order data is treated as revenue-of-record when present.
+
+## Development Commands
 
 ```bash
+# evaluator only
+pip install -r requirements.txt
 ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
+
+# backend app
+pip install -r requirements-app.txt
+python -m pytest
+python -m backend.backtest
+python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+
+# frontend app
+npm install
+npm run test
+npm run check
+npm run test:e2e
 ```
 
-The script:
-
-1. Locates a usable Python interpreter.
-2. Checks required Python dependencies.
-3. Reads CSV files from `data/`.
-4. Validates campaign records.
-5. Loads the packaged `pickle/model.pkl` artifact or uses the safe fallback.
-6. Writes 30, 60, and 90-day prediction rows to the output CSV.
-
-On Windows Git Bash, set `PYTHON` when multiple Python installations exist:
-
-```bash
-PYTHON="/c/path/to/.venv/Scripts/python.exe" ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
-```
-
-## Quality Checks
+## Deployment
 
 Frontend:
 
-```bash
-npm run check
-```
+- Deploy the Vite app to Vercel or Netlify.
+- Set `VITE_API_BASE_URL` to the deployed backend URL.
 
-Backend compile check:
+Backend:
 
-```bash
-python -m compileall backend
-```
-
-Browser demo smoke check:
+- Deploy FastAPI to Render or Railway.
+- Start command:
 
 ```bash
-# In one terminal
-python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
-
-# In another terminal
-npm run dev
-
-# Then run
-npm run demo:e2e
-```
-
-Train model:
-
-```bash
-python -m backend.train --data-dir data --model pickle/model.pkl
-```
-
-Generate predictions:
-
-```bash
-python -m backend.predict --data-dir data --model pickle/model.pkl --output output/predictions.csv
-```
-
-Run evaluator backtest:
-
-```bash
-python -m backend.backtest
-```
-
-## Folder Structure
-
-```text
-.
-|-- backend/
-|   |-- main.py                  # FastAPI app, CORS, rate limiting, API routes
-|   |-- schemas.py               # Pydantic request/response contracts
-|   |-- schema_adapters.py       # GA4, Shopify, Ads CSV normalization
-|   |-- data_preprocessing.py    # Validation, aggregation, feature engineering
-|   |-- forecasting.py           # XGBoost live forecasting, budget simulation
-|   |-- decision_support.py      # Budget optimizer, what-if, risks, opportunities
-|   |-- gemini.py                # Gemini insights with deterministic fallback
-|   |-- anomaly.py               # Anomaly detection and trend break analysis
-|   |-- causal_lite.py           # Observational DiD causal analysis (offline)
-|   |-- train.py                 # Evaluator model training pipeline
-|   |-- predict.py               # Offline CLI entry point (run.sh target)
-|   |-- inference.py             # Segment forecasting, interval enforcement
-|   |-- evaluator_contract.py    # Shared constants and output schema
-|   |-- evaluator_intervals.py   # Interval calibration and horizon multipliers
-|   |-- evaluator_io.py          # CSV reading, model loading, output writing
-|   |-- segment_utils.py         # Feature frames, category maps, segment specs
-|   |-- backtest.py              # Walk-forward backtesting and blend weight grid
-|   |-- utils.py                 # Shared filesystem and formatting helpers
-|   `-- __init__.py
-|-- data/
-|   `-- sample_campaigns.csv
-|-- pickle/
-|   `-- model.pkl
-|-- public/
-|   |-- data/
-|   |   `-- sample_campaigns.csv
-|   `-- favicon.svg
-|-- reports/
-|   |-- backtest_report.json
-|   `-- backtest_summary.md
-|-- src/
-|   |-- components/
-|   |-- lib/
-|   `-- routes/
-|-- .env.example
-|-- LICENSE
-|-- requirements-app.txt
-|-- requirements.txt
-|-- render.yaml
-|-- run.sh
-|-- package.json
-`-- README.md
-```
-
-## Live Demo Deployment
-
-No live production URLs are claimed in this repository. Deployment requires the owner's Vercel, Render, or Railway account and secret configuration; add only verified URLs to the submission form after the health check and judge demo path pass.
-
-Frontend on Vercel:
-
-1. Import `VINAY-KUMAR-PY/ignite-forecast-iq`.
-2. Set the build command to `npm run build`.
-3. Set the output directory to `dist`.
-4. Add `VITE_API_BASE_URL=https://your-backend-domain`.
-5. Redeploy after backend CORS is configured.
-
-Frontend on Netlify:
-
-1. Connect the repository and use the same build command.
-2. Publish `dist`.
-3. Add `VITE_API_BASE_URL=https://your-backend-domain`.
-4. Confirm the homepage **Try Live Demo** button opens `/app` with sample data loaded.
-
-Backend on Render:
-
-1. Create a Python web service from this repository.
-2. Use `render.yaml`, or set build/start commands manually.
-3. Build command: `pip install -r requirements-app.txt`.
-4. Start command: `python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT`.
-5. Add `CORS_ORIGINS=https://ignite-forecast-iq.vercel.app,https://your-preview-domain.vercel.app`.
-6. Add `GEMINI_API_KEY` only on the backend if live Gemini is required.
-7. Add `TRAINING_ADMIN_TOKEN` if hosted retraining will be enabled.
-8. Confirm `/health` returns `{"status":"ok","service":"forecastiq-api"}`.
-
-Backend on Railway:
-
-1. Create a Python service from this repository.
-2. Use the same build and start commands as Render.
-3. Configure `PORT`, `CORS_ORIGINS`, and optional Gemini variables in Railway environment settings.
-4. Confirm `/health` returns `{"status":"ok"}`.
-
-Deployment environment variables:
-
-| Variable               | Surface      | Purpose                                                     |
-| ---------------------- | ------------ | ----------------------------------------------------------- |
-| `VITE_API_BASE_URL`    | Frontend     | Public API base URL used by the browser app.                |
-| `GEMINI_API_KEY`       | Backend only | Enables live Gemini insights; never expose through `VITE_`. |
-| `GEMINI_MODEL`         | Backend only | Optional model override, defaulting to a fast Gemini model. |
-| `CORS_ORIGINS`         | Backend only | Comma-separated frontend origins allowed to call the API.   |
-| `TRAINING_ADMIN_TOKEN` | Backend only | Required token for `POST /api/train`.                       |
-| `MAX_UPLOAD_ROWS`      | Backend only | Optional max rows accepted by data-ingesting endpoints.     |
-| `API_RATE_LIMIT_ENABLED` | Backend only | Enables protective rate limiting for heavy endpoints.       |
-| `RATE_LIMIT_FORECAST_PER_MINUTE` | Backend only | `30/minute` default for `POST /api/forecast`.      |
-| `RATE_LIMIT_SIMULATE_PER_MINUTE` | Backend only | `30/minute` default for `POST /api/simulate`.      |
-| `RATE_LIMIT_DECISION_SUPPORT_PER_MINUTE` | Backend only | `30/minute` default for `POST /api/decision-support`. |
-| `RATE_LIMIT_INSIGHTS_PER_MINUTE` | Backend only | `30/minute` default for `POST /api/insights`.      |
-
-### Backend on Render or Railway
-
-Use a Python web service with this start command:
-
-```bash
-pip install -r requirements-app.txt
 python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT
 ```
 
-Recommended backend environment variables:
+Environment variables:
 
-- `CORS_ORIGINS=https://ignite-forecast-iq.vercel.app,https://your-preview-domain.vercel.app`
-- `GEMINI_API_KEY=...` only if live Gemini insights are required
-- `GEMINI_MODEL=gemini-2.5-flash-lite`
-- `TRAINING_ADMIN_TOKEN=...` for admin retraining
-- `LOG_LEVEL=INFO`
-
-Keep `pickle/model.pkl` packaged with the backend build so evaluator and API model paths remain available.
-
-### Frontend on Vercel
-
-```bash
-VITE_API_BASE_URL=https://your-api-domain.example npm run build
+```text
+GEMINI_API_KEY          optional; enables live Gemini insights
+GEMINI_MODEL            optional; defaults to gemini-2.5-flash-lite
+TRAINING_ADMIN_TOKEN    required for protected model training endpoint
+CORS_ORIGINS            comma-separated production frontend origins
 ```
 
-Deploy `dist/` to Vercel or any static host. Configure `VITE_API_BASE_URL` to point to the hosted FastAPI backend.
+Health check:
 
-### Production Checklist
+```text
+/health
+```
 
-- Confirm `./run.sh ./data ./pickle/model.pkl ./output/predictions.csv` still works offline.
-- Confirm `/health` returns `{ "status": "ok" }`.
-- Confirm `CORS_ORIGINS` is comma-separated and includes the production frontend URL plus any preview URLs.
-- Store Gemini keys only in backend environment variables.
-- Do not expose secrets with `VITE_` prefixes.
-- Package or mount `pickle/model.pkl` with the backend.
-- Run `npm run build`, `npm run lint`, and `python -m pytest` before release.
+## Repository Map
 
-## Limitations
+```text
+backend/       FastAPI, forecasting, evaluator CLI, Gemini, schema adapters
+src/           React app routes, dashboard, upload, forecast, simulator, insights
+tests/         Backend, evaluator, schema, Gemini, and Playwright tests
+scripts/       E2E wrapper and synthetic fixture generator
+reports/       Backtest report and summary
+pickle/        Committed evaluator model artifact
+output/        Sample predictions and causal summary
+```
 
-- Forecast quality depends on the amount and cleanliness of uploaded campaign history.
-- Confidence intervals are residual-based and should be recalibrated with real holdout data before production media commitments.
-- The current model does not ingest external demand signals such as promotions, holidays, price changes, inventory, or competitor activity.
-- Gemini output quality depends on the configured model and API availability; fallback insights remain deterministic.
-- The frontend currently uses local sample data as the default demo state.
+Deeper references:
 
-## Future Improvements
-
-- Add train/test backtesting dashboards with MAPE, WAPE, and interval calibration by channel.
-- Add authentication and role-based access for agency or brand teams.
-- Add scheduled retraining and model registry metadata.
-- Add feature support for promotions, holidays, product categories, and margin.
-- Add experiment tracking for budget scenario comparisons.
-- Add CI/CD workflows for frontend, backend, and Docker deployment.
+- [TECHNICAL.md](./TECHNICAL.md)
+- [ARCHITECTURE.md](./ARCHITECTURE.md)
+- [DEMO_GUIDE.md](./DEMO_GUIDE.md)
+- [EVALUATION.md](./EVALUATION.md)
+- [VALIDATION_NOTES.md](./VALIDATION_NOTES.md)

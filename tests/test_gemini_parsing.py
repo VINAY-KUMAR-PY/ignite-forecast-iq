@@ -215,6 +215,45 @@ class GeminiParsingTests(unittest.TestCase):
         self.assertEqual(insights.model_dump(mode="json"), _fallback_insights(SUMMARY).model_dump(mode="json"))
         self.assertTrue(insights.actionPlan)
 
+    def test_mocked_gemini_response_returns_ranked_causal_hypotheses(self) -> None:
+        payload = _fallback_insights(SUMMARY).model_dump(mode="json")
+        payload["causalHypotheses"] = [
+            {
+                "rank": 1,
+                "title": "Google Ads demand capture",
+                "confidence": "high",
+                "hypothesis": "Google Ads revenue increased because spend-response evidence and DiD estimates both point to incremental demand capture.",
+                "supportingEvidence": [
+                    "DiD estimate for Google Ads: $12,800 incremental revenue.",
+                    "Spend/revenue delta correlation is 0.62 across 28 observations.",
+                ],
+                "contradictingEvidence": ["No randomized holdout test is available."],
+                "recommendedTest": "Run a staged Google Ads budget ramp and compare actual revenue to the forecast interval.",
+            },
+            {
+                "rank": 2,
+                "title": "Meta Ads efficiency drag",
+                "confidence": "medium",
+                "hypothesis": "Meta Ads may be suppressing blended ROAS because the anomaly context flags Meta ROAS while bottom campaigns show low efficiency.",
+                "supportingEvidence": [
+                    "Anomaly evidence references Meta Ads ROAS.",
+                    "Cold Prospecting ROAS is 1.6x versus portfolio ROAS of 4.09x.",
+                ],
+                "contradictingEvidence": ["Meta may be assisting conversions outside last-touch revenue."],
+                "recommendedTest": "Refresh prospecting creative and monitor conversion-rate changes before increasing budget.",
+            },
+        ]
+
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "configured", "GEMINI_MAX_ATTEMPTS": "1"}, clear=False):
+            with patch("backend.gemini._generate_content", new=AsyncMock(return_value=json.dumps(payload))):
+                insights, source = asyncio.run(generate_gemini_insights_with_source(SUMMARY))
+
+        self.assertEqual(source, "gemini")
+        self.assertGreaterEqual(len(insights.causalHypotheses), 2)
+        self.assertEqual([item.rank for item in insights.causalHypotheses[:2]], [1, 2])
+        self.assertTrue(all(item.supportingEvidence for item in insights.causalHypotheses[:2]))
+        self.assertTrue(any("DiD" in evidence for evidence in insights.causalHypotheses[0].supportingEvidence))
+
 
 if __name__ == "__main__":
     unittest.main()

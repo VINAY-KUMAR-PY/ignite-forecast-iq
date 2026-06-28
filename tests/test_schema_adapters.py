@@ -142,6 +142,75 @@ class SchemaAdapterTests(unittest.TestCase):
             self.assertEqual(float(cleaned.frame["spend"].sum()), 116.0)
             self.assertEqual(float(cleaned.frame["revenue"].sum()), 765.5)
 
+    def test_conflicting_duplicate_alias_columns_prefer_canonical_names(self) -> None:
+        raw = pd.DataFrame(
+            {
+                "date": ["2026-07-01"],
+                "day": ["1999-01-01"],
+                "channel": ["Google Ads"],
+                "platform": ["Meta Ads"],
+                "campaign_type": ["Search"],
+                "CampaignType": ["Shopping"],
+                "campaign_name": ["Canonical Campaign"],
+                "CampaignName": ["Alias Campaign"],
+                "spend": [100.0],
+                "cost": [999.0],
+                "revenue": [500.0],
+                "conversion_value": [9999.0],
+            }
+        )
+
+        cleaned = canonicalize_frame(raw)
+
+        self.assertEqual(cleaned.valid_rows, 1)
+        row = cleaned.frame.iloc[0]
+        self.assertEqual(row["date"], "2026-07-01")
+        self.assertEqual(row["channel"], "Google Ads")
+        self.assertEqual(row["campaign_type"], "Search")
+        self.assertEqual(row["campaign_name"], "Canonical Campaign")
+        self.assertEqual(float(row["spend"]), 100.0)
+        self.assertEqual(float(row["revenue"]), 500.0)
+
+    def test_all_optional_fields_missing_rows_are_filled_safely(self) -> None:
+        raw = pd.DataFrame(
+            {
+                "date": ["2026-07-01", "2026-07-02"],
+                "channel": ["Google Ads", "Meta Ads"],
+                "campaign_name": ["Brand", "Prospecting"],
+                "spend": [100.0, 50.0],
+                "revenue": [450.0, 125.0],
+            }
+        )
+
+        cleaned = canonicalize_frame(raw)
+
+        self.assertEqual(cleaned.valid_rows, 2)
+        for column in ["clicks", "impressions", "conversions"]:
+            self.assertTrue((cleaned.frame[column] == 0).all())
+        self.assertEqual(set(cleaned.frame["campaign_type"]), {"Unclassified"})
+        self.assertTrue(math.isclose(float(cleaned.frame["roas"].iloc[0]), 4.5, rel_tol=0.001))
+
+    def test_bing_timeperiod_campaigntype_campaignname_combination(self) -> None:
+        raw = pd.DataFrame(
+            {
+                "TimePeriod": ["2026-08-01", "2026-08-02"],
+                "CampaignType": ["Search", "Shopping"],
+                "CampaignName": ["Bing Brand", "Bing Shopping"],
+                "Spend": [25.0, 45.0],
+                "Clicks": [10, 18],
+                "Impressions": [400, 700],
+                "Conversions": [2, 3],
+                "Revenue": [120.0, 210.0],
+            }
+        )
+
+        cleaned = canonicalize_frame(raw)
+
+        self.assertEqual(cleaned.valid_rows, 2)
+        self.assertEqual(set(cleaned.frame["channel"]), {"Microsoft Ads"})
+        self.assertEqual(set(cleaned.frame["campaign_type"]), {"Search", "Shopping"})
+        self.assertEqual(set(cleaned.frame["campaign_name"]), {"Bing Brand", "Bing Shopping"})
+
     def test_ga4_plus_ads_reconciles_revenue_without_double_counting(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             data_dir = Path(tmp)

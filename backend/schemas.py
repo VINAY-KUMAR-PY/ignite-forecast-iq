@@ -342,6 +342,16 @@ class ActionPlanItem(BaseModel):
     kpi: str
 
 
+class CausalHypothesis(BaseModel):
+    rank: int
+    title: str
+    confidence: Literal["low", "medium", "high"]
+    hypothesis: str
+    supportingEvidence: List[str]
+    contradictingEvidence: List[str] = Field(default_factory=list)
+    recommendedTest: str
+
+
 class InsightsResponse(BaseModel):
     executiveSummary: str
     revenueDrivers: List[RevenueDriver]
@@ -351,6 +361,7 @@ class InsightsResponse(BaseModel):
     risks: List[Risk]
     growthOpportunities: List[GrowthOpportunity]
     actionPlan: List[ActionPlanItem]
+    causalHypotheses: List[CausalHypothesis] = Field(default_factory=list)
 
 
 class TrainRequest(BaseModel):

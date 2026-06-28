@@ -10,6 +10,7 @@ This file records objective verification evidence for reviewers. It documents wh
 - `output/causal_summary.txt` contains anomaly signals, DiD effect estimates with dollar amounts, and recognized channel names.
 - CI runs the evaluator contract on Python 3.11, 3.12, 3.13, and 3.14 on every push.
 - Budget-JSON 4th argument is supported: `./run.sh ./data ./pickle/model.pkl ./output/predictions.csv '{"Google Ads":60000}'`.
+- Large synthetic stress fixture: 50,400 rows completed the full `run.sh` evaluator path in 5.87 seconds on the local Windows/Git Bash environment using Python 3.14.4, producing a valid 12-column CSV with horizons {30, 60, 90}. CI enforces a 60-second budget on Linux.
 
 ## Backtest results (walk-forward)
 

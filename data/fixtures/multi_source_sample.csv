@@ -1,0 +1,61 @@
+date,sessionSource,sessionMedium,purchaseRevenue,sessions,conversions,channel,campaign_type,campaign_name,spend,clicks,impressions,revenue,roas,TimePeriod,CampaignType,CampaignName,Spend,Clicks,Impressions,Conversions,Revenue
+2026-01-01,google,cpc,900.0,120,8,,,,,,,,,,,,,,,,
+2026-01-02,facebook,paid_social,937.5,124,9,,,,,,,,,,,,,,,,
+2026-01-03,bing,cpc,975.0,128,10,,,,,,,,,,,,,,,,
+2026-01-04,newsletter,email,1012.5,132,11,,,,,,,,,,,,,,,,
+2026-01-05,google,cpc,1050.0,136,12,,,,,,,,,,,,,,,,
+2026-01-06,facebook,paid_social,1087.5,140,8,,,,,,,,,,,,,,,,
+2026-01-07,bing,cpc,1125.0,144,9,,,,,,,,,,,,,,,,
+2026-01-08,newsletter,email,1162.5,148,10,,,,,,,,,,,,,,,,
+2026-01-09,google,cpc,1200.0,152,11,,,,,,,,,,,,,,,,
+2026-01-10,facebook,paid_social,1237.5,156,12,,,,,,,,,,,,,,,,
+2026-01-11,bing,cpc,1275.0,160,8,,,,,,,,,,,,,,,,
+2026-01-12,newsletter,email,1312.5,164,9,,,,,,,,,,,,,,,,
+2026-01-13,google,cpc,1350.0,168,10,,,,,,,,,,,,,,,,
+2026-01-14,facebook,paid_social,1387.5,172,11,,,,,,,,,,,,,,,,
+2026-01-15,bing,cpc,1425.0,176,12,,,,,,,,,,,,,,,,
+2026-01-16,newsletter,email,1462.5,180,8,,,,,,,,,,,,,,,,
+2026-01-17,google,cpc,1500.0,184,9,,,,,,,,,,,,,,,,
+2026-01-18,facebook,paid_social,1537.5,188,10,,,,,,,,,,,,,,,,
+2026-01-19,bing,cpc,1575.0,192,11,,,,,,,,,,,,,,,,
+2026-01-20,newsletter,email,1612.5,196,12,,,,,,,,,,,,,,,,
+2026-01-21,,,,,10,Google Ads,Search,Canonical Campaign 01,240,90,4200,980,4.0833,,,,,,,,
+2026-01-22,,,,,11,Meta Ads,Paid Social,Canonical Campaign 02,249,93,4315,1022,4.1044,,,,,,,,
+2026-01-23,,,,,12,Microsoft Ads,Shopping,Canonical Campaign 03,258,96,4430,1064,4.124,,,,,,,,
+2026-01-24,,,,,13,Google Ads,Search,Canonical Campaign 04,267,99,4545,1106,4.1423,,,,,,,,
+2026-01-25,,,,,14,Meta Ads,Paid Social,Canonical Campaign 05,276,102,4660,1148,4.1594,,,,,,,,
+2026-01-26,,,,,15,Microsoft Ads,Shopping,Canonical Campaign 06,285,105,4775,1190,4.1754,,,,,,,,
+2026-01-27,,,,,10,Google Ads,Search,Canonical Campaign 07,294,108,4890,1232,4.1905,,,,,,,,
+2026-01-28,,,,,11,Meta Ads,Paid Social,Canonical Campaign 08,303,111,5005,1274,4.2046,,,,,,,,
+2026-01-29,,,,,12,Microsoft Ads,Shopping,Canonical Campaign 09,312,114,5120,1316,4.2179,,,,,,,,
+2026-01-30,,,,,13,Google Ads,Search,Canonical Campaign 10,321,117,5235,1358,4.2305,,,,,,,,
+2026-01-31,,,,,14,Meta Ads,Paid Social,Canonical Campaign 11,330,120,5350,1400,4.2424,,,,,,,,
+2026-02-01,,,,,15,Microsoft Ads,Shopping,Canonical Campaign 12,339,123,5465,1442,4.2537,,,,,,,,
+2026-02-02,,,,,10,Google Ads,Search,Canonical Campaign 13,348,126,5580,1484,4.2644,,,,,,,,
+2026-02-03,,,,,11,Meta Ads,Paid Social,Canonical Campaign 14,357,129,5695,1526,4.2745,,,,,,,,
+2026-02-04,,,,,12,Microsoft Ads,Shopping,Canonical Campaign 15,366,132,5810,1568,4.2842,,,,,,,,
+2026-02-05,,,,,13,Google Ads,Search,Canonical Campaign 16,375,135,5925,1610,4.2933,,,,,,,,
+2026-02-06,,,,,14,Meta Ads,Paid Social,Canonical Campaign 17,384,138,6040,1652,4.3021,,,,,,,,
+2026-02-07,,,,,15,Microsoft Ads,Shopping,Canonical Campaign 18,393,141,6155,1694,4.3104,,,,,,,,
+2026-02-08,,,,,10,Google Ads,Search,Canonical Campaign 19,402,144,6270,1736,4.3184,,,,,,,,
+2026-02-09,,,,,11,Meta Ads,Paid Social,Canonical Campaign 20,411,147,6385,1778,4.326,,,,,,,,
+,,,,,,,,,,,,,,2026-02-10,Search,Bing Campaign 01,180,70,3100,7,720
+,,,,,,,,,,,,,,2026-02-11,Audience,Bing Campaign 02,187,72,3195,8,755
+,,,,,,,,,,,,,,2026-02-12,Shopping,Bing Campaign 03,194,74,3290,9,790
+,,,,,,,,,,,,,,2026-02-13,Search,Bing Campaign 04,201,76,3385,10,825
+,,,,,,,,,,,,,,2026-02-14,Audience,Bing Campaign 05,208,78,3480,7,860
+,,,,,,,,,,,,,,2026-02-15,Shopping,Bing Campaign 06,215,80,3575,8,895
+,,,,,,,,,,,,,,2026-02-16,Search,Bing Campaign 07,222,82,3670,9,930
+,,,,,,,,,,,,,,2026-02-17,Audience,Bing Campaign 08,229,84,3765,10,965
+,,,,,,,,,,,,,,2026-02-18,Shopping,Bing Campaign 09,236,86,3860,7,1000
+,,,,,,,,,,,,,,2026-02-19,Search,Bing Campaign 10,243,88,3955,8,1035
+,,,,,,,,,,,,,,2026-02-20,Audience,Bing Campaign 11,250,90,4050,9,1070
+,,,,,,,,,,,,,,2026-02-21,Shopping,Bing Campaign 12,257,92,4145,10,1105
+,,,,,,,,,,,,,,2026-02-22,Search,Bing Campaign 13,264,94,4240,7,1140
+,,,,,,,,,,,,,,2026-02-23,Audience,Bing Campaign 14,271,96,4335,8,1175
+,,,,,,,,,,,,,,2026-02-24,Shopping,Bing Campaign 15,278,98,4430,9,1210
+,,,,,,,,,,,,,,2026-02-25,Search,Bing Campaign 16,285,100,4525,10,1245
+,,,,,,,,,,,,,,2026-02-26,Audience,Bing Campaign 17,292,102,4620,7,1280
+,,,,,,,,,,,,,,2026-02-27,Shopping,Bing Campaign 18,299,104,4715,8,1315
+,,,,,,,,,,,,,,2026-02-28,Search,Bing Campaign 19,306,106,4810,9,1350
+,,,,,,,,,,,,,,2026-03-01,Audience,Bing Campaign 20,313,108,4905,10,1385

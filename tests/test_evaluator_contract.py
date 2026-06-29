@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -80,6 +81,33 @@ class EvaluatorContractTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertIn("Prediction mode: safe_baseline_fallback", result.stdout)
             self.assert_predictions_csv(output, SAFE_BASELINE_MODEL_TYPE)
+
+    def test_multi_source_fixture_runs_evaluator(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            data_dir = Path(tmp) / "data"
+            data_dir.mkdir()
+            shutil.copy(Path("data/fixtures/multi_source_sample.csv"), data_dir / "multi_source_sample.csv")
+            output = Path(tmp) / "predictions.csv"
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "backend.predict",
+                    "--data-dir",
+                    str(data_dir),
+                    "--model",
+                    "./pickle/model.pkl",
+                    "--output",
+                    str(output),
+                ],
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=60,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assert_predictions_csv(output)
 
     def test_causal_summary_file_exists(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

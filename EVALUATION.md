@@ -12,7 +12,7 @@ and demo evidence.
 - Offline evaluator uses `backend.predict`, `backend.inference`, and `pickle/model.pkl`.
 - The evaluator artifact is a compact sklearn GradientBoostingRegressor with 48 engineered features.
 - Confidence intervals use calibrated horizon multipliers in `backend/evaluator_intervals.py`:
-  30d `1.00`, 60d `1.15`, 90d `1.35`.
+  30d `1.00`, 60d `1.15`, 90d `1.50`.
 - `backend/inference.py` enforces self-consistent revenue bands and horizon widening.
 - Backtest evidence is stored in `reports/backtest_report.json` and `reports/backtest_summary.md`.
 - `tests/test_interval_monotonicity.py` verifies strict overall 30d < 60d < 90d widening.
@@ -29,6 +29,7 @@ and demo evidence.
 
 - `backend/gemini.py` uses the `google-genai` SDK when `GEMINI_API_KEY` is configured.
 - Deterministic fallback generates a complete `InsightsResponse` when Gemini is missing, slow, malformed, or rate-limited.
+- Prompt structure and deterministic fallback output evidence in `docs/gemini_sample_transcripts/EVIDENCE.md`.
 - The AI layer now returns ranked competing causal hypotheses with:
   - confidence label,
   - supporting evidence,
@@ -119,8 +120,10 @@ compare the trained model and safe baseline.
 
 The latest holdout evidence shows trained revenue MAE `1,723.79` versus baseline
 MAE `2,185.89`, and trained ROAS MAE `0.04` versus baseline MAE `0.05`. Current
-walk-forward interval coverage is `92.59%`, `92.59%`, and `92.59%` for 30, 60,
-and 90 days using multipliers `1.00`, `1.15`, and `1.35`.
+walk-forward revenue interval coverage is `100.0%`, `92.59%`, and `100.0%` for
+30, 60, and 90 days using multipliers `1.00`, `1.15`, and `1.50`. The 30-day
+ROAS interval coverage improved to `85.19%` after widening the short-horizon
+planning band.
 
 ### Why keep a fallback model?
 

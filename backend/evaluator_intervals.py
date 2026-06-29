@@ -13,10 +13,10 @@ import numpy as np
 from .evaluator_contract import safe_float
 
 
-DEFAULT_HORIZON_CONFIDENCE_Z = {"30": 1.20, "60": 1.25, "90": 1.30}
-DEFAULT_HORIZON_INTERVAL_MULTIPLIER = {"30": 1.00, "60": 1.15, "90": 1.35}
-LOW_SAMPLE_HORIZON_INTERVAL_MULTIPLIER = {"30": 0.80, "60": 1.05, "90": 1.25}
-HORIZON_INTERVAL_FLOOR_PCT = {30: 0.04, 60: 0.125, 90: 0.135}
+DEFAULT_HORIZON_CONFIDENCE_Z = {"30": 1.38, "60": 1.25, "90": 1.40}
+DEFAULT_HORIZON_INTERVAL_MULTIPLIER = {"30": 1.00, "60": 1.15, "90": 1.50}
+LOW_SAMPLE_HORIZON_INTERVAL_MULTIPLIER = {"30": 0.95, "60": 1.05, "90": 1.25}
+HORIZON_INTERVAL_FLOOR_PCT = {30: 0.08, 60: 0.125, 90: 0.175}
 
 
 def horizon_confidence_z(config: dict[str, Any], horizon: int, default: float = 1.64) -> float:

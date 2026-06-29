@@ -1,5 +1,7 @@
 # ForecastIQ
 
+[![Evaluator CI](https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq/actions/workflows/evaluator-ci.yml/badge.svg)](https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq/actions/workflows/evaluator-ci.yml)
+
 ForecastIQ is an AI-powered ecommerce forecasting and budget-decision platform built for NetElixir AIgnition 3.0. It turns GA4, Shopify, Google Ads, Meta Ads, and Microsoft/Bing Ads CSV exports into revenue forecasts, ROAS forecasts, confidence intervals, budget simulations, anomaly signals, and an executive action brief.
 
 ## 30-Second Judge Summary
@@ -71,6 +73,8 @@ pip install -r requirements.txt
 chmod +x run.sh
 ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
 ```
+
+Note: `requirements.txt` pins `scikit-learn==1.9.0` to match the committed artifact. Running on a machine with a different sklearn version will trigger a functional smoke test; predictions still use the trained model if the smoke test passes.
 
 The trained `pickle/model.pkl` artifact was rebuilt and last verified with Python 3.14.4 on Windows 11 AMD64; AI-integration transcript replay tooling is documented in [docs/gemini_sample_transcripts](./docs/gemini_sample_transcripts/), with real redacted transcripts pending a local Gemini API key run.
 

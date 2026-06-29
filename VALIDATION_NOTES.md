@@ -14,11 +14,11 @@ This file records objective verification evidence for reviewers. It documents wh
 
 ## Backtest results (walk-forward)
 
-| Horizon | Trained revenue MAPE | Baseline revenue MAPE | Interval coverage |
-|---:|---:|---:|---:|
-| 30 days | 2.66% | ~3.1% | see `reports/backtest_summary.md` for current values |
-| 60 days | 5.04% | 5.37% | see `reports/backtest_summary.md` for current values |
-| 90 days | 6.86% | 10.30% | see `reports/backtest_summary.md` for current values |
+| Horizon | Trained revenue MAPE | Baseline revenue MAPE | Revenue interval coverage | ROAS interval coverage |
+|---:|---:|---:|---:|---:|
+| 30 days | 2.66% | ~3.1% | 100.0% | 85.19% |
+| 60 days | 5.04% | 5.37% | 92.59% | 100.0% |
+| 90 days | 6.86% | 10.30% | 100.0% | 100.0% |
 
 ## Known gaps
 

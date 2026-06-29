@@ -46,9 +46,12 @@ target date. This prevents CV overfitting on small per-horizon slices.
 
 ### Horizon-Dedicated Sample Counts
 The artifact stores dedicated training-sample counts by horizon:
-- 30-day: 414 samples
-- 60-day: 180 samples
-- 90-day: 108 samples
+- 30-day: 468 samples
+- 60-day: 216 samples
+- 90-day: 126 samples
+
+Sample counts reflect the artifact committed at `pickle/model.pkl` version 5
+(trained 2026-06-29, Python 3.14.4, scikit-learn 1.9.0).
 
 If a horizon has fewer than the minimum required samples, it is marked
 `fallback_only` instead of training on mismatched target scales.
@@ -145,17 +148,18 @@ forecasts:
 
 | Horizon | Interval Multiplier | Floor (% of expected) | Confidence Z |
 |---|---|---|---|
-| 30 days | 1.00 | 4.0% | 1.20 |
+| 30 days | 1.00 | 8.0% | 1.38 |
 | 60 days | 1.15 | 12.5% | 1.25 |
-| 90 days | 1.35 | 13.0% | 1.30 |
+| 90 days | 1.50 | 17.5% | 1.40 |
 
 The earlier evaluator artifact produced 100.0% walk-forward revenue coverage at
 30, 60, and 90 days, which was safe but too wide for budget planning. The
-current artifact narrows the calibrated residual multipliers and minimum-width
-floors while preserving non-negative lower bounds; the regenerated backtest now
-reports 92.59% walk-forward revenue coverage at 30, 60, and 90 days. This is
-closer to the 90% planning target and gives marketing teams tighter but still
-conservative ranges for budget decisions.
+current artifact narrows the calibrated residual multipliers and tunes the
+minimum-width floors while preserving non-negative lower bounds; the regenerated
+backtest now reports walk-forward revenue coverage of 100.0%, 92.59%, and
+100.0% at 30, 60, and 90 days, while the 30-day ROAS coverage improved to
+85.19%. This gives marketing teams tighter but still conservative ranges for
+budget decisions.
 
 The monotonic enforcement pass (in `backend/inference.py`) ensures that each
 horizon's `interval_width_pct` is strictly larger than the previous horizon's

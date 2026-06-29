@@ -474,8 +474,9 @@ def _enforce_monotonic_interval_width_pct(rows: list[dict[str, Any]]) -> list[di
             if expected > 0:
                 current_pct = ((upper - lower) / expected) * 100.0
                 _STRICT_GAP_PP = 2.0  # each horizon must be at least 2pp wider than the previous
-                if current_pct < min_width_pct + (_STRICT_GAP_PP if min_width_pct > 0 else 0):
-                    required_half = (min_width_pct / 100.0) * expected / 2.0
+                target_width_pct = min_width_pct + (_STRICT_GAP_PP if min_width_pct > 0 else 0)
+                if current_pct < target_width_pct:
+                    required_half = (target_width_pct / 100.0) * expected / 2.0
                     midpoint = (upper + lower) / 2.0
                     new_lower = midpoint - required_half
                     new_upper = midpoint + required_half

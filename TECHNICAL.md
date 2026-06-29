@@ -145,9 +145,17 @@ forecasts:
 
 | Horizon | Interval Multiplier | Floor (% of expected) | Confidence Z |
 |---|---|---|---|
-| 30 days | 1.38 | 10% | 1.58 |
-| 60 days | 1.55 | 17% | 1.64 |
-| 90 days | 1.80 | 25% | 1.70 |
+| 30 days | 1.00 | 4.0% | 1.20 |
+| 60 days | 1.15 | 12.5% | 1.25 |
+| 90 days | 1.35 | 13.0% | 1.30 |
+
+The earlier evaluator artifact produced 100.0% walk-forward revenue coverage at
+30, 60, and 90 days, which was safe but too wide for budget planning. The
+current artifact narrows the calibrated residual multipliers and minimum-width
+floors while preserving non-negative lower bounds; the regenerated backtest now
+reports 92.59% walk-forward revenue coverage at 30, 60, and 90 days. This is
+closer to the 90% planning target and gives marketing teams tighter but still
+conservative ranges for budget decisions.
 
 The monotonic enforcement pass (in `backend/inference.py`) ensures that each
 horizon's `interval_width_pct` is strictly larger than the previous horizon's

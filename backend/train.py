@@ -316,7 +316,7 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
         "confidence": {
             "confidence_z": 1.64,
             "horizon_confidence_z": horizon_confidence_z,
-            "minimum_interval_pct": 0.045,
+            "minimum_interval_pct": 0.04,
             "horizon_interval_multiplier": (
                 LOW_SAMPLE_HORIZON_INTERVAL_MULTIPLIER
                 if low_sample_training

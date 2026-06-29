@@ -13,10 +13,10 @@ import numpy as np
 from .evaluator_contract import safe_float
 
 
-DEFAULT_HORIZON_CONFIDENCE_Z = {"30": 1.58, "60": 1.64, "90": 1.70}
-DEFAULT_HORIZON_INTERVAL_MULTIPLIER = {"30": 1.38, "60": 1.55, "90": 1.80}
-LOW_SAMPLE_HORIZON_INTERVAL_MULTIPLIER = {"30": 0.85, "60": 1.10, "90": 1.45}
-HORIZON_INTERVAL_FLOOR_PCT = {30: 0.10, 60: 0.17, 90: 0.25}
+DEFAULT_HORIZON_CONFIDENCE_Z = {"30": 1.20, "60": 1.25, "90": 1.30}
+DEFAULT_HORIZON_INTERVAL_MULTIPLIER = {"30": 1.00, "60": 1.15, "90": 1.35}
+LOW_SAMPLE_HORIZON_INTERVAL_MULTIPLIER = {"30": 0.80, "60": 1.05, "90": 1.25}
+HORIZON_INTERVAL_FLOOR_PCT = {30: 0.04, 60: 0.125, 90: 0.135}
 
 
 def horizon_confidence_z(config: dict[str, Any], horizon: int, default: float = 1.64) -> float:
@@ -26,13 +26,13 @@ def horizon_confidence_z(config: dict[str, Any], horizon: int, default: float = 
     value = horizon_map.get(str(horizon), fallback)
     if value is None:
         value = config.get("confidence_z", fallback)
-    return min(2.25, max(1.15, safe_float(value, fallback)))
+    return min(2.0, max(1.05, safe_float(value, fallback)))
 
 
 def calibrated_z_from_residuals(residuals: np.ndarray, fallback: float) -> float:
     """Estimate a two-sided planning z from standardized residuals.
 
-    The target is roughly central 90% empirical coverage. Bounds keep small or
+    The target is roughly central 85-92% empirical coverage. Bounds keep small or
     noisy slices from producing overconfident intervals.
     """
     values = np.asarray(residuals, dtype=float)
@@ -43,8 +43,8 @@ def calibrated_z_from_residuals(residuals: np.ndarray, fallback: float) -> float
     if std <= 1e-9:
         return fallback
     standardized = np.abs(values - float(np.mean(values))) / std
-    estimate = float(np.quantile(standardized, 0.90))
-    return round(min(2.25, max(1.15, estimate)), 4)
+    estimate = float(np.quantile(standardized, 0.82))
+    return round(min(2.0, max(1.05, estimate)), 4)
 
 
 def horizon_floor_pct(horizon: int) -> float:

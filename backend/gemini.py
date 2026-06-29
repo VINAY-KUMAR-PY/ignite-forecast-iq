@@ -8,6 +8,7 @@ import json
 import logging
 import os
 import re
+from datetime import datetime
 from typing import Any, Dict, List, Literal
 
 from dotenv import load_dotenv
@@ -52,6 +53,57 @@ def _money(value: float) -> str:
     return f"${value:,.0f}"
 
 
+def _event_datetime(value: Any) -> datetime | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    try:
+        return datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def _event_date_label(value: Any) -> str:
+    parsed = _event_datetime(value)
+    return parsed.strftime("%b %d") if parsed else "undated"
+
+
+def _causal_event_title(channel: str, estimate: dict[str, Any]) -> str:
+    metric = str(estimate.get("metric") or "revenue").lower()
+    incremental = float(estimate.get("incrementalRevenue") or 0)
+    if "roas" in metric:
+        event = "ROAS compression" if incremental < 0 else "ROAS lift"
+    elif incremental < 0:
+        event = "revenue pressure"
+    else:
+        event = "demand shift"
+    return f"{channel} {event} ({_event_date_label(estimate.get('date'))})"
+
+
+def _signal_title(channel: str, signal: dict[str, Any]) -> str:
+    date_value = signal.get("date") or signal.get("startDate") or signal.get("endDate")
+    return f"{channel} anomaly signal ({_event_date_label(date_value)})"
+
+
+def _ranked_causal_estimates(causal_estimates: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def sort_key(estimate: dict[str, Any]) -> tuple[float, float]:
+        parsed = _event_datetime(estimate.get("date"))
+        timestamp = parsed.timestamp() if parsed else 0.0
+        return abs(float(estimate.get("incrementalRevenue") or 0)), timestamp
+
+    return sorted(causal_estimates, key=sort_key, reverse=True)
+
+
+def _ensure_distinct_hypothesis_titles(hypotheses: list[dict[str, Any]]) -> None:
+    seen: dict[str, int] = {}
+    for item in hypotheses:
+        title = str(item.get("title") or "Causal hypothesis")
+        count = seen.get(title, 0)
+        if count:
+            item["title"] = f"{title} signal {count + 1}"
+        seen[title] = count + 1
+
+
 def _build_causal_hypotheses(summary: Dict[str, Any]) -> list[dict[str, Any]]:
     """Rank competing observational causal hypotheses from DiD/anomaly evidence."""
     causal_estimates = summary.get("causalEstimates") or []
@@ -63,7 +115,7 @@ def _build_causal_hypotheses(summary: Dict[str, Any]) -> list[dict[str, Any]]:
     roas_trend = float(summary.get("roasTrendPct") or 0)
 
     hypotheses: list[dict[str, Any]] = []
-    for estimate in causal_estimates[:3]:
+    for estimate in _ranked_causal_estimates(causal_estimates)[:3]:
         channel = _string(estimate.get("channel"), "Affected channel")
         confidence = _enum(estimate.get("confidence"), {"low", "medium", "high"}, "medium")
         incremental = float(estimate.get("incrementalRevenue") or 0)
@@ -73,7 +125,7 @@ def _build_causal_hypotheses(summary: Dict[str, Any]) -> list[dict[str, Any]]:
         hypotheses.append(
             {
                 "rank": len(hypotheses) + 1,
-                "title": f"{channel} budget or demand shift",
+                "title": _causal_event_title(channel, estimate),
                 "confidence": confidence,
                 "hypothesis": (
                     f"{channel} revenue changed because a spend, demand, or campaign-mix shift produced "
@@ -97,10 +149,15 @@ def _build_causal_hypotheses(summary: Dict[str, Any]) -> list[dict[str, Any]]:
         evidence = driver_evidence[0]
         channel = _string(evidence.get("channel"), "Primary channel")
         corr = float(evidence.get("spendRevenueDeltaCorrelation") or 0)
+        driver_title = (
+            f"{channel} spend-revenue association"
+            if not hypotheses
+            else f"{channel} spend-efficiency relationship"
+        )
         hypotheses.append(
             {
                 "rank": len(hypotheses) + 1,
-                "title": f"{channel} spend-response relationship",
+                "title": driver_title,
                 "confidence": _enum(evidence.get("strength"), {"low", "medium", "high"}, "medium"),
                 "hypothesis": (
                     f"{channel} may be driving incremental revenue because spend deltas and revenue deltas "
@@ -123,7 +180,7 @@ def _build_causal_hypotheses(summary: Dict[str, Any]) -> list[dict[str, Any]]:
         hypotheses.append(
             {
                 "rank": len(hypotheses) + 1,
-                "title": f"{channel} anomaly or trend break",
+                "title": _signal_title(channel, signal),
                 "confidence": _enum(signal.get("severity"), {"low", "medium", "high", "warning", "critical"}, "medium").replace("warning", "medium").replace("critical", "high"),
                 "hypothesis": (
                     f"{channel} performance may have shifted because an anomaly or trend break changed the recent baseline used for forecasting."
@@ -175,6 +232,7 @@ def _build_causal_hypotheses(summary: Dict[str, Any]) -> list[dict[str, Any]]:
             ]
         )
 
+    _ensure_distinct_hypothesis_titles(hypotheses)
     for index, item in enumerate(hypotheses[:5], start=1):
         item["rank"] = index
         item["confidence"] = _enum(item.get("confidence"), {"low", "medium", "high"}, "medium")

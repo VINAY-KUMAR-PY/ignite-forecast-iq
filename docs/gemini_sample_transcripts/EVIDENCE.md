@@ -757,7 +757,7 @@ This is the full deterministic fallback output from `backend.gemini._fallback_in
   "causalHypotheses": [
     {
       "rank": 1,
-      "title": "Google Ads budget or demand shift",
+      "title": "Google Ads ROAS compression (May 16)",
       "confidence": "medium",
       "hypothesis": "Google Ads revenue changed because a spend, demand, or campaign-mix shift produced an observational DiD effect of $-3,006.",
       "supportingEvidence": [
@@ -772,7 +772,7 @@ This is the full deterministic fallback output from `backend.gemini._fallback_in
     },
     {
       "rank": 2,
-      "title": "Google Ads budget or demand shift",
+      "title": "Google Ads ROAS compression (Jun 11)",
       "confidence": "low",
       "hypothesis": "Google Ads revenue changed because a spend, demand, or campaign-mix shift produced an observational DiD effect of $-2,892.",
       "supportingEvidence": [
@@ -787,7 +787,7 @@ This is the full deterministic fallback output from `backend.gemini._fallback_in
     },
     {
       "rank": 3,
-      "title": "Meta Ads budget or demand shift",
+      "title": "Meta Ads ROAS lift (Jun 08)",
       "confidence": "medium",
       "hypothesis": "Meta Ads revenue changed because a spend, demand, or campaign-mix shift produced an observational DiD effect of $2,238.",
       "supportingEvidence": [
@@ -802,7 +802,7 @@ This is the full deterministic fallback output from `backend.gemini._fallback_in
     },
     {
       "rank": 4,
-      "title": "Google Ads spend-response relationship",
+      "title": "Google Ads spend-efficiency relationship",
       "confidence": "medium",
       "hypothesis": "Google Ads may be driving incremental revenue because spend deltas and revenue deltas move together with correlation 0.86.",
       "supportingEvidence": [
@@ -816,7 +816,7 @@ This is the full deterministic fallback output from `backend.gemini._fallback_in
     },
     {
       "rank": 5,
-      "title": "Google Ads anomaly or trend break",
+      "title": "Google Ads anomaly signal (Jun 11)",
       "confidence": "medium",
       "hypothesis": "Google Ads performance may have shifted because an anomaly or trend break changed the recent baseline used for forecasting.",
       "supportingEvidence": [

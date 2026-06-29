@@ -16,7 +16,7 @@ This file records objective verification evidence for reviewers. It documents wh
 
 | Horizon | Trained revenue MAPE | Baseline revenue MAPE | Revenue interval coverage | ROAS interval coverage |
 |---:|---:|---:|---:|---:|
-| 30 days | 2.66% | ~3.1% | 100.0% | 85.19% |
+| 30 days | 2.66% | ~3.1% | 100.0% | 100.0% |
 | 60 days | 5.04% | 5.37% | 92.59% | 100.0% |
 | 90 days | 6.86% | 10.30% | 100.0% | 100.0% |
 

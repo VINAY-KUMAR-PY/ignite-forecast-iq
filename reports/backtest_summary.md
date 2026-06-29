@@ -1,6 +1,6 @@
 # ForecastIQ Backtest Summary
 
-Generated: 2026-06-29T11:00:12.459786+00:00
+Generated: 2026-06-29T12:09:25.398459+00:00
 
 ## Holdout Design
 
@@ -36,7 +36,7 @@ Generated: 2026-06-29T11:00:12.459786+00:00
 | Model | MAE | RMSE | MAPE | Interval coverage |
 | --- | ---: | ---: | ---: | ---: |
 | Trained model | 1723.79 | 2226.8 | 2.26% | 100.0% |
-| Safe baseline | 2185.89 | 2763.76 | 2.78% | 88.89% |
+| Safe baseline | 2185.89 | 2763.76 | 2.78% | 100.0% |
 
 ### ROAS
 
@@ -92,14 +92,14 @@ Recommendation: Keep roas_model_weight=0.60; it has the best ROAS RMSE/MAE balan
 
 | Horizon days | Folds | Segments | Trained revenue MAE | Trained revenue RMSE | Trained revenue MAPE | Trained revenue coverage | Trained ROAS MAE | Trained ROAS RMSE | Trained ROAS coverage | Baseline MAE | Baseline RMSE | Revenue MAE winner |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| 30 | 3 | 54 | 2462.0 | 4406.72 | 2.66% | 100.0% | 0.05 | 0.06 | 85.19% | 3097.88 | 4501.73 | Trained model |
+| 30 | 3 | 54 | 2462.0 | 4406.72 | 2.66% | 100.0% | 0.05 | 0.06 | 100.0% | 3097.88 | 4501.73 | Trained model |
 | 60 | 3 | 54 | 10541.64 | 18671.63 | 5.04% | 92.59% | 0.05 | 0.06 | 100.0% | 11221.15 | 18229.52 | Trained model |
 | 90 | 3 | 54 | 20891.06 | 33520.44 | 6.86% | 100.0% | 0.06 | 0.07 | 100.0% | 31577.72 | 49786.14 | Trained model |
 
 Note on 30-day ROAS interval coverage: ROAS confidence intervals are derived from revenue intervals
 divided by projected spend, so revenue interval width drives ROAS interval width. The 30-day revenue
 multiplier (1.0) and minimum-width floor are calibrated
-against walk-forward evidence; the current trained-model ROAS coverage is 85.19%.
+against walk-forward evidence; the current trained-model ROAS coverage is 100.0%.
 A future calibration pass dedicated to ROAS residuals could refine interval efficiency further.
 
 ## Interval Calibration Before/After

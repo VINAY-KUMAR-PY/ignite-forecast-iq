@@ -12,6 +12,7 @@ import json
 from pathlib import Path
 
 import numpy as np
+import sklearn
 
 from .evaluator_contract import (
     HORIZONS,
@@ -108,6 +109,7 @@ def main() -> None:
     )
     log(f"Wrote {len(rows)} rows to {args.output}")
     log(f"Causal summary written to {summary_path}")
+    log(f"scikit-learn version: {sklearn.__version__} (artifact built on 1.9.0)")
 
 
 if __name__ == "__main__":

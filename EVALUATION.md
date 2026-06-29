@@ -122,7 +122,7 @@ The latest holdout evidence shows trained revenue MAE `1,723.79` versus baseline
 MAE `2,185.89`, and trained ROAS MAE `0.04` versus baseline MAE `0.05`. Current
 walk-forward revenue interval coverage is `100.0%`, `92.59%`, and `100.0%` for
 30, 60, and 90 days using multipliers `1.00`, `1.15`, and `1.50`. The 30-day
-ROAS interval coverage improved to `85.19%` after widening the short-horizon
+ROAS interval coverage improved to `100.0%` after widening the short-horizon
 planning band.
 
 ### Why keep a fallback model?

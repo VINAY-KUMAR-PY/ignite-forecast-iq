@@ -148,7 +148,7 @@ forecasts:
 
 | Horizon | Interval Multiplier | Floor (% of expected) | Confidence Z |
 |---|---|---|---|
-| 30 days | 1.00 | 8.0% | 1.38 |
+| 30 days | 1.00 | 10.0% | 1.50 |
 | 60 days | 1.15 | 12.5% | 1.25 |
 | 90 days | 1.50 | 17.5% | 1.40 |
 
@@ -158,7 +158,7 @@ current artifact narrows the calibrated residual multipliers and tunes the
 minimum-width floors while preserving non-negative lower bounds; the regenerated
 backtest now reports walk-forward revenue coverage of 100.0%, 92.59%, and
 100.0% at 30, 60, and 90 days, while the 30-day ROAS coverage improved to
-85.19%. This gives marketing teams tighter but still conservative ranges for
+100.0%. This gives marketing teams tighter but still conservative ranges for
 budget decisions.
 
 The monotonic enforcement pass (in `backend/inference.py`) ensures that each

@@ -220,6 +220,39 @@ class GeminiParsingTests(unittest.TestCase):
         self.assertTrue(all(item["contradictingEvidence"] for item in hypotheses[:2]))
         self.assertTrue(all(item["recommendedTest"] for item in hypotheses[:2]))
 
+    def test_causal_hypothesis_titles_are_distinct_for_same_channel_events(self) -> None:
+        summary = dict(SUMMARY)
+        summary["causalEstimates"] = [
+            {
+                "date": "2026-06-11",
+                "channel": "Google Ads",
+                "metric": "roas",
+                "method": "difference_in_differences",
+                "incrementalRevenue": -9000.0,
+                "lowerRevenue": -12000.0,
+                "upperRevenue": -3500.0,
+                "confidence": "medium",
+            },
+            {
+                "date": "2026-05-16",
+                "channel": "Google Ads",
+                "metric": "revenue",
+                "method": "difference_in_differences",
+                "incrementalRevenue": 14000.0,
+                "lowerRevenue": 8000.0,
+                "upperRevenue": 19000.0,
+                "confidence": "high",
+            },
+        ]
+
+        hypotheses = _build_causal_hypotheses(summary)
+        titles = [item["title"] for item in hypotheses[:3]]
+
+        self.assertEqual(len(titles), len(set(titles)))
+        self.assertIn("Google Ads demand shift (May 16)", titles[0])
+        self.assertIn("Google Ads ROAS compression (Jun 11)", titles)
+        self.assertTrue(any(title == "Google Ads spend-efficiency relationship" for title in titles))
+
     def test_prompt_includes_statistical_driver_evidence_with_causal_guardrail(self) -> None:
         prompt = _build_prompt(SUMMARY)
 

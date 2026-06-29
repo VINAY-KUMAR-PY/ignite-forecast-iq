@@ -127,7 +127,7 @@ jobs:
           from pathlib import Path
 
           text = Path("output/causal_summary.txt").read_text(encoding="utf-8")
-          if len(text) < 100:
+          if len(text) < 300:
               raise SystemExit("causal_summary.txt is too short or missing")
           print("Causal summary OK:", len(text), "chars")
           PY
@@ -165,7 +165,7 @@ jobs:
           if not p.exists():
               raise SystemExit("causal_summary.txt missing")
           text = p.read_text()
-          if len(text) < 100:
+          if len(text) < 300:
               raise SystemExit("causal_summary.txt missing or too short")
           if "Anomaly signals" not in text and "No anomalies" not in text:
               raise SystemExit("causal_summary.txt missing anomaly section")

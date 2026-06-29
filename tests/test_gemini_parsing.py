@@ -3,13 +3,27 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import sys
+import types
 import unittest
 from unittest.mock import AsyncMock, patch
 
 from backend.gemini import (
+    _build_causal_hypotheses,
+    _classify_exception,
     _extract_json,
     _fallback_insights,
     _build_prompt,
+    _gemini_max_attempts,
+    _gemini_max_output_tokens,
+    _gemini_retry_backoff_seconds,
+    _gemini_temperature,
+    _gemini_timeout_seconds,
+    _generate_content,
+    _generate_with_google_genai,
+    _generate_with_legacy_sdk,
+    _generation_error,
+    _is_retryable,
     _safe_exception_message,
     _validate_insights_payload,
     generate_gemini_insights_live,
@@ -108,6 +122,55 @@ class GeminiParsingTests(unittest.TestCase):
         self.assertIn(insights.actionPlan[0].priority, {"high", "medium", "low"})
         self.assertTrue(insights.budgetAllocation)
 
+    def test_schema_repair_merges_all_optional_sections(self) -> None:
+        payload = _fallback_insights(SUMMARY).model_dump(mode="json")
+        payload["channelPerformance"] = [{"channel": "Meta Ads", "verdict": "urgent", "insight": "Softening"}]
+        payload["budgetAllocation"] = [
+            {
+                "channel": "Google Ads",
+                "currentSharePct": "40",
+                "recommendedSharePct": "48",
+                "rationale": "Search is efficient.",
+                "expectedImpact": "Revenue lift",
+            }
+        ]
+        payload["growthOpportunities"] = [
+            {
+                "title": "Scale search",
+                "description": "Add exact match coverage.",
+                "expectedImpact": "Revenue lift",
+                "effort": "impossible",
+            }
+        ]
+        payload["actionPlan"] = [
+            {
+                "priority": "critical",
+                "timeline": "This week",
+                "owner": "Growth lead",
+                "action": "Move budget",
+                "kpi": "ROAS",
+            }
+        ]
+        payload["causalHypotheses"] = [
+            {
+                "rank": "1",
+                "title": "Search lift",
+                "confidence": "certain",
+                "hypothesis": "Revenue rose because search demand improved.",
+                "supportingEvidence": ["Search ROAS is above average."],
+                "contradictingEvidence": ["No randomized test."],
+                "recommendedTest": "Run a holdout.",
+            }
+        ]
+
+        insights = _validate_insights_payload(payload, SUMMARY)
+
+        self.assertIn(insights.channelPerformance[0].verdict, {"outperforming", "on_track", "underperforming"})
+        self.assertNotEqual(insights.channelPerformance[0].verdict, "urgent")
+        self.assertEqual(insights.growthOpportunities[0].effort, "low")
+        self.assertEqual(insights.actionPlan[0].priority, "high")
+        self.assertEqual(insights.causalHypotheses[0].confidence, "medium")
+
     def test_schema_repair_handles_empty_summary_defaults(self) -> None:
         fallback = _fallback_insights({}).model_dump(mode="json")
         payload = json.loads('{"channelPerformance":[{"channel":"Unknown","verdict":"watch"}]}')
@@ -145,6 +208,18 @@ class GeminiParsingTests(unittest.TestCase):
         self.assertTrue(any(metric in combined for metric in ["spend", "conversion", "revenue"]))
         self.assertIn("association", combined)
 
+    def test_build_causal_hypotheses_falls_back_without_did_estimates(self) -> None:
+        summary = dict(SUMMARY)
+        summary["causalEstimates"] = []
+
+        hypotheses = _build_causal_hypotheses(summary)
+
+        self.assertGreaterEqual(len(hypotheses), 2)
+        self.assertEqual([item["rank"] for item in hypotheses[:2]], [1, 2])
+        self.assertTrue(all(item["supportingEvidence"] for item in hypotheses[:2]))
+        self.assertTrue(all(item["contradictingEvidence"] for item in hypotheses[:2]))
+        self.assertTrue(all(item["recommendedTest"] for item in hypotheses[:2]))
+
     def test_prompt_includes_statistical_driver_evidence_with_causal_guardrail(self) -> None:
         prompt = _build_prompt(SUMMARY)
 
@@ -179,6 +254,161 @@ class GeminiParsingTests(unittest.TestCase):
                     self.assertEqual(source, "fallback")
                     self.assertTrue(insights.risks)
                     self.assertTrue(insights.growthOpportunities)
+
+    def test_gemini_config_helpers_and_error_classification(self) -> None:
+        with patch.dict(
+            os.environ,
+            {
+                "GEMINI_TEMPERATURE": "bad",
+                "GEMINI_TIMEOUT_SECONDS": "999",
+                "GEMINI_MAX_ATTEMPTS": "bad",
+                "GEMINI_RETRY_BACKOFF_SECONDS": "bad",
+                "GEMINI_MAX_OUTPUT_TOKENS": "bad",
+            },
+            clear=False,
+        ):
+            self.assertEqual(_gemini_temperature(), 0.2)
+            self.assertEqual(_gemini_timeout_seconds(), 120.0)
+            self.assertEqual(_gemini_max_attempts(), 3)
+            self.assertEqual(_gemini_retry_backoff_seconds(), 1.5)
+            self.assertEqual(_gemini_max_output_tokens(), 3072)
+
+        self.assertEqual(_classify_exception(asyncio.TimeoutError()), "timeout")
+        self.assertEqual(_classify_exception(RuntimeError("429 quota exceeded")), "rate_limit")
+        self.assertEqual(_classify_exception(RuntimeError("invalid json")), "validation")
+        generated = _generation_error(RuntimeError("503 service unavailable"), "context")
+        self.assertEqual(generated.kind, "transient")
+        self.assertTrue(_is_retryable(generated.kind))
+
+    def test_generate_content_uses_legacy_sdk_when_current_sdk_import_fails(self) -> None:
+        with patch(
+            "backend.gemini._generate_with_google_genai",
+            new=AsyncMock(side_effect=ModuleNotFoundError("No module named 'google.genai'")),
+        ):
+            with patch("backend.gemini._legacy_generativeai_available", return_value=True):
+                with patch("backend.gemini._generate_with_legacy_sdk", new=AsyncMock(return_value='{"ok": true}')) as legacy:
+                    text = asyncio.run(_generate_content("key", "model", "prompt", 5))
+
+        self.assertEqual(text, '{"ok": true}')
+        legacy.assert_awaited_once()
+
+    def test_google_genai_adapter_returns_structured_json_from_parsed_response(self) -> None:
+        class HttpOptions:
+            def __init__(self, timeout):
+                self.timeout = timeout
+
+        class GenerateContentConfig:
+            def __init__(self, **kwargs):
+                self.kwargs = kwargs
+
+        class FakeModels:
+            @staticmethod
+            def generate_content(model, contents, config):
+                assert model == "gemini-2.5-flash"
+                assert contents == "prompt"
+                assert config.kwargs["response_mime_type"] == "application/json"
+                return types.SimpleNamespace(parsed=_fallback_insights(SUMMARY))
+
+        class FakeClient:
+            def __init__(self, api_key, http_options):
+                self.api_key = api_key
+                self.http_options = http_options
+                self.models = FakeModels()
+
+        google_module = types.ModuleType("google")
+        genai_module = types.ModuleType("google.genai")
+        genai_module.Client = FakeClient
+        genai_module.types = types.SimpleNamespace(
+            HttpOptions=HttpOptions,
+            GenerateContentConfig=GenerateContentConfig,
+        )
+        google_module.genai = genai_module
+
+        with patch.dict(sys.modules, {"google": google_module, "google.genai": genai_module}):
+            text = asyncio.run(_generate_with_google_genai("key", "gemini-2.5-flash", "prompt", 5))
+
+        self.assertIn("executiveSummary", text)
+
+    def test_google_genai_adapter_falls_back_to_raw_text_when_parsed_unavailable(self) -> None:
+        class HttpOptions:
+            def __init__(self, timeout):
+                self.timeout = timeout
+
+        class GenerateContentConfig:
+            def __init__(self, **kwargs):
+                self.kwargs = kwargs
+
+        class Response:
+            text = '{"executiveSummary": "raw"}'
+
+            @property
+            def parsed(self):
+                raise RuntimeError("parsed unavailable")
+
+        class FakeModels:
+            @staticmethod
+            def generate_content(model, contents, config):
+                return Response()
+
+        class FakeClient:
+            def __init__(self, api_key, http_options):
+                self.models = FakeModels()
+
+        google_module = types.ModuleType("google")
+        genai_module = types.ModuleType("google.genai")
+        genai_module.Client = FakeClient
+        genai_module.types = types.SimpleNamespace(
+            HttpOptions=HttpOptions,
+            GenerateContentConfig=GenerateContentConfig,
+        )
+        google_module.genai = genai_module
+
+        with patch.dict(sys.modules, {"google": google_module, "google.genai": genai_module}):
+            text = asyncio.run(_generate_with_google_genai("key", "gemini-2.5-flash", "prompt", 5))
+
+        self.assertEqual(text, '{"executiveSummary": "raw"}')
+
+    def test_legacy_sdk_adapter_returns_text(self) -> None:
+        class FakeModel:
+            def __init__(self, model_name, generation_config):
+                self.model_name = model_name
+                self.generation_config = generation_config
+
+            async def generate_content_async(self, prompt, request_options):
+                assert prompt == "prompt"
+                assert request_options["timeout"] == 5
+                return types.SimpleNamespace(text='{"executiveSummary": "legacy"}')
+
+        legacy_module = types.ModuleType("google.generativeai")
+        legacy_module.configure = lambda api_key: None
+        legacy_module.GenerativeModel = FakeModel
+        google_module = types.ModuleType("google")
+        google_module.generativeai = legacy_module
+
+        with patch.dict(
+            sys.modules,
+            {"google": google_module, "google.generativeai": legacy_module},
+        ):
+            text = asyncio.run(_generate_with_legacy_sdk("key", "gemini-2.5-flash", "prompt", 5))
+
+        self.assertEqual(text, '{"executiveSummary": "legacy"}')
+
+    def test_live_generation_retries_transient_error_then_uses_gemini_payload(self) -> None:
+        payload = _fallback_insights(SUMMARY).model_dump(mode="json")
+        payload["executiveSummary"] = "Gemini retry eventually returned a structured briefing."
+        with patch.dict(
+            os.environ,
+            {"GEMINI_API_KEY": "configured", "GEMINI_MAX_ATTEMPTS": "2", "GEMINI_RETRY_BACKOFF_SECONDS": "0"},
+            clear=False,
+        ):
+            with patch(
+                "backend.gemini._generate_content",
+                new=AsyncMock(side_effect=[RuntimeError("503 temporary outage"), json.dumps(payload)]),
+            ):
+                with patch("backend.gemini.asyncio.sleep", new=AsyncMock()):
+                    insights = asyncio.run(generate_gemini_insights_live(SUMMARY))
+
+        self.assertEqual(insights.executiveSummary, payload["executiveSummary"])
 
     def test_malformed_gemini_response_falls_back_to_valid_insights(self) -> None:
         with patch.dict(os.environ, {"GEMINI_API_KEY": "configured", "GEMINI_MAX_ATTEMPTS": "1"}, clear=False):

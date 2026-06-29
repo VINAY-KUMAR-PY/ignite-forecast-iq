@@ -48,7 +48,7 @@
       },
       "low_sample_training": false,
       "sample_confidence_discount": 1.0,
-      "revenue_model_weight": 0.4,
+      "revenue_model_weight": 0.6,
       "roas_model_weight": 0.6,
       "revenue_model_weight_by_horizon": {
         "30": 0.6,

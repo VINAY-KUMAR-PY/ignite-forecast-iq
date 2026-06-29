@@ -1,20 +1,19 @@
 services:
   - type: web
     name: forecastiq-api
-    runtime: python
+    env: python
+    plan: free
     buildCommand: pip install -r requirements-app.txt
-    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
-    healthCheckPath: /health
+    startCommand: python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: GEMINI_API_KEY
         sync: false
       - key: GEMINI_MODEL
-        value: gemini-2.5-flash-lite
-      - key: GEMINI_TIMEOUT_SECONDS
-        value: "45"
-      - key: GEMINI_MAX_ATTEMPTS
-        value: "3"
+        value: gemini-2.5-flash
+      - key: TRAINING_ADMIN_TOKEN
+        sync: false
       - key: CORS_ORIGINS
         sync: false
       - key: LOG_LEVEL
         value: INFO
+    healthCheckPath: /health

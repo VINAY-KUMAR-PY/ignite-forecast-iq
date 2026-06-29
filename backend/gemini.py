@@ -534,7 +534,7 @@ def _close_partial_json(text: str) -> str:
 
 
 def _gemini_model_name() -> str:
-    return (os.getenv("GEMINI_MODEL") or "gemini-2.5-flash-lite").strip() or "gemini-2.5-flash-lite"
+    return (os.getenv("GEMINI_MODEL") or "gemini-2.5-flash").strip() or "gemini-2.5-flash"
 
 
 def _gemini_temperature() -> float:

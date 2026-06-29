@@ -181,7 +181,7 @@ Environment variables:
 
 ```text
 GEMINI_API_KEY          optional; enables live Gemini insights
-GEMINI_MODEL            optional; defaults to gemini-2.5-flash-lite
+GEMINI_MODEL            optional; defaults to gemini-2.5-flash
 TRAINING_ADMIN_TOKEN    required for protected model training endpoint
 CORS_ORIGINS            comma-separated production frontend origins
 ```

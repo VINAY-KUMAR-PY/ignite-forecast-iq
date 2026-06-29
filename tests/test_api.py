@@ -31,6 +31,22 @@ def test_train_rejects_path_traversal_before_writing(valid_campaign_row) -> None
     assert "pickle" in response.text
 
 
+def test_train_persists_model_when_authorized(valid_campaign_row) -> None:
+    bundle = {"model_type": "trained_model"}
+    with patch.dict(os.environ, {"TRAINING_ADMIN_TOKEN": "secret"}, clear=False):
+        with patch("backend.main.train_evaluator_model", return_value=bundle):
+            with patch("backend.main.joblib.dump") as dump:
+                response = TestClient(app).post(
+                    "/api/train",
+                    json={"rows": [valid_campaign_row()], "modelPath": "judge-test.pkl"},
+                    headers={"X-Training-Admin-Token": "secret"},
+                )
+
+    assert response.status_code == 200, response.text
+    assert response.json()["modelPath"].replace("\\", "/") == "pickle/judge-test.pkl"
+    dump.assert_called_once()
+
+
 def test_oversized_payload_returns_clear_422(valid_campaign_row) -> None:
     rows = [valid_campaign_row((index % 28) + 1) for index in range(MAX_UPLOAD_ROWS + 1)]
     response = TestClient(app).post("/api/forecast", json={"rows": rows, "horizon": 30, "level": "overall"})
@@ -149,6 +165,18 @@ def test_anomalies_endpoint_is_rate_limited(sample_campaign_rows) -> None:
     assert response.status_code == 200, response.text
     assert "anomalies" in response.json()
     assert "trendBreaks" in response.json()
+
+
+def test_anomalies_endpoint_returns_lists(sample_campaign_rows) -> None:
+    client = TestClient(app)
+    response = client.post("/api/anomalies", json={"rows": sample_campaign_rows()})
+
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    assert isinstance(payload["anomalies"], list)
+    assert isinstance(payload["trendBreaks"], list)
+    assert isinstance(payload["driverEvidence"], list)
+    assert isinstance(payload["causalEstimates"], list)
 
 
 def test_simulate_and_decision_support_happy_paths(sample_campaign_rows) -> None:

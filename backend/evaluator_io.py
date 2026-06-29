@@ -293,7 +293,19 @@ def generate_offline_causal_summary(
     from .anomaly import detect_anomalies
 
     if frame.empty or not rows:
-        return "Insufficient data for causal summary."
+        return (
+            "=== ForecastIQ Causal Summary (offline, deterministic) ===\n"
+            "Executive interpretation: the submitted data did not contain enough usable rows to "
+            "estimate a directional revenue trend, so ForecastIQ generated evaluator-safe fallback "
+            "predictions instead of failing. The dollar impact is treated as $0 and the percentage "
+            "change versus the trailing 30-day average is 0.0% because no reliable trailing average "
+            "can be computed.\n"
+            "Causal effect estimates (observational DiD, not experimental incrementality):\n"
+            "  - No causal estimate available; the dataset was empty or malformed after validation.\n"
+            "Confidence note: this offline causal layer is observational difference-in-differences, "
+            "not randomized incrementality. It is intended to explain forecast evidence, not to prove "
+            "causality without a controlled experiment."
+        )
 
     daily = (
         frame.groupby("date", as_index=False)[["spend", "revenue"]]
@@ -304,6 +316,29 @@ def generate_offline_causal_summary(
     total_spend = safe_float(daily["spend"].sum())
     total_revenue = safe_float(daily["revenue"].sum())
     blended_roas = safe_ratio(total_revenue, total_spend)
+    recent_window = daily.tail(min(30, len(daily)))
+    prior_window = daily.iloc[max(0, len(daily) - 60) : max(0, len(daily) - 30)]
+    recent_revenue_total = safe_float(recent_window["revenue"].sum())
+    recent_daily_avg = safe_ratio(recent_revenue_total, max(len(recent_window), 1))
+    if len(prior_window):
+        trailing_daily_avg = safe_ratio(safe_float(prior_window["revenue"].sum()), len(prior_window))
+    else:
+        trailing_daily_avg = safe_ratio(total_revenue, max(len(daily), 1))
+    revenue_delta_dollars = recent_daily_avg - trailing_daily_avg
+    revenue_delta_pct = safe_ratio(revenue_delta_dollars, trailing_daily_avg) * 100 if trailing_daily_avg else 0.0
+    if revenue_delta_pct > 2.0:
+        revenue_direction = "up"
+    elif revenue_delta_pct < -2.0:
+        revenue_direction = "down"
+    else:
+        revenue_direction = "flat"
+    executive_interpretation = (
+        f"Executive interpretation: revenue is {revenue_direction} versus the trailing 30-day "
+        f"average by ${revenue_delta_dollars:,.0f} per day ({revenue_delta_pct:+.1f}%). "
+        f"The most recent window produced ${recent_revenue_total:,.0f} in revenue, while the "
+        "causal layer below explains whether detected channel events plausibly contributed to "
+        "that movement."
+    )
 
     channel_summary = (
         frame.groupby("channel")[["spend", "revenue"]]
@@ -347,19 +382,49 @@ def generate_offline_causal_summary(
         causal_estimates = []
 
     if causal_estimates:
-        causal_lines = [
-            "  - {channel} on {date}: incremental revenue ${effect:,.0f} "
-            "(95% CI ${lower:,.0f} to ${upper:,.0f}), ROAS effect {roas:.2f}x, confidence={confidence}".format(
-                channel=str(item.get("channel")),
-                date=str(item.get("date")),
-                effect=safe_float(item.get("incrementalRevenue")),
-                lower=safe_float(item.get("lowerRevenue")),
-                upper=safe_float(item.get("upperRevenue")),
-                roas=safe_float(item.get("roasEffect")),
-                confidence=str(item.get("confidence") or "low"),
+        causal_lines = []
+        for item in causal_estimates[:3]:
+            event_date = pd.to_datetime(item.get("date"), errors="coerce")
+            pre_days = int(safe_float(item.get("preWindowDays"), 0))
+            post_days = int(safe_float(item.get("postWindowDays"), 0))
+            if pd.isna(event_date):
+                pre_window = "unknown pre-event window"
+                post_window = "unknown post-event window"
+                event_label = str(item.get("date") or "unknown date")
+            else:
+                pre_start = (event_date - pd.Timedelta(days=max(pre_days, 1))).strftime("%Y-%m-%d")
+                pre_end = (event_date - pd.Timedelta(days=1)).strftime("%Y-%m-%d")
+                post_start = event_date.strftime("%Y-%m-%d")
+                post_end = (event_date + pd.Timedelta(days=max(post_days, 1) - 1)).strftime("%Y-%m-%d")
+                pre_window = f"{pre_start} to {pre_end}"
+                post_window = f"{post_start} to {post_end}"
+                event_label = event_date.strftime("%Y-%m-%d")
+            channel = str(item.get("channel") or "Unknown Channel")
+            effect = safe_float(item.get("incrementalRevenue"))
+            lower = safe_float(item.get("lowerRevenue"))
+            upper = safe_float(item.get("upperRevenue"))
+            roas = safe_float(item.get("roasEffect"))
+            confidence = str(item.get("confidence") or "low")
+            direction = "rose" if effect >= 0 else "fell"
+            causal_lines.append(
+                "  - {channel} on {date}: incremental revenue ${effect:,.0f} "
+                "(95% CI ${lower:,.0f} to ${upper:,.0f}), ROAS effect {roas:.2f}x, "
+                "confidence={confidence}. Pre window: {pre_window}; post window: {post_window}. "
+                "{channel} revenue {direction} after the detected event on {date}, compared with "
+                "movement in control channels, suggesting the event had observable impact while "
+                "still requiring an experiment for proof.".format(
+                    channel=channel,
+                    date=event_label,
+                    effect=effect,
+                    lower=lower,
+                    upper=upper,
+                    roas=roas,
+                    confidence=confidence,
+                    pre_window=pre_window,
+                    post_window=post_window,
+                    direction=direction,
+                )
             )
-            for item in causal_estimates[:3]
-        ]
     else:
         causal_lines = ["  - No causal estimate available; history was too sparse around detected events."]
 
@@ -393,6 +458,7 @@ def generate_offline_causal_summary(
 
     lines = [
         "=== ForecastIQ Causal Summary (offline, deterministic) ===",
+        executive_interpretation,
         f"Historical period: {daily['date'].iloc[0]} to {daily['date'].iloc[-1]} ({len(daily)} days)",
         f"Total spend: ${total_spend:,.0f} | Total revenue: ${total_revenue:,.0f} | Blended ROAS: {blended_roas:.2f}x",
         f"Performance is {trend_note}.",
@@ -416,6 +482,9 @@ def generate_offline_causal_summary(
         f"{weakest_channel} campaigns for wasted spend, weak conversion quality, or rising CPC.",
         "Uncertainty warning: treat wider 60 and 90-day intervals as planning ranges, not exact "
         "targets, because thinner segment history and residual volatility compound over longer horizons.",
+        "Confidence note: this causal summary uses observational difference-in-differences. It is "
+        "directional evidence for forecast explanation, not experimental incrementality; budget "
+        "decisions should be validated with geo, audience, or campaign holdout tests where possible.",
     ]
 
     # Optional: attempt to enrich the summary with an LLM call.
@@ -441,7 +510,7 @@ def generate_offline_causal_summary(
                 + "\n".join(lines[:10])
             )
             _response = _client.models.generate_content(
-                model=os.environ.get("GEMINI_MODEL", "gemini-2.5-flash-lite"),
+                model=os.environ.get("GEMINI_MODEL", "gemini-2.5-flash"),
                 contents=_prompt,
             )
             _ai_paragraph = (_response.text or "").strip()

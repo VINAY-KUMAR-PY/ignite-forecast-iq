@@ -1,14 +1,20 @@
 from __future__ import annotations
 
 import math
+import os
+import subprocess
+import sys
 import tempfile
+import types
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import joblib
 import numpy as np
 import pandas as pd
 
+import backend.predict as predict_module
 from backend.predict import (
     OUTPUT_COLUMNS,
     MODEL_TYPE,
@@ -71,6 +77,142 @@ class OfflinePredictionTests(unittest.TestCase):
             self.assertEqual({row["horizon_days"] for row in rows}, {30, 60, 90})
             self.assertEqual({row["model_type"] for row in rows}, {SAFE_BASELINE_MODEL_TYPE})
             self.assertEqual({row["level"] for row in rows}, {"overall"})
+
+    def test_read_csv_folder_empty_directory_returns_empty_frame(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            raw = read_csv_folder(tmp)
+
+        self.assertTrue(raw.empty)
+
+    def test_write_predictions_writes_exact_contract_columns(self) -> None:
+        row = {
+            "level": "overall",
+            "segment": "all",
+            "horizon_days": 30,
+            "expected_revenue": 100.0,
+            "lower_revenue": 90.0,
+            "upper_revenue": 110.0,
+            "expected_roas": 2.0,
+            "lower_roas": 1.8,
+            "upper_roas": 2.2,
+            "model_type": SAFE_BASELINE_MODEL_TYPE,
+            "interval_width_pct": 20.0,
+            "forecast_confidence": "high",
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "nested" / "predictions.csv"
+            write_predictions([row], output)
+            written = pd.read_csv(output)
+
+        self.assertEqual(list(written.columns), OUTPUT_COLUMNS)
+        self.assertEqual(len(written), 1)
+        self.assertEqual(written.loc[0, "model_type"], SAFE_BASELINE_MODEL_TYPE)
+
+    def test_budget_json_parser_accepts_valid_and_rejects_bad_values(self) -> None:
+        parsed = predict_module._parse_budget_json('{"Google Ads": 100, "Meta Ads": -50}')
+
+        self.assertEqual(parsed, {"Google Ads": 100.0, "Meta Ads": 0.0})
+        self.assertEqual(predict_module._parse_budget_json(""), {})
+        self.assertEqual(predict_module._parse_budget_json("[1, 2]"), {})
+        self.assertEqual(predict_module._parse_budget_json("{bad json"), {})
+
+    def test_safe_load_model_fallback_branches_for_unsupported_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            unsupported = root / "unsupported.pkl"
+            joblib.dump(["not", "a", "dict"], unsupported)
+            legacy = root / "legacy.pkl"
+            joblib.dump(
+                {
+                    "artifact_version": 1,
+                    "confidence_z": 1.2,
+                    "horizon_confidence_z": {"30": 1.1, "60": 1.2, "90": 1.3},
+                    "trend_weight": 0.2,
+                },
+                legacy,
+            )
+            oversized = root / "oversized.pkl"
+            oversized.write_bytes(b"0" * 2_000_001)
+
+            unsupported_model = safe_load_model(unsupported)
+            legacy_model = safe_load_model(legacy)
+            oversized_model = safe_load_model(oversized)
+
+        self.assertEqual(unsupported_model["model_type"], SAFE_BASELINE_MODEL_TYPE)
+        self.assertEqual(legacy_model["model_type"], SAFE_BASELINE_MODEL_TYPE)
+        self.assertEqual(legacy_model["confidence_z"], 1.2)
+        self.assertEqual(oversized_model["model_type"], SAFE_BASELINE_MODEL_TYPE)
+
+    def test_read_csv_folder_missing_and_empty_files_return_empty_frame(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertTrue(read_csv_folder(root / "missing").empty)
+            data_dir = root / "data"
+            data_dir.mkdir()
+            (data_dir / "empty.csv").write_text("", encoding="utf-8")
+            (data_dir / "header_only.csv").write_text("date,channel,spend,revenue\n", encoding="utf-8")
+            self.assertTrue(read_csv_folder(data_dir).empty)
+
+    def test_predict_main_subprocess_succeeds_with_temp_data_dir(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            data_dir = root / "data"
+            data_dir.mkdir()
+            output = root / "predictions.csv"
+            data_dir.joinpath("campaigns.csv").write_text(
+                "date,channel,campaign_type,campaign_name,spend,clicks,impressions,conversions,revenue,roas\n"
+                "2026-01-01,Google Ads,Search,Brand,100,40,1000,5,420,4.2\n"
+                "2026-01-02,Meta Ads,Paid Social,Prospecting,90,35,1300,3,260,2.8889\n",
+                encoding="utf-8",
+            )
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "backend.predict",
+                    "--data-dir",
+                    str(data_dir),
+                    "--model",
+                    str(Path("pickle/model.pkl").resolve()),
+                    "--output",
+                    str(output),
+                ],
+                capture_output=True,
+                text=True,
+                cwd=str(Path(__file__).resolve().parents[1]),
+                timeout=60,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertTrue(output.exists())
+
+    def test_predict_main_runs_in_process_for_coverage(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            data_dir = root / "data"
+            data_dir.mkdir()
+            output = root / "predictions.csv"
+            data_dir.joinpath("campaigns.csv").write_text(
+                "date,channel,campaign_type,campaign_name,spend,clicks,impressions,conversions,revenue,roas\n"
+                "2026-01-01,Google Ads,Search,Brand,100,40,1000,5,420,4.2\n"
+                "2026-01-02,Google Ads,Search,Brand,120,44,1100,6,510,4.25\n"
+                "2026-01-03,Meta Ads,Paid Social,Prospecting,90,35,1300,3,260,2.8889\n",
+                encoding="utf-8",
+            )
+            argv = [
+                "backend.predict",
+                "--data-dir",
+                str(data_dir),
+                "--model",
+                str(Path("pickle/model.pkl").resolve()),
+                "--output",
+                str(output),
+            ]
+            with patch.object(sys, "argv", argv):
+                predict_module.main()
+
+            written = pd.read_csv(output)
+            self.assertEqual(list(written.columns), OUTPUT_COLUMNS)
+            self.assertFalse(written.empty)
 
     def test_ga4_headers_only_normalize_and_predict(self) -> None:
         raw = pd.DataFrame(
@@ -257,6 +399,67 @@ class OfflinePredictionTests(unittest.TestCase):
             f"Causal summary contains no recognized channel names. Expected one of {known_channels}. "
             f"Summary start: {summary[:200]}",
         )
+
+    def test_causal_summary_sparse_input_has_executive_and_confidence_notes(self) -> None:
+        summary = generate_offline_causal_summary(pd.DataFrame(), [])
+
+        self.assertGreater(len(summary), 400)
+        self.assertIn("Executive interpretation", summary)
+        self.assertIn("Confidence note", summary)
+        self.assertIn("observational difference-in-differences", summary)
+
+    def test_causal_summary_can_use_optional_gemini_enrichment(self) -> None:
+        raw = pd.read_csv("data/sample_campaigns.csv").head(120)
+        cleaned = canonicalize_frame(raw)
+        rows = build_predictions(cleaned.frame, fallback_model_config("optional Gemini test"))
+
+        class FakeModels:
+            @staticmethod
+            def generate_content(**kwargs):
+                return types.SimpleNamespace(text="Scale Google Ads carefully while monitoring ROAS.")
+
+        class FakeClient:
+            def __init__(self, api_key):
+                self.api_key = api_key
+                self.models = FakeModels()
+
+        google_module = types.ModuleType("google")
+        genai_module = types.ModuleType("google.genai")
+        genai_module.Client = FakeClient
+        google_module.genai = genai_module
+
+        with patch.dict(sys.modules, {"google": google_module, "google.genai": genai_module}):
+            with patch.dict(os.environ, {"GEMINI_API_KEY": "configured"}, clear=False):
+                summary = generate_offline_causal_summary(cleaned.frame, rows)
+
+        self.assertIn("AI Strategic Recommendation (Gemini)", summary)
+        self.assertIn("Scale Google Ads carefully", summary)
+
+    def test_causal_summary_reports_optional_gemini_failure_without_breaking(self) -> None:
+        raw = pd.read_csv("data/sample_campaigns.csv").head(120)
+        cleaned = canonicalize_frame(raw)
+        rows = build_predictions(cleaned.frame, fallback_model_config("optional Gemini failure test"))
+
+        class FakeModels:
+            @staticmethod
+            def generate_content(**kwargs):
+                raise RuntimeError("service unavailable")
+
+        class FakeClient:
+            def __init__(self, api_key):
+                self.models = FakeModels()
+
+        google_module = types.ModuleType("google")
+        genai_module = types.ModuleType("google.genai")
+        genai_module.Client = FakeClient
+        google_module.genai = genai_module
+
+        with patch.dict(sys.modules, {"google": google_module, "google.genai": genai_module}):
+            with patch.dict(os.environ, {"GEMINI_API_KEY": "configured"}, clear=False):
+                summary = generate_offline_causal_summary(cleaned.frame, rows)
+
+        self.assertIn("Gemini enrichment could not complete", summary)
+        self.assertIn("predictions.csv evaluator contract is unaffected", summary)
 
     def test_planned_budgets_scale_channel_projection_and_summary(self) -> None:
         raw = pd.read_csv("data/sample_campaigns.csv")

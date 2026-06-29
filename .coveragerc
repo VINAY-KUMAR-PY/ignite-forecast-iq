@@ -1,13 +1,6 @@
 [run]
 omit =
     backend/backtest.py
-    backend/causal_lite.py
-    backend/evaluator_io.py
-    backend/gemini.py
-    backend/main.py
-    backend/predict.py
-    backend/train.py
-    backend/utils.py
 
 [report]
 exclude_lines =

@@ -318,6 +318,15 @@ describe("judge-facing route behavior", () => {
     });
   });
 
+  it("renders backend forecast revenue and ROAS values", async () => {
+    renderWithData(<ForecastPage />);
+
+    expect(await screen.findByText("Revenue forecast")).toBeInTheDocument();
+    expect(await screen.findByText("$1,200")).toBeInTheDocument();
+    expect(await screen.findByText("3.20x")).toBeInTheDocument();
+    await waitFor(() => expect(apiMocks.fetchForecastApi).toHaveBeenCalled());
+  });
+
   it("loads simulator scenarios and exposes budget scenario buttons", async () => {
     renderWithData(<SimulatorPage />);
 

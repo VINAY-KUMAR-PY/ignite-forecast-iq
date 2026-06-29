@@ -1,4 +1,5 @@
 === ForecastIQ Causal Summary (offline, deterministic) ===
+Executive interpretation: revenue is flat versus the trailing 30-day average by $-193 per day (-1.2%). The most recent window produced $476,117 in revenue, while the causal layer below explains whether detected channel events plausibly contributed to that movement.
 Historical period: 2025-08-22 to 2026-06-17 (300 days)
 Total spend: $1,027,759 | Total revenue: $4,170,596 | Blended ROAS: 4.06x
 Performance is stable (spend and revenue trends within +/-5% over recent 28 days).
@@ -10,13 +11,14 @@ Anomaly signals (top 3, used as forecast evidence):
   - 2026-06-08 | Meta Ads | roas: actual=3.31, expected=2.94, z=2.5 (warning)
   - 2026-05-29 | Meta Ads | roas: actual=3.29, expected=2.94, z=2.8 (warning)
 Causal effect estimates (observational DiD, not experimental incrementality):
-  - Google Ads on 2026-06-11: incremental revenue $-2,892 (95% CI $-6,306 to $1,192), ROAS effect -0.23x, confidence=low
-  - Meta Ads on 2026-06-08: incremental revenue $2,238 (95% CI $-1,105 to $5,400), ROAS effect 0.16x, confidence=medium
-  - Meta Ads on 2026-05-29: incremental revenue $1,344 (95% CI $-2,143 to $4,797), ROAS effect 0.13x, confidence=medium
+  - Google Ads on 2026-06-11: incremental revenue $-2,892 (95% CI $-6,306 to $1,192), ROAS effect -0.23x, confidence=low. Pre window: 2026-05-28 to 2026-06-10; post window: 2026-06-11 to 2026-06-17. Google Ads revenue fell after the detected event on 2026-06-11, compared with movement in control channels, suggesting the event had observable impact while still requiring an experiment for proof.
+  - Meta Ads on 2026-06-08: incremental revenue $2,238 (95% CI $-1,105 to $5,400), ROAS effect 0.16x, confidence=medium. Pre window: 2026-05-25 to 2026-06-07; post window: 2026-06-08 to 2026-06-17. Meta Ads revenue rose after the detected event on 2026-06-08, compared with movement in control channels, suggesting the event had observable impact while still requiring an experiment for proof.
+  - Meta Ads on 2026-05-29: incremental revenue $1,344 (95% CI $-2,143 to $4,797), ROAS effect 0.13x, confidence=medium. Pre window: 2026-05-15 to 2026-05-28; post window: 2026-05-29 to 2026-06-11. Meta Ads revenue rose after the detected event on 2026-05-29, compared with movement in control channels, suggesting the event had observable impact while still requiring an experiment for proof.
 Causal hypothesis: the 3 anomaly signal(s) above, combined with spend trajectory and channel ROAS efficiency, are the observable evidence base for the forecast range. Wider intervals at 60 and 90 days reflect compounding uncertainty from these detected signals and auction dynamics.
 Action: if blended ROAS is above target, test incremental budget in the leading channel before reallocating away from stable performers.
 Budget recommendation: test a controlled shift toward Microsoft Ads while reviewing Meta Ads campaigns for wasted spend, weak conversion quality, or rising CPC.
 Uncertainty warning: treat wider 60 and 90-day intervals as planning ranges, not exact targets, because thinner segment history and residual volatility compound over longer horizons.
+Confidence note: this causal summary uses observational difference-in-differences. It is directional evidence for forecast explanation, not experimental incrementality; budget decisions should be validated with geo, audience, or campaign holdout tests where possible.
 
 === AI Strategic Recommendation ===
 Offline recommendation: prioritize Microsoft Ads, the strongest ROAS channel, while tightening Meta Ads, the highest-risk channel in this dataset. Keep the next budget move small enough to validate inside the 30-day forecast band before using the wider 60 and 90-day planning ranges. Live Gemini enrichment is optional and does not affect predictions.csv.

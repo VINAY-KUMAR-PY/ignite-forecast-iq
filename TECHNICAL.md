@@ -106,6 +106,15 @@ If a horizon has fewer than the minimum required samples, it is marked
 | campaign_type_code | Categorical | Integer code for campaign_type |
 | residual_volatility | Derived | Rolling std of recent revenue residuals |
 
+## SHAP Availability
+
+SHAP attribution is enabled when `shap>=0.47.2` is installed (Python 3.11-3.13).
+On Python 3.14, SHAP is not yet available; the live API falls back to
+`feature_importances_fallback` and the `shap_method` field in the diagnostics
+response will read `"feature_importances_fallback"`. The evaluator offline path
+uses lightweight model diagnostics and does not depend on SHAP at any Python
+version.
+
 ## Data Preprocessing Logic
 
 1. **Schema normalization** (`schema_adapters.py`): each CSV in `data/` is
@@ -221,7 +230,7 @@ any external service.
 | Backend | FastAPI, Pydantic v2, SlowAPI rate limiting (in main.py), python-dotenv |
 | Forecasting (live) | XGBoost, scikit-learn GBR fallback, joblib |
 | Forecasting (offline) | scikit-learn GBR, joblib, pinned scipy/numpy/pandas |
-| AI insights | Google Gemini (gemini-2.5-flash-lite) via google-genai SDK |
+| AI insights | Google Gemini (gemini-2.5-flash) via google-genai SDK |
 | Evaluator pipeline | run.sh → backend.predict → predictions.csv + causal_summary.txt |
 | Deployment | Vercel (frontend), Render/Railway (backend) |
 ---

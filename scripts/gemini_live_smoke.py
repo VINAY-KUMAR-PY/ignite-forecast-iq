@@ -59,7 +59,7 @@ async def run_fallback_smoke() -> None:
 
 
 async def run_live_smoke() -> None:
-    model = os.getenv("GEMINI_MODEL") or "gemini-2.5-flash-lite"
+    model = os.getenv("GEMINI_MODEL") or "gemini-2.5-flash"
     timeout = os.getenv("GEMINI_TIMEOUT_SECONDS") or "45"
     attempts = os.getenv("GEMINI_MAX_ATTEMPTS") or "3"
     key_status = "configured" if (os.getenv("GEMINI_API_KEY") or "").strip() else "missing"

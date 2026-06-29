@@ -72,6 +72,8 @@ chmod +x run.sh
 ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
 ```
 
+The trained `pickle/model.pkl` artifact was rebuilt and last verified with Python 3.14.4 on Windows 11 AMD64; AI-integration transcript replay tooling is documented in [docs/gemini_sample_transcripts](./docs/gemini_sample_transcripts/), with real redacted transcripts pending a local Gemini API key run.
+
 Expected output:
 
 ```text

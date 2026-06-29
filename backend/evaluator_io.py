@@ -214,6 +214,25 @@ def is_trained_model_artifact(model: dict[str, Any]) -> bool:
         and list(model.get("feature_columns") or []) == FEATURE_COLUMNS
     )
 
+def trained_model_functional_smoke_test(model: dict[str, Any]) -> bool:
+    """Verify loaded sklearn estimators can run one finite prediction."""
+    try:
+        feature_row = pd.DataFrame([{column: 0.0 for column in FEATURE_COLUMNS}], columns=FEATURE_COLUMNS)
+        for horizon in HORIZONS:
+            entry = (model.get("models") or {}).get(horizon) or (model.get("models") or {}).get(str(horizon))
+            if not isinstance(entry, dict) or entry.get("fallback_only") is True:
+                continue
+            for key in ("revenue_model", "roas_model"):
+                estimator = entry.get(key)
+                if not hasattr(estimator, "predict"):
+                    return False
+                prediction = np.asarray(estimator.predict(feature_row), dtype=float)
+                if prediction.size < 1 or not np.isfinite(prediction[0]):
+                    return False
+        return True
+    except Exception:
+        return False
+
 def safe_load_model(model_path: str | Path) -> dict[str, Any]:
     path = Path(model_path)
     fallback = fallback_model_config("model unavailable")
@@ -231,22 +250,21 @@ def safe_load_model(model_path: str | Path) -> dict[str, Any]:
         log(f"Model artifact is too large for evaluator-safe loading ({size} bytes); using safe baseline")
         return fallback
 
-    if True:
-        try:
-            import sklearn
-            from packaging.version import Version
+    sklearn_mismatch_warning: str | None = None
+    try:
+        import sklearn
+        from packaging.version import Version
 
-            model_sklearn = "1.9.0"
-            sklearn_version = Version(sklearn.__version__)
-            artifact_version = Version(model_sklearn)
-            if sklearn_version.major != artifact_version.major or sklearn_version.minor != artifact_version.minor:
-                log(
-                    f"sklearn {sklearn.__version__} is outside artifact build minor version {model_sklearn}; "
-                    "using safe baseline because artifact compatibility requires sklearn 1.9.x"
-                )
-                return fallback_model_config("sklearn version incompatible with artifact")
-        except ImportError:
-            pass
+        model_sklearn = "1.9.0"
+        sklearn_version = Version(sklearn.__version__)
+        artifact_version = Version(model_sklearn)
+        if sklearn_version != artifact_version:
+            sklearn_mismatch_warning = (
+                f"sklearn {sklearn.__version__} differs from artifact build version {model_sklearn}"
+            )
+            log(f"{sklearn_mismatch_warning}; running trained-model functional smoke test")
+    except ImportError:
+        pass
 
     try:
         loaded = joblib.load(path)
@@ -259,6 +277,11 @@ def safe_load_model(model_path: str | Path) -> dict[str, Any]:
         return fallback
 
     if is_trained_model_artifact(loaded):
+        if sklearn_mismatch_warning and not trained_model_functional_smoke_test(loaded):
+            log(f"{sklearn_mismatch_warning}; functional smoke test failed, using safe baseline")
+            return fallback_model_config("sklearn version incompatible with artifact")
+        if sklearn_mismatch_warning:
+            log("sklearn version differs but functional smoke test passed; using trained model.")
         loaded["prediction_mode"] = TRAINED_MODEL_TYPE
         log(f"Loaded trained evaluator model artifact: {TRAINED_MODEL_TYPE}")
         return loaded

@@ -34,6 +34,7 @@ from backend.predict import (
     unseen_category_diagnostics,
     write_predictions,
 )
+from backend.evaluator_io import trained_model_functional_smoke_test
 from backend.utils import read_csv_folder as read_training_csv_folder
 
 
@@ -142,6 +143,26 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertEqual(legacy_model["model_type"], SAFE_BASELINE_MODEL_TYPE)
         self.assertEqual(legacy_model["confidence_z"], 1.2)
         self.assertEqual(oversized_model["model_type"], SAFE_BASELINE_MODEL_TYPE)
+
+    def test_safe_load_model_allows_patch_mismatch_when_functional_smoke_passes(self) -> None:
+        with patch("sklearn.__version__", "1.9.1"):
+            model = safe_load_model("pickle/model.pkl")
+
+        self.assertEqual(model["model_type"], TRAINED_MODEL_TYPE)
+        self.assertTrue(trained_model_functional_smoke_test(model))
+
+    def test_safe_load_model_rejects_version_mismatch_when_functional_smoke_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            artifact_path = Path(tmp) / "broken.pkl"
+            model = safe_load_model("pickle/model.pkl")
+            first_horizon = next(iter(model["models"]))
+            model["models"][first_horizon]["revenue_model"] = object()
+            joblib.dump(model, artifact_path)
+
+            with patch("sklearn.__version__", "1.9.1"):
+                loaded = safe_load_model(artifact_path)
+
+        self.assertEqual(loaded["model_type"], SAFE_BASELINE_MODEL_TYPE)
 
     def test_read_csv_folder_missing_and_empty_files_return_empty_frame(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

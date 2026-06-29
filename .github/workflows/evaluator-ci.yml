@@ -221,6 +221,50 @@ jobs:
           print("Committed trained artifact verified.")
           PY
 
+  sklearn-patch-compatibility:
+    name: Sklearn 1.9.x patch compatibility smoke
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install evaluator dependencies with latest sklearn 1.9.x patch
+        run: |
+          python -m pip install -r requirements.txt
+          python -m pip install --upgrade --force-reinstall "scikit-learn>=1.9,<1.10"
+          python - <<'PY'
+          import sklearn
+          print("Installed scikit-learn:", sklearn.__version__)
+          PY
+
+      - name: Assert trained model survives sklearn patch mismatch
+        run: |
+          python - <<'PY'
+          from unittest.mock import patch
+
+          from backend.evaluator_io import safe_load_model
+
+          with patch("sklearn.__version__", "1.9.1"):
+              model = safe_load_model("./pickle/model.pkl")
+          if model.get("model_type") != "trained_model":
+              raise SystemExit(f"Expected trained_model under functional smoke path, got {model.get('model_type')}")
+          print("Functional smoke path kept trained_model active under sklearn patch mismatch.")
+          PY
+          python -m backend.predict --data-dir ./data --model ./pickle/model.pkl --output ./output/predictions.csv
+          python - <<'PY'
+          import pandas as pd
+          frame = pd.read_csv("output/predictions.csv")
+          if "trained_model" not in set(frame["model_type"].astype(str)):
+              raise SystemExit("trained_model missing after sklearn patch compatibility run")
+          print("Sklearn patch compatibility prediction mode:", sorted(set(frame["model_type"].astype(str))))
+          PY
+
   frontend:
     name: Frontend tests, typecheck, lint, and production build
     runs-on: ubuntu-latest

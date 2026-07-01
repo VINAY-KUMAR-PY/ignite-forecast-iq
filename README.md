@@ -1,6 +1,7 @@
 # ForecastIQ
 
 [![Evaluator CI](https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq/actions/workflows/evaluator-ci.yml/badge.svg)](https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq/actions/workflows/evaluator-ci.yml)
+[![Frontend CI](https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq/actions/workflows/frontend-ci.yml)
 
 ForecastIQ is an AI-powered ecommerce forecasting and budget-decision platform built for NetElixir AIgnition 3.0. It turns GA4, Shopify, Google Ads, Meta Ads, and Microsoft/Bing Ads CSV exports into revenue forecasts, ROAS forecasts, confidence intervals, budget simulations, anomaly signals, and an executive action brief.
 
@@ -78,6 +79,21 @@ Note: `requirements.txt` pins `scikit-learn==1.9.0` to match the committed artif
 
 The trained `pickle/model.pkl` artifact was rebuilt and last verified with Python 3.14.4 on Windows 11 AMD64. Live Gemini output verification is handled by [scripts/verify_gemini_live.py](./scripts/verify_gemini_live.py) and the Gemini Live Smoke workflow; successful secret-backed runs write redacted replayable transcripts to [docs/gemini_sample_transcripts](./docs/gemini_sample_transcripts/).
 
+Dependency verification evidence from a clean Python 3.14.4 virtual environment:
+
+```text
+python -m pip install -r requirements.txt
+Successfully installed joblib-1.5.3 narwhals-2.23.0 numpy-2.4.6 packaging-24.1
+pandas-3.0.3 python-dateutil-2.9.0.post0 scikit-learn-1.9.0 scipy-1.17.1
+six-1.17.0 threadpoolctl-3.6.0 tzdata-2026.2
+python 3.14.4
+sklearn 1.9.0
+artifact_version 5
+model_type trained_model
+```
+
+The evaluator CI runs the same pinned install on Ubuntu runners for Python 3.11, 3.12, 3.13, and 3.14, then asserts the committed artifact emits `model_type=trained_model`.
+
 Expected output:
 
 ```text
@@ -112,6 +128,7 @@ This job is separate from broader backend, frontend, and Playwright checks so th
 Current automated evidence includes:
 
 - Python evaluator matrix: 3.11, 3.12, 3.13, 3.14.
+- Dedicated Frontend CI: clean `npm ci`, `npm run test`, and `npm run build`.
 - Backend pytest coverage gate: 90%.
 - Frontend unit tests: Vitest + React Testing Library.
 - Playwright demo flow: Try Live Demo -> Forecast -> Simulator -> Insights.

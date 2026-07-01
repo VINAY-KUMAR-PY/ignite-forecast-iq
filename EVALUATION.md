@@ -34,7 +34,10 @@ exactly `trained_model` on those supported runtimes.
 
 The latest holdout report compares trained-model and deterministic-baseline
 behavior and records MAE, RMSE, MAPE, interval coverage, and per-horizon
-performance.
+performance. The offline model can also emit `trained_model_estimated_spend`
+for revenue-only GA4/Shopify-style exports; that mode is documented in
+`TECHNICAL.md` and keeps the trained path available while labeling the spend
+assumption honestly.
 
 ## Data Compatibility Evidence
 
@@ -106,8 +109,9 @@ the local commands in `README.md` to reproduce the offline evaluator path.
 
 - The model does not ingest promotions, inventory, prices, margins, competitor
   activity, or macroeconomic signals.
-- Confidence intervals are residual-based and should be recalibrated with
-  production holdout data before real budget commitments.
+- Confidence intervals combine quantile regressors with residual guardrails and
+  should be recalibrated with production holdout data before real budget
+  commitments.
 - The causal layer is observational DiD-style evidence, not an experiment.
 - SHAP is optional in the live app and unavailable on Python 3.14; lightweight
   feature-importance and permutation explanations remain available.

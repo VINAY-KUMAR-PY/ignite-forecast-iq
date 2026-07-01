@@ -51,7 +51,7 @@ The artifact stores dedicated training-sample counts by horizon:
 - 90-day: 126 samples
 
 Sample counts reflect the artifact committed at `pickle/model.pkl` version 5
-(trained 2026-06-29, Python 3.14.4, scikit-learn 1.9.0).
+(retrained with quantile interval models on Python 3.14.4, scikit-learn 1.9.0).
 
 If a horizon has fewer than the minimum required samples, it is marked
 `fallback_only` instead of training on mismatched target scales.
@@ -143,8 +143,8 @@ version.
 
 ## Interval Calibration Methodology
 
-Confidence intervals use calibrated residual volatility from rolling historical
-forecasts:
+Confidence intervals combine revenue quantile regressors with calibrated
+residual volatility from rolling historical forecasts:
 
 | Horizon | Interval Multiplier | Floor (% of expected) | Confidence Z |
 |---|---|---|---|
@@ -154,12 +154,11 @@ forecasts:
 
 The earlier evaluator artifact produced 100.0% walk-forward revenue coverage at
 30, 60, and 90 days, which was safe but too wide for budget planning. The
-current artifact narrows the calibrated residual multipliers and tunes the
-minimum-width floors while preserving non-negative lower bounds; the regenerated
-backtest now reports walk-forward revenue coverage of 100.0%, 92.59%, and
-100.0% at 30, 60, and 90 days, while the 30-day ROAS coverage improved to
-100.0%. This gives marketing teams tighter but still conservative ranges for
-budget decisions.
+current artifact adds GradientBoostingRegressor quantile models for the revenue
+target. The residual-volatility table remains as a safety floor, and the
+monotonic enforcement pass still audits the final bands before CSV writing. The
+regenerated backtest includes both a final 30-day holdout and rolling-origin
+fold averages across 30, 60, and 90-day horizons.
 
 The monotonic enforcement pass (in `backend/inference.py`) ensures that each
 horizon's `interval_width_pct` is strictly larger than the previous horizon's
@@ -184,9 +183,18 @@ ROAS is set to `expected_roas = lower_roas = upper_roas = 0` and
 | expected_roas | float | >= 0, finite | isfinite |
 | lower_roas | float | >= 0, finite | isfinite + <= expected_roas |
 | upper_roas | float | >= 0, finite | isfinite + >= expected_roas |
-| model_type | str | trained_model, safe_baseline_fallback | trained_model on Python 3.11-3.14 with pinned sklearn 1.9.0 |
+| model_type | str | trained_model, trained_model_estimated_spend, safe_baseline_fallback | trained_model on Python 3.11-3.14 with pinned sklearn 1.9.0 when spend is observed |
 | interval_width_pct | float | >= 0, finite | monotonic across horizons |
 | forecast_confidence | str | high, medium, low, not_computable | non-null |
+
+## Known Degradation Paths
+
+| `model_type` value | Trigger condition | What changes internally | Accuracy expectation |
+|---|---|---|---|
+| `trained_model` | Valid data includes usable media spend and the committed artifact loads under the pinned evaluator runtime. | Uses the trained sklearn revenue, ROAS, and revenue-quantile models with deterministic guardrails. | Best supported offline path; backtest metrics in `reports/backtest_summary.md` apply most directly. |
+| `trained_model_estimated_spend` | Revenue is present but all spend is missing or zero, as in GA4-only or Shopify-only exports without Ads cost data. | Estimates spend from training-time channel/campaign-type ROAS benchmarks, reruns trained inference, and writes an explicit assumption note in `causal_summary.txt`. | Better than dropping straight to a naive baseline for revenue direction, but ROAS and spend-response accuracy are lower because spend is inferred. |
+| `safe_baseline_fallback` | Model file is missing/corrupt/unsupported, data is empty or malformed, segment history is too sparse, a trained submodel cannot score safely, or all rows have zero revenue and zero spend. | Uses deterministic trailing-window revenue, trend, and residual-width rules with no learned estimator dependency. | Most conservative and crash-resistant path; useful for evaluator safety but less specific than trained inference. |
+| `not_computable` in `forecast_confidence` | Projected spend is zero after validation or fallback. | Revenue forecasts are still emitted, but ROAS fields are set to zero to avoid division by zero. | Revenue output remains schema-safe; ROAS should not be interpreted as a performance forecast. |
 
 ## Assumptions
 
@@ -202,8 +210,9 @@ ROAS is set to `expected_roas = lower_roas = upper_roas = 0` and
 
 - The model does not ingest promotions, inventory levels, pricing changes,
   competitor activity, or macroeconomic signals.
-- Confidence intervals are residual-based and should be recalibrated with
-  production holdout data before real budget commitments.
+- Confidence intervals combine quantile regressors with residual guardrails and
+  should be recalibrated with production holdout data before real budget
+  commitments.
 - The causal inference layer is observational DiD-style analysis, not
   experimental incrementality. No randomization was performed.
 - SHAP attribution is only available in the live API path on Python < 3.14;

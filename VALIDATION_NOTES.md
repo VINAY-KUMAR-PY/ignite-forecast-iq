@@ -16,13 +16,13 @@ This file records objective verification evidence for reviewers. It documents wh
 
 | Horizon | Trained revenue MAPE | Baseline revenue MAPE | Revenue interval coverage | ROAS interval coverage |
 |---:|---:|---:|---:|---:|
-| 30 days | 2.66% | ~3.1% | 100.0% | 100.0% |
-| 60 days | 5.04% | 5.37% | 92.59% | 100.0% |
+| 30 days | 2.66% | 3.15% | 100.0% | 100.0% |
+| 60 days | 5.04% | 5.37% | 100.0% | 100.0% |
 | 90 days | 6.86% | 10.30% | 100.0% | 100.0% |
 
 ## Known gaps
 
 - Causal layer is observational DiD, not experimental incrementality.
 - SHAP attribution is live-API only; offline path uses lightweight model diagnostics.
-- Confidence intervals are residual-based and should be recalibrated with production holdout data.
+- Confidence intervals combine quantile regressors with residual guardrails and should be recalibrated with production holdout data.
 - The model does not include promotions, inventory, pricing, or competitor signals.

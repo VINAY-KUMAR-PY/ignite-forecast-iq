@@ -242,6 +242,9 @@ jobs:
       - name: Check frontend
         run: npm run check
 
+      - name: Build frontend
+        run: npm run build
+
       - name: Reject high-severity production advisories
         run: npm audit --omit=dev --audit-level=high
 

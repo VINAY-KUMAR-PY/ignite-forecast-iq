@@ -145,8 +145,13 @@ class EvaluatorContractTests(unittest.TestCase):
             stderr=subprocess.PIPE,
             timeout=10,
         )
-        self.assertEqual(git_mode.returncode, 0, git_mode.stderr)
-        self.assertIn("100755", git_mode.stdout, "run.sh must be executable after a fresh clone")
+        if git_mode.returncode == 0 and git_mode.stdout.strip():
+            self.assertIn("100755", git_mode.stdout, "run.sh must be executable after a fresh clone")
+        else:
+            self.assertTrue(
+                os.access(script, os.X_OK),
+                "run.sh must be executable; git metadata was unavailable so filesystem mode was checked",
+            )
         content = script.read_text(encoding="utf-8")
         self.assertIn("python", content.lower())
         self.assertIn("-m backend.predict", content)

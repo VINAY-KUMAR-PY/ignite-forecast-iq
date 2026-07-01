@@ -1,9 +1,14 @@
-# ForecastIQ Scoring Evidence
+# ForecastIQ Evidence Pointer
 
-Scoring evidence and judge Q&A have been consolidated into [EVALUATION.md](./EVALUATION.md).
+ForecastIQ does not assign itself a judge score in this document. Reviewers can
+use [EVALUATION.md](./EVALUATION.md) as the evidence index for:
 
-Use that appendix for:
+- evaluator-contract checks,
+- model and backtest reports,
+- Gemini and causal-hypothesis validation,
+- frontend/demo tests,
+- CI jobs and reproducible commands,
+- current limitations.
 
-- AIgnition criterion-by-criterion evidence.
-- Updated test and CI evidence, including Vitest, Playwright, 90% backend coverage, large-data stress testing, and the isolated hackathon evaluator protocol.
-- Judge Q&A and limitations.
+The intent is to make verification easy while leaving final scoring to the
+organizers and judges.

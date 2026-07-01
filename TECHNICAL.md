@@ -184,7 +184,7 @@ ROAS is set to `expected_roas = lower_roas = upper_roas = 0` and
 | expected_roas | float | >= 0, finite | isfinite |
 | lower_roas | float | >= 0, finite | isfinite + <= expected_roas |
 | upper_roas | float | >= 0, finite | isfinite + >= expected_roas |
-| model_type | str | trained_model, safe_baseline_fallback | trained_model on Py3.11+ |
+| model_type | str | trained_model, safe_baseline_fallback | trained_model on Python 3.11-3.14 with pinned sklearn 1.9.0 |
 | interval_width_pct | float | >= 0, finite | monotonic across horizons |
 | forecast_confidence | str | high, medium, low, not_computable | non-null |
 
@@ -222,6 +222,14 @@ budget recommendations is assembled and sent to Gemini via the Google Gen AI
 SDK with a senior-analyst system prompt. The response is parsed into a typed
 `InsightsResponse` Pydantic object. Retry logic handles rate limits, timeouts,
 and transient SDK errors with exponential backoff.
+
+**Live verification** (`scripts/verify_gemini_live.py`): when `GEMINI_API_KEY`
+is configured, the verifier builds a real forecast and causal evidence summary
+from `data/sample_campaigns.csv`, calls Gemini, validates the response against
+`InsightsResponse`, and writes a redacted transcript under
+`docs/gemini_sample_transcripts/`. The `gemini-live-smoke` GitHub Actions
+workflow runs this verifier with the repository secret and commits transcript
+evidence when the live call succeeds.
 
 **Deterministic fallback**: if Gemini is unavailable for any reason (missing
 API key, rate limit, timeout, malformed response, network failure), a

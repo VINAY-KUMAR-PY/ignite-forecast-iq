@@ -74,9 +74,9 @@ chmod +x run.sh
 ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
 ```
 
-Note: `requirements.txt` pins `scikit-learn==1.9.0` to match the committed artifact. Running on a machine with a different sklearn version will trigger a functional smoke test; predictions still use the trained model if the smoke test passes.
+Note: `requirements.txt` pins `scikit-learn==1.9.0` to match the committed artifact. The supported evaluator runtime is Python 3.11-3.14 with the exact pinned dependencies; CI requires `model_type=trained_model` across that full matrix.
 
-The trained `pickle/model.pkl` artifact was rebuilt and last verified with Python 3.14.4 on Windows 11 AMD64; AI-integration transcript replay tooling is documented in [docs/gemini_sample_transcripts](./docs/gemini_sample_transcripts/), with real redacted transcripts pending a local Gemini API key run.
+The trained `pickle/model.pkl` artifact was rebuilt and last verified with Python 3.14.4 on Windows 11 AMD64. Live Gemini output verification is handled by [scripts/verify_gemini_live.py](./scripts/verify_gemini_live.py) and the Gemini Live Smoke workflow; successful secret-backed runs write redacted replayable transcripts to [docs/gemini_sample_transcripts](./docs/gemini_sample_transcripts/).
 
 Expected output:
 
@@ -118,8 +118,9 @@ Current automated evidence includes:
 - Large-data evaluator stress test: synthetic ~50,000-row CSV through `run.sh`.
 - Schema adapter edge tests for GA4, Shopify, Google Ads micros, Meta Ads, and Bing/Microsoft Ads.
 - Gemini parsing tests with mocked responses and ranked causal hypotheses.
+- Live Gemini verification script and workflow: schema-validates real Gemini responses and saves redacted transcripts when `GEMINI_API_KEY` is configured.
 
-See [EVALUATION.md](./EVALUATION.md) for judge Q&A and scorecard evidence.
+See [EVALUATION.md](./EVALUATION.md) for the evidence index linking tests, CI jobs, reports, and transcript validation.
 
 ## Forecasting Methodology
 

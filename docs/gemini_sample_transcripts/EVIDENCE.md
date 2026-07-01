@@ -1,14 +1,12 @@
-# Gemini Integration Evidence (Offline Fallback)
+# Gemini Integration Evidence
 
-No `GEMINI_API_KEY` or `GOOGLE_API_KEY` was available in this execution environment, so live Gemini transcripts were not captured in this pass. The evidence below is generated from the real ForecastIQ code path and can be replayed without network access.
+This file records the deterministic prompt and fallback evidence generated from the real ForecastIQ code path. Genuine live Gemini transcripts are captured by `scripts/verify_gemini_live.py` and committed as `live_gemini_transcript_*.json` when `GEMINI_API_KEY` is available through the Gemini Live Smoke workflow.
 
 ## Reproduction
 
 1. Set `GEMINI_API_KEY` in the environment for live transcript capture.
-2. Start the FastAPI backend with `python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000`.
-3. POST validated sample rows to `/api/insights`.
-4. Save redacted responses as `transcript_01.json`, `transcript_02.json`, and `transcript_03.json`.
-5. Validate each file with `python scripts/replay_gemini_transcript.py docs/gemini_sample_transcripts/transcript_01.json`.
+2. Run `python scripts/verify_gemini_live.py --require-live --output-dir docs/gemini_sample_transcripts`.
+3. Validate the saved file with `python scripts/replay_gemini_transcript.py docs/gemini_sample_transcripts/live_gemini_transcript_<timestamp>.json`.
 
 ## System Prompt SHA256 Prefix
 

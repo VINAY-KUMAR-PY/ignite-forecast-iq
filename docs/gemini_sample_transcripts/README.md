@@ -1,16 +1,22 @@
 # Gemini Sample Transcripts
 
-This folder is reserved for redacted Gemini request/response transcripts that
-can be replayed offline with:
+This folder contains Gemini integration evidence. Redacted live transcript JSON
+files can be replayed offline with:
 
 ```bash
 python scripts/replay_gemini_transcript.py docs/gemini_sample_transcripts/<transcript>.json
 ```
 
-No live Gemini transcript is committed in this pass because the local execution
-environment did not provide `GEMINI_API_KEY` or `GOOGLE_API_KEY`. Do not place
-synthetic or fallback-only output here as if it came from Gemini. When a real key
-is available, capture 2-3 redacted transcripts with:
+Do not place synthetic or fallback-only output here as if it came from Gemini.
+When `GEMINI_API_KEY` is available, capture a redacted transcript with:
+
+```bash
+python scripts/verify_gemini_live.py --require-live --output-dir docs/gemini_sample_transcripts
+```
+
+The `gemini-live-smoke` GitHub Actions workflow runs the same verifier with the
+repository secret and commits `live_gemini_transcript_*.json` files when the
+live response validates successfully. Each live transcript includes:
 
 - system prompt,
 - user prompt or summarized prompt inputs,

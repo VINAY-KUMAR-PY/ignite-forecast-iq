@@ -32,6 +32,7 @@ OUTPUT_COLUMNS = [
 
 HORIZONS = (30, 60, 90)
 TRAINED_MODEL_TYPE = "trained_model"
+TRAINED_ESTIMATED_SPEND_MODEL_TYPE = "trained_model_estimated_spend"
 SAFE_BASELINE_MODEL_TYPE = "safe_baseline_fallback"
 ROAS_NOT_COMPUTABLE_CONFIDENCE = "not_computable"
 ARTIFACT_TYPE = "forecastiq_evaluator_model"

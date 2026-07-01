@@ -28,6 +28,7 @@ from .evaluator_contract import (
     MAX_MODEL_ARTIFACT_BYTES,
     OUTPUT_COLUMNS,
     SAFE_BASELINE_MODEL_TYPE,
+    TRAINED_ESTIMATED_SPEND_MODEL_TYPE,
     TRAINED_MODEL_TYPE,
     CleanResult,
     empty_frame,
@@ -459,6 +460,9 @@ def generate_offline_causal_summary(
     )
     forecast_rev_30 = safe_float(overall_30.get("expected_revenue", 0))
     forecast_roas_30 = safe_float(overall_30.get("expected_roas", 0))
+    estimated_spend_mode = any(
+        str(row.get("model_type") or "") == TRAINED_ESTIMATED_SPEND_MODEL_TYPE for row in rows
+    )
 
     trend_note = (
         "accelerating (+{:.0f}% spend, +{:.0f}% revenue over recent 28 days)".format(
@@ -478,12 +482,21 @@ def generate_offline_causal_summary(
         planned_budget_note = "Planned budget input received: " + ", ".join(
             f"{channel}: ${safe_float(budget):,.0f}" for channel, budget in planned_budgets.items()
         ) + "."
+    spend_estimation_lines = []
+    if estimated_spend_mode:
+        spend_estimation_lines.append(
+            "Spend-estimation assumption: the input contained revenue but no usable media spend, so ForecastIQ "
+            "estimated spend from training-time channel ROAS benchmarks and labeled predictions as "
+            f"{TRAINED_ESTIMATED_SPEND_MODEL_TYPE}. Accuracy should be treated as lower than full "
+            f"{TRAINED_MODEL_TYPE} mode because ROAS and spend-response features are inferred."
+        )
 
     lines = [
         "=== ForecastIQ Causal Summary (offline, deterministic) ===",
         executive_interpretation,
         f"Historical period: {daily['date'].iloc[0]} to {daily['date'].iloc[-1]} ({len(daily)} days)",
         f"Total spend: ${total_spend:,.0f} | Total revenue: ${total_revenue:,.0f} | Blended ROAS: {blended_roas:.2f}x",
+        *spend_estimation_lines,
         f"Performance is {trend_note}.",
         *([planned_budget_note] if planned_budget_note else []),
         f"Leading channel by ROAS: {top_channel} at {top_roas:.2f}x - "

@@ -14,6 +14,7 @@ from .evaluator_contract import (
     OUTPUT_COLUMNS,
     ROAS_NOT_COMPUTABLE_CONFIDENCE,
     SAFE_BASELINE_MODEL_TYPE,
+    TRAINED_ESTIMATED_SPEND_MODEL_TYPE,
     TRAINED_MODEL_TYPE,
     clean_number,
     log,
@@ -38,6 +39,8 @@ from .segment_utils import (
 )
 
 MODEL_TYPE = SAFE_BASELINE_MODEL_TYPE
+SPEND_ESTIMATED_ATTR = "forecastiq_spend_estimated"
+SPEND_ESTIMATION_NOTE_ATTR = "forecastiq_spend_estimation_note"
 
 def roas_interval_from_revenue(
     lower_revenue: float,
@@ -149,6 +152,54 @@ def revenue_residuals(segment: pd.DataFrame) -> np.ndarray:
     residuals = (values - baseline).dropna().to_numpy(dtype=float)
     return residuals[np.isfinite(residuals)]
 
+def estimate_missing_spend_for_trained_mode(frame: pd.DataFrame, model: dict[str, Any]) -> tuple[bool, str]:
+    """Estimate spend for revenue-only exports so trained inference can still run.
+
+    The estimator uses ROAS benchmarks stored in the trained artifact. It is only
+    activated when all observed spend is zero while revenue is positive; mixed
+    Ads + analytics folders keep their observed spend.
+    """
+    if frame.empty or "spend" not in frame or "revenue" not in frame:
+        return False, ""
+    spend = pd.to_numeric(frame["spend"], errors="coerce").replace([np.inf, -np.inf], np.nan).fillna(0.0)
+    revenue = pd.to_numeric(frame["revenue"], errors="coerce").replace([np.inf, -np.inf], np.nan).fillna(0.0)
+    if safe_float(spend.sum()) > 1e-9 or safe_float(revenue.sum()) <= 1e-9:
+        return False, ""
+
+    metadata = ((model.get("preprocessing") or {}).get("spend_estimation") or {})
+    overall_roas = safe_float(metadata.get("overall_roas"), 0.0)
+    if overall_roas <= 0:
+        return False, ""
+    channel_roas = {str(k): safe_float(v) for k, v in (metadata.get("channel_roas") or {}).items()}
+    campaign_type_roas = {str(k): safe_float(v) for k, v in (metadata.get("campaign_type_roas") or {}).items()}
+    min_roas = max(0.1, safe_float(metadata.get("minimum_roas"), 0.5))
+    max_roas = max(min_roas, safe_float(metadata.get("maximum_roas"), 25.0))
+
+    estimated_spend: list[float] = []
+    for index, row in frame.iterrows():
+        row_revenue = safe_float(revenue.loc[index])
+        if row_revenue <= 0:
+            estimated_spend.append(0.0)
+            continue
+        channel = str(row.get("channel") or "")
+        campaign_type = str(row.get("campaign_type") or "")
+        benchmark_roas = channel_roas.get(channel) or campaign_type_roas.get(campaign_type) or overall_roas
+        benchmark_roas = min(max_roas, max(min_roas, safe_float(benchmark_roas, overall_roas)))
+        estimated_spend.append(row_revenue / benchmark_roas)
+
+    if safe_float(sum(estimated_spend)) <= 0:
+        return False, ""
+
+    frame.loc[:, "spend"] = estimated_spend
+    frame.loc[:, "roas"] = np.where(frame["spend"] > 0, revenue / frame["spend"], 0.0)
+    note = (
+        "Input revenue rows had no usable spend. ForecastIQ estimated spend from training-time "
+        f"channel ROAS benchmarks (overall benchmark {overall_roas:.2f}x) to run trained-model inference."
+    )
+    frame.attrs[SPEND_ESTIMATED_ATTR] = True
+    frame.attrs[SPEND_ESTIMATION_NOTE_ATTR] = note
+    return True, note
+
 def trained_forecast_segment(
     segment: pd.DataFrame,
     horizon: int,
@@ -236,6 +287,18 @@ def trained_forecast_segment(
         expected_revenue * max(0.04, minimum_interval_pct),
         recent_volatility,
     )
+    if horizon_model.get("revenue_lower_quantile_model") is not None and horizon_model.get("revenue_upper_quantile_model") is not None:
+        try:
+            q_lower = safe_float(horizon_model["revenue_lower_quantile_model"].predict(features)[0])
+            q_upper = safe_float(horizon_model["revenue_upper_quantile_model"].predict(features)[0])
+            if q_lower > q_upper:
+                q_lower, q_upper = q_upper, q_lower
+            q_lower = max(0.0, q_lower)
+            q_upper = max(q_lower, q_upper)
+            quantile_half_width = max(expected_revenue - q_lower, q_upper - expected_revenue, 0.0)
+            interval = max(interval, quantile_half_width)
+        except Exception as exc:
+            log(f"Quantile interval fallback for {level}:{segment_name}:{horizon}d - {type(exc).__name__}: {exc}")
     lower = max(0.0, expected_revenue - interval)
     upper = max(lower, expected_revenue + interval)
     if planned_budgets:
@@ -288,6 +351,7 @@ def build_trained_predictions(
     frame: pd.DataFrame,
     model: dict[str, Any],
     planned_budgets: dict[str, float] | None = None,
+    trained_model_type: str = TRAINED_MODEL_TYPE,
 ) -> tuple[list[dict[str, Any]], int]:
     rows: list[dict[str, Any]] = []
     trained_count = 0
@@ -310,7 +374,7 @@ def build_trained_predictions(
                     planned_budgets,
                     parent_channel_segment,
                 )
-                model_type = TRAINED_MODEL_TYPE
+                model_type = trained_model_type
                 trained_count += 1
             except Exception as exc:
                 segment_fallback_count += 1
@@ -345,6 +409,10 @@ def build_predictions(
     if is_trained_model_artifact(model) and len(frame) >= int(
         model.get("preprocessing", {}).get("min_prediction_rows", MIN_TRAINED_MODEL_ROWS)
     ):
+        estimated_spend, estimation_note = estimate_missing_spend_for_trained_mode(frame, model)
+        trained_model_type = TRAINED_ESTIMATED_SPEND_MODEL_TYPE if estimated_spend else TRAINED_MODEL_TYPE
+        if estimated_spend:
+            log(estimation_note)
         for diagnostic in unseen_category_diagnostics(frame, model):
             log(f"Category diagnostic: {diagnostic}")
         known_channels = set((model.get("preprocessing") or {}).get("category_maps", {}).get("channel", {}).keys())
@@ -357,9 +425,9 @@ def build_predictions(
                     f"{sorted(unseen)}"
                 )
         try:
-            rows, trained_count = build_trained_predictions(frame, model, planned_budgets)
+            rows, trained_count = build_trained_predictions(frame, model, planned_budgets, trained_model_type)
             if trained_count > 0:
-                log(f"Prediction mode: {TRAINED_MODEL_TYPE}")
+                log(f"Prediction mode: {trained_model_type}")
                 return sanitize_rows(rows)
             log("Trained artifact produced no trained predictions; using safe baseline")
         except Exception as exc:
@@ -476,13 +544,16 @@ def _enforce_monotonic_interval_width_pct(rows: list[dict[str, Any]]) -> list[di
                 _STRICT_GAP_PP = 2.0  # each horizon must be at least 2pp wider than the previous
                 target_width_pct = min_width_pct + (_STRICT_GAP_PP if min_width_pct > 0 else 0)
                 if current_pct < target_width_pct:
-                    required_half = (target_width_pct / 100.0) * expected / 2.0
+                    required_width = (target_width_pct / 100.0) * expected
+                    required_half = required_width / 2.0
                     midpoint = (upper + lower) / 2.0
                     new_lower = midpoint - required_half
                     new_upper = midpoint + required_half
                     new_lower = max(0.0, new_lower)
                     new_upper = max(new_upper, expected)
                     new_lower = min(new_lower, expected)
+                    if new_upper - new_lower < required_width:
+                        new_upper = new_lower + required_width
                     row["lower_revenue"] = clean_number(new_lower)
                     row["upper_revenue"] = clean_number(new_upper)
                     actual_pct = ((new_upper - new_lower) / expected) * 100.0

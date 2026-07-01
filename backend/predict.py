@@ -18,6 +18,7 @@ from .evaluator_contract import (
     HORIZONS,
     OUTPUT_COLUMNS,
     SAFE_BASELINE_MODEL_TYPE,
+    TRAINED_ESTIMATED_SPEND_MODEL_TYPE,
     TRAINED_MODEL_TYPE,
     log,
 )
@@ -38,6 +39,7 @@ from .inference import (
     build_predictions,
     build_trained_predictions,
     confidence_interval_width,
+    estimate_missing_spend_for_trained_mode,
     forecast_segment,
     revenue_residuals,
     revenue_trend,

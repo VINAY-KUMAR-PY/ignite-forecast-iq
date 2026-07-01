@@ -19,12 +19,14 @@ from backend.predict import (
     OUTPUT_COLUMNS,
     MODEL_TYPE,
     SAFE_BASELINE_MODEL_TYPE,
+    TRAINED_ESTIMATED_SPEND_MODEL_TYPE,
     TRAINED_MODEL_TYPE,
     THIN_CAMPAIGN_CONFIDENCE,
     _monotonic_interval_multipliers,
     build_predictions,
     canonicalize_frame,
     confidence_interval_width,
+    estimate_missing_spend_for_trained_mode,
     fallback_model_config,
     generate_offline_causal_summary,
     planned_projected_spend,
@@ -673,37 +675,57 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertIn("Retail Media", diagnostics[0])
         self.assertIn("Commerce", diagnostics[1])
 
-    def test_zero_spend_ga4_shopify_shapes_mark_roas_not_computable(self) -> None:
+    def test_ga4_revenue_only_uses_trained_model_with_estimated_spend_label(self) -> None:
         dates = pd.date_range("2026-01-01", periods=70, freq="D").strftime("%Y-%m-%d")
-        for raw in [
-            pd.DataFrame(
-                {
-                    "event_date": dates,
-                    "sessionSource": ["google"] * len(dates),
-                    "sessionMedium": ["organic"] * len(dates),
-                    "sessions": [100] * len(dates),
-                    "conversions": [4] * len(dates),
-                    "purchaseRevenue": [250] * len(dates),
-                }
-            ),
-            pd.DataFrame(
-                {
-                    "created_at": dates,
-                    "product_type": ["Accessories"] * len(dates),
-                    "orders": [3] * len(dates),
-                    "total_price": [180] * len(dates),
-                }
-            ),
-        ]:
-            with self.subTest(columns=list(raw.columns)):
-                cleaned = canonicalize_frame(raw)
-                rows = build_predictions(cleaned.frame, safe_load_model("pickle/model.pkl"))
+        raw = pd.DataFrame(
+            {
+                "event_date": dates,
+                "sessionSource": ["google"] * len(dates),
+                "sessionMedium": ["organic"] * len(dates),
+                "sessions": [100] * len(dates),
+                "conversions": [4] * len(dates),
+                "purchaseRevenue": [250 + (idx % 11) * 5 for idx in range(len(dates))],
+            }
+        )
 
-                self.assert_valid_prediction_rows(rows)
-                self.assertEqual({row["forecast_confidence"] for row in rows}, {"not_computable"})
-                self.assertEqual({row["expected_roas"] for row in rows}, {0.0})
-                self.assertEqual({row["lower_roas"] for row in rows}, {0.0})
-                self.assertEqual({row["upper_roas"] for row in rows}, {0.0})
+        cleaned = canonicalize_frame(raw)
+        model = safe_load_model("pickle/model.pkl")
+        rows = build_predictions(cleaned.frame, model)
+
+        self.assertTrue(cleaned.frame.attrs.get("forecastiq_spend_estimated"))
+        self.assert_valid_prediction_rows(rows)
+        self.assertIn(TRAINED_ESTIMATED_SPEND_MODEL_TYPE, {row["model_type"] for row in rows})
+        self.assertTrue(any(row["expected_roas"] > 0 for row in rows))
+        summary = generate_offline_causal_summary(cleaned.frame, rows)
+        self.assertIn("Spend-estimation assumption", summary)
+
+    def test_all_zero_revenue_and_spend_rows_do_not_estimate_spend(self) -> None:
+        dates = pd.date_range("2026-01-01", periods=70, freq="D").strftime("%Y-%m-%d")
+        raw = pd.DataFrame(
+            {
+                "date": dates,
+                "channel": ["Google Ads"] * len(dates),
+                "campaign_type": ["Search"] * len(dates),
+                "campaign_name": ["No Activity"] * len(dates),
+                "spend": [0] * len(dates),
+                "clicks": [0] * len(dates),
+                "impressions": [0] * len(dates),
+                "conversions": [0] * len(dates),
+                "revenue": [0] * len(dates),
+            }
+        )
+
+        cleaned = canonicalize_frame(raw)
+        model = safe_load_model("pickle/model.pkl")
+        estimated, _ = estimate_missing_spend_for_trained_mode(cleaned.frame, model)
+        rows = build_predictions(cleaned.frame, model)
+
+        self.assertFalse(estimated)
+        self.assert_valid_prediction_rows(rows)
+        self.assertEqual({row["forecast_confidence"] for row in rows}, {"not_computable"})
+        self.assertEqual({row["expected_roas"] for row in rows}, {0.0})
+        self.assertEqual({row["lower_roas"] for row in rows}, {0.0})
+        self.assertEqual({row["upper_roas"] for row in rows}, {0.0})
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 # ForecastIQ Backtest Summary
 
-Generated: 2026-06-29T12:09:25.398459+00:00
+Generated: 2026-07-01T14:35:09.256723+00:00
 
 ## Holdout Design
 
@@ -93,8 +93,20 @@ Recommendation: Keep roas_model_weight=0.60; it has the best ROAS RMSE/MAE balan
 | Horizon days | Folds | Segments | Trained revenue MAE | Trained revenue RMSE | Trained revenue MAPE | Trained revenue coverage | Trained ROAS MAE | Trained ROAS RMSE | Trained ROAS coverage | Baseline MAE | Baseline RMSE | Revenue MAE winner |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 | 30 | 3 | 54 | 2462.0 | 4406.72 | 2.66% | 100.0% | 0.05 | 0.06 | 100.0% | 3097.88 | 4501.73 | Trained model |
-| 60 | 3 | 54 | 10541.64 | 18671.63 | 5.04% | 92.59% | 0.05 | 0.06 | 100.0% | 11221.15 | 18229.52 | Trained model |
+| 60 | 3 | 54 | 10541.64 | 18671.63 | 5.04% | 100.0% | 0.05 | 0.06 | 100.0% | 11221.15 | 18229.52 | Trained model |
 | 90 | 3 | 54 | 20891.06 | 33520.44 | 6.86% | 100.0% | 0.06 | 0.07 | 100.0% | 31577.72 | 49786.14 | Trained model |
+
+## Rolling-Origin Average Metrics
+
+These metrics average fold-level scores across the three rolling origins for each horizon, rather
+than pooling every segment row first. This makes the rolling-origin evidence easier to compare with
+the single final-30-day holdout above.
+
+| Horizon days | Folds averaged | Avg trained MAE | Avg trained RMSE | Avg trained coverage | Avg trained ROAS MAE | Avg baseline MAE | Avg baseline RMSE | Avg baseline coverage |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 30 | 3 | 2461.9967 | 3489.03 | 100.0% | 0.0467 | 3097.8833 | 4350.7967 | 100.0% |
+| 60 | 3 | 10541.6433 | 15193.8367 | 100.0% | 0.0467 | 11221.15 | 16105.0433 | 96.2967% |
+| 90 | 3 | 20891.0633 | 29908.7433 | 100.0% | 0.0567 | 31577.7233 | 45146.58 | 81.48% |
 
 Note on 30-day ROAS interval coverage: ROAS confidence intervals are derived from revenue intervals
 divided by projected spend, so revenue interval width drives ROAS interval width. The 30-day revenue
@@ -111,7 +123,7 @@ minimum-width floors. This narrows bands while preserving non-negative lower bou
 | Horizon days | Previous coverage | Current coverage | Trained revenue MAE | Baseline revenue MAE |
 | ---: | ---: | ---: | ---: | ---: |
 | 30 | 100.0% | 100.0% | 2462.0 | 3097.88 |
-| 60 | 100.0% | 92.59% | 10541.64 | 11221.15 |
+| 60 | 100.0% | 100.0% | 10541.64 | 11221.15 |
 | 90 | 100.0% | 100.0% | 20891.06 | 31577.72 |
 
 ## Confidence Interval Methodology

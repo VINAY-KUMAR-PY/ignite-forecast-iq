@@ -38,11 +38,17 @@ class BacktestReportTests(unittest.TestCase):
             self.assertGreater(item["fold_count"], 0)
             self.assertGreater(item["segments_evaluated"], 0)
             self.assertIn("model_performance_evidence", item)
+            self.assertIn("rolling_origin_average_metrics", item)
+            self.assertGreaterEqual(item["rolling_origin_average_metrics"]["folds_averaged"], 3)
+            self.assertIn("trained_model_metrics", item["rolling_origin_average_metrics"])
+            self.assertIn("safe_baseline_metrics", item["rolling_origin_average_metrics"])
             for fold in item["folds"]:
                 if "error" in fold:
                     continue
                 self.assertIn("dedicated_training_samples", fold)
                 self.assertIn("fallback_only", fold)
+                self.assertIn("trained_model_metrics", fold)
+                self.assertIn("safe_baseline_metrics", fold)
                 if fold["fallback_only"]:
                     self.assertLess(fold["dedicated_training_samples"], 8)
                 else:

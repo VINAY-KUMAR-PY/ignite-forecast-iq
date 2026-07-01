@@ -42,6 +42,42 @@ from .segment_utils import (
 )
 from .utils import DEFAULT_MODEL_PATH
 
+def _spend_estimation_metadata(frame: pd.DataFrame) -> dict[str, Any]:
+    """Store historical efficiency benchmarks for revenue-only evaluator inputs."""
+    usable = frame.copy()
+    usable["spend"] = pd.to_numeric(usable.get("spend"), errors="coerce").replace([np.inf, -np.inf], np.nan).fillna(0)
+    usable["revenue"] = pd.to_numeric(usable.get("revenue"), errors="coerce").replace([np.inf, -np.inf], np.nan).fillna(0)
+    positive = usable[(usable["spend"] > 0) & (usable["revenue"] > 0)].copy()
+    if positive.empty:
+        return {
+            "method": "training_channel_roas_benchmark",
+            "overall_roas": 4.0,
+            "channel_roas": {},
+            "campaign_type_roas": {},
+            "minimum_roas": 0.5,
+            "maximum_roas": 25.0,
+        }
+
+    def roas_map(column: str) -> dict[str, float]:
+        values: dict[str, float] = {}
+        for key, group in positive.groupby(column):
+            spend = safe_float(group["spend"].sum())
+            revenue = safe_float(group["revenue"].sum())
+            roas = safe_ratio(revenue, spend)
+            if roas > 0:
+                values[str(key)] = clean_number(min(25.0, max(0.5, roas)), 4)
+        return values
+
+    overall_roas = safe_ratio(safe_float(positive["revenue"].sum()), safe_float(positive["spend"].sum()))
+    return {
+        "method": "training_channel_roas_benchmark",
+        "overall_roas": clean_number(min(25.0, max(0.5, overall_roas)), 4),
+        "channel_roas": roas_map("channel") if "channel" in positive else {},
+        "campaign_type_roas": roas_map("campaign_type") if "campaign_type" in positive else {},
+        "minimum_roas": 0.5,
+        "maximum_roas": 25.0,
+    }
+
 def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
     """Train a compact sklearn artifact for the offline evaluator pipeline."""
     from sklearn.ensemble import GradientBoostingRegressor
@@ -146,6 +182,23 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
         revenue_model = GradientBoostingRegressor(
             random_state=42 + horizon,
             **revenue_params,
+        )
+        quantile_params = {
+            "n_estimators": 45,
+            "learning_rate": 0.05,
+            "max_depth": 2,
+            "subsample": 0.9,
+            "random_state": 340 + horizon,
+        }
+        revenue_lower_model = GradientBoostingRegressor(
+            loss="quantile",
+            alpha=0.10,
+            **quantile_params,
+        )
+        revenue_upper_model = GradientBoostingRegressor(
+            loss="quantile",
+            alpha=0.90,
+            **{**quantile_params, "random_state": 440 + horizon},
         )
         roas_model = GradientBoostingRegressor(
             n_estimators={30: 80, 60: 70, 90: 60}[horizon],
@@ -253,6 +306,8 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
         roas_model_weight = 0.60 if roas_holdout_beats_baseline else 0.10
         roas_weight_by_horizon[str(horizon)] = roas_model_weight
         roas_model.fit(X_h, y_roas_h)
+        revenue_lower_model.fit(X_h, y_rev_actual_h)
+        revenue_upper_model.fit(X_h, y_rev_actual_h)
         fitted_revenue_delta = np.asarray(revenue_model.predict(X_h), dtype=float)
         fitted_revenue = np.expm1(np.log1p(np.maximum(baseline_rev_h, 0.0)) + fitted_revenue_delta)
         fitted_revenue = np.maximum(fitted_revenue, 0.0)
@@ -272,6 +327,9 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
         roas_by_horizon[str(horizon)] = clean_number(max(roas_std, roas_floor, 0.05), 4)
         models[horizon] = {
             "revenue_model": revenue_model,
+            "revenue_lower_quantile_model": revenue_lower_model,
+            "revenue_upper_quantile_model": revenue_upper_model,
+            "revenue_quantile_alpha": {"lower": 0.10, "upper": 0.90},
             "roas_model": roas_model,
             "revenue_target_transform": "log_residual_to_baseline",
             "revenue_log_bias": clean_number(revenue_log_bias, 6),
@@ -312,8 +370,10 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
             "category_maps": maps,
             "horizons": HORIZONS,
             "min_prediction_rows": MIN_TRAINED_MODEL_ROWS,
+            "spend_estimation": _spend_estimation_metadata(frame),
         },
         "confidence": {
+            "interval_method": "quantile_regression_augmented_residual",
             "confidence_z": 1.64,
             "horizon_confidence_z": horizon_confidence_z,
             "minimum_interval_pct": 0.04,

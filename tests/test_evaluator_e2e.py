@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from typing import Callable
 
 import pandas as pd
 
@@ -105,6 +106,27 @@ def _assert_valid_predictions(path: Path) -> pd.DataFrame:
     return df
 
 
+def _run_submission_command(repo_root: Path, data_dir: Path, output_path: Path) -> subprocess.CompletedProcess[str]:
+    bash = _working_bash()
+    if not bash:
+        import pytest
+
+        pytest.skip("bash is required for the run.sh contract")
+    return subprocess.run(
+        [
+            bash,
+            "run.sh",
+            str(data_dir),
+            str(repo_root / "pickle" / "model.pkl"),
+            str(output_path),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=str(repo_root),
+        timeout=90,
+    )
+
+
 def _working_bash() -> str | None:
     candidates = [
         os.environ.get("FORECASTIQ_TEST_BASH"),
@@ -162,33 +184,71 @@ def test_evaluator_pipeline_end_to_end():
 def test_run_sh_handles_heldout_style_schema_compatible_data():
     """Exercise the offline evaluator contract against non-sample data ranges."""
     repo_root = Path(__file__).resolve().parents[1]
-    bash = _working_bash()
-    if not bash:
-        import pytest
-
-        pytest.skip("bash is required for the run.sh contract")
 
     with tempfile.TemporaryDirectory() as tmp:
         data_dir = Path(tmp) / "data"
         data_dir.mkdir()
         _write_heldout_style_csv(data_dir / "heldout_variant.csv")
         out_path = Path(tmp) / "predictions.csv"
-        result = subprocess.run(
-            [
-                bash,
-                "run.sh",
-                str(data_dir),
-                str(repo_root / "pickle" / "model.pkl"),
-                str(out_path),
-            ],
-            capture_output=True,
-            text=True,
-            cwd=str(repo_root),
-            timeout=90,
-        )
+        result = _run_submission_command(repo_root, data_dir, out_path)
         assert result.returncode == 0, result.stdout + result.stderr
         df = _assert_valid_predictions(out_path)
         assert len(df) >= 12
+
+
+def test_run_sh_edge_cases_exit_without_traceback():
+    repo_root = Path(__file__).resolve().parents[1]
+    cases: list[tuple[str, Callable[[Path], None]]] = []
+
+    def empty_folder(data_dir: Path) -> None:
+        data_dir.mkdir()
+
+    def malformed_csvs(data_dir: Path) -> None:
+        data_dir.mkdir()
+        (data_dir / "bad.csv").write_text('not,a,valid\n"unterminated', encoding="utf-8")
+        (data_dir / "empty.csv").write_text("", encoding="utf-8")
+
+    def zero_activity(data_dir: Path) -> None:
+        data_dir.mkdir()
+        rows = []
+        for day in range(1, 46):
+            rows.append(
+                {
+                    "date": f"2026-01-{min(day, 28):02d}",
+                    "channel": "Google Ads",
+                    "campaign_type": "Search",
+                    "campaign_name": "Zero Activity",
+                    "spend": 0,
+                    "clicks": 0,
+                    "impressions": 0,
+                    "conversions": 0,
+                    "revenue": 0,
+                    "roas": 0,
+                }
+            )
+        with (data_dir / "zero.csv").open("w", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=rows[0].keys())
+            writer.writeheader()
+            writer.writerows(rows)
+
+    cases.extend(
+        [
+            ("empty", empty_folder),
+            ("malformed", malformed_csvs),
+            ("zero_activity", zero_activity),
+        ]
+    )
+
+    for name, writer in cases:
+        with tempfile.TemporaryDirectory() as tmp:
+            data_dir = Path(tmp) / "data"
+            output = Path(tmp) / "predictions.csv"
+            writer(data_dir)
+            result = _run_submission_command(repo_root, data_dir, output)
+            combined = result.stdout + result.stderr
+            assert result.returncode == 0, combined
+            assert "Traceback" not in combined
+            _assert_valid_predictions(output)
 
 
 def test_roas_not_computable_on_zero_spend():

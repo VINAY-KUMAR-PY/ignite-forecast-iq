@@ -390,6 +390,9 @@ def _walk_forward_horizon(frame: pd.DataFrame, horizon: int) -> dict[str, Any]:
                 "segments_evaluated": scored["segments_evaluated"],
                 "dedicated_training_samples": int(horizon_model.get(str(horizon), 0)),
                 "fallback_only": horizon in fallback_horizons,
+                "trained_model_metrics": scored["trained_model_metrics"],
+                "safe_baseline_metrics": scored["safe_baseline_metrics"],
+                "model_performance_evidence": scored["model_performance_evidence"],
             }
         )
         rows.extend(scored["rows"])
@@ -397,13 +400,15 @@ def _walk_forward_horizon(frame: pd.DataFrame, horizon: int) -> dict[str, Any]:
     trained_metrics = _metrics(rows, "trained")
     safe_metrics = _metrics(rows, "safe")
     evidence = _performance_evidence(trained_metrics, safe_metrics)
+    successful_folds = [fold for fold in folds if "error" not in fold]
     return {
         "horizon_days": horizon,
         "folds": folds,
-        "fold_count": len([fold for fold in folds if "error" not in fold]),
+        "fold_count": len(successful_folds),
         "segments_evaluated": len(rows),
         "trained_model_metrics": trained_metrics,
         "safe_baseline_metrics": safe_metrics,
+        "rolling_origin_average_metrics": _average_fold_metrics(successful_folds),
         "model_performance_evidence": evidence,
         "trained_vs_safe_baseline": {
             "mae_delta": _round(safe_metrics["mae"] - trained_metrics["mae"], 2),
@@ -412,6 +417,53 @@ def _walk_forward_horizon(frame: pd.DataFrame, horizon: int) -> dict[str, Any]:
             "roas_mae_delta": _round(safe_metrics["roas_mae"] - trained_metrics["roas_mae"], 4),
             "roas_rmse_delta": _round(safe_metrics["roas_rmse"] - trained_metrics["roas_rmse"], 4),
         },
+    }
+
+
+def _average_fold_metrics(folds: list[dict[str, Any]]) -> dict[str, Any]:
+    if not folds:
+        return {
+            "trained_model_metrics": _metrics([], "trained"),
+            "safe_baseline_metrics": _metrics([], "safe"),
+            "folds_averaged": 0,
+        }
+
+    def average_metric(prefix: str, target: str, key: str) -> float:
+        values = [
+            _safe_float(fold[f"{prefix}_metrics"][target][key])
+            for fold in folds
+            if f"{prefix}_metrics" in fold and target in fold[f"{prefix}_metrics"]
+        ]
+        return _round(float(np.mean(values)), 4) if values else 0.0
+
+    def target_metrics(prefix: str, target: str) -> dict[str, float]:
+        return {
+            "mae": average_metric(prefix, target, "mae"),
+            "rmse": average_metric(prefix, target, "rmse"),
+            "mape": average_metric(prefix, target, "mape"),
+            "interval_coverage": average_metric(prefix, target, "interval_coverage"),
+        }
+
+    trained_revenue = target_metrics("trained_model", "revenue")
+    trained_roas = target_metrics("trained_model", "roas")
+    safe_revenue = target_metrics("safe_baseline", "revenue")
+    safe_roas = target_metrics("safe_baseline", "roas")
+
+    def combined(revenue: dict[str, float], roas: dict[str, float]) -> dict[str, Any]:
+        return {
+            **revenue,
+            "revenue": revenue,
+            "roas": roas,
+            "roas_mae": roas["mae"],
+            "roas_rmse": roas["rmse"],
+            "roas_mape": roas["mape"],
+            "roas_interval_coverage": roas["interval_coverage"],
+        }
+
+    return {
+        "folds_averaged": len(folds),
+        "trained_model_metrics": combined(trained_revenue, trained_roas),
+        "safe_baseline_metrics": combined(safe_revenue, safe_roas),
     }
 
 
@@ -580,6 +632,17 @@ def _summary_markdown(report: dict[str, Any]) -> str:
         f'{_winner_label(item["model_performance_evidence"]["revenue"]["winner"])} |'
         for item in report["per_horizon_performance"]
     )
+    rolling_average_rows = "\n".join(
+        f'| {item["horizon_days"]} | {item["rolling_origin_average_metrics"]["folds_averaged"]} | '
+        f'{item["rolling_origin_average_metrics"]["trained_model_metrics"]["mae"]} | '
+        f'{item["rolling_origin_average_metrics"]["trained_model_metrics"]["rmse"]} | '
+        f'{item["rolling_origin_average_metrics"]["trained_model_metrics"]["interval_coverage"]}% | '
+        f'{item["rolling_origin_average_metrics"]["trained_model_metrics"]["roas_mae"]} | '
+        f'{item["rolling_origin_average_metrics"]["safe_baseline_metrics"]["mae"]} | '
+        f'{item["rolling_origin_average_metrics"]["safe_baseline_metrics"]["rmse"]} | '
+        f'{item["rolling_origin_average_metrics"]["safe_baseline_metrics"]["interval_coverage"]}% |'
+        for item in report["per_horizon_performance"]
+    )
     horizon_30 = next(
         (item for item in report["per_horizon_performance"] if int(item["horizon_days"]) == 30),
         None,
@@ -677,6 +740,16 @@ Recommendation: {report["roas_blend_weight_recommendation"]["recommendation"]}
 | Horizon days | Folds | Segments | Trained revenue MAE | Trained revenue RMSE | Trained revenue MAPE | Trained revenue coverage | Trained ROAS MAE | Trained ROAS RMSE | Trained ROAS coverage | Baseline MAE | Baseline RMSE | Revenue MAE winner |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 {horizon_rows}
+
+## Rolling-Origin Average Metrics
+
+These metrics average fold-level scores across the three rolling origins for each horizon, rather
+than pooling every segment row first. This makes the rolling-origin evidence easier to compare with
+the single final-30-day holdout above.
+
+| Horizon days | Folds averaged | Avg trained MAE | Avg trained RMSE | Avg trained coverage | Avg trained ROAS MAE | Avg baseline MAE | Avg baseline RMSE | Avg baseline coverage |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+{rolling_average_rows}
 
 Note on 30-day ROAS interval coverage: ROAS confidence intervals are derived from revenue intervals
 divided by projected spend, so revenue interval width drives ROAS interval width. The 30-day revenue

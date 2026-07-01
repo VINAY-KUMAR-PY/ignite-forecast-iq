@@ -12,9 +12,10 @@ on:
       - "backend/schemas.py"
       - "requirements.txt"
       - "scripts/gemini_live_smoke.py"
+      - "scripts/verify_gemini_live.py"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   gemini-live-smoke:
@@ -51,3 +52,20 @@ jobs:
 
       - name: Run live Gemini smoke test
         run: python scripts/gemini_live_smoke.py
+
+      - name: Capture redacted live Gemini transcript
+        if: ${{ env.GEMINI_API_KEY != '' }}
+        run: python scripts/verify_gemini_live.py --require-live --output-dir docs/gemini_sample_transcripts
+
+      - name: Commit transcript evidence
+        if: ${{ env.GEMINI_API_KEY != '' && github.event_name != 'pull_request' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/gemini_sample_transcripts/live_gemini_transcript_*.json
+          if git diff --cached --quiet; then
+            echo "No new transcript evidence to commit."
+          else
+            git commit -m "docs: add live Gemini transcript evidence"
+            git push
+          fi

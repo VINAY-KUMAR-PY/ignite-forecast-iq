@@ -414,6 +414,8 @@ class OfflinePredictionTests(unittest.TestCase):
         rows = build_predictions(cleaned.frame, model)
         summary = generate_offline_causal_summary(cleaned.frame, rows)
 
+        self.assertTrue(summary.startswith("AI mode: OFFLINE_DETERMINISTIC_FALLBACK"))
+        self.assertIn("no live LLM call was made in this run", summary.splitlines()[0])
         self.assertGreater(len(summary), 100)
         self.assertRegex(summary, r"ROAS|roas")
         self.assertIn("$", summary)
@@ -428,6 +430,7 @@ class OfflinePredictionTests(unittest.TestCase):
     def test_causal_summary_sparse_input_has_executive_and_confidence_notes(self) -> None:
         summary = generate_offline_causal_summary(pd.DataFrame(), [])
 
+        self.assertTrue(summary.startswith("AI mode: OFFLINE_DETERMINISTIC_FALLBACK"))
         self.assertGreater(len(summary), 400)
         self.assertIn("Executive interpretation", summary)
         self.assertIn("Confidence note", summary)

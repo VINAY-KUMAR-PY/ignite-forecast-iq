@@ -93,6 +93,28 @@ def _metrics(rows: list[dict[str, Any]], prefix: str) -> dict[str, Any]:
     }
 
 
+def _segment_level_interval_coverage(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Summarize interval calibration by forecast horizon segment level."""
+    levels = ("overall", "channel", "campaign_type", "campaign")
+    summary: dict[str, dict[str, Any]] = {}
+    for level in levels:
+        level_rows = [row for row in rows if str(row.get("level")) == level]
+        trained = _metrics(level_rows, "trained")
+        safe = _metrics(level_rows, "safe")
+        summary[level] = {
+            "segments_evaluated": len(level_rows),
+            "trained_revenue_coverage": trained["revenue"]["interval_coverage"],
+            "trained_revenue_width_pct": trained["revenue"]["mean_interval_width_pct"],
+            "trained_roas_coverage": trained["roas"]["interval_coverage"],
+            "trained_roas_width_pct": trained["roas"]["mean_interval_width_pct"],
+            "safe_revenue_coverage": safe["revenue"]["interval_coverage"],
+            "safe_revenue_width_pct": safe["revenue"]["mean_interval_width_pct"],
+            "safe_roas_coverage": safe["roas"]["interval_coverage"],
+            "safe_roas_width_pct": safe["roas"]["mean_interval_width_pct"],
+        }
+    return summary
+
+
 def _winner_evidence(
     trained_metrics: dict[str, Any],
     safe_metrics: dict[str, Any],
@@ -423,6 +445,7 @@ def _walk_forward_horizon(frame: pd.DataFrame, horizon: int) -> dict[str, Any]:
         "segments_evaluated": len(rows),
         "trained_model_metrics": trained_metrics,
         "safe_baseline_metrics": safe_metrics,
+        "segment_level_interval_coverage": _segment_level_interval_coverage(rows),
         "rolling_origin_average_metrics": _average_fold_metrics(successful_folds),
         "model_performance_evidence": evidence,
         "trained_vs_safe_baseline": {
@@ -669,6 +692,14 @@ def _summary_markdown(report: dict[str, Any]) -> str:
         f'{item["rolling_origin_average_metrics"]["safe_baseline_metrics"]["mean_interval_width_pct"]}% |'
         for item in report["per_horizon_performance"]
     )
+    segment_level_rows = "\n".join(
+        f'| {item["horizon_days"]} | {level} | {metrics["segments_evaluated"]} | '
+        f'{metrics["trained_revenue_coverage"]}% | {metrics["trained_revenue_width_pct"]}% | '
+        f'{metrics["trained_roas_coverage"]}% | {metrics["safe_revenue_coverage"]}% | '
+        f'{metrics["safe_revenue_width_pct"]}% |'
+        for item in report["per_horizon_performance"]
+        for level, metrics in item.get("segment_level_interval_coverage", {}).items()
+    )
     horizon_30 = next(
         (item for item in report["per_horizon_performance"] if int(item["horizon_days"]) == 30),
         None,
@@ -777,6 +808,16 @@ the single final-30-day holdout above.
 | Horizon days | Folds averaged | Avg trained MAE | Avg trained RMSE | Avg trained coverage | Avg trained width % | Avg trained ROAS MAE | Avg baseline MAE | Avg baseline RMSE | Avg baseline coverage | Avg baseline width % |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 {rolling_average_rows}
+
+## Interval Coverage by Horizon and Segment Level
+
+This table reports rolling-origin interval coverage separately for overall,
+channel, campaign_type, and campaign rows. It helps reveal whether calibration
+is only good at account level or remains stable at thinner segment grains.
+
+| Horizon days | Segment level | Segments scored | Trained revenue coverage | Trained revenue width % | Trained ROAS coverage | Baseline revenue coverage | Baseline revenue width % |
+| ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+{segment_level_rows}
 
 Note on 30-day ROAS interval coverage: ROAS confidence intervals are derived from revenue intervals
 divided by projected spend, so revenue interval width drives ROAS interval width. The 30-day revenue

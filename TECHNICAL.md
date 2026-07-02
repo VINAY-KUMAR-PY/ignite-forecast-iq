@@ -1,7 +1,7 @@
 ---
 # ForecastIQ — Technical Reference
 
-## Forecasting Methodology
+## Methodology
 
 ForecastIQ trains supervised regressors on validated campaign rows aggregated
 to daily grain per segment (overall, channel, campaign type, campaign).
@@ -36,7 +36,7 @@ aggressive. When spend is reduced, revenue falls less than spend up to a capped
 efficiency gain, so ROAS can improve under lower budget scenarios. CI now checks
 that 10x Google Ads spend produces lower ROAS than a conservative budget.
 
-### Model Selection
+## Model Selection
 
 ForecastIQ intentionally uses different model choices for the live product and
 offline evaluator because the evaluator must run quickly with minimal
@@ -227,7 +227,7 @@ response will read `"feature_importances_fallback"`. The evaluator offline path
 uses lightweight model diagnostics and does not depend on SHAP at any Python
 version.
 
-## Data Preprocessing Logic
+## Data Preprocessing
 
 1. **Schema normalization** (`schema_adapters.py`): each CSV in `data/` is
    classified as canonical campaign, GA4, Shopify, or Ads export. Column aliases
@@ -308,7 +308,7 @@ ROAS is set to `expected_roas = lower_roas = upper_roas = 0` and
 | `safe_baseline_fallback` | Model file is missing/corrupt/unsupported, data is empty or malformed, segment history is too sparse, a trained submodel cannot score safely, or all rows have zero revenue and zero spend. | Uses deterministic trailing-window revenue, trend, and residual-width rules with no learned estimator dependency. | Most conservative and crash-resistant path; useful for evaluator safety but less specific than trained inference. |
 | `not_computable` in `forecast_confidence` | Projected spend is zero after validation or fallback. | Revenue forecasts are still emitted, but ROAS fields are set to zero to avoid division by zero. | Revenue output remains schema-safe; ROAS should not be interpreted as a performance forecast. |
 
-## Assumptions and Limitations
+## Assumptions & Limitations
 
 - Existing channel-level attribution is treated as the source of truth; no
   custom attribution engine is built.
@@ -343,10 +343,10 @@ ROAS is set to `expected_roas = lower_roas = upper_roas = 0` and
   fall back only when the segment is genuinely unsupported.
 - The model does not support multi-touch attribution across channels.
 
-## Validation Notes
+## Test & Backtest Evidence
 
-This section records objective verification evidence for reviewers after the
-documentation consolidation.
+This section records objective verification evidence for reviewers. It replaces
+the older standalone evidence indexes.
 
 ### Latest local verification (2026-07-02)
 
@@ -363,18 +363,18 @@ Offline evaluator:
 [ForecastIQ] Causal summary written to output\causal_summary.txt
 [ForecastIQ] scikit-learn version: 1.9.0 (artifact built on 1.9.0)
 PASS offline evaluator: 54 rows ['trained_model']
-PASS causal summary: 3793 bytes
+PASS causal summary: 4202 bytes
 
 Backend tests:
-144 passed, 1 skipped, 7 warnings in 375.92s
+144 passed, 1 skipped, 7 warnings in 231.38s
 
 Frontend validation:
-npm install: up to date, audited 567 packages
-npm run check: tsc, eslint, and Vite build passed in 9.96s
-npm run test: 1 file passed, 5 tests passed
-npm run test:e2e: 1 Playwright Chromium test passed in 16.8s
-npm run lint: eslint passed
-npm audit --omit=dev --audit-level=high: passed; one low-severity dev-server advisory remains
+npm install: up to date, audited 567 packages in 2s; one low-severity
+dev-server advisory remains
+npm run check: tsc, eslint, and Vite build passed; Vite transformed 2,837
+modules and built in 8.23s
+npm run test: Vitest passed 1 file and 5 tests in 4.24s
+npm run build: Vite transformed 2,837 modules and built in 8.05s
 
 Sklearn zero-fallback guard:
 the CI job `exact-sklearn-zero-fallback` installs the pinned evaluator runtime
@@ -425,6 +425,19 @@ The third attempted 90-day fold is reported as an insufficient-history fold in
 remains high on the sample data; mean interval width is reported beside
 coverage so reviewers can see the current sharpness-versus-coverage tradeoff
 without changing the evaluator forecast contract.
+
+### Interval coverage interpretation
+
+The expanded rolling-origin report now breaks interval coverage down by horizon
+and segment level. Current trained-model revenue and ROAS coverage is 100.0%
+for 30, 60, and 90-day folds across overall, channel, campaign_type, and
+campaign rows. That means the intervals are conservative rather than
+overconfident relative to an 80-95% nominal planning target. Widths widen by
+horizon and by thinner segment grain: trained revenue width is 60.0-69.0% at
+30 days, 72.0-82.8% at 60 days, and 90.0-103.5% at 90 days. This is acceptable
+for hackathon evaluator safety, but production use should recalibrate bands on
+larger merchant-specific holdouts to tighten sharpness while preserving
+coverage.
 
 ### Known gaps
 
@@ -478,7 +491,45 @@ mirrors the live Gemini prompt structure with executive interpretation,
 ranked anomaly evidence, causal hypotheses, competing explanations, risks, and
 budget actions.
 
-## Architecture Summary
+## Architecture Overview
+
+```mermaid
+flowchart LR
+  User["Marketing user"] --> UI["React + TypeScript frontend"]
+  UI --> API["FastAPI backend"]
+  API --> Adapters["GA4 / Shopify / Ads schema adapters"]
+  Adapters --> Validation["Validation + daily aggregation"]
+  Validation --> LiveForecast["Live XGBoost forecast APIs"]
+  Validation --> Offline["Offline evaluator: run.sh + sklearn artifact"]
+  LiveForecast --> Simulator["Budget simulator + decision support"]
+  LiveForecast --> Gemini["Gemini insights or deterministic fallback"]
+  Offline --> CSV["predictions.csv + causal_summary.txt"]
+  Simulator --> UI
+  Gemini --> UI
+```
+
+Frontend responsibilities:
+
+- Preserve the existing React/TanStack Router user experience.
+- Load demo data or user CSVs and send campaign rows to backend APIs.
+- Render upload validation, dashboard, forecast, simulator, AI insights, and
+  executive-decision views.
+- Fall back gracefully when the backend is unavailable.
+
+Backend responsibilities:
+
+- Normalize mixed ecommerce exports into the canonical campaign schema.
+- Validate records and aggregate campaign rows to daily modeling grain.
+- Serve live forecasts, budget simulation, spend curves, decision support,
+  anomaly detection, and Gemini-backed insights.
+- Keep the offline evaluator isolated: `run.sh` only reads CSVs, loads
+  `pickle/model.pkl`, writes `predictions.csv` and `causal_summary.txt`, and
+  exits.
+
+Primary API surface: `GET /health`, `POST /api/validate`,
+`POST /api/forecast`, `POST /api/simulate`, `POST /api/spend-curve`,
+`POST /api/decision-support`, `POST /api/insights`, and protected
+`POST /api/train`.
 
 | Layer | Technology |
 |---|---|

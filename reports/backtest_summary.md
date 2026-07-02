@@ -1,6 +1,6 @@
 # ForecastIQ Backtest Summary
 
-Generated: 2026-07-02T13:12:33.813340+00:00
+Generated: 2026-07-02T15:33:45.904673+00:00
 
 ## Holdout Design
 
@@ -108,6 +108,27 @@ the single final-30-day holdout above.
 | 30 | 3 | 2461.9967 | 3489.03 | 100.0% | 66.5% | 0.0467 | 3097.8833 | 4350.7967 | 100.0% | 60.0% |
 | 60 | 3 | 19904.3333 | 28590.1733 | 100.0% | 79.8% | 0.0433 | 17906.95 | 25640.2433 | 100.0% | 72.0% |
 | 90 | 2 | 37576.105 | 52391.055 | 100.0% | 99.75% | 0.085 | 22141.945 | 31514.105 | 100.0% | 90.0% |
+
+## Interval Coverage by Horizon and Segment Level
+
+This table reports rolling-origin interval coverage separately for overall,
+channel, campaign_type, and campaign rows. It helps reveal whether calibration
+is only good at account level or remains stable at thinner segment grains.
+
+| Horizon days | Segment level | Segments scored | Trained revenue coverage | Trained revenue width % | Trained ROAS coverage | Baseline revenue coverage | Baseline revenue width % |
+| ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 30 | overall | 3 | 100.0% | 60.0% | 100.0% | 100.0% | 60.0% |
+| 30 | channel | 9 | 100.0% | 63.0% | 100.0% | 100.0% | 60.0% |
+| 30 | campaign_type | 18 | 100.0% | 66.0% | 100.0% | 100.0% | 60.0% |
+| 30 | campaign | 24 | 100.0% | 69.0% | 100.0% | 100.0% | 60.0% |
+| 60 | overall | 3 | 100.0% | 72.0% | 100.0% | 100.0% | 72.0% |
+| 60 | channel | 9 | 100.0% | 75.6% | 100.0% | 100.0% | 72.0% |
+| 60 | campaign_type | 18 | 100.0% | 79.2% | 100.0% | 100.0% | 72.0% |
+| 60 | campaign | 24 | 100.0% | 82.8% | 100.0% | 100.0% | 72.0% |
+| 90 | overall | 2 | 100.0% | 90.0% | 100.0% | 100.0% | 90.0% |
+| 90 | channel | 6 | 100.0% | 94.5% | 100.0% | 100.0% | 90.0% |
+| 90 | campaign_type | 12 | 100.0% | 99.0% | 100.0% | 100.0% | 90.0% |
+| 90 | campaign | 16 | 100.0% | 103.5% | 100.0% | 100.0% | 90.0% |
 
 Note on 30-day ROAS interval coverage: ROAS confidence intervals are derived from revenue intervals
 divided by projected spend, so revenue interval width drives ROAS interval width. The 30-day revenue

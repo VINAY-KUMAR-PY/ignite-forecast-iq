@@ -48,6 +48,21 @@ class BacktestReportTests(unittest.TestCase):
             successful_window_count += item["fold_count"]
             self.assertGreater(item["segments_evaluated"], 0)
             self.assertIn("model_performance_evidence", item)
+            self.assertIn("segment_level_interval_coverage", item)
+            self.assertEqual(
+                set(item["segment_level_interval_coverage"]),
+                {"overall", "channel", "campaign_type", "campaign"},
+            )
+            for level_metrics in item["segment_level_interval_coverage"].values():
+                self.assertGreater(level_metrics["segments_evaluated"], 0)
+                for key in [
+                    "trained_revenue_coverage",
+                    "trained_roas_coverage",
+                    "safe_revenue_coverage",
+                    "safe_roas_coverage",
+                ]:
+                    self.assertGreaterEqual(level_metrics[key], 0)
+                    self.assertLessEqual(level_metrics[key], 100)
             self.assertIn("rolling_origin_average_metrics", item)
             self.assertEqual(item["rolling_origin_average_metrics"]["folds_averaged"], item["fold_count"])
             self.assertIn("trained_model_metrics", item["rolling_origin_average_metrics"])

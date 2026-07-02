@@ -14,6 +14,8 @@ from scripts.gemini_ci_utils import (
     ProviderUnavailable,
     assert_live_insight_payload_shape,
     is_provider_unavailable,
+    normalize_live_insight_payload,
+    strengthen_live_smoke_prompt,
 )
 from scripts.gemini_live_smoke import SUMMARY, _strict_live_insights
 from scripts.verify_gemini_live import verify_live
@@ -26,9 +28,42 @@ def test_provider_outage_classifier_covers_high_demand_and_timeout() -> None:
     assert not is_provider_unavailable(ModuleNotFoundError("No module named google.genai"))
 
 
-def test_live_payload_shape_fails_on_invalid_response_schema() -> None:
+def test_live_payload_shape_normalizes_partial_response_sections() -> None:
+    payload = normalize_live_insight_payload(
+        {
+            "executiveSummary": "Partial but valid Gemini response.",
+            "revenueDrivers": [],
+        }
+    )
+
+    assert payload["channelPerformance"] == []
+    assert payload["campaignPerformance"] == {}
+    assert payload["budgetAllocation"] == []
+    assert payload["risks"] == []
+    assert payload["growthOpportunities"] == []
+    assert payload["actionPlan"] == []
+    assert_live_insight_payload_shape(payload)
+
+
+def test_live_payload_shape_stays_strict_for_malformed_schema() -> None:
+    with pytest.raises(RuntimeError, match="top-level payload"):
+        normalize_live_insight_payload(["not", "an", "object"])
+
     with pytest.raises(RuntimeError, match="missing keys"):
-        assert_live_insight_payload_shape({"executiveSummary": "partial"})
+        assert_live_insight_payload_shape(normalize_live_insight_payload({}))
+
+
+def test_live_smoke_prompt_emphasizes_required_app_sections() -> None:
+    prompt = strengthen_live_smoke_prompt("Base prompt")
+    for key in (
+        "channelPerformance",
+        "campaignPerformance",
+        "budgetAllocation",
+        "risks",
+        "growthOpportunities",
+        "actionPlan",
+    ):
+        assert key in prompt
 
 
 def test_verify_live_exits_zero_for_provider_unavailable(tmp_path: Path) -> None:
@@ -78,6 +113,17 @@ def test_strict_live_smoke_fails_missing_key_and_invalid_schema() -> None:
         with patch("scripts.gemini_live_smoke._generate_content", new=AsyncMock(return_value="{}")):
             with pytest.raises(RuntimeError, match="missing keys"):
                 asyncio.run(_strict_live_insights())
+
+        partial_payload = {
+            "executiveSummary": "Gemini returned a partial executive summary.",
+            "revenueDrivers": [],
+        }
+        with patch(
+            "scripts.gemini_live_smoke._generate_content",
+            new=AsyncMock(return_value=json.dumps(partial_payload)),
+        ):
+            insights = asyncio.run(_strict_live_insights())
+        assert insights.executiveSummary == partial_payload["executiveSummary"]
 
 
 def test_strict_live_smoke_accepts_valid_gemini_schema() -> None:

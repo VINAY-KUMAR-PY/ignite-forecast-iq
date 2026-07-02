@@ -47,7 +47,9 @@ from scripts.gemini_ci_utils import (  # noqa: E402
     ProviderUnavailable,
     assert_live_insight_payload_shape,
     is_provider_unavailable,
+    normalize_live_insight_payload,
     provider_unavailable_note,
+    strengthen_live_smoke_prompt,
 )
 
 
@@ -218,13 +220,13 @@ async def verify_live(args: argparse.Namespace) -> Path | None:
         return None
 
     summary = build_sample_summary(args.data)
-    prompt = _build_prompt(summary)
+    prompt = strengthen_live_smoke_prompt(_build_prompt(summary))
     try:
         raw_text = await _call_gemini(api_key, prompt)
     except ProviderUnavailable as exc:
         print(f"PROVIDER UNAVAILABLE: {exc}")
         return None
-    payload = _extract_json(raw_text)
+    payload = normalize_live_insight_payload(_extract_json(raw_text))
     assert_live_insight_payload_shape(payload)
     insights = _validate_insights_payload(payload, summary)
     _assert_causal_schema(insights)

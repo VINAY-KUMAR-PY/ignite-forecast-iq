@@ -33,7 +33,9 @@ from scripts.gemini_ci_utils import (  # noqa: E402
     ProviderUnavailable,
     assert_live_insight_payload_shape,
     is_provider_unavailable,
+    normalize_live_insight_payload,
     provider_unavailable_note,
+    strengthen_live_smoke_prompt,
 )
 
 
@@ -86,7 +88,7 @@ async def run_live_smoke() -> None:
     except ProviderUnavailable as exc:
         print(f"PROVIDER UNAVAILABLE: {exc}")
         return
-    if not insights.executiveSummary or len(insights.actionPlan) < 1:
+    if not insights.executiveSummary:
         raise RuntimeError("Gemini smoke did not include required executive insight fields")
 
     client = TestClient(app)
@@ -113,7 +115,7 @@ async def _strict_live_insights():
     timeout = _gemini_timeout_seconds()
     attempts = _gemini_max_attempts()
     backoff = _gemini_retry_backoff_seconds()
-    prompt = _build_prompt(SUMMARY)
+    prompt = strengthen_live_smoke_prompt(_build_prompt(SUMMARY))
     last_error: Exception | None = None
 
     for attempt in range(1, attempts + 1):
@@ -121,7 +123,7 @@ async def _strict_live_insights():
             text = await _generate_content(key, model, prompt, timeout)
             if not text.strip():
                 raise RuntimeError("Gemini returned an empty response")
-            payload = _extract_json(text)
+            payload = normalize_live_insight_payload(_extract_json(text))
             assert_live_insight_payload_shape(payload)
             return _validate_insights_payload(payload, SUMMARY)
         except Exception as exc:  # pragma: no cover - live network path

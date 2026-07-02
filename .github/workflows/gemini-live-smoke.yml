@@ -11,6 +11,7 @@ on:
       - "backend/main.py"
       - "backend/schemas.py"
       - "requirements.txt"
+      - "scripts/gemini_ci_utils.py"
       - "scripts/gemini_live_smoke.py"
       - "scripts/verify_gemini_live.py"
 
@@ -62,7 +63,13 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/gemini_sample_transcripts/live_gemini_transcript_*.json
+          shopt -s nullglob
+          transcripts=(docs/gemini_sample_transcripts/live_gemini_transcript_*.json)
+          if [ ${#transcripts[@]} -eq 0 ]; then
+            echo "No transcript evidence files found. Provider may have been unavailable."
+            exit 0
+          fi
+          git add "${transcripts[@]}"
           if git diff --cached --quiet; then
             echo "No new transcript evidence to commit."
           else

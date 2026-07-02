@@ -43,6 +43,12 @@ from backend.gemini import (  # noqa: E402
     _validate_insights_payload,
 )
 from backend.schemas import InsightsResponse  # noqa: E402
+from scripts.gemini_ci_utils import (  # noqa: E402
+    ProviderUnavailable,
+    assert_live_insight_payload_shape,
+    is_provider_unavailable,
+    provider_unavailable_note,
+)
 
 
 def _round(value: Any, digits: int = 4) -> float:
@@ -195,6 +201,8 @@ async def _call_gemini(api_key: str, prompt: str) -> str:
             error = _generation_error(exc, "Gemini live verification failed")
             last_error = error
             if attempt >= attempts or not _is_retryable(error.kind):
+                if is_provider_unavailable(error):
+                    raise ProviderUnavailable(provider_unavailable_note(error)) from exc
                 raise error from exc
             await asyncio.sleep(backoff * (2 ** (attempt - 1)))
     raise RuntimeError(f"Gemini live verification failed: {last_error}")
@@ -211,8 +219,13 @@ async def verify_live(args: argparse.Namespace) -> Path | None:
 
     summary = build_sample_summary(args.data)
     prompt = _build_prompt(summary)
-    raw_text = await _call_gemini(api_key, prompt)
+    try:
+        raw_text = await _call_gemini(api_key, prompt)
+    except ProviderUnavailable as exc:
+        print(f"PROVIDER UNAVAILABLE: {exc}")
+        return None
     payload = _extract_json(raw_text)
+    assert_live_insight_payload_shape(payload)
     insights = _validate_insights_payload(payload, summary)
     _assert_causal_schema(insights)
 

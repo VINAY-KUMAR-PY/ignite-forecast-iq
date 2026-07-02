@@ -1,3 +1,4 @@
+AI mode: OFFLINE_DETERMINISTIC_FALLBACK (no live LLM call was made in this run; Gemini requires GEMINI_API_KEY and network access, disabled in the evaluator contract).
 === ForecastIQ Causal Summary (offline, deterministic) ===
 Executive interpretation: revenue is flat versus the trailing 30-day average by $-193 per day (-1.2%). The strongest observational DiD signal is Google Ads, showing $-2,892 of estimated revenue drag (low confidence), so the forecast range is anchored to a measured channel movement rather than a generic trend.
 Historical period: 2025-08-22 to 2026-06-17 (300 days)

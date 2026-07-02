@@ -37,6 +37,12 @@ from .evaluator_contract import (
 from .evaluator_intervals import DEFAULT_HORIZON_CONFIDENCE_Z
 from .segment_utils import FEATURE_COLUMNS, safe_ratio, window_trend
 
+OFFLINE_AI_MODE_HEADER = (
+    "AI mode: OFFLINE_DETERMINISTIC_FALLBACK "
+    "(no live LLM call was made in this run; Gemini requires GEMINI_API_KEY and "
+    "network access, disabled in the evaluator contract)."
+)
+
 def read_csv_folder(data_dir: str | Path) -> pd.DataFrame:
     data_path = Path(data_dir)
     if not data_path.exists():
@@ -194,6 +200,7 @@ def fallback_model_config(reason: str = "fallback") -> dict[str, Any]:
         "fallback_reason": reason,
     }
 
+
 def is_trained_model_artifact(model: dict[str, Any]) -> bool:
     def valid_horizon_entry(entry: Any) -> bool:
         return isinstance(entry, dict) and (
@@ -323,6 +330,7 @@ def generate_offline_causal_summary(
 
     if frame.empty or not rows:
         return (
+            f"{OFFLINE_AI_MODE_HEADER}\n"
             "=== ForecastIQ Causal Summary (offline, deterministic) ===\n"
             "Executive interpretation: the submitted data did not contain enough usable rows to "
             "estimate a directional revenue trend, so ForecastIQ generated evaluator-safe fallback "
@@ -558,6 +566,7 @@ def generate_offline_causal_summary(
     competing_hypothesis_line = framing_templates[template_index]
 
     lines = [
+        OFFLINE_AI_MODE_HEADER,
         "=== ForecastIQ Causal Summary (offline, deterministic) ===",
         executive_interpretation,
         f"Historical period: {daily['date'].iloc[0]} to {daily['date'].iloc[-1]} ({len(daily)} days)",

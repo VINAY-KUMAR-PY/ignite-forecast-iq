@@ -78,6 +78,8 @@ chmod +x run.sh
 ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
 ```
 
+For AI Integration scoring in the offline evaluator, check the first line of `output/causal_summary.txt`; it explicitly labels the run as `OFFLINE_DETERMINISTIC_FALLBACK` when no live Gemini call is allowed.
+
 Note: `requirements.txt` pins `scikit-learn==1.9.0` to match the committed artifact. The supported evaluator runtime is Python 3.11-3.14 with the exact pinned dependencies; CI requires `model_type=trained_model` across that full matrix.
 `requirements.txt` is the minimal offline-evaluator dependency set; `requirements-app.txt` is a superset needed only for running the full FastAPI backend, tests, Gemini integration, and local frontend demo.
 
@@ -138,7 +140,7 @@ cross-read duplicate documentation.
 | Forecast model | `backend/inference.py`, `pickle/model.pkl`, `reports/backtest_report.json`, `reports/backtest_summary.md`, `tests/test_interval_monotonicity.py`, `tests/test_offline_predict.py` |
 | Data compatibility | `backend/schema_adapters.py`, `backend/data_preprocessing.py`, `tests/test_schema_adapters.py` for GA4, Shopify, Google Ads micros, Meta Ads, Microsoft/Bing Ads, and duplicate-revenue guards |
 | AI and causal layer | `backend/gemini.py`, `backend/causal_lite.py`, `scripts/verify_gemini_live.py`, `.github/workflows/gemini-live-smoke.yml`, `tests/test_gemini_parsing.py`, `tests/test_causal_lite.py`, `docs/gemini_sample_transcripts/` |
-| Product demo | `src/routes/index.tsx`, `src/routes/`, `src/routes/app-pages.test.tsx`, `tests/e2e/demo.spec.ts`, `DEMO_GUIDE.md`, `ARCHITECTURE.md`, `TECHNICAL.md` |
+| Product demo | `src/routes/index.tsx`, `src/routes/`, `src/routes/app-pages.test.tsx`, `tests/e2e/demo.spec.ts`, `DEMO_GUIDE.md`, `TECHNICAL.md` |
 | CI jobs | `evaluator`, `app-tests`, `frontend`, `e2e-demo`, `hackathon-evaluator-protocol`, and `gemini-live-smoke` |
 | Exact sklearn guard | `exact-sklearn-zero-fallback` in `.github/workflows/evaluator-ci.yml` installs the pinned evaluator runtime and rejects sklearn mismatch/fallback warnings |
 
@@ -251,6 +253,4 @@ output/        Sample predictions and causal summary
 Deeper references:
 
 - [TECHNICAL.md](./TECHNICAL.md)
-- [ARCHITECTURE.md](./ARCHITECTURE.md)
 - [DEMO_GUIDE.md](./DEMO_GUIDE.md)
-- [EVALUATION.md](./EVALUATION.md)

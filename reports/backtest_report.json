@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-02T13:12:33.813340+00:00",
+  "generated_at": "2026-07-02T15:33:45.904673+00:00",
   "data_dir": "data",
   "holdout_days": 30,
   "train_rows": 2160,
@@ -588,6 +588,52 @@
         "roas_mape": 1.46,
         "roas_interval_coverage": 100.0
       },
+      "segment_level_interval_coverage": {
+        "overall": {
+          "segments_evaluated": 3,
+          "trained_revenue_coverage": 100.0,
+          "trained_revenue_width_pct": 60.0,
+          "trained_roas_coverage": 100.0,
+          "trained_roas_width_pct": 62.21,
+          "safe_revenue_coverage": 100.0,
+          "safe_revenue_width_pct": 60.0,
+          "safe_roas_coverage": 100.0,
+          "safe_roas_width_pct": 60.0
+        },
+        "channel": {
+          "segments_evaluated": 9,
+          "trained_revenue_coverage": 100.0,
+          "trained_revenue_width_pct": 63.0,
+          "trained_roas_coverage": 100.0,
+          "trained_roas_width_pct": 65.59,
+          "safe_revenue_coverage": 100.0,
+          "safe_revenue_width_pct": 60.0,
+          "safe_roas_coverage": 100.0,
+          "safe_roas_width_pct": 60.03
+        },
+        "campaign_type": {
+          "segments_evaluated": 18,
+          "trained_revenue_coverage": 100.0,
+          "trained_revenue_width_pct": 66.0,
+          "trained_roas_coverage": 100.0,
+          "trained_roas_width_pct": 68.25,
+          "safe_revenue_coverage": 100.0,
+          "safe_revenue_width_pct": 60.0,
+          "safe_roas_coverage": 100.0,
+          "safe_roas_width_pct": 60.0
+        },
+        "campaign": {
+          "segments_evaluated": 24,
+          "trained_revenue_coverage": 100.0,
+          "trained_revenue_width_pct": 69.0,
+          "trained_roas_coverage": 100.0,
+          "trained_roas_width_pct": 71.61,
+          "safe_revenue_coverage": 100.0,
+          "safe_revenue_width_pct": 60.0,
+          "safe_roas_coverage": 100.0,
+          "safe_roas_width_pct": 59.97
+        }
+      },
       "rolling_origin_average_metrics": {
         "folds_averaged": 3,
         "trained_model_metrics": {
@@ -995,6 +1041,52 @@
         "roas_mape": 1.51,
         "roas_interval_coverage": 100.0
       },
+      "segment_level_interval_coverage": {
+        "overall": {
+          "segments_evaluated": 3,
+          "trained_revenue_coverage": 100.0,
+          "trained_revenue_width_pct": 72.0,
+          "trained_roas_coverage": 100.0,
+          "trained_roas_width_pct": 72.13,
+          "safe_revenue_coverage": 100.0,
+          "safe_revenue_width_pct": 72.0,
+          "safe_roas_coverage": 100.0,
+          "safe_roas_width_pct": 72.01
+        },
+        "channel": {
+          "segments_evaluated": 9,
+          "trained_revenue_coverage": 100.0,
+          "trained_revenue_width_pct": 75.6,
+          "trained_roas_coverage": 100.0,
+          "trained_roas_width_pct": 75.91,
+          "safe_revenue_coverage": 100.0,
+          "safe_revenue_width_pct": 72.0,
+          "safe_roas_coverage": 100.0,
+          "safe_roas_width_pct": 72.08
+        },
+        "campaign_type": {
+          "segments_evaluated": 18,
+          "trained_revenue_coverage": 100.0,
+          "trained_revenue_width_pct": 79.2,
+          "trained_roas_coverage": 100.0,
+          "trained_roas_width_pct": 79.39,
+          "safe_revenue_coverage": 100.0,
+          "safe_revenue_width_pct": 72.0,
+          "safe_roas_coverage": 100.0,
+          "safe_roas_width_pct": 72.0
+        },
+        "campaign": {
+          "segments_evaluated": 24,
+          "trained_revenue_coverage": 100.0,
+          "trained_revenue_width_pct": 82.8,
+          "trained_roas_coverage": 100.0,
+          "trained_roas_width_pct": 83.16,
+          "safe_revenue_coverage": 100.0,
+          "safe_revenue_width_pct": 72.0,
+          "safe_roas_coverage": 100.0,
+          "safe_roas_width_pct": 71.98
+        }
+      },
       "rolling_origin_average_metrics": {
         "folds_averaged": 3,
         "trained_model_metrics": {
@@ -1321,6 +1413,52 @@
         "roas_rmse": 0.1,
         "roas_mape": 2.07,
         "roas_interval_coverage": 100.0
+      },
+      "segment_level_interval_coverage": {
+        "overall": {
+          "segments_evaluated": 2,
+          "trained_revenue_coverage": 100.0,
+          "trained_revenue_width_pct": 90.0,
+          "trained_roas_coverage": 100.0,
+          "trained_roas_width_pct": 98.21,
+          "safe_revenue_coverage": 100.0,
+          "safe_revenue_width_pct": 90.0,
+          "safe_roas_coverage": 100.0,
+          "safe_roas_width_pct": 90.15
+        },
+        "channel": {
+          "segments_evaluated": 6,
+          "trained_revenue_coverage": 100.0,
+          "trained_revenue_width_pct": 94.5,
+          "trained_roas_coverage": 100.0,
+          "trained_roas_width_pct": 100.95,
+          "safe_revenue_coverage": 100.0,
+          "safe_revenue_width_pct": 90.0,
+          "safe_roas_coverage": 100.0,
+          "safe_roas_width_pct": 89.94
+        },
+        "campaign_type": {
+          "segments_evaluated": 12,
+          "trained_revenue_coverage": 100.0,
+          "trained_revenue_width_pct": 99.0,
+          "trained_roas_coverage": 100.0,
+          "trained_roas_width_pct": 106.35,
+          "safe_revenue_coverage": 100.0,
+          "safe_revenue_width_pct": 90.0,
+          "safe_roas_coverage": 100.0,
+          "safe_roas_width_pct": 89.98
+        },
+        "campaign": {
+          "segments_evaluated": 16,
+          "trained_revenue_coverage": 100.0,
+          "trained_revenue_width_pct": 103.5,
+          "trained_roas_coverage": 100.0,
+          "trained_roas_width_pct": 111.7,
+          "safe_revenue_coverage": 100.0,
+          "safe_revenue_width_pct": 90.0,
+          "safe_roas_coverage": 100.0,
+          "safe_roas_width_pct": 89.98
+        }
       },
       "rolling_origin_average_metrics": {
         "folds_averaged": 2,

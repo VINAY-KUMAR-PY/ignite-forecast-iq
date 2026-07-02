@@ -130,6 +130,26 @@ def _validated_frame(records: list[dict], operation: str):
     return frame, validation
 
 
+def _validate_budget_channels(frame, budgets: dict[str, float], operation: str) -> None:
+    """Reject planned budgets for channels absent from the uploaded dataset."""
+    if not budgets:
+        return
+    observed = {
+        str(channel).strip().casefold()
+        for channel in frame.get("channel", [])
+        if str(channel).strip()
+    }
+    unknown = [channel for channel in budgets if str(channel).strip().casefold() not in observed]
+    if unknown:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"{operation} budget channel '{unknown[0]}' is not present in the uploaded data. "
+                "Upload rows for that channel or remove the budget override."
+            ),
+        )
+
+
 def _authorized_training_token(token: str | None) -> None:
     expected = (os.getenv("TRAINING_ADMIN_TOKEN") or "").strip()
     if not expected or token != expected:
@@ -194,6 +214,7 @@ def forecast(request: Request, body: ForecastRequest) -> ForecastResponse:
 def simulate(request: Request, body: SimulationRequest) -> SimulationResponse:
     """Reforecast channel revenue after planned media budget changes."""
     frame, validation = _validated_frame([row.model_dump() for row in body.rows], "simulation")
+    _validate_budget_channels(frame, body.budgets, "Simulation")
     result = simulate_budgets(frame, body.horizon, body.budgets)
     return SimulationResponse(
         channels=result["channels"],
@@ -233,6 +254,7 @@ def get_anomalies(request: Request, body: AnomalyRequest) -> dict:
 def decision_support(request: Request, body: DecisionSupportRequest) -> DecisionSupportResponse:
     """Return optimizer, what-if, risk, opportunity and health analytics."""
     frame, validation = _validated_frame([row.model_dump() for row in body.rows], "decision support")
+    _validate_budget_channels(frame, body.budgets, "Decision support")
     result = build_decision_support(
         frame=frame,
         horizon=body.horizon,

@@ -1,17 +1,17 @@
 # ForecastIQ Evaluation Appendix
 
-The canonical evidence index now lives in the `Evidence & Validation` section
-of [README.md](./README.md). That section links the evaluator contract, model
-reports, data adapter tests, AI/Gemini validation, causal inference tests,
-frontend checks, and CI jobs in one place.
+ForecastIQ does not assign itself a judge score in this document. Reviewers can
+use this appendix as an evidence index for the evaluator contract, model and
+backtest reports, Gemini and causal-hypothesis validation, frontend/demo tests,
+CI jobs, reproducible commands, and current limitations.
 
-Use this appendix only as a quick pointer to deeper supporting documents:
+The canonical quick map still lives in the `Evidence & Validation` section of
+[README.md](./README.md). Use the references below for deeper review:
 
 - [TECHNICAL.md](./TECHNICAL.md): methodology, degradation paths, assumptions,
-  and model limitations.
-- [VALIDATION_NOTES.md](./VALIDATION_NOTES.md): latest local validation notes
-  and stress-test timing.
+  validation notes, and model limitations.
 - [reports/backtest_summary.md](./reports/backtest_summary.md): holdout and
   rolling-origin backtest evidence.
 - [ARCHITECTURE.md](./ARCHITECTURE.md): product and system architecture.
 - [DEMO_GUIDE.md](./DEMO_GUIDE.md): judge demo path.
+- [PRESENTATION_GUIDE.md](./PRESENTATION_GUIDE.md): final presentation framing.

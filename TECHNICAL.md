@@ -56,6 +56,30 @@ Sample counts reflect the artifact committed at `pickle/model.pkl` version 5
 If a horizon has fewer than the minimum required samples, it is marked
 `fallback_only` instead of training on mismatched target scales.
 
+## Seasonality Handling
+
+ForecastIQ accounts for seasonality at the campaign_type level through both
+the live forecast path and the offline evaluator path:
+
+- `backend/data_preprocessing.py::feature_frame` adds day-of-week, month,
+  7-day/30-day/365-day sine and cosine cycles, month sine/cosine, Q4 flags,
+  holiday-week flags, month-end flags, Black Friday proximity, lag features
+  (`revenue_lag_1/7/14`, `spend_lag_1/7/14`), and rolling windows
+  (`revenue_roll_7/28`, `spend_roll_7/28`).
+- `backend/data_preprocessing.py::future_features` projects the same seasonal,
+  lag, and rolling-window features into each forecast day so future campaign
+  type forecasts are not flat extrapolations.
+- `backend/forecasting.py::_project_exog` uses the matching future weekday from
+  the recent 28-day window when projecting spend, clicks, impressions, and
+  conversions. This preserves weekly campaign behavior before the model scores
+  each future point.
+- `backend/segment_utils.py::segment_feature_frame` gives the offline evaluator
+  horizon-end day-of-week, month, sine/cosine cycles, year-end cycles,
+  `dow_campaign_type_interaction`, rolling/trend windows, and recent volatility.
+- When `level="campaign_type"`, both paths first filter rows to that
+  campaign_type, so the seasonal features are learned and applied within the
+  selected campaign_type history rather than only at the global account level.
+
 ## Feature Engineering — All 48 Features
 
 | Feature | Category | Description |
@@ -199,17 +223,19 @@ ROAS is set to `expected_roas = lower_roas = upper_roas = 0` and
 | `safe_baseline_fallback` | Model file is missing/corrupt/unsupported, data is empty or malformed, segment history is too sparse, a trained submodel cannot score safely, or all rows have zero revenue and zero spend. | Uses deterministic trailing-window revenue, trend, and residual-width rules with no learned estimator dependency. | Most conservative and crash-resistant path; useful for evaluator safety but less specific than trained inference. |
 | `not_computable` in `forecast_confidence` | Projected spend is zero after validation or fallback. | Revenue forecasts are still emitted, but ROAS fields are set to zero to avoid division by zero. | Revenue output remains schema-safe; ROAS should not be interpreted as a performance forecast. |
 
-## Assumptions
+## Assumptions and Limitations
 
 - Existing channel-level attribution is treated as the source of truth; no
   custom attribution engine is built.
 - ROAS is `revenue / spend`; zero spend → `not_computable`.
 - Historical spend patterns are used as projected spend when no budget override
   is provided.
+- API budget controls reject negative or non-finite budgets and reject budget
+  overrides for channels absent from the uploaded dataset. Zero-budget
+  simulations are allowed, but positive `targetRevenue` or `targetRoas` goals
+  require at least one positive planned budget or observed spend signal.
 - The offline evaluator does not call Gemini or any external network service.
 - Seasonality flags use US calendar; non-US holiday patterns are not modeled.
-
-## Limitations
 
 - The model does not ingest promotions, inventory levels, pricing changes,
   competitor activity, or macroeconomic signals.
@@ -226,6 +252,79 @@ ROAS is set to `expected_roas = lower_roas = upper_roas = 0` and
   shrunken trained-model estimate when feature construction is possible and
   fall back only when the segment is genuinely unsupported.
 - The model does not support multi-touch attribution across channels.
+
+## Validation Notes
+
+This section records objective verification evidence for reviewers after the
+documentation consolidation.
+
+### Latest local verification (2026-07-02)
+
+```text
+Clean evaluator venv:
+PASS clean venv install
+python 3.14.4
+sklearn 1.9.0
+pandas 3.0.3
+numpy 2.4.6
+
+Offline evaluator:
+[ForecastIQ] Wrote 54 rows to ./output/predictions.csv
+[ForecastIQ] Causal summary written to output\causal_summary.txt
+[ForecastIQ] scikit-learn version: 1.9.0 (artifact built on 1.9.0)
+PASS offline evaluator: 54 rows ['trained_model']
+PASS causal summary: 3793 bytes
+
+Backend tests:
+130 passed, 1 skipped, 7 warnings in 452.23s
+
+Frontend build:
+npm install: up to date, audited 567 packages
+npm run build: vite built successfully in 29.37s
+```
+
+### Evaluator pipeline verification
+
+- `run.sh` runs offline without starting servers or calling external APIs.
+- `pickle/model.pkl` is a committed joblib sklearn artifact (<=2 MB, version 5,
+  scikit-learn 1.9.0).
+- `output/predictions.csv` matches the required 12-column schema with horizons
+  {30, 60, 90}, finite values, non-negative lower bounds, and monotonically
+  widening interval widths across horizons.
+- Committed sample intervals are narrower and differentiated: overall
+  30/60/90-day widths are 60%, 72%, and 90%; row-level widths range from 60%
+  to 103.5%.
+- `data/fixtures` out-of-distribution evaluator runs emit trained-model rows
+  for all 174 predictions; thin campaigns are marked low confidence rather
+  than falling back solely because of small segment size.
+- `output/causal_summary.txt` contains anomaly signals, DiD effect estimates
+  with dollar amounts, and recognized channel names.
+- CI runs the evaluator contract on Python 3.11, 3.12, 3.13, and 3.14 on every
+  push.
+- Budget-JSON 4th argument is supported:
+  `./run.sh ./data ./pickle/model.pkl ./output/predictions.csv '{"Google Ads":60000}'`.
+- Large synthetic stress fixture: 50,400 rows completed the full `run.sh`
+  evaluator path in 5.87 seconds on the local Windows/Git Bash environment
+  using Python 3.14.4, producing a valid 12-column CSV with horizons {30, 60,
+  90}. CI enforces a 60-second budget on Linux.
+
+### Backtest results (walk-forward)
+
+| Horizon | Trained revenue MAPE | Baseline revenue MAPE | Revenue interval coverage | ROAS interval coverage |
+|---:|---:|---:|---:|---:|
+| 30 days | 2.66% | 3.15% | 100.0% | 100.0% |
+| 60 days | 5.04% | 5.37% | 100.0% | 100.0% |
+| 90 days | 6.86% | 10.30% | 100.0% | 100.0% |
+
+### Known gaps
+
+- Causal layer is observational DiD, not experimental incrementality.
+- SHAP attribution is live-API only; offline path uses lightweight model
+  diagnostics.
+- Confidence intervals combine quantile regressors with residual guardrails and
+  should be recalibrated with production holdout data.
+- The model does not include promotions, inventory, pricing, or competitor
+  signals.
 
 ## AI Integration Strategy
 

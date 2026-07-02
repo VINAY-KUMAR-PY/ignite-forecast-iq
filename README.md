@@ -76,6 +76,7 @@ chmod +x run.sh
 ```
 
 Note: `requirements.txt` pins `scikit-learn==1.9.0` to match the committed artifact. The supported evaluator runtime is Python 3.11-3.14 with the exact pinned dependencies; CI requires `model_type=trained_model` across that full matrix.
+`requirements.txt` is the minimal offline-evaluator dependency set; `requirements-app.txt` is a superset needed only for running the full FastAPI backend, tests, Gemini integration, and local frontend demo.
 
 The trained `pickle/model.pkl` artifact was rebuilt and last verified with Python 3.14.4 on Windows 11 AMD64. Live Gemini output verification is handled by [scripts/verify_gemini_live.py](./scripts/verify_gemini_live.py) and the Gemini Live Smoke workflow; successful secret-backed runs write redacted replayable transcripts to [docs/gemini_sample_transcripts](./docs/gemini_sample_transcripts/).
 
@@ -245,4 +246,3 @@ Deeper references:
 - [ARCHITECTURE.md](./ARCHITECTURE.md)
 - [DEMO_GUIDE.md](./DEMO_GUIDE.md)
 - [EVALUATION.md](./EVALUATION.md)
-- [VALIDATION_NOTES.md](./VALIDATION_NOTES.md)

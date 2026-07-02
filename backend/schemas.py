@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import math
 from typing import Any, Dict, List, Literal, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 ForecastLevel = Literal["overall", "channel", "campaign_type", "campaign"]
@@ -139,6 +140,11 @@ class SimulationRequest(BaseModel):
     horizon: Horizon = 30
     budgets: Dict[str, float] = Field(default_factory=dict)
 
+    @field_validator("budgets")
+    @classmethod
+    def budgets_must_be_non_negative(cls, value: Dict[str, float]) -> Dict[str, float]:
+        return _validated_budget_map(value)
+
 
 class SimChannelResult(BaseModel):
     channel: str
@@ -190,7 +196,7 @@ class SpendCurveRequest(BaseModel):
     rows: List[CampaignRow]
     channel: str = "Google Ads"
     horizon: int = 30
-    current_budget: float = Field(default=0.0, alias="currentBudget")
+    current_budget: float = Field(default=0.0, ge=0, alias="currentBudget")
 
 
 class AnomalyRequest(BaseModel):
@@ -201,6 +207,22 @@ class WhatIfScenarioInput(BaseModel):
     name: str
     budgetMultipliers: Dict[str, float] = Field(default_factory=dict)
 
+    @field_validator("budgetMultipliers")
+    @classmethod
+    def budget_multipliers_must_be_non_negative(cls, value: Dict[str, float]) -> Dict[str, float]:
+        cleaned: Dict[str, float] = {}
+        for channel, multiplier in value.items():
+            channel_name = str(channel).strip()
+            if not channel_name:
+                raise ValueError("Budget multiplier channel must not be empty")
+            numeric = float(multiplier)
+            if not math.isfinite(numeric):
+                raise ValueError(f"Budget multiplier for {channel_name} must be finite")
+            if numeric < 0:
+                raise ValueError(f"Budget multiplier for {channel_name} must be non-negative")
+            cleaned[channel_name] = numeric
+        return cleaned
+
 
 class DecisionSupportRequest(BaseModel):
     rows: List[CampaignRow]
@@ -209,6 +231,39 @@ class DecisionSupportRequest(BaseModel):
     targetRevenue: Optional[float] = Field(default=None, ge=0)
     targetRoas: Optional[float] = Field(default=None, ge=0)
     scenarios: List[WhatIfScenarioInput] = Field(default_factory=list)
+
+    @field_validator("budgets")
+    @classmethod
+    def budgets_must_be_non_negative(cls, value: Dict[str, float]) -> Dict[str, float]:
+        return _validated_budget_map(value)
+
+    @model_validator(mode="after")
+    def target_requires_positive_spend(self) -> "DecisionSupportRequest":
+        has_target = (self.targetRevenue or 0) > 0 or (self.targetRoas or 0) > 0
+        if not has_target:
+            return self
+        submitted_budget_total = sum(float(value) for value in self.budgets.values())
+        observed_spend_total = sum(float(row.spend) for row in self.rows)
+        budgets_were_explicitly_zero = bool(self.budgets) and submitted_budget_total <= 1e-9
+        no_spend_signal = submitted_budget_total <= 1e-9 and observed_spend_total <= 1e-9
+        if budgets_were_explicitly_zero or no_spend_signal:
+            raise ValueError("Positive revenue or ROAS targets require at least one positive planned budget")
+        return self
+
+
+def _validated_budget_map(value: Dict[str, float]) -> Dict[str, float]:
+    cleaned: Dict[str, float] = {}
+    for channel, budget in value.items():
+        channel_name = str(channel).strip()
+        if not channel_name:
+            raise ValueError("Budget channel must not be empty")
+        numeric = float(budget)
+        if not math.isfinite(numeric):
+            raise ValueError(f"Budget for {channel_name} must be finite")
+        if numeric < 0:
+            raise ValueError(f"Budget for {channel_name} must be non-negative")
+        cleaned[channel_name] = numeric
+    return cleaned
 
 
 class BudgetRecommendation(BaseModel):

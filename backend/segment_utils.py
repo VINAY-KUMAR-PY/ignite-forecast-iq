@@ -97,6 +97,27 @@ def aggregate_segment_daily(segment: pd.DataFrame) -> pd.DataFrame:
 def safe_ratio(numerator: float, denominator: float) -> float:
     return float(numerator) / float(denominator) if float(denominator) else 0.0
 
+def spend_response_multiplier(spend_multiplier: float) -> float:
+    """Concave media response used by the offline evaluator budget override.
+
+    Planned spend up to roughly 1.5x recent history is treated as near-linear.
+    Beyond that point, incremental revenue decays so extreme budgets do not
+    imply impossible ROAS. When spend is reduced, revenue falls less than spend
+    up to a capped efficiency gain, mirroring the live simulator's saturation
+    behavior without adding app-only dependencies to the evaluator path.
+    """
+    multiplier = max(0.0, safe_float(spend_multiplier, 1.0))
+    if multiplier <= 0.0:
+        return 0.0
+    if multiplier < 1.0:
+        return min(multiplier ** 0.72, multiplier * 1.35)
+    saturation_start = 1.5
+    if multiplier <= saturation_start:
+        return multiplier
+    elasticity = 0.55
+    incremental = (multiplier - saturation_start) * ((multiplier / saturation_start) ** (elasticity - 1.0))
+    return max(saturation_start, saturation_start + incremental)
+
 def category_maps(frame: pd.DataFrame) -> dict[str, dict[str, int]]:
     return {
         "channel": {

@@ -5,7 +5,6 @@ import os
 import subprocess
 import sys
 import tempfile
-import types
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -23,6 +22,7 @@ from backend.predict import (
     TRAINED_MODEL_TYPE,
     THIN_CAMPAIGN_CONFIDENCE,
     _monotonic_interval_multipliers,
+    aggregate_segment_daily,
     build_predictions,
     canonicalize_frame,
     confidence_interval_width,
@@ -33,7 +33,9 @@ from backend.predict import (
     read_csv_folder,
     safe_load_model,
     sanitize_rows,
+    spend_response_multiplier,
     unseen_category_diagnostics,
+    window_sum,
     write_predictions,
 )
 from backend.evaluator_io import trained_model_functional_smoke_test
@@ -431,58 +433,67 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertIn("Confidence note", summary)
         self.assertIn("observational difference-in-differences", summary)
 
-    def test_causal_summary_can_use_optional_gemini_enrichment(self) -> None:
+    def test_causal_summary_stays_offline_when_gemini_env_is_configured(self) -> None:
         raw = pd.read_csv("data/sample_campaigns.csv").head(120)
         cleaned = canonicalize_frame(raw)
-        rows = build_predictions(cleaned.frame, fallback_model_config("optional Gemini test"))
+        rows = build_predictions(cleaned.frame, fallback_model_config("offline boundary test"))
 
-        class FakeModels:
-            @staticmethod
-            def generate_content(**kwargs):
-                return types.SimpleNamespace(text="Scale Google Ads carefully while monitoring ROAS.")
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "configured"}, clear=False):
+            summary = generate_offline_causal_summary(cleaned.frame, rows)
 
-        class FakeClient:
-            def __init__(self, api_key):
-                self.api_key = api_key
-                self.models = FakeModels()
+        self.assertIn("AI Strategic Recommendation", summary)
+        self.assertIn("Offline deterministic recommendation", summary)
+        self.assertIn("intentionally performs no LLM or network calls", summary)
+        self.assertNotIn("AI Strategic Recommendation (Gemini)", summary)
 
-        google_module = types.ModuleType("google")
-        genai_module = types.ModuleType("google.genai")
-        genai_module.Client = FakeClient
-        google_module.genai = genai_module
-
-        with patch.dict(sys.modules, {"google": google_module, "google.genai": genai_module}):
-            with patch.dict(os.environ, {"GEMINI_API_KEY": "configured"}, clear=False):
-                summary = generate_offline_causal_summary(cleaned.frame, rows)
-
-        self.assertIn("AI Strategic Recommendation (Gemini)", summary)
-        self.assertIn("Scale Google Ads carefully", summary)
-
-    def test_causal_summary_reports_optional_gemini_failure_without_breaking(self) -> None:
+    def test_causal_summary_mirrors_ranked_causal_hypothesis_structure(self) -> None:
         raw = pd.read_csv("data/sample_campaigns.csv").head(120)
         cleaned = canonicalize_frame(raw)
-        rows = build_predictions(cleaned.frame, fallback_model_config("optional Gemini failure test"))
+        rows = build_predictions(cleaned.frame, fallback_model_config("causal schema test"))
+        summary = generate_offline_causal_summary(cleaned.frame, rows)
 
-        class FakeModels:
-            @staticmethod
-            def generate_content(**kwargs):
-                raise RuntimeError("service unavailable")
+        self.assertIn("Causal hypothesis:", summary)
+        self.assertIn("Competing explanation to test:", summary)
+        self.assertIn("observational difference-in-differences", summary)
 
-        class FakeClient:
-            def __init__(self, api_key):
-                self.models = FakeModels()
+    def test_spend_response_multiplier_has_non_increasing_marginal_revenue(self) -> None:
+        multipliers = [1.0, 1.5, 2.0, 4.0, 10.0]
+        responses = [spend_response_multiplier(value) for value in multipliers]
+        marginal = [
+            (responses[index] - responses[index - 1]) / (multipliers[index] - multipliers[index - 1])
+            for index in range(1, len(multipliers))
+        ]
 
-        google_module = types.ModuleType("google")
-        genai_module = types.ModuleType("google.genai")
-        genai_module.Client = FakeClient
-        google_module.genai = genai_module
+        for earlier, later in zip(marginal, marginal[1:]):
+            self.assertLessEqual(later, earlier + 1e-9)
 
-        with patch.dict(sys.modules, {"google": google_module, "google.genai": genai_module}):
-            with patch.dict(os.environ, {"GEMINI_API_KEY": "configured"}, clear=False):
-                summary = generate_offline_causal_summary(cleaned.frame, rows)
+    def test_budget_override_uses_saturation_so_extreme_spend_lowers_roas(self) -> None:
+        raw = pd.read_csv("data/sample_campaigns.csv")
+        cleaned = canonicalize_frame(raw)
+        model = fallback_model_config("planned budget saturation test")
+        channel = "Google Ads"
+        channel_frame = cleaned.frame[cleaned.frame["channel"] == channel].copy()
+        daily = aggregate_segment_daily(channel_frame)
+        history_days = max(1, min(7, len(daily)))
+        base_budget = window_sum(daily, "spend", 7) / history_days * 30
 
-        self.assertIn("Gemini enrichment could not complete", summary)
-        self.assertIn("predictions.csv evaluator contract is unaffected", summary)
+        def channel_forecast(multiplier: float) -> tuple[float, float]:
+            rows = build_predictions(cleaned.frame, model, {channel: base_budget * multiplier})
+            row = next(
+                item
+                for item in rows
+                if item["level"] == "channel" and item["segment"] == channel and int(item["horizon_days"]) == 30
+            )
+            return float(row["expected_revenue"]), float(row["expected_roas"])
+
+        points = {multiplier: channel_forecast(multiplier) for multiplier in [1.0, 2.0, 4.0, 10.0]}
+        marginal_1_to_2 = (points[2.0][0] - points[1.0][0]) / base_budget
+        marginal_2_to_4 = (points[4.0][0] - points[2.0][0]) / (base_budget * 2)
+        marginal_4_to_10 = (points[10.0][0] - points[4.0][0]) / (base_budget * 6)
+
+        self.assertLessEqual(marginal_2_to_4, marginal_1_to_2 + 1e-9)
+        self.assertLessEqual(marginal_4_to_10, marginal_2_to_4 + 1e-9)
+        self.assertLess(points[10.0][1], points[1.0][1])
 
     def test_planned_budgets_scale_channel_projection_and_summary(self) -> None:
         raw = pd.read_csv("data/sample_campaigns.csv")

@@ -35,6 +35,7 @@ from .segment_utils import (
     safe_ratio,
     segment_feature_frame,
     segment_specs,
+    spend_response_multiplier,
     unseen_category_diagnostics,
 )
 
@@ -96,7 +97,8 @@ def forecast_segment(
     historical_spend = max(0.0, daily_spend * horizon)
     expected_spend = planned_projected_spend(segment, horizon, historical_spend, planned_budgets)
     spend_scale = safe_ratio(expected_spend, historical_spend) if historical_spend > 0 else 1.0
-    expected_revenue = max(0.0, daily_revenue * horizon * trend_multiplier * spend_scale)
+    revenue_response = spend_response_multiplier(spend_scale) if planned_budgets else spend_scale
+    expected_revenue = max(0.0, daily_revenue * horizon * trend_multiplier * revenue_response)
     interval = confidence_interval_width(daily["revenue"], expected_revenue, horizon, model)
     lower = max(0.0, expected_revenue - interval)
     upper = max(lower, expected_revenue + interval)

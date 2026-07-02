@@ -23,6 +23,7 @@ HOLIDAY_WEEKS = [
 ]
 BLACK_FRIDAY_DATES = ["2024-11-29", "2025-11-28", "2026-11-27"]
 MAX_UPLOAD_ROWS = int(os.getenv("MAX_UPLOAD_ROWS", "20000"))
+DEFAULT_SEASONALITY_REGION = os.getenv("FORECASTIQ_SEASONALITY_REGION", "US")
 
 
 def rows_to_frame(rows: Iterable[CampaignRow]) -> pd.DataFrame:
@@ -161,22 +162,44 @@ def filter_frame(frame: pd.DataFrame, level: str, value: str | None = None) -> p
     return frame[frame[key] == value].copy()
 
 
-def add_holiday_features(frame: pd.DataFrame) -> pd.DataFrame:
-    """Add ecommerce holiday and cyclical seasonality flags."""
+def normalize_seasonality_region(region: str | None = None) -> str:
+    """Return the seasonality calendar mode used for retail holiday flags."""
+    raw = (region or os.getenv("FORECASTIQ_SEASONALITY_REGION") or DEFAULT_SEASONALITY_REGION or "US").strip().casefold()
+    if raw in {"none", "neutral", "global", "off"}:
+        return "none"
+    return "US"
+
+
+def add_holiday_features(frame: pd.DataFrame, region: str | None = None) -> pd.DataFrame:
+    """Add ecommerce holiday and cyclical seasonality flags.
+
+    Region ``US`` keeps built-in retail holiday flags. Region ``none`` disables
+    hardcoded holiday/Q4/Black-Friday flags while keeping data-derived cyclic
+    day/week/month encodings for non-US or unknown-market datasets.
+    """
     data = frame.copy()
     if "date_dt" in data:
         dates = pd.to_datetime(data["date_dt"], errors="coerce")
     else:
         dates = pd.to_datetime(data["date"], errors="coerce")
 
-    holiday_starts = pd.to_datetime(pd.Series(HOLIDAY_WEEKS), errors="coerce").dropna()
+    calendar_region = normalize_seasonality_region(region)
+    holiday_starts = (
+        pd.to_datetime(pd.Series(HOLIDAY_WEEKS), errors="coerce").dropna()
+        if calendar_region == "US"
+        else pd.Series(dtype="datetime64[ns]")
+    )
     holiday_windows = [(start.normalize(), (start + pd.Timedelta(days=6)).normalize()) for start in holiday_starts]
     normalized_dates = dates.dt.normalize()
     holiday_mask = pd.Series(False, index=data.index)
     for start, end in holiday_windows:
         holiday_mask |= normalized_dates.between(start, end)
 
-    black_fridays = pd.to_datetime(pd.Series(BLACK_FRIDAY_DATES), errors="coerce").dropna()
+    black_fridays = (
+        pd.to_datetime(pd.Series(BLACK_FRIDAY_DATES), errors="coerce").dropna()
+        if calendar_region == "US"
+        else pd.Series(dtype="datetime64[ns]")
+    )
 
     def days_to_nearest_black_friday(date: pd.Timestamp) -> int:
         if pd.isna(date) or black_fridays.empty:
@@ -187,7 +210,7 @@ def add_holiday_features(frame: pd.DataFrame) -> pd.DataFrame:
     month = dates.dt.month.fillna(1).astype(int)
     week = dates.dt.isocalendar().week.astype(float).fillna(1)
     data["is_holiday_week"] = holiday_mask.astype(int)
-    data["is_q4"] = month.isin([10, 11, 12]).astype(int)
+    data["is_q4"] = month.isin([10, 11, 12]).astype(int) if calendar_region == "US" else 0
     data["month_sin"] = np.sin(2 * np.pi * month / 12)
     data["month_cos"] = np.cos(2 * np.pi * month / 12)
     data["week_of_year_sin"] = np.sin(2 * np.pi * week / 52.18)
@@ -196,7 +219,7 @@ def add_holiday_features(frame: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
-def feature_frame(daily: pd.DataFrame, target: str) -> tuple[pd.DataFrame, pd.Series]:
+def feature_frame(daily: pd.DataFrame, target: str, region: str | None = None) -> tuple[pd.DataFrame, pd.Series]:
     """Build supervised learning features for revenue or ROAS targets."""
     data = daily.copy().sort_values("date").reset_index(drop=True)
     lag_target = "revenue" if target.startswith("revenue_horizon_") else target
@@ -214,7 +237,7 @@ def feature_frame(daily: pd.DataFrame, target: str) -> tuple[pd.DataFrame, pd.Se
     data["sin_year"] = np.sin(2 * np.pi * data["day_of_year"] / 365.25)
     data["cos_year"] = np.cos(2 * np.pi * data["day_of_year"] / 365.25)
     data["trend"] = np.arange(len(data))
-    data = add_holiday_features(data)
+    data = add_holiday_features(data, region=region)
     data["rev_std_14"] = data["revenue"].rolling(14, min_periods=4).std().fillna(0)
     data["rev_std_28"] = data["revenue"].rolling(28, min_periods=7).std().fillna(0)
     data["spend_x_sin7"] = data["spend"] * data["sin_7"]
@@ -272,6 +295,7 @@ def future_features(
     target: str,
     future_date: pd.Timestamp,
     exog: dict,
+    region: str | None = None,
 ) -> pd.DataFrame:
     """Build one recursive future feature row for a forecast step."""
     hist = history.copy().sort_values("date").reset_index(drop=True)
@@ -293,7 +317,7 @@ def future_features(
     day_index = float(len(hist))
     sin_7 = float(np.sin(2 * np.pi * day_index / 7))
     revenue_values = hist["revenue"].astype(float).tolist()
-    holiday = add_holiday_features(pd.DataFrame([{"date": future_date.strftime("%Y-%m-%d")}])).iloc[0]
+    holiday = add_holiday_features(pd.DataFrame([{"date": future_date.strftime("%Y-%m-%d")}]), region=region).iloc[0]
     row = {
         "spend": float(exog.get("spend", 0)),
         "clicks": float(exog.get("clicks", 0)),

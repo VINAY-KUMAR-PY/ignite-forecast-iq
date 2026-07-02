@@ -58,6 +58,7 @@ from .segment_utils import (
     safe_ratio,
     segment_feature_frame,
     segment_specs,
+    spend_response_multiplier,
     unseen_category_diagnostics,
     window_sum,
     window_trend,

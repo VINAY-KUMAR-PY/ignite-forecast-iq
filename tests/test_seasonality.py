@@ -4,6 +4,7 @@ from datetime import date, timedelta
 
 import pandas as pd
 
+from backend.data_preprocessing import add_holiday_features
 from backend.forecasting import forecast_frame
 
 
@@ -54,3 +55,20 @@ def test_campaign_type_forecast_responds_to_weekly_seasonality() -> None:
     assert relative_delta > 0.10
     drivers = {item.feature for item in monday_peak.diagnostics.topRevenueFeatures}
     assert drivers & {"dow", "sin_7", "cos_7", "revenue_lag_7", "revenue_lag_14"}
+
+
+def test_neutral_seasonality_region_disables_us_holiday_flags(monkeypatch) -> None:
+    frame = pd.DataFrame({"date": ["2025-11-28"], "spend": [100.0], "revenue": [400.0]})
+
+    us = add_holiday_features(frame, region="US")
+    neutral = add_holiday_features(frame, region="none")
+
+    assert int(us["is_holiday_week"].iloc[0]) == 1
+    assert int(us["is_q4"].iloc[0]) == 1
+    assert int(neutral["is_holiday_week"].iloc[0]) == 0
+    assert int(neutral["is_q4"].iloc[0]) == 0
+    assert float(neutral["days_to_black_friday"].iloc[0]) == 0.0
+
+    monkeypatch.setenv("FORECASTIQ_SEASONALITY_REGION", "none")
+    configured = add_holiday_features(frame)
+    assert int(configured["is_holiday_week"].iloc[0]) == 0

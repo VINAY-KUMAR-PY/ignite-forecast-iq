@@ -1,6 +1,9 @@
 import type { CampaignRow, ForecastPoint, ValidationResult } from "./types";
 
-const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000").replace(/\/$/, "");
+const DEFAULT_API_BASE = import.meta.env.PROD
+  ? "https://forecastiq-api.onrender.com"
+  : "http://127.0.0.1:8000";
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE).replace(/\/$/, "");
 
 export interface ForecastApiResponse {
   revenue: ForecastPoint[];
@@ -287,12 +290,119 @@ interface AnomalyRequest {
   rows: CampaignRow[];
 }
 
+function finiteNonNegative(value: unknown, fallback = 0): number {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) && numeric >= 0 ? numeric : fallback;
+}
+
+function requiredText(value: unknown, fallback: string): string {
+  const text = typeof value === "string" ? value.trim() : "";
+  return text || fallback;
+}
+
+function safeRows(rows: CampaignRow[]): CampaignRow[] {
+  const cleaned = rows
+    .map((row) => {
+      const date = requiredText(row.date, "");
+      const channel = requiredText(row.channel, "");
+      const campaignType = requiredText(row.campaign_type, "Unclassified");
+      const campaignName = requiredText(row.campaign_name, campaignType);
+      if (!date || !channel) return null;
+      const spend = finiteNonNegative(row.spend);
+      const revenue = finiteNonNegative(row.revenue);
+      const roas = Number.isFinite(Number(row.roas))
+        ? finiteNonNegative(row.roas)
+        : spend > 0
+          ? revenue / spend
+          : 0;
+      return {
+        date,
+        channel,
+        campaign_type: campaignType,
+        campaign_name: campaignName,
+        spend,
+        clicks: finiteNonNegative(row.clicks),
+        impressions: finiteNonNegative(row.impressions),
+        conversions: finiteNonNegative(row.conversions),
+        revenue,
+        roas,
+      };
+    })
+    .filter((row): row is CampaignRow => row !== null);
+
+  if (!cleaned.length) {
+    throw new Error("No valid campaign rows are available for the backend request.");
+  }
+  return cleaned;
+}
+
+function observedChannels(rows: CampaignRow[]): string[] {
+  return [...new Set(rows.map((row) => row.channel).filter(Boolean))];
+}
+
+function safeBudgetMap(
+  rows: CampaignRow[],
+  budgets: Record<string, number>,
+): Record<string, number> {
+  const channels = observedChannels(rows);
+  if (!channels.length) {
+    throw new Error("At least one campaign channel is required for budget simulation.");
+  }
+  return Object.fromEntries(
+    channels.map((channel) => [channel, finiteNonNegative(budgets[channel])]),
+  );
+}
+
+function safeTargets(
+  targets: { targetRevenue?: number; targetRoas?: number },
+  budgets: Record<string, number>,
+) {
+  const totalBudget = Object.values(budgets).reduce(
+    (sum, value) => sum + finiteNonNegative(value),
+    0,
+  );
+  if (totalBudget <= 0) {
+    return { targetRevenue: 0, targetRoas: 0 };
+  }
+  return {
+    targetRevenue: finiteNonNegative(targets.targetRevenue),
+    targetRoas: finiteNonNegative(targets.targetRoas),
+  };
+}
+
+function safeScenarios(
+  rows: CampaignRow[],
+  scenarios: WhatIfScenarioInput[],
+): WhatIfScenarioInput[] {
+  const channels = observedChannels(rows);
+  return scenarios.map((scenario) => ({
+    name: requiredText(scenario.name, "Scenario"),
+    budgetMultipliers: Object.fromEntries(
+      channels.map((channel) => [
+        channel,
+        finiteNonNegative(scenario.budgetMultipliers?.[channel], 1),
+      ]),
+    ),
+  }));
+}
+
+function safeSpendCurveChannel(rows: CampaignRow[], channel: string): string {
+  const channels = observedChannels(rows);
+  return channels.includes(channel) ? channel : channels[0];
+}
+
 async function postJson<T>(path: string, body: unknown): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "network request failed";
+    throw new Error(`Failed to reach ForecastIQ backend at ${API_BASE}${path}: ${message}`);
+  }
   if (!response.ok) {
     const text = await response.text();
     throw new Error(text || `Backend request failed with ${response.status}`);
@@ -318,7 +428,10 @@ export function simulateBudgetsApi(
   horizon: 30 | 60 | 90,
   budgets: Record<string, number>,
 ) {
-  return postJson<SimulationApiResponse>("/api/simulate", { rows, horizon, budgets });
+  const cleanedRows = safeRows(rows);
+  const body = { rows: cleanedRows, horizon, budgets: safeBudgetMap(cleanedRows, budgets) };
+  console.log("simulate request", body);
+  return postJson<SimulationApiResponse>("/api/simulate", body);
 }
 
 export function decisionSupportApi(
@@ -328,14 +441,17 @@ export function decisionSupportApi(
   targets: { targetRevenue?: number; targetRoas?: number } = {},
   scenarios: WhatIfScenarioInput[] = [],
 ) {
-  return postJson<DecisionSupportResponse>("/api/decision-support", {
-    rows,
+  const cleanedRows = safeRows(rows);
+  const cleanedBudgets = safeBudgetMap(cleanedRows, budgets);
+  const body = {
+    rows: cleanedRows,
     horizon,
-    budgets,
-    targetRevenue: targets.targetRevenue,
-    targetRoas: targets.targetRoas,
-    scenarios,
-  });
+    budgets: cleanedBudgets,
+    ...safeTargets(targets, cleanedBudgets),
+    scenarios: safeScenarios(cleanedRows, scenarios),
+  };
+  console.log("decision-support request", body);
+  return postJson<DecisionSupportResponse>("/api/decision-support", body);
 }
 
 export function generateInsightsApi(summary: Record<string, unknown>) {
@@ -348,12 +464,14 @@ export function fetchSpendCurveApi(
   horizon: 30 | 60 | 90,
   currentBudget: number,
 ) {
+  const cleanedRows = safeRows(rows);
   const body: SpendCurveRequest = {
-    rows,
-    channel,
+    rows: cleanedRows,
+    channel: safeSpendCurveChannel(cleanedRows, channel),
     horizon,
-    currentBudget,
+    currentBudget: finiteNonNegative(currentBudget),
   };
+  console.log("spend-curve request", body);
   return postJson<SpendCurveResponse>("/api/spend-curve", body);
 }
 

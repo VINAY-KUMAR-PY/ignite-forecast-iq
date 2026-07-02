@@ -148,17 +148,20 @@ residual volatility from rolling historical forecasts:
 
 | Horizon | Interval Multiplier | Floor (% of expected) | Confidence Z |
 |---|---|---|---|
-| 30 days | 1.00 | 10.0% | 1.50 |
-| 60 days | 1.15 | 12.5% | 1.25 |
-| 90 days | 1.50 | 17.5% | 1.40 |
+| 30 days | 0.70 | 30.0% | 0.95 |
+| 60 days | 0.90 | 36.0% | 1.00 |
+| 90 days | 1.10 | 45.0% | 1.10 |
 
 The earlier evaluator artifact produced 100.0% walk-forward revenue coverage at
 30, 60, and 90 days, which was safe but too wide for budget planning. The
 current artifact adds GradientBoostingRegressor quantile models for the revenue
-target. The residual-volatility table remains as a safety floor, and the
+target's residual correction, then caps those bands with segment-aware planning
+guardrails. The residual-volatility table remains as a safety floor, and the
 monotonic enforcement pass still audits the final bands before CSV writing. The
-regenerated backtest includes both a final 30-day holdout and rolling-origin
-fold averages across 30, 60, and 90-day horizons.
+sample holdout remains fully covered because realized errors are small, but the
+committed sample intervals are materially narrower: overall 30/60/90-day widths
+are 60%, 72%, and 90%. The regenerated backtest includes both a final 30-day
+holdout and rolling-origin fold averages across 30, 60, and 90-day horizons.
 
 The monotonic enforcement pass (in `backend/inference.py`) ensures that each
 horizon's `interval_width_pct` is strictly larger than the previous horizon's
@@ -219,8 +222,9 @@ ROAS is set to `expected_roas = lower_roas = upper_roas = 0` and
   the offline evaluator uses lightweight model diagnostics.
 - The offline GBR estimator and live XGBoost estimator are not numerically
   identical; exact point-for-point parity is not claimed.
-- Forecast quality degrades for segments with fewer than 45 days of history;
-  those segments fall back to the deterministic baseline.
+- Forecast quality degrades for sparse segments; those segments now use a
+  shrunken trained-model estimate when feature construction is possible and
+  fall back only when the segment is genuinely unsupported.
 - The model does not support multi-touch attribution across channels.
 
 ## AI Integration Strategy

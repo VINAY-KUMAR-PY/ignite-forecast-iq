@@ -452,6 +452,36 @@ def generate_offline_causal_summary(
     else:
         causal_lines = ["  - No causal estimate available; history was too sparse around detected events."]
 
+    if causal_estimates:
+        strongest = max(causal_estimates, key=lambda item: abs(safe_float(item.get("incrementalRevenue"))))
+        strongest_channel = str(strongest.get("channel") or "Unknown Channel")
+        strongest_effect = safe_float(strongest.get("incrementalRevenue"))
+        strongest_confidence = str(strongest.get("confidence") or "low")
+        effect_direction = "lift" if strongest_effect >= 0 else "drag"
+        executive_interpretation = (
+            f"Executive interpretation: revenue is {revenue_direction} versus the trailing 30-day "
+            f"average by ${revenue_delta_dollars:,.0f} per day ({revenue_delta_pct:+.1f}%). "
+            f"The strongest observational DiD signal is {strongest_channel}, showing "
+            f"${strongest_effect:,.0f} of estimated revenue {effect_direction} "
+            f"({strongest_confidence} confidence), so the forecast range is anchored to a measured "
+            "channel movement rather than a generic trend."
+        )
+    elif top_anomalies:
+        executive_interpretation = (
+            f"Executive interpretation: revenue is {revenue_direction} versus the trailing 30-day "
+            f"average by ${revenue_delta_dollars:,.0f} per day ({revenue_delta_pct:+.1f}%). "
+            f"{len(top_anomalies)} anomaly signal(s) were detected, but the history around those "
+            "events was too thin for a stable DiD estimate, so the forecast leans more heavily on "
+            "trend and channel efficiency evidence."
+        )
+    else:
+        executive_interpretation = (
+            f"Executive interpretation: revenue is {revenue_direction} versus the trailing 30-day "
+            f"average by ${revenue_delta_dollars:,.0f} per day ({revenue_delta_pct:+.1f}%). "
+            "No material anomalies were detected, so the forecast is driven mainly by recent run-rate, "
+            "ROAS stability, and planned budget movement."
+        )
+
     spend_trend = window_trend(daily, "spend", 28)
     revenue_trend_val = window_trend(daily, "revenue", 28)
 
@@ -490,6 +520,30 @@ def generate_offline_causal_summary(
             f"{TRAINED_ESTIMATED_SPEND_MODEL_TYPE}. Accuracy should be treated as lower than full "
             f"{TRAINED_MODEL_TYPE} mode because ROAS and spend-response features are inferred."
         )
+    anomaly_header = (
+        "Anomaly signals ranked by forecast relevance:"
+        if top_anomalies
+        else "Anomaly scan result:"
+    )
+    if causal_estimates:
+        top_causal = max(causal_estimates, key=lambda item: abs(safe_float(item.get("incrementalRevenue"))))
+        hypothesis_line = (
+            f"Causal hypothesis: {top_causal.get('channel', 'the leading channel')} is the primary explanatory "
+            f"candidate because its DiD estimate has the largest absolute revenue effect "
+            f"(${safe_float(top_causal.get('incrementalRevenue')):,.0f}). "
+            "Other anomaly signals remain supporting evidence until validated with a holdout test."
+        )
+    elif top_anomalies:
+        hypothesis_line = (
+            f"Causal hypothesis: {len(top_anomalies)} anomaly signal(s) suggest recent channel disruption, "
+            "but sparse pre/post windows prevent a stable dollar estimate; treat this as directional "
+            "evidence for prioritizing diagnostics."
+        )
+    else:
+        hypothesis_line = (
+            "Causal hypothesis: no abnormal channel break was detected, so the most defensible explanation "
+            "is continuation of recent ROAS and spend trajectory."
+        )
 
     lines = [
         "=== ForecastIQ Causal Summary (offline, deterministic) ===",
@@ -504,14 +558,11 @@ def generate_offline_causal_summary(
         f"Leading channel by revenue: {top_revenue_channel}; highest-risk channel by ROAS: "
         f"{weakest_channel} at {weakest_roas:.2f}x.",
         f"30-day forecast: expected revenue ${forecast_rev_30:,.0f} at {forecast_roas_30:.2f}x ROAS.",
-        "Anomaly signals (top 3, used as forecast evidence):",
+        anomaly_header,
         *anomaly_lines,
         "Causal effect estimates (observational DiD, not experimental incrementality):",
         *causal_lines,
-        f"Causal hypothesis: the {len(top_anomalies)} anomaly signal(s) above, combined "
-        "with spend trajectory and channel ROAS efficiency, are the observable evidence "
-        "base for the forecast range. Wider intervals at 60 and 90 days reflect compounding "
-        "uncertainty from these detected signals and auction dynamics.",
+        hypothesis_line,
         "Action: if blended ROAS is above target, test incremental budget in the leading "
         "channel before reallocating away from stable performers.",
         f"Budget recommendation: test a controlled shift toward {top_channel} while reviewing "

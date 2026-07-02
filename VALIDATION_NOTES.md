@@ -7,6 +7,8 @@ This file records objective verification evidence for reviewers. It documents wh
 - `run.sh` runs offline without starting servers or calling external APIs.
 - `pickle/model.pkl` is a committed joblib sklearn artifact (<=2 MB, version 5, scikit-learn 1.9.0).
 - `output/predictions.csv` matches the required 12-column schema with horizons {30, 60, 90}, finite values, non-negative lower bounds, and monotonically widening interval widths across horizons.
+- Committed sample intervals are narrower and differentiated: overall 30/60/90-day widths are 60%, 72%, and 90%; row-level widths range from 60% to 103.5%.
+- `data/fixtures` out-of-distribution evaluator run now emits trained-model rows for all 174 predictions; thin campaigns are marked low confidence rather than falling back solely because of small segment size.
 - `output/causal_summary.txt` contains anomaly signals, DiD effect estimates with dollar amounts, and recognized channel names.
 - CI runs the evaluator contract on Python 3.11, 3.12, 3.13, and 3.14 on every push.
 - Budget-JSON 4th argument is supported: `./run.sh ./data ./pickle/model.pkl ./output/predictions.csv '{"Google Ads":60000}'`.

@@ -76,3 +76,27 @@ def test_all_segments_interval_width_non_decreasing():
                             f"{level}/{segment}: {h_next}d ({w_next:.1f}%) < {h_prev}d ({w_prev:.1f}%)"
                         )
         assert not violations, "Interval widths decreased:\n" + "\n".join(violations)
+
+
+def test_sample_forecast_confidence_is_not_constant():
+    """Sample output should expose useful confidence tiers, not all low."""
+    with tempfile.TemporaryDirectory() as tmp:
+        output = Path(tmp) / "predictions.csv"
+        result = subprocess.run(
+            [
+                sys.executable, "-m", "backend.predict",
+                "--data-dir", "./data",
+                "--model", "./pickle/model.pkl",
+                "--output", str(output),
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=120,
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+
+        df = pd.read_csv(output)
+        confidence_values = set(df["forecast_confidence"].astype(str))
+        assert len(confidence_values) > 1
+        assert confidence_values & {"medium", "high"}

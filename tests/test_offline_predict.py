@@ -614,7 +614,7 @@ class OfflinePredictionTests(unittest.TestCase):
             {"horizon_interval_multiplier": {"30": 0.60, "60": 1.45, "90": 1.10}}
         )
 
-        self.assertEqual(multipliers, {"30": 1.00, "60": 1.15, "90": 1.50})
+        self.assertEqual(multipliers, {"30": 0.70, "60": 0.90, "90": 1.10})
         self.assertLessEqual(multipliers["30"], multipliers["60"])
         self.assertLessEqual(multipliers["60"], multipliers["90"])
 

@@ -123,35 +123,46 @@ CI includes a dedicated job named **Hackathon 5-step evaluator protocol** that m
 
 This job is separate from broader backend, frontend, and Playwright checks so the evaluator contract remains easy to audit.
 
-## Validation Evidence
+## Evidence & Validation
 
-Current automated evidence includes:
+ForecastIQ keeps one canonical evidence map here so judges do not need to
+cross-read duplicate scorecards.
 
-- Python evaluator matrix: 3.11, 3.12, 3.13, 3.14.
-- Dedicated Frontend CI: clean `npm ci`, `npm run test`, and `npm run build`.
-- Backend pytest coverage gate: 90%.
-- Frontend unit tests: Vitest + React Testing Library.
-- Playwright demo flow: Try Live Demo -> Forecast -> Simulator -> Insights.
-- Large-data evaluator stress test: synthetic ~50,000-row CSV through `run.sh`.
-- Schema adapter edge tests for GA4, Shopify, Google Ads micros, Meta Ads, and Bing/Microsoft Ads.
-- Gemini parsing tests with mocked responses and ranked causal hypotheses.
-- Live Gemini verification script and workflow: schema-validates real Gemini responses and saves redacted transcripts when `GEMINI_API_KEY` is configured.
+| Area | Evidence |
+|---|---|
+| Evaluator contract | `run.sh`, `backend/predict.py`, `backend/evaluator_contract.py`, `tests/test_evaluator_contract.py`, `tests/test_evaluator_e2e.py`, `tests/test_scale_evaluator.py`, `.github/workflows/evaluator-ci.yml` |
+| Forecast model | `backend/inference.py`, `pickle/model.pkl`, `reports/backtest_report.json`, `reports/backtest_summary.md`, `tests/test_interval_monotonicity.py`, `tests/test_offline_predict.py` |
+| Data compatibility | `backend/schema_adapters.py`, `backend/data_preprocessing.py`, `tests/test_schema_adapters.py` for GA4, Shopify, Google Ads micros, Meta Ads, Microsoft/Bing Ads, and duplicate-revenue guards |
+| AI and causal layer | `backend/gemini.py`, `backend/causal_lite.py`, `scripts/verify_gemini_live.py`, `.github/workflows/gemini-live-smoke.yml`, `tests/test_gemini_parsing.py`, `tests/test_causal_lite.py`, `docs/gemini_sample_transcripts/` |
+| Product demo | `src/routes/index.tsx`, `src/routes/`, `src/routes/app-pages.test.tsx`, `tests/e2e/demo.spec.ts`, `DEMO_GUIDE.md`, `ARCHITECTURE.md`, `TECHNICAL.md` |
+| CI jobs | `evaluator`, `app-tests`, `frontend`, `e2e-demo`, `hackathon-evaluator-protocol`, and `gemini-live-smoke` |
 
-See [EVALUATION.md](./EVALUATION.md) for the evidence index linking tests, CI jobs, reports, and transcript validation.
+The latest backtest compares trained-model and deterministic-baseline behavior
+using MAE, RMSE, MAPE, interval coverage, and per-horizon performance. The
+offline model can emit `trained_model`, `trained_model_estimated_spend`, or
+`safe_baseline_fallback`; the exact degradation conditions are documented in
+[TECHNICAL.md](./TECHNICAL.md).
+
+Known limits: the model does not ingest promotions, inventory, prices, margins,
+competitor activity, or macroeconomic signals. The causal layer is
+observational DiD evidence, not randomized incrementality. Confidence intervals
+are practical planning intervals and should be recalibrated with production
+holdout data before real budget commitments.
 
 ## Forecasting Methodology
 
 The offline evaluator model is trained on a residual correction over a deterministic baseline. This keeps the model useful while preserving safe fallback behavior for tiny, malformed, or hidden datasets.
 
-Confidence intervals use residual calibration with horizon-specific widening:
+Confidence intervals use residual-relative quantile regressors, residual
+volatility guardrails, horizon-specific widening, and segment-level widening:
 
-| Horizon | Multiplier | Floor |
+| Horizon | Residual multiplier | Planning floor |
 |---|---:|---:|
-| 30 days | 1.38 | 10% |
-| 60 days | 1.55 | 17% |
-| 90 days | 1.80 | 25% |
+| 30 days | 0.70 | 30% |
+| 60 days | 0.90 | 36% |
+| 90 days | 1.10 | 45% |
 
-The interval enforcement layer ensures uncertainty bands widen across horizons and that `interval_width_pct` matches the actual revenue bands.
+The interval enforcement layer ensures uncertainty bands widen across horizons and that `interval_width_pct` matches the actual revenue bands. On the committed sample output, overall intervals are now 60%, 72%, and 90% for 30, 60, and 90 days, with confidence labels varying by horizon and segment quality.
 
 For full methodology, feature list, assumptions, and limitations, see [TECHNICAL.md](./TECHNICAL.md).
 

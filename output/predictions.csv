@@ -1,55 +1,55 @@
 level,segment,horizon_days,expected_revenue,lower_revenue,upper_revenue,expected_roas,lower_roas,upper_roas,model_type,interval_width_pct,forecast_confidence
-overall,all,30,463256.62,43554.98,882958.26,4.05,0.37,7.53,trained_model,181.2,low
-overall,all,60,956347.26,80351.46,1832343.06,4.05,0.36,7.79,trained_model,183.2,low
-overall,all,90,1490945.34,110358.46,2871532.21,4.04,0.34,8.13,trained_model,185.2,low
-channel,Google Ads,30,257799.65,43554.98,472044.31,4.56,0.76,8.21,trained_model,166.21,low
-channel,Google Ads,60,529326.04,84135.83,974516.25,4.56,0.74,8.46,trained_model,168.21,low
-channel,Google Ads,90,823119.18,119031.18,1527207.18,4.55,0.69,8.85,trained_model,171.08,low
-channel,Meta Ads,30,135028.67,43554.98,226502.35,3.0,0.93,4.85,trained_model,135.49,low
-channel,Meta Ads,60,281103.25,84643.05,477563.45,3.0,0.91,5.11,trained_model,139.78,low
-channel,Meta Ads,90,434569.05,114614.41,754523.69,3.02,0.82,5.38,trained_model,147.25,low
-channel,Microsoft Ads,30,70132.64,24156.98,116108.29,5.43,1.85,8.89,trained_model,131.11,low
-channel,Microsoft Ads,60,144734.56,48406.05,241063.06,5.42,1.98,9.09,trained_model,133.11,low
-channel,Microsoft Ads,90,225737.51,73239.88,378235.14,5.43,2.23,9.29,trained_model,135.11,low
-campaign_type,Advantage+,30,52429.0,0.0,116108.29,3.0,0.0,6.45,trained_model,221.46,low
-campaign_type,Advantage+,60,109008.63,0.0,243588.66,3.01,0.0,6.48,trained_model,223.46,low
-campaign_type,Advantage+,90,168220.13,0.0,379265.98,3.03,0.0,6.74,trained_model,225.46,low
-campaign_type,Performance Max,30,91611.86,43554.98,139668.73,4.27,1.99,6.39,trained_model,104.91,low
-campaign_type,Performance Max,60,187902.83,84965.89,290839.76,4.26,1.94,6.65,trained_model,109.56,low
-campaign_type,Performance Max,90,291560.08,118359.55,464760.61,4.21,1.8,7.08,trained_model,118.81,low
-campaign_type,Prospecting,30,37863.45,0.0,116108.29,2.98,0.0,8.82,trained_model,306.65,low
-campaign_type,Prospecting,60,76961.8,0.0,237542.64,2.97,0.0,8.87,trained_model,308.65,low
-campaign_type,Prospecting,90,118716.26,0.0,368792.13,2.98,0.0,9.22,trained_model,310.65,low
-campaign_type,Retargeting,30,46210.48,0.0,116108.29,3.01,0.0,7.46,trained_model,251.26,low
-campaign_type,Retargeting,60,95333.29,0.0,241440.76,3.03,0.0,7.5,trained_model,253.26,low
-campaign_type,Retargeting,90,146842.11,0.0,374828.66,3.04,0.0,7.8,trained_model,255.26,low
-campaign_type,Search,30,121066.77,43554.98,198578.55,5.51,1.95,8.87,trained_model,128.05,low
-campaign_type,Search,60,248433.22,84965.89,411900.55,5.49,1.9,9.2,trained_model,131.6,low
-campaign_type,Search,90,384892.1,119031.18,650753.03,5.46,1.77,9.69,trained_model,138.15,low
-campaign_type,Shopping,30,114883.73,43554.98,186212.47,4.47,1.65,7.07,trained_model,124.18,low
-campaign_type,Shopping,60,237902.24,84965.89,390838.59,4.44,1.61,7.42,trained_model,128.57,low
-campaign_type,Shopping,90,371037.47,119031.18,623043.76,4.43,1.51,7.89,trained_model,135.84,low
-campaign,Advantage Shopping,30,52429.0,0.0,116108.29,3.0,0.0,6.45,trained_model,221.46,low
-campaign,Advantage Shopping,60,109008.63,0.0,243588.66,3.01,0.0,6.48,trained_model,223.46,low
-campaign,Advantage Shopping,90,168220.13,0.0,379265.98,3.03,0.0,6.74,trained_model,225.46,low
-campaign,Bing Brand,30,36473.67,0.0,116108.29,6.03,0.0,18.91,trained_model,318.33,low
-campaign,Bing Brand,60,75106.26,0.0,240591.29,6.0,0.0,19.0,trained_model,320.33,low
-campaign,Bing Brand,90,116719.04,0.0,376225.78,6.0,0.0,19.76,trained_model,322.33,low
-campaign,Bing Generic,30,33982.15,0.0,116108.29,5.01,0.0,16.77,trained_model,341.67,low
-campaign,Bing Generic,60,69791.4,0.0,239855.14,4.97,0.0,17.16,trained_model,343.67,low
-campaign,Bing Generic,90,108258.28,0.0,374221.11,4.98,0.0,17.52,trained_model,345.67,low
-campaign,Brand Search,30,84836.6,43554.98,126118.21,5.33,2.68,7.77,trained_model,97.32,low
-campaign,Brand Search,60,173371.98,84965.89,261778.06,5.3,2.62,8.06,trained_model,101.98,low
-campaign,Brand Search,90,267977.44,118359.55,417595.34,5.28,2.43,8.57,trained_model,111.66,low
-campaign,Cart Retargeting,30,46210.48,0.0,116108.29,3.01,0.0,7.46,trained_model,251.26,low
-campaign,Cart Retargeting,60,95333.29,0.0,241440.76,3.03,0.0,7.5,trained_model,253.26,low
-campaign,Cart Retargeting,90,146842.11,0.0,374828.66,3.04,0.0,7.8,trained_model,255.26,low
-campaign,Generic Search,30,80981.84,43554.98,118408.69,4.29,2.24,6.1,trained_model,92.43,low
-campaign,Generic Search,60,167831.01,84965.89,250696.12,4.28,2.19,6.46,trained_model,98.75,low
-campaign,Generic Search,90,262262.94,119031.18,405494.7,4.27,2.04,6.96,trained_model,109.23,low
-campaign,Lookalike Prospecting,30,37863.45,0.0,116108.29,2.98,0.0,8.82,trained_model,306.65,low
-campaign,Lookalike Prospecting,60,76961.8,0.0,237542.64,2.97,0.0,8.87,trained_model,308.65,low
-campaign,Lookalike Prospecting,90,118716.26,0.0,368792.13,2.98,0.0,9.22,trained_model,310.65,low
-campaign,Shopping Best Sellers,30,91611.86,43554.98,139668.73,4.27,1.99,6.39,trained_model,104.91,low
-campaign,Shopping Best Sellers,60,187902.83,84965.89,290839.76,4.26,1.94,6.65,trained_model,109.56,low
-campaign,Shopping Best Sellers,90,291560.08,118359.55,464760.61,4.21,1.8,7.08,trained_model,118.81,low
+overall,all,30,463256.62,324279.63,602233.61,4.05,2.76,5.13,trained_model,60.0,high
+overall,all,60,956347.26,612062.25,1300632.28,4.05,2.61,5.54,trained_model,72.0,high
+overall,all,90,1490945.34,820019.94,2161870.74,4.04,2.33,6.14,trained_model,90.0,medium
+channel,Google Ads,30,257799.65,176592.76,339006.54,4.56,3.07,5.89,trained_model,63.0,high
+channel,Google Ads,60,529326.04,329240.8,729411.28,4.56,2.86,6.34,trained_model,75.6,medium
+channel,Google Ads,90,823119.18,434195.37,1212042.99,4.55,2.52,7.02,trained_model,94.5,medium
+channel,Meta Ads,30,135028.67,92494.64,177562.7,3.0,1.98,3.8,trained_model,63.0,high
+channel,Meta Ads,60,281103.25,174846.22,387360.28,3.0,1.87,4.15,trained_model,75.6,medium
+channel,Meta Ads,90,434569.05,229235.18,639902.93,3.02,1.64,4.57,trained_model,94.5,medium
+channel,Microsoft Ads,30,70132.64,48040.86,92224.42,5.43,3.68,7.06,trained_model,63.0,high
+channel,Microsoft Ads,60,144734.56,90024.89,199444.22,5.42,3.45,7.63,trained_model,75.6,medium
+channel,Microsoft Ads,90,225737.51,119076.54,332398.48,5.43,3.04,8.48,trained_model,94.5,medium
+campaign_type,Advantage+,30,52429.0,35127.43,69730.56,3.0,1.95,3.87,trained_model,66.0,high
+campaign_type,Advantage+,60,109008.63,65841.21,152176.05,3.01,1.83,4.23,trained_model,79.2,medium
+campaign_type,Advantage+,90,168220.13,84951.16,251489.09,3.03,1.57,4.66,trained_model,99.0,medium
+campaign_type,Performance Max,30,91611.86,61379.94,121843.77,4.27,2.81,5.57,trained_model,66.0,high
+campaign_type,Performance Max,60,187902.83,113493.31,262312.35,4.26,2.59,6.0,trained_model,79.2,medium
+campaign_type,Performance Max,90,291560.08,147237.84,435882.32,4.21,2.24,6.64,trained_model,99.0,medium
+campaign_type,Prospecting,30,37863.45,25368.51,50358.39,2.98,1.93,3.83,trained_model,66.0,high
+campaign_type,Prospecting,60,76961.8,46484.92,107438.67,2.97,1.77,4.08,trained_model,79.2,medium
+campaign_type,Prospecting,90,118716.26,59951.71,177480.8,2.98,1.52,4.5,trained_model,99.0,medium
+campaign_type,Retargeting,30,46210.48,30961.02,61459.94,3.01,1.99,3.95,trained_model,66.0,high
+campaign_type,Retargeting,60,95333.29,57581.31,133085.28,3.03,1.85,4.28,trained_model,79.2,medium
+campaign_type,Retargeting,90,146842.11,74155.27,219528.96,3.04,1.59,4.7,trained_model,99.0,medium
+campaign_type,Search,30,121066.77,81114.73,161018.8,5.51,3.62,7.19,trained_model,66.0,high
+campaign_type,Search,60,248433.22,150053.66,346812.77,5.49,3.35,7.75,trained_model,79.2,medium
+campaign_type,Search,90,384892.1,194370.51,575413.7,5.46,2.89,8.57,trained_model,99.0,medium
+campaign_type,Shopping,30,114883.73,76972.1,152795.36,4.47,2.92,5.8,trained_model,66.0,high
+campaign_type,Shopping,60,237902.24,143692.95,332111.53,4.44,2.73,6.31,trained_model,79.2,medium
+campaign_type,Shopping,90,371037.47,187373.92,554701.02,4.43,2.37,7.02,trained_model,99.0,medium
+campaign,Advantage Shopping,30,52429.0,34340.99,70517.0,3.0,1.91,3.92,trained_model,69.0,high
+campaign,Advantage Shopping,60,109008.63,63879.06,154138.2,3.01,1.77,4.28,trained_model,82.8,medium
+campaign,Advantage Shopping,90,168220.13,81166.21,255274.04,3.03,1.5,4.73,trained_model,103.5,medium
+campaign,Bing Brand,30,36473.67,23890.25,49057.08,6.03,3.89,7.99,trained_model,69.0,high
+campaign,Bing Brand,60,75106.26,44012.27,106200.25,6.0,3.58,8.65,trained_model,82.8,medium
+campaign,Bing Brand,90,116719.04,56316.94,177121.14,6.0,3.06,9.61,trained_model,103.5,medium
+campaign,Bing Generic,30,33982.15,22258.31,45706.0,5.01,3.21,6.6,trained_model,69.0,high
+campaign,Bing Generic,60,69791.4,40897.76,98685.04,4.97,2.95,7.13,trained_model,82.8,medium
+campaign,Bing Generic,90,108258.28,52234.62,164281.94,4.98,2.51,7.91,trained_model,103.5,medium
+campaign,Brand Search,30,84836.6,55567.97,114105.22,5.33,3.42,7.03,trained_model,69.0,high
+campaign,Brand Search,60,173371.98,101595.98,245147.98,5.3,3.13,7.55,trained_model,82.8,medium
+campaign,Brand Search,90,267977.44,129299.12,406655.77,5.28,2.65,8.35,trained_model,103.5,medium
+campaign,Cart Retargeting,30,46210.48,30267.87,62153.1,3.01,1.95,3.99,trained_model,69.0,high
+campaign,Cart Retargeting,60,95333.29,55865.31,134801.28,3.03,1.8,4.33,trained_model,82.8,medium
+campaign,Cart Retargeting,90,146842.11,70851.32,222832.91,3.04,1.52,4.77,trained_model,103.5,medium
+campaign,Generic Search,30,80981.84,53043.1,108920.57,4.29,2.73,5.61,trained_model,69.0,high
+campaign,Generic Search,60,167831.01,98348.97,237313.04,4.28,2.53,6.11,trained_model,82.8,medium
+campaign,Generic Search,90,262262.94,126541.87,397984.01,4.27,2.17,6.83,trained_model,103.5,medium
+campaign,Lookalike Prospecting,30,37863.45,24800.56,50926.34,2.98,1.88,3.87,trained_model,69.0,high
+campaign,Lookalike Prospecting,60,76961.8,45099.61,108823.98,2.97,1.71,4.14,trained_model,82.8,medium
+campaign,Lookalike Prospecting,90,118716.26,57280.59,180151.92,2.98,1.45,4.56,trained_model,103.5,medium
+campaign,Shopping Best Sellers,30,91611.86,60005.77,123217.95,4.27,2.74,5.63,trained_model,69.0,high
+campaign,Shopping Best Sellers,60,187902.83,110111.06,265694.6,4.26,2.52,6.07,trained_model,82.8,medium
+campaign,Shopping Best Sellers,90,291560.08,140677.74,442442.42,4.21,2.14,6.74,trained_model,103.5,medium

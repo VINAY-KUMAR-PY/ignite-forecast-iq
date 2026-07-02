@@ -192,12 +192,12 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
         }
         revenue_lower_model = GradientBoostingRegressor(
             loss="quantile",
-            alpha=0.10,
+            alpha=0.12,
             **quantile_params,
         )
         revenue_upper_model = GradientBoostingRegressor(
             loss="quantile",
-            alpha=0.90,
+            alpha=0.88,
             **{**quantile_params, "random_state": 440 + horizon},
         )
         roas_model = GradientBoostingRegressor(
@@ -306,8 +306,8 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
         roas_model_weight = 0.60 if roas_holdout_beats_baseline else 0.10
         roas_weight_by_horizon[str(horizon)] = roas_model_weight
         roas_model.fit(X_h, y_roas_h)
-        revenue_lower_model.fit(X_h, y_rev_actual_h)
-        revenue_upper_model.fit(X_h, y_rev_actual_h)
+        revenue_lower_model.fit(X_h, y_rev_h)
+        revenue_upper_model.fit(X_h, y_rev_h)
         fitted_revenue_delta = np.asarray(revenue_model.predict(X_h), dtype=float)
         fitted_revenue = np.expm1(np.log1p(np.maximum(baseline_rev_h, 0.0)) + fitted_revenue_delta)
         fitted_revenue = np.maximum(fitted_revenue, 0.0)
@@ -329,7 +329,8 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
             "revenue_model": revenue_model,
             "revenue_lower_quantile_model": revenue_lower_model,
             "revenue_upper_quantile_model": revenue_upper_model,
-            "revenue_quantile_alpha": {"lower": 0.10, "upper": 0.90},
+            "revenue_quantile_alpha": {"lower": 0.12, "upper": 0.88},
+            "revenue_quantile_target": "log_residual_to_baseline",
             "roas_model": roas_model,
             "revenue_target_transform": "log_residual_to_baseline",
             "revenue_log_bias": clean_number(revenue_log_bias, 6),
@@ -376,7 +377,8 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
             "interval_method": "quantile_regression_augmented_residual",
             "confidence_z": 1.64,
             "horizon_confidence_z": horizon_confidence_z,
-            "minimum_interval_pct": 0.04,
+            "minimum_interval_pct": 0.12,
+            "quantile_interval_cap_pct": 0.50,
             "horizon_interval_multiplier": (
                 LOW_SAMPLE_HORIZON_INTERVAL_MULTIPLIER
                 if low_sample_training

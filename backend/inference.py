@@ -209,8 +209,11 @@ def trained_forecast_segment(
     planned_budgets: dict[str, float] | None = None,
     parent_channel_segment: pd.DataFrame | None = None,
 ) -> dict[str, float]:
-    if len(segment) < int(model.get("preprocessing", {}).get("min_prediction_rows", MIN_TRAINED_MODEL_ROWS)):
-        raise ValueError("segment is too small for trained-model prediction")
+    if segment.empty:
+        raise ValueError("segment is empty for trained-model prediction")
+
+    min_prediction_rows = int(model.get("preprocessing", {}).get("min_prediction_rows", MIN_TRAINED_MODEL_ROWS))
+    thin_segment = len(segment) < min_prediction_rows
 
     maps = model.get("preprocessing", {}).get("category_maps") or {}
     features = segment_feature_frame(segment, horizon, level, segment_name, maps, planned_budgets)
@@ -244,6 +247,8 @@ def trained_forecast_segment(
     if baseline_revenue > 0:
         trained_revenue = min(max(trained_revenue, baseline_revenue * 0.5), baseline_revenue * 2.5)
         revenue_weight = _horizon_model_weight(model, "revenue_model_weight", horizon, 0.25)
+        if thin_segment:
+            revenue_weight *= _thin_segment_weight_multiplier(len(segment), min_prediction_rows)
         expected_revenue = (trained_revenue * revenue_weight) + (baseline_revenue * (1 - revenue_weight))
     else:
         expected_revenue = max(0.0, trained_revenue)
@@ -252,6 +257,8 @@ def trained_forecast_segment(
     expected_roas = min(max(trained_roas, 0.0), roas_guard)
     if baseline_roas > 0:
         roas_weight = _horizon_model_weight(model, "roas_model_weight", horizon, 0.40)
+        if thin_segment:
+            roas_weight *= _thin_segment_weight_multiplier(len(segment), min_prediction_rows)
         expected_roas = (expected_roas * roas_weight) + (baseline_roas * (1 - roas_weight))
 
     confidence = model.get("confidence") or {}
@@ -262,7 +269,7 @@ def trained_forecast_segment(
     )
     z = horizon_confidence_z(confidence, horizon)
     pooled_channel_residuals = False
-    if level == "campaign" and len(segment) < 30 and parent_channel_segment is not None:
+    if level == "campaign" and (len(segment) < 30 or thin_segment) and parent_channel_segment is not None:
         campaign_residuals = revenue_residuals(segment)
         channel_residuals = revenue_residuals(parent_channel_segment)
         pooled_residuals = np.concatenate([campaign_residuals, channel_residuals])
@@ -293,12 +300,31 @@ def trained_forecast_segment(
             q_upper = safe_float(horizon_model["revenue_upper_quantile_model"].predict(features)[0])
             if q_lower > q_upper:
                 q_lower, q_upper = q_upper, q_lower
-            q_lower = max(0.0, q_lower)
-            q_upper = max(q_lower, q_upper)
+            if horizon_model.get("revenue_quantile_target") == "log_residual_to_baseline":
+                q_lower_revenue = safe_float(
+                    np.expm1(math.log1p(max(baseline_revenue, 0.0)) + q_lower + safe_float(horizon_model.get("revenue_log_bias"), 0.0))
+                )
+                q_upper_revenue = safe_float(
+                    np.expm1(math.log1p(max(baseline_revenue, 0.0)) + q_upper + safe_float(horizon_model.get("revenue_log_bias"), 0.0))
+                )
+                q_lower_revenue = max(0.0, q_lower_revenue)
+                q_upper_revenue = max(q_lower_revenue, q_upper_revenue)
+                revenue_weight = _horizon_model_weight(model, "revenue_model_weight", horizon, 0.25)
+                if thin_segment:
+                    revenue_weight *= _thin_segment_weight_multiplier(len(segment), min_prediction_rows)
+                q_lower = (q_lower_revenue * revenue_weight) + (baseline_revenue * (1 - revenue_weight))
+                q_upper = (q_upper_revenue * revenue_weight) + (baseline_revenue * (1 - revenue_weight))
+            else:
+                q_lower = max(0.0, q_lower)
+                q_upper = max(q_lower, q_upper)
             quantile_half_width = max(expected_revenue - q_lower, q_upper - expected_revenue, 0.0)
-            interval = max(interval, quantile_half_width)
+            quantile_cap = expected_revenue * safe_float(confidence.get("quantile_interval_cap_pct"), 0.50)
+            if thin_segment:
+                quantile_cap *= 1.25
+            interval = max(interval, min(quantile_half_width, quantile_cap))
         except Exception as exc:
             log(f"Quantile interval fallback for {level}:{segment_name}:{horizon}d - {type(exc).__name__}: {exc}")
+    interval *= _segment_interval_multiplier(level, len(segment), min_prediction_rows, thin_segment)
     lower = max(0.0, expected_revenue - interval)
     upper = max(lower, expected_revenue + interval)
     if planned_budgets:
@@ -318,9 +344,14 @@ def trained_forecast_segment(
     else:
         expected_roas = min(max(expected_roas, lower_roas), upper_roas)
     width_pct = safe_ratio(upper - lower, expected_revenue) * 100 if expected_revenue > 0 else 0.0
-    confidence_label = roas_confidence
-    if pooled_channel_residuals and width_pct > 35:
-        confidence_label = THIN_CAMPAIGN_CONFIDENCE
+    confidence_label = roas_confidence or _trained_confidence_label(
+        level=level,
+        history_days=len(segment),
+        width_pct=width_pct,
+        horizon_model=horizon_model,
+        thin_segment=thin_segment,
+        pooled_channel_residuals=pooled_channel_residuals,
+    )
     return {
         "expected_revenue": clean_number(expected_revenue),
         "lower_revenue": clean_number(lower),
@@ -336,6 +367,54 @@ def _horizon_model_weight(model: dict[str, Any], key: str, horizon: int, default
     horizon_weights = confidence.get(f"{key}_by_horizon") or {}
     value = horizon_weights.get(str(horizon), confidence.get(key, default))
     return min(0.8, max(0.0, safe_float(value, default)))
+
+def _thin_segment_weight_multiplier(history_days: int, min_prediction_rows: int) -> float:
+    """Shrink trained-model influence for sparse segments instead of hard fallback."""
+    if min_prediction_rows <= 0:
+        return 0.25
+    ratio = safe_float(history_days) / float(min_prediction_rows)
+    return min(0.65, max(0.15, ratio * 0.55))
+
+def _trained_confidence_label(
+    *,
+    level: str,
+    history_days: int,
+    width_pct: float,
+    horizon_model: dict[str, Any],
+    thin_segment: bool,
+    pooled_channel_residuals: bool,
+) -> str:
+    """Translate model diagnostics into high/medium/low planning confidence."""
+    cv_r2 = safe_float(horizon_model.get("revenue_cv_r2"), 0.0)
+    holdout_beats = bool(horizon_model.get("revenue_holdout_beats_baseline"))
+    if thin_segment:
+        if pooled_channel_residuals and history_days >= 3 and width_pct <= 120:
+            return "medium"
+        return "low"
+    if history_days >= 90 and width_pct <= 75 and cv_r2 >= 0.10 and holdout_beats:
+        return "high"
+    if history_days >= 30 and width_pct <= 125 and cv_r2 >= 0.0:
+        return "medium"
+    return "low"
+
+def _segment_interval_multiplier(
+    level: str,
+    history_days: int,
+    min_prediction_rows: int,
+    thin_segment: bool,
+) -> float:
+    """Differentiate uncertainty by aggregation level and history depth."""
+    level_factor = {
+        "overall": 1.00,
+        "channel": 1.05,
+        "campaign_type": 1.10,
+        "campaign": 1.15,
+    }.get(level, 1.10)
+    if thin_segment:
+        level_factor += 0.12
+    if min_prediction_rows > 0 and history_days < min_prediction_rows * 2:
+        level_factor += 0.06
+    return min(1.35, max(0.95, level_factor))
 
 def _monotonic_interval_multipliers(confidence: dict[str, Any]) -> dict[str, float]:
     multipliers = confidence.get("horizon_interval_multiplier") or DEFAULT_HORIZON_INTERVAL_MULTIPLIER
@@ -490,9 +569,9 @@ def sanitize_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
             upper_roas = expected_roas
         width_pct = clean_number(((upper - lower) / expected) * 100 if expected > 0 else 0.0)
         confidence = str(row.get("forecast_confidence") or "")
-        if confidence == THIN_CAMPAIGN_CONFIDENCE:
+        if confidence in {"high", "medium", "low", THIN_CAMPAIGN_CONFIDENCE, ROAS_NOT_COMPUTABLE_CONFIDENCE}:
             pass
-        elif confidence != ROAS_NOT_COMPUTABLE_CONFIDENCE:
+        else:
             confidence = "high" if width_pct < 30 else "medium" if width_pct <= 60 else "low"
         clean_rows.append(
             {

@@ -196,6 +196,19 @@ def test_run_sh_handles_heldout_style_schema_compatible_data():
         assert len(df) >= 12
 
 
+def test_run_sh_fixture_fallback_rate_stays_under_half():
+    """Small OOD segments should use shrunken trained estimates more often than fallback."""
+    repo_root = Path(__file__).resolve().parents[1]
+    data_dir = repo_root / "data" / "fixtures"
+    with tempfile.TemporaryDirectory() as tmp:
+        output = Path(tmp) / "predictions.csv"
+        result = _run_submission_command(repo_root, data_dir, output)
+        assert result.returncode == 0, result.stdout + result.stderr
+        df = _assert_valid_predictions(output)
+        fallback_rate = df["model_type"].astype(str).eq("safe_baseline_fallback").mean()
+        assert fallback_rate < 0.50, f"fallback_rate={fallback_rate:.2%}"
+
+
 def test_run_sh_edge_cases_exit_without_traceback():
     repo_root = Path(__file__).resolve().parents[1]
     cases: list[tuple[str, Callable[[Path], None]]] = []

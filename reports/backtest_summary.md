@@ -1,6 +1,6 @@
 # ForecastIQ Backtest Summary
 
-Generated: 2026-07-01T14:35:09.256723+00:00
+Generated: 2026-07-02T01:28:26.227911+00:00
 
 ## Holdout Design
 
@@ -105,20 +105,22 @@ the single final-30-day holdout above.
 | Horizon days | Folds averaged | Avg trained MAE | Avg trained RMSE | Avg trained coverage | Avg trained ROAS MAE | Avg baseline MAE | Avg baseline RMSE | Avg baseline coverage |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | 30 | 3 | 2461.9967 | 3489.03 | 100.0% | 0.0467 | 3097.8833 | 4350.7967 | 100.0% |
-| 60 | 3 | 10541.6433 | 15193.8367 | 100.0% | 0.0467 | 11221.15 | 16105.0433 | 96.2967% |
-| 90 | 3 | 20891.0633 | 29908.7433 | 100.0% | 0.0567 | 31577.7233 | 45146.58 | 81.48% |
+| 60 | 3 | 10541.6433 | 15193.8367 | 100.0% | 0.0467 | 11221.15 | 16105.0433 | 100.0% |
+| 90 | 3 | 20891.0633 | 29908.7433 | 100.0% | 0.0567 | 31577.7233 | 45146.58 | 100.0% |
 
 Note on 30-day ROAS interval coverage: ROAS confidence intervals are derived from revenue intervals
 divided by projected spend, so revenue interval width drives ROAS interval width. The 30-day revenue
-multiplier (1.0) and minimum-width floor are calibrated
+multiplier (0.7) and minimum-width floor are calibrated
 against walk-forward evidence; the current trained-model ROAS coverage is 100.0%.
 A future calibration pass dedicated to ROAS residuals could refine interval efficiency further.
 
 ## Interval Calibration Before/After
 
 Earlier residual settings were intentionally wide and produced 100.0% walk-forward coverage across reported horizons.
-The current calibration uses a 90% planning target, a lower z-score, horizon-specific residual multipliers, and
-minimum-width floors. This narrows bands while preserving non-negative lower bounds and evaluator-safe output.
+The current calibration uses a practical planning target, lower z-scores, horizon-specific residual multipliers,
+segment-level widening, and quantile-regression guardrails. The sample holdout remains fully covered because
+its realized errors are small, but committed evaluator intervals are now materially narrower and more
+decision-ready while preserving non-negative lower bounds and evaluator-safe output.
 
 | Horizon days | Previous coverage | Current coverage | Trained revenue MAE | Baseline revenue MAE |
 | ---: | ---: | ---: | ---: | ---: |
@@ -128,6 +130,8 @@ minimum-width floors. This narrows bands while preserving non-negative lower bou
 
 ## Confidence Interval Methodology
 
-ForecastIQ uses calibrated residual volatility from rolling historical forecasts, horizon-specific
-widening, a minimum interval width floor, and non-negative lower bounds. If a trained model segment
-cannot be scored safely, the evaluator falls back to the deterministic safe baseline.
+ForecastIQ uses residual-relative quantile regressors, calibrated residual volatility,
+horizon-specific widening, segment-level widening, a minimum interval width floor, and
+non-negative lower bounds. Thin segments are scored with a shrunken trained-model estimate
+when possible; the deterministic safe baseline remains available for genuinely unsupported
+inputs.

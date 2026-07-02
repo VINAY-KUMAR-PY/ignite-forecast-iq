@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from time import perf_counter
 import unittest
 from unittest.mock import patch
 
@@ -204,6 +205,39 @@ def test_simulate_and_decision_support_happy_paths(sample_campaign_rows) -> None
     assert payload["optimizer"]["recommendations"]
     assert payload["scenarios"]
     assert payload["channelHealth"]
+
+
+def test_large_frontend_simulator_payload_uses_fast_memory_safe_paths(sample_campaign_rows) -> None:
+    rows = sample_campaign_rows(days=1582)
+    budgets = {"Google Ads": 5000, "Meta Ads": 4200, "Microsoft Ads": 2800}
+    client = TestClient(app)
+
+    started = perf_counter()
+    simulate = client.post("/api/simulate", json={"rows": rows, "horizon": 30, "budgets": budgets})
+    decision = client.post(
+        "/api/decision-support",
+        json={
+            "rows": rows,
+            "horizon": 30,
+            "budgets": budgets,
+            "targetRevenue": 25000,
+            "targetRoas": 3.0,
+        },
+    )
+    spend_curve = client.post(
+        "/api/spend-curve",
+        json={"rows": rows, "channel": "Google Ads", "horizon": 30, "currentBudget": 5000},
+    )
+    elapsed = perf_counter() - started
+
+    assert len(rows) > 4700
+    assert elapsed < 3.0
+    assert simulate.status_code == 200, simulate.text
+    assert decision.status_code == 200, decision.text
+    assert spend_curve.status_code == 200, spend_curve.text
+    assert len(simulate.json()["channels"]) == 3
+    assert decision.json()["optimizer"]["recommendations"]
+    assert spend_curve.json()["curve"]
 
 
 def test_insights_anomalies_and_spend_curve_happy_paths(sample_campaign_rows) -> None:

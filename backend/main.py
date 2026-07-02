@@ -4,6 +4,7 @@ import json
 import logging
 import os
 from pathlib import Path
+from time import perf_counter
 
 import joblib
 from fastapi import FastAPI, Header, HTTPException, Request, Response
@@ -14,10 +15,17 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 from .data_preprocessing import validate_records
-from .decision_support import build_decision_support, compute_driver_evidence, estimate_causal_effects
+from .decision_support import compute_driver_evidence, estimate_causal_effects
 from .anomaly import compute_trend_breaks, detect_anomalies
-from .forecasting import compute_spend_response_curve, forecast_frame, simulate_budgets
+from .forecasting import forecast_frame
 from .gemini import generate_gemini_insights
+from .lightweight_api import (
+    aggregate_channel_summaries,
+    build_lightweight_decision_support,
+    build_lightweight_simulation,
+    build_lightweight_spend_curve,
+    validate_budget_channels,
+)
 from .train import train_evaluator_model
 from .schemas import (
     AnomalyRequest,
@@ -33,6 +41,7 @@ from .schemas import (
     TrainRequest,
     TrainResponse,
     ValidationRequest,
+    ValidationIssue,
     ValidationResponse,
 )
 
@@ -51,6 +60,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 MODEL_DIR = (PROJECT_ROOT / "pickle").resolve()
+LIGHTWEIGHT_ROW_CAP = 1000
 
 app = FastAPI(
     title="AIgnition ForecastIQ API",
@@ -150,6 +160,47 @@ def _validate_budget_channels(frame, budgets: dict[str, float], operation: str) 
         )
 
 
+def _lightweight_bundle(rows, operation: str):
+    """Aggregate frontend simulator rows without pandas/model work."""
+    bundle = aggregate_channel_summaries(rows)
+    if len(rows) > LIGHTWEIGHT_ROW_CAP:
+        rows.clear()
+        logger.info(
+            "%s request exceeded %s rows; raw rows discarded after aggregation",
+            operation,
+            LIGHTWEIGHT_ROW_CAP,
+        )
+    return bundle
+
+
+def _lightweight_validation(bundle) -> ValidationResponse:
+    return ValidationResponse(
+        rows=[],
+        issues=[
+            ValidationIssue(
+                type="info",
+                row=0,
+                message=(
+                    "Frontend simulator endpoints used memory-safe channel aggregates; "
+                    "raw validated rows were discarded after request parsing."
+                ),
+            )
+        ],
+        totalRows=bundle.row_count,
+        validRows=bundle.row_count,
+    )
+
+
+def _log_lightweight_api(operation: str, row_count: int, aggregate_count: int, started: float) -> None:
+    logger.info(
+        "%s memory-safe path used: row_count=%s aggregate_count=%s elapsed_ms=%.1f",
+        operation,
+        row_count,
+        aggregate_count,
+        (perf_counter() - started) * 1000,
+    )
+
+
 def _authorized_training_token(token: str | None) -> None:
     expected = (os.getenv("TRAINING_ADMIN_TOKEN") or "").strip()
     if not expected or token != expected:
@@ -213,13 +264,18 @@ def forecast(request: Request, body: ForecastRequest) -> ForecastResponse:
 @limiter.limit("30/minute")
 def simulate(request: Request, body: SimulationRequest) -> SimulationResponse:
     """Reforecast channel revenue after planned media budget changes."""
-    frame, validation = _validated_frame([row.model_dump() for row in body.rows], "simulation")
-    _validate_budget_channels(frame, body.budgets, "Simulation")
-    result = simulate_budgets(frame, body.horizon, body.budgets)
+    started = perf_counter()
+    bundle = _lightweight_bundle(body.rows, "simulation")
+    try:
+        validate_budget_channels(bundle, body.budgets, "Simulation")
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    result = build_lightweight_simulation(bundle, body.horizon, body.budgets)
+    _log_lightweight_api("simulation", bundle.row_count, bundle.aggregate_count, started)
     return SimulationResponse(
         channels=result["channels"],
         totals=result["totals"],
-        validation=validation,
+        validation=_lightweight_validation(bundle),
         roas_decomposition=result.get("roas_decomposition", []),
     )
 
@@ -228,8 +284,11 @@ def simulate(request: Request, body: SimulationRequest) -> SimulationResponse:
 @limiter.limit("30/minute")
 def spend_curve(request: Request, body: SpendCurveRequest) -> dict:
     """Return channel-level spend response curve and saturation estimate."""
-    frame, _ = _validated_frame([row.model_dump() for row in body.rows], "spend curve")
-    return compute_spend_response_curve(frame, body.channel, int(body.horizon), float(body.current_budget))
+    started = perf_counter()
+    bundle = _lightweight_bundle(body.rows, "spend curve")
+    result = build_lightweight_spend_curve(bundle, body.channel, int(body.horizon), float(body.current_budget))
+    _log_lightweight_api("spend_curve", bundle.row_count, bundle.aggregate_count, started)
+    return result
 
 
 @app.post("/api/anomalies")
@@ -253,17 +312,22 @@ def get_anomalies(request: Request, body: AnomalyRequest) -> dict:
 @limiter.limit("30/minute")
 def decision_support(request: Request, body: DecisionSupportRequest) -> DecisionSupportResponse:
     """Return optimizer, what-if, risk, opportunity and health analytics."""
-    frame, validation = _validated_frame([row.model_dump() for row in body.rows], "decision support")
-    _validate_budget_channels(frame, body.budgets, "Decision support")
-    result = build_decision_support(
-        frame=frame,
+    started = perf_counter()
+    bundle = _lightweight_bundle(body.rows, "decision support")
+    try:
+        validate_budget_channels(bundle, body.budgets, "Decision support")
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    result = build_lightweight_decision_support(
+        bundle=bundle,
         horizon=body.horizon,
         budgets=body.budgets,
         target_revenue=body.targetRevenue,
         target_roas=body.targetRoas,
         scenarios=body.scenarios,
     )
-    return DecisionSupportResponse(**result, validation=validation)
+    _log_lightweight_api("decision_support", bundle.row_count, bundle.aggregate_count, started)
+    return DecisionSupportResponse(**result, validation=_lightweight_validation(bundle))
 
 
 @app.post("/api/insights", response_model=InsightsResponse)

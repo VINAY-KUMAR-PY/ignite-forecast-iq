@@ -279,7 +279,13 @@ def safe_load_model(model_path: str | Path) -> dict[str, Any]:
 
     if is_trained_model_artifact(loaded):
         if sklearn_mismatch_warning and not trained_model_functional_smoke_test(loaded):
-            log(f"{sklearn_mismatch_warning}; functional smoke test failed, using safe baseline")
+            log("")
+            log("=================================================================")
+            log("FORECASTIQ WARNING: SAFE BASELINE FALLBACK WAS USED")
+            log(f"{sklearn_mismatch_warning}; functional smoke test failed.")
+            log("Predictions remain schema-safe, but trained-model scoring was skipped.")
+            log("=================================================================")
+            log("")
             return fallback_model_config("sklearn version incompatible with artifact")
         if sklearn_mismatch_warning:
             log("sklearn version differs but functional smoke test passed; using trained model.")

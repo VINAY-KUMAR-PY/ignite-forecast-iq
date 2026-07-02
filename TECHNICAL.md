@@ -56,6 +56,37 @@ Sample counts reflect the artifact committed at `pickle/model.pkl` version 5
 If a horizon has fewer than the minimum required samples, it is marked
 `fallback_only` instead of training on mismatched target scales.
 
+### Model Artifact Provenance
+
+`pickle/model.pkl` is produced from the committed sample data and deterministic
+training code, not from a hidden notebook. Reproduce the artifact from a clean
+checkout with:
+
+```bash
+python -m pip install -r requirements.txt
+python -m backend.train --data-dir data --model pickle/model.pkl
+python -m backend.predict --data-dir data --model pickle/model.pkl --output output/predictions.csv
+```
+
+Training entry point: `backend/train.py::train_evaluator_model`.
+
+Training data snapshot: `data/sample_campaigns.csv` after schema normalization
+and validation into 2,400 usable campaign rows.
+
+Determinism controls: NumPy seed `42`, stable sorted segment aggregation, fixed
+feature list from `backend/segment_utils.py::FEATURE_COLUMNS`, and fixed
+GradientBoostingRegressor random states per horizon/target.
+
+Artifact environment: Python 3.14.4, pandas 3.0.3, numpy 2.4.6,
+scikit-learn 1.9.0, scipy 1.17.1, joblib 1.5.3, packaging 24.1.
+
+Compatibility evidence: a clean local verification produced bit-for-bit
+identical committed-sample `predictions.csv` under scikit-learn 1.8.0 and
+1.9.0 (`sha256=d5383019dffa4b6d3dae742d3c57a91a98ff53a334742437ec6bf2b9d44a5e7f`,
+54 rows, `model_type=trained_model`). The evaluator CI repeats this check on
+Ubuntu without pip cache. PyPI currently exposes only one 1.9.x release, so CI
+tests the exact build version plus the previous compatible 1.8.x line.
+
 ## Seasonality Handling
 
 ForecastIQ accounts for seasonality at the campaign_type level through both
@@ -276,11 +307,18 @@ PASS offline evaluator: 54 rows ['trained_model']
 PASS causal summary: 3793 bytes
 
 Backend tests:
-130 passed, 1 skipped, 7 warnings in 452.23s
+139 passed, 1 skipped, 7 warnings in 267.25s
 
-Frontend build:
-npm install: up to date, audited 567 packages
-npm run build: vite built successfully in 29.37s
+Frontend validation:
+npm ci: added 566 packages, audited 567 packages
+npm run check: tsc, eslint, and Vite build passed
+npm run test: 1 file passed, 5 tests passed
+npm run test:e2e: 1 Playwright Chromium test passed
+
+Sklearn compatibility:
+scikit-learn 1.8.0 and 1.9.0 produced bit-for-bit identical
+predictions.csv outputs on committed sample data, both with model_type=trained_model.
+See TEST_RESULTS.md for command details and the SHA-256 hash.
 ```
 
 ### Evaluator pipeline verification

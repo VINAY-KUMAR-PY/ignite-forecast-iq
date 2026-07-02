@@ -69,6 +69,35 @@ if [ $PREDICT_EXIT -ne 0 ]; then
   exit $PREDICT_EXIT
 fi
 
+"${PYTHON_CMD[@]}" - "$OUTPUT_PATH" <<'PY'
+import csv
+import sys
+from pathlib import Path
+
+output = Path(sys.argv[1])
+if not output.exists():
+    sys.exit(0)
+
+try:
+    with output.open(newline="", encoding="utf-8") as handle:
+        modes = {
+            str(row.get("model_type") or "").strip()
+            for row in csv.DictReader(handle)
+            if row.get("model_type")
+        }
+except Exception:
+    sys.exit(0)
+
+if "safe_baseline_fallback" in modes:
+    print("", file=sys.stderr)
+    print("=================================================================", file=sys.stderr)
+    print("FORECASTIQ WARNING: SAFE BASELINE FALLBACK WAS USED", file=sys.stderr)
+    print("The trained model did not complete for this evaluator run.", file=sys.stderr)
+    print("Review scikit-learn compatibility, model loading, and input schema logs.", file=sys.stderr)
+    print("=================================================================", file=sys.stderr)
+    print("", file=sys.stderr)
+PY
+
 SUMMARY_PATH="$(dirname "$OUTPUT_PATH")/causal_summary.txt"
 # Co-location contract: causal_summary.txt should live beside predictions.csv.
 if [ ! -f "$SUMMARY_PATH" ] && [ -f "./output/causal_summary.txt" ]; then

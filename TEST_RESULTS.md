@@ -163,3 +163,31 @@ No safe-baseline warning banner was printed.
 
 - The local workstation only has Python 3.14.4 installed. Python 3.11, 3.12, and 3.13 are covered by GitHub Actions via `actions/setup-python`.
 - The new sklearn compatibility CI job runs without pip cache and asserts `model_type=trained_model`, 54 committed-sample rows, and the stable sample CSV SHA-256 above for sklearn 1.8.0 and 1.9.0.
+
+## Current validation addendum: rolling backtest and AI input-safety pass
+
+Generated on: 2026-07-02
+
+Commands:
+
+```bash
+pip install -r requirements.txt
+./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
+pip install -r requirements-app.txt
+python -m pytest -q
+npm install
+npm run check
+npm run test
+python -m pytest tests/ --cov=backend --cov-report=term --cov-report=json --cov-fail-under=90
+```
+
+Results:
+
+```text
+run.sh: PASS, 54 rows, model_type=trained_model, causal_summary.txt written
+pytest -q: 141 passed, 1 skipped, 7 warnings in 189.25s
+npm install: up to date, audited 567 packages; 1 low severity advisory reported by npm
+npm run check: PASS, TypeScript, ESLint, and Vite production build completed
+npm run test: PASS, 1 test file passed, 5 tests passed
+coverage gate: PASS, backend coverage 90.23%, required >=90%
+```

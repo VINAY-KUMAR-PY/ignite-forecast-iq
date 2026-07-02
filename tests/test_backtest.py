@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date
 import unittest
 
 from backend.backtest import run_backtest
@@ -14,7 +15,14 @@ class BacktestReportTests(unittest.TestCase):
             self.assertIn("revenue", metrics)
             self.assertIn("roas", metrics)
             for target in ["revenue", "roas"]:
-                for key in ["mae", "rmse", "mape", "interval_coverage"]:
+                for key in [
+                    "mae",
+                    "rmse",
+                    "mape",
+                    "interval_coverage",
+                    "mean_interval_width",
+                    "mean_interval_width_pct",
+                ]:
                     self.assertIn(key, metrics[target])
                     self.assertGreaterEqual(metrics[target][key], 0)
 
@@ -34,25 +42,39 @@ class BacktestReportTests(unittest.TestCase):
 
         horizons = {item["horizon_days"] for item in report["per_horizon_performance"]}
         self.assertEqual(horizons, {30, 60, 90})
+        successful_window_count = 0
         for item in report["per_horizon_performance"]:
             self.assertGreater(item["fold_count"], 0)
+            successful_window_count += item["fold_count"]
             self.assertGreater(item["segments_evaluated"], 0)
             self.assertIn("model_performance_evidence", item)
             self.assertIn("rolling_origin_average_metrics", item)
-            self.assertGreaterEqual(item["rolling_origin_average_metrics"]["folds_averaged"], 3)
+            self.assertEqual(item["rolling_origin_average_metrics"]["folds_averaged"], item["fold_count"])
             self.assertIn("trained_model_metrics", item["rolling_origin_average_metrics"])
             self.assertIn("safe_baseline_metrics", item["rolling_origin_average_metrics"])
+            successful_folds = [fold for fold in item["folds"] if "error" not in fold]
+            chronological = sorted(successful_folds, key=lambda fold: fold["start_date"])
+            for earlier, later in zip(chronological, chronological[1:]):
+                self.assertLess(
+                    date.fromisoformat(earlier["end_date"]),
+                    date.fromisoformat(later["start_date"]),
+                )
             for fold in item["folds"]:
+                self.assertIn("fold", fold)
                 if "error" in fold:
                     continue
                 self.assertIn("dedicated_training_samples", fold)
                 self.assertIn("fallback_only", fold)
                 self.assertIn("trained_model_metrics", fold)
                 self.assertIn("safe_baseline_metrics", fold)
+                for metrics_name in ["trained_model_metrics", "safe_baseline_metrics"]:
+                    self.assertIn("mean_interval_width_pct", fold[metrics_name]["revenue"])
+                    self.assertIn("mean_interval_width", fold[metrics_name]["roas"])
                 if fold["fallback_only"]:
                     self.assertLess(fold["dedicated_training_samples"], 8)
                 else:
                     self.assertGreaterEqual(fold["dedicated_training_samples"], 8)
+        self.assertGreaterEqual(successful_window_count, 3)
 
 
 if __name__ == "__main__":

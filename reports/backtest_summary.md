@@ -1,11 +1,12 @@
 # ForecastIQ Backtest Summary
 
-Generated: 2026-07-02T01:28:26.227911+00:00
+Generated: 2026-07-02T13:12:33.813340+00:00
 
 ## Holdout Design
 
 - Primary training period: all valid sample rows before the final 30 days
 - Primary test period: final 30 days
+- Rolling-origin design: up to three non-overlapping holdout windows per horizon
 - Train rows: 2160
 - Test rows: 240
 - Segments evaluated: 18
@@ -33,17 +34,17 @@ Generated: 2026-07-02T01:28:26.227911+00:00
 
 ### Revenue
 
-| Model | MAE | RMSE | MAPE | Interval coverage |
-| --- | ---: | ---: | ---: | ---: |
-| Trained model | 1723.79 | 2226.8 | 2.26% | 100.0% |
-| Safe baseline | 2185.89 | 2763.76 | 2.78% | 100.0% |
+| Model | MAE | RMSE | MAPE | Interval coverage | Mean interval width | Mean interval width % |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Trained model | 1723.79 | 2226.8 | 2.26% | 100.0% | 68984.645 | 66.5% |
+| Safe baseline | 2185.89 | 2763.76 | 2.78% | 100.0% | 64318.6094 | 60.0% |
 
 ### ROAS
 
-| Model | MAE | RMSE | MAPE | Interval coverage |
-| --- | ---: | ---: | ---: | ---: |
-| Trained model | 0.04 | 0.06 | 1.05% | 100.0% |
-| Safe baseline | 0.05 | 0.07 | 1.44% | 100.0% |
+| Model | MAE | RMSE | MAPE | Interval coverage | Mean interval width | Mean interval width % |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Trained model | 0.04 | 0.06 | 1.05% | 100.0% | 2.7417 | 66.25% |
+| Safe baseline | 0.05 | 0.07 | 1.44% | 100.0% | 2.4828 | 60.04% |
 
 ## Trained vs Baseline
 
@@ -90,11 +91,11 @@ Recommendation: Keep roas_model_weight=0.60; it has the best ROAS RMSE/MAE balan
 
 ## Walk-Forward Per-Horizon Performance
 
-| Horizon days | Folds | Segments | Trained revenue MAE | Trained revenue RMSE | Trained revenue MAPE | Trained revenue coverage | Trained ROAS MAE | Trained ROAS RMSE | Trained ROAS coverage | Baseline MAE | Baseline RMSE | Revenue MAE winner |
-| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| 30 | 3 | 54 | 2462.0 | 4406.72 | 2.66% | 100.0% | 0.05 | 0.06 | 100.0% | 3097.88 | 4501.73 | Trained model |
-| 60 | 3 | 54 | 10541.64 | 18671.63 | 5.04% | 100.0% | 0.05 | 0.06 | 100.0% | 11221.15 | 18229.52 | Trained model |
-| 90 | 3 | 54 | 20891.06 | 33520.44 | 6.86% | 100.0% | 0.06 | 0.07 | 100.0% | 31577.72 | 49786.14 | Trained model |
+| Horizon days | Folds | Segments | Trained revenue MAE | Trained revenue RMSE | Trained revenue MAPE | Trained revenue coverage | Trained revenue width % | Trained ROAS MAE | Trained ROAS RMSE | Trained ROAS coverage | Trained ROAS width | Baseline MAE | Baseline RMSE | Baseline width % | Revenue MAE winner |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| 30 | 3 | 54 | 2462.0 | 4406.72 | 2.66% | 100.0% | 66.5% | 0.05 | 0.06 | 100.0% | 2.8567 | 3097.88 | 4501.73 | 60.0% | Trained model |
+| 60 | 3 | 54 | 19904.33 | 32970.75 | 10.56% | 100.0% | 79.8% | 0.04 | 0.05 | 100.0% | 3.3265 | 17906.95 | 29506.8 | 72.0% | Safe baseline |
+| 90 | 2 | 36 | 37576.1 | 68255.03 | 14.02% | 100.0% | 99.75% | 0.09 | 0.11 | 100.0% | 4.4858 | 22141.94 | 34041.4 | 90.0% | Safe baseline |
 
 ## Rolling-Origin Average Metrics
 
@@ -102,11 +103,11 @@ These metrics average fold-level scores across the three rolling origins for eac
 than pooling every segment row first. This makes the rolling-origin evidence easier to compare with
 the single final-30-day holdout above.
 
-| Horizon days | Folds averaged | Avg trained MAE | Avg trained RMSE | Avg trained coverage | Avg trained ROAS MAE | Avg baseline MAE | Avg baseline RMSE | Avg baseline coverage |
-| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 30 | 3 | 2461.9967 | 3489.03 | 100.0% | 0.0467 | 3097.8833 | 4350.7967 | 100.0% |
-| 60 | 3 | 10541.6433 | 15193.8367 | 100.0% | 0.0467 | 11221.15 | 16105.0433 | 100.0% |
-| 90 | 3 | 20891.0633 | 29908.7433 | 100.0% | 0.0567 | 31577.7233 | 45146.58 | 100.0% |
+| Horizon days | Folds averaged | Avg trained MAE | Avg trained RMSE | Avg trained coverage | Avg trained width % | Avg trained ROAS MAE | Avg baseline MAE | Avg baseline RMSE | Avg baseline coverage | Avg baseline width % |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 30 | 3 | 2461.9967 | 3489.03 | 100.0% | 66.5% | 0.0467 | 3097.8833 | 4350.7967 | 100.0% | 60.0% |
+| 60 | 3 | 19904.3333 | 28590.1733 | 100.0% | 79.8% | 0.0433 | 17906.95 | 25640.2433 | 100.0% | 72.0% |
+| 90 | 2 | 37576.105 | 52391.055 | 100.0% | 99.75% | 0.085 | 22141.945 | 31514.105 | 100.0% | 90.0% |
 
 Note on 30-day ROAS interval coverage: ROAS confidence intervals are derived from revenue intervals
 divided by projected spend, so revenue interval width drives ROAS interval width. The 30-day revenue
@@ -125,8 +126,8 @@ decision-ready while preserving non-negative lower bounds and evaluator-safe out
 | Horizon days | Previous coverage | Current coverage | Trained revenue MAE | Baseline revenue MAE |
 | ---: | ---: | ---: | ---: | ---: |
 | 30 | 100.0% | 100.0% | 2462.0 | 3097.88 |
-| 60 | 100.0% | 100.0% | 10541.64 | 11221.15 |
-| 90 | 100.0% | 100.0% | 20891.06 | 31577.72 |
+| 60 | 100.0% | 100.0% | 19904.33 | 17906.95 |
+| 90 | 100.0% | 100.0% | 37576.1 | 22141.94 |
 
 ## Confidence Interval Methodology
 
@@ -135,3 +136,12 @@ horizon-specific widening, segment-level widening, a minimum interval width floo
 non-negative lower bounds. Thin segments are scored with a shrunken trained-model estimate
 when possible; the deterministic safe baseline remains available for genuinely unsupported
 inputs.
+
+
+## Fold Errors
+
+The following fold(s) could not complete due to insufficient training data:
+
+| Horizon | Start date | End date | Error |
+| ---: | --- | --- | --- |
+| 90 | 2025-09-21 | 2025-12-19 | ValueError: not enough rolling forecast samples to train evaluator model |

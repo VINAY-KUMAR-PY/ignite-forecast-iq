@@ -47,11 +47,22 @@ def _round(value: float, digits: int = 4) -> float:
 
 def _target_metrics(rows: list[dict[str, Any]], prefix: str, target: str) -> dict[str, float]:
     if not rows:
-        return {"mae": 0.0, "rmse": 0.0, "mape": 0.0, "interval_coverage": 0.0}
+        return {
+            "mae": 0.0,
+            "rmse": 0.0,
+            "mape": 0.0,
+            "interval_coverage": 0.0,
+            "mean_interval_width": 0.0,
+            "mean_interval_width_pct": 0.0,
+        }
     actual = np.asarray([_safe_float(row[f"actual_{target}"]) for row in rows], dtype=float)
     predicted = np.asarray([_safe_float(row[f"{prefix}_expected_{target}"]) for row in rows], dtype=float)
+    lower = np.asarray([_safe_float(row[f"{prefix}_lower_{target}"]) for row in rows], dtype=float)
+    upper = np.asarray([_safe_float(row[f"{prefix}_upper_{target}"]) for row in rows], dtype=float)
     errors = actual - predicted
     denom = np.maximum(np.abs(actual), 1.0)
+    width = np.maximum(upper - lower, 0.0)
+    width_denom = np.maximum(np.abs(predicted), 1.0)
     coverage = [
         _safe_float(row[f"{prefix}_lower_{target}"])
         <= _safe_float(row[f"actual_{target}"])
@@ -63,6 +74,8 @@ def _target_metrics(rows: list[dict[str, Any]], prefix: str, target: str) -> dic
         "rmse": _round(float(np.sqrt(np.mean(errors**2))), 2),
         "mape": _round(float(np.mean(np.abs(errors) / denom) * 100), 2),
         "interval_coverage": _round(float(np.mean(coverage) * 100), 2),
+        "mean_interval_width": _round(float(np.mean(width)), 4),
+        "mean_interval_width_pct": _round(float(np.mean(width / width_denom) * 100), 2),
     }
 
 
@@ -361,7 +374,7 @@ def _walk_forward_horizon(frame: pd.DataFrame, horizon: int) -> dict[str, Any]:
     max_date = frame["date_dt"].max()
     folds: list[dict[str, Any]] = []
     rows: list[dict[str, Any]] = []
-    for offset in (0, 30, 60):
+    for fold_index, offset in enumerate((0, horizon, horizon * 2), start=1):
         start = max_date - pd.Timedelta(days=horizon - 1 + offset)
         end = start + pd.Timedelta(days=horizon - 1)
         train_frame = frame[frame["date_dt"] < start].drop(columns=["date_dt"]).copy()
@@ -373,6 +386,7 @@ def _walk_forward_horizon(frame: pd.DataFrame, horizon: int) -> dict[str, Any]:
         except Exception as exc:
             folds.append(
                 {
+                    "fold": fold_index,
                     "start_date": start.strftime("%Y-%m-%d"),
                     "end_date": end.strftime("%Y-%m-%d"),
                     "error": f"{type(exc).__name__}: {exc}",
@@ -383,6 +397,7 @@ def _walk_forward_horizon(frame: pd.DataFrame, horizon: int) -> dict[str, Any]:
         fallback_horizons = (scored["model"].get("confidence") or {}).get("fallback_horizons", [])
         folds.append(
             {
+                "fold": fold_index,
                 "start_date": start.strftime("%Y-%m-%d"),
                 "end_date": end.strftime("%Y-%m-%d"),
                 "train_rows": scored["train_rows"],
@@ -442,6 +457,8 @@ def _average_fold_metrics(folds: list[dict[str, Any]]) -> dict[str, Any]:
             "rmse": average_metric(prefix, target, "rmse"),
             "mape": average_metric(prefix, target, "mape"),
             "interval_coverage": average_metric(prefix, target, "interval_coverage"),
+            "mean_interval_width": average_metric(prefix, target, "mean_interval_width"),
+            "mean_interval_width_pct": average_metric(prefix, target, "mean_interval_width_pct"),
         }
 
     trained_revenue = target_metrics("trained_model", "revenue")
@@ -569,7 +586,11 @@ def write_report_files(report: dict[str, Any], json_path: str | Path, md_path: s
 
 
 def _metric_row(label: str, metrics: dict[str, float]) -> str:
-    return f'| {label} | {metrics["mae"]} | {metrics["rmse"]} | {metrics["mape"]}% | {metrics["interval_coverage"]}% |'
+    return (
+        f'| {label} | {metrics["mae"]} | {metrics["rmse"]} | {metrics["mape"]}% | '
+        f'{metrics["interval_coverage"]}% | {metrics["mean_interval_width"]} | '
+        f'{metrics["mean_interval_width_pct"]}% |'
+    )
 
 
 def _winner_label(value: str) -> str:
@@ -626,9 +647,12 @@ def _summary_markdown(report: dict[str, Any]) -> str:
         f'{item["trained_model_metrics"]["mae"]} | '
         f'{item["trained_model_metrics"]["rmse"]} | {item["trained_model_metrics"]["mape"]}% | '
         f'{item["trained_model_metrics"]["interval_coverage"]}% | '
+        f'{item["trained_model_metrics"]["mean_interval_width_pct"]}% | '
         f'{item["trained_model_metrics"]["roas_mae"]} | {item["trained_model_metrics"]["roas_rmse"]} | '
         f'{item["trained_model_metrics"]["roas_interval_coverage"]}% | '
+        f'{item["trained_model_metrics"]["roas"]["mean_interval_width"]} | '
         f'{item["safe_baseline_metrics"]["mae"]} | {item["safe_baseline_metrics"]["rmse"]} | '
+        f'{item["safe_baseline_metrics"]["mean_interval_width_pct"]}% | '
         f'{_winner_label(item["model_performance_evidence"]["revenue"]["winner"])} |'
         for item in report["per_horizon_performance"]
     )
@@ -637,10 +661,12 @@ def _summary_markdown(report: dict[str, Any]) -> str:
         f'{item["rolling_origin_average_metrics"]["trained_model_metrics"]["mae"]} | '
         f'{item["rolling_origin_average_metrics"]["trained_model_metrics"]["rmse"]} | '
         f'{item["rolling_origin_average_metrics"]["trained_model_metrics"]["interval_coverage"]}% | '
+        f'{item["rolling_origin_average_metrics"]["trained_model_metrics"]["mean_interval_width_pct"]}% | '
         f'{item["rolling_origin_average_metrics"]["trained_model_metrics"]["roas_mae"]} | '
         f'{item["rolling_origin_average_metrics"]["safe_baseline_metrics"]["mae"]} | '
         f'{item["rolling_origin_average_metrics"]["safe_baseline_metrics"]["rmse"]} | '
-        f'{item["rolling_origin_average_metrics"]["safe_baseline_metrics"]["interval_coverage"]}% |'
+        f'{item["rolling_origin_average_metrics"]["safe_baseline_metrics"]["interval_coverage"]}% | '
+        f'{item["rolling_origin_average_metrics"]["safe_baseline_metrics"]["mean_interval_width_pct"]}% |'
         for item in report["per_horizon_performance"]
     )
     horizon_30 = next(
@@ -663,6 +689,7 @@ Generated: {report["generated_at"]}
 
 - Primary training period: all valid sample rows before the final {report["holdout_days"]} days
 - Primary test period: final {report["holdout_days"]} days
+- Rolling-origin design: up to three non-overlapping holdout windows per horizon
 - Train rows: {report["train_rows"]}
 - Test rows: {report["test_rows"]}
 - Segments evaluated: {report["segments_evaluated"]}
@@ -690,15 +717,15 @@ Generated: {report["generated_at"]}
 
 ### Revenue
 
-| Model | MAE | RMSE | MAPE | Interval coverage |
-| --- | ---: | ---: | ---: | ---: |
+| Model | MAE | RMSE | MAPE | Interval coverage | Mean interval width | Mean interval width % |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
 {_metric_row("Trained model", trained)}
 {_metric_row("Safe baseline", safe)}
 
 ### ROAS
 
-| Model | MAE | RMSE | MAPE | Interval coverage |
-| --- | ---: | ---: | ---: | ---: |
+| Model | MAE | RMSE | MAPE | Interval coverage | Mean interval width | Mean interval width % |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
 {_metric_row("Trained model", trained_roas)}
 {_metric_row("Safe baseline", safe_roas)}
 
@@ -737,8 +764,8 @@ Recommendation: {report["roas_blend_weight_recommendation"]["recommendation"]}
 
 ## Walk-Forward Per-Horizon Performance
 
-| Horizon days | Folds | Segments | Trained revenue MAE | Trained revenue RMSE | Trained revenue MAPE | Trained revenue coverage | Trained ROAS MAE | Trained ROAS RMSE | Trained ROAS coverage | Baseline MAE | Baseline RMSE | Revenue MAE winner |
-| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| Horizon days | Folds | Segments | Trained revenue MAE | Trained revenue RMSE | Trained revenue MAPE | Trained revenue coverage | Trained revenue width % | Trained ROAS MAE | Trained ROAS RMSE | Trained ROAS coverage | Trained ROAS width | Baseline MAE | Baseline RMSE | Baseline width % | Revenue MAE winner |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 {horizon_rows}
 
 ## Rolling-Origin Average Metrics
@@ -747,8 +774,8 @@ These metrics average fold-level scores across the three rolling origins for eac
 than pooling every segment row first. This makes the rolling-origin evidence easier to compare with
 the single final-30-day holdout above.
 
-| Horizon days | Folds averaged | Avg trained MAE | Avg trained RMSE | Avg trained coverage | Avg trained ROAS MAE | Avg baseline MAE | Avg baseline RMSE | Avg baseline coverage |
-| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Horizon days | Folds averaged | Avg trained MAE | Avg trained RMSE | Avg trained coverage | Avg trained width % | Avg trained ROAS MAE | Avg baseline MAE | Avg baseline RMSE | Avg baseline coverage | Avg baseline width % |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 {rolling_average_rows}
 
 Note on 30-day ROAS interval coverage: ROAS confidence intervals are derived from revenue intervals

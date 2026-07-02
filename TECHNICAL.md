@@ -25,6 +25,25 @@ residual correction over the baseline rather than raw revenue. At inference time
 This residual-correction architecture means the model needs fewer samples to
 generalize and degrades gracefully to the baseline when ML evidence is weak.
 
+### Model Selection
+
+ForecastIQ intentionally uses different model choices for the live product and
+offline evaluator because the evaluator must run quickly with minimal
+dependencies while the app can afford richer interactive diagnostics.
+
+| Candidate | Decision | Rationale |
+|---|---|---|
+| Plain linear regression / Ridge | Not selected as primary | Useful as a stability benchmark, but too rigid for channel saturation, seasonality, and non-linear spend-response curves. |
+| Prophet / ETS-style time series | Not selected | Good for univariate seasonality, but less natural for multi-channel spend, campaign type, and budget-simulator features. |
+| XGBoost | Selected for live API | Strong non-linear tabular model with feature importance and fast scoring for the dashboard and explainability center. |
+| sklearn GradientBoostingRegressor residual correction | Selected for offline evaluator | Small, joblib-compatible, deterministic under the pinned evaluator runtime, and backtested against the safe baseline in `reports/backtest_summary.md`. |
+| Deterministic safe baseline | Kept as fallback and benchmark | Provides crash-resistant forecasts for malformed, sparse, or unsupported hidden evaluator data and remains the comparison system in rolling-origin reports. |
+
+The rolling-origin backtest now reports point error, coverage, and mean
+interval width for both trained model and baseline. That lets reviewers compare
+not only whether intervals cover actuals, but whether they are sharp enough to
+support budget decisions.
+
 ### Blend Weight Gate
 Revenue and ROAS blend weights are determined by a two-gate holdout test stored
 in the artifact's `confidence` block:
@@ -55,6 +74,24 @@ Sample counts reflect the artifact committed at `pickle/model.pkl` version 5
 
 If a horizon has fewer than the minimum required samples, it is marked
 `fallback_only` instead of training on mismatched target scales.
+
+### Backtest Design
+
+ForecastIQ uses rolling-origin walk-forward validation instead of relying only
+on a single final split. For each horizon, the evaluator scores chronological
+holdout windows against history available before that window. The windows are
+non-overlapping within each horizon, which prevents the same post-period from
+being counted repeatedly. The report records every successful fold and any
+insufficient-history fold explicitly.
+
+This design proves three things that a single split does not:
+
+- the trained model is evaluated on multiple market periods, not only the final
+  campaign month;
+- the safe baseline is measured side-by-side on the same windows, so fallback
+  quality is visible rather than asserted;
+- interval calibration can be judged by both coverage and mean interval width,
+  exposing the sharpness-versus-coverage tradeoff.
 
 ### Model Artifact Provenance
 
@@ -348,11 +385,17 @@ See TEST_RESULTS.md for command details and the SHA-256 hash.
 
 ### Backtest results (walk-forward)
 
-| Horizon | Trained revenue MAPE | Baseline revenue MAPE | Revenue interval coverage | ROAS interval coverage |
-|---:|---:|---:|---:|---:|
-| 30 days | 2.66% | 3.15% | 100.0% | 100.0% |
-| 60 days | 5.04% | 5.37% | 100.0% | 100.0% |
-| 90 days | 6.86% | 10.30% | 100.0% | 100.0% |
+| Horizon | Successful folds | Trained revenue MAPE | Baseline revenue MAPE | Revenue coverage | Mean revenue interval width |
+|---:|---:|---:|---:|---:|---:|
+| 30 days | 3 | 2.66% | 3.15% | 100.0% | 66.5% |
+| 60 days | 3 | 10.56% | 9.54% | 100.0% | 79.8% |
+| 90 days | 2 | 14.02% | 7.89% | 100.0% | 99.75% |
+
+The third attempted 90-day fold is reported as an insufficient-history fold in
+`reports/backtest_summary.md` rather than being silently dropped. Coverage
+remains high on the sample data; mean interval width is reported beside
+coverage so reviewers can see the current sharpness-versus-coverage tradeoff
+without changing the evaluator forecast contract.
 
 ### Known gaps
 
@@ -372,6 +415,17 @@ budget recommendations is assembled and sent to Gemini via the Google Gen AI
 SDK with a senior-analyst system prompt. The response is parsed into a typed
 `InsightsResponse` Pydantic object. Retry logic handles rate limits, timeouts,
 and transient SDK errors with exponential backoff.
+
+**Untrusted CSV text guardrail**: campaign names, channel names, anomaly labels,
+and any other uploaded text are treated as data, not instructions. Before the
+summary is serialized into the Gemini prompt, `backend/gemini.py` deep-sanitizes
+string fields and replaces instruction-like phrases such as "ignore previous
+instructions" with a neutral marker. The prompt also explicitly tells Gemini
+never to follow instructions embedded inside uploaded business data.
+`tests/test_gemini_parsing.py::test_prompt_sanitizes_instruction_like_uploaded_text`
+and
+`tests/test_gemini_parsing.py::test_malicious_uploaded_text_does_not_break_structured_contract`
+cover this behavior.
 
 **Live verification** (`scripts/verify_gemini_live.py`): when `GEMINI_API_KEY`
 is configured, the verifier builds a real forecast and causal evidence summary

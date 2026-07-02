@@ -262,7 +262,20 @@ jobs:
       - name: Run tests with coverage
         run: |
           pip install pytest-cov
-          pytest tests/ --cov=backend --cov-report=term-missing --cov-fail-under=90
+          pytest tests/ --cov=backend --cov-report=term-missing --cov-report=json --cov-fail-under=90
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          coverage = json.loads(Path("coverage.json").read_text())
+          total = coverage["totals"]["percent_covered_display"]
+          print(f"Backend coverage: {total}%")
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as handle:
+              handle.write("## Backend coverage\n\n")
+              handle.write(f"- Overall backend coverage: **{total}%**\n")
+              handle.write("- Required gate: **90%** via `--cov-fail-under=90`\n")
+          PY
 
       - name: Verify committed trained artifact
         run: |

@@ -372,9 +372,9 @@ Frontend validation:
 npm install: up to date, audited 567 packages in 2s; one low-severity
 dev-server advisory remains
 npm run check: tsc, eslint, and Vite build passed; Vite transformed 2,837
-modules and built in 8.23s
-npm run test: Vitest passed 1 file and 5 tests in 4.24s
-npm run build: Vite transformed 2,837 modules and built in 8.05s
+modules and built in 8.19s
+npm run test: Vitest passed 1 file and 5 tests in 4.00s
+npm run build: Vite transformed 2,837 modules and built in 7.21s
 
 Sklearn zero-fallback guard:
 the CI job `exact-sklearn-zero-fallback` installs the pinned evaluator runtime

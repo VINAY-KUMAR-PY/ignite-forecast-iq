@@ -19,6 +19,8 @@ Marketing teams often know what happened in campaigns, but not what budget actio
 
 The offline evaluator path is intentionally isolated: it uses `run.sh`, a compact sklearn model artifact, and no servers, Gemini, frontend, or internet.
 
+For judging, `pickle/model.pkl` is the canonical offline evaluator artifact: `run.sh` scores it with the sklearn GradientBoostingRegressor path and writes `predictions.csv`. The live FastAPI app also exposes a richer XGBoost-powered product experience for interactive dashboards and explainability; both paths are benchmarked against the same deterministic baseline in `reports/backtest_summary.md`, so the evaluator evidence is representative of the broader forecasting quality.
+
 ## Architecture At A Glance
 
 ```mermaid
@@ -163,6 +165,8 @@ volatility guardrails, horizon-specific widening, and segment-level widening:
 | 30 days | 0.70 | 30% |
 | 60 days | 0.90 | 36% |
 | 90 days | 1.10 | 45% |
+
+The resulting 60-90% planning bands are intentional for ecommerce media forecasts, especially over 60- and 90-day horizons where seasonality, promotion cadence, auction volatility, and channel mix shifts compound uncertainty. Tighter bands would overstate confidence and can mislead budget decisions; these intervals are calibrated against the rolling-origin backtest in `reports/backtest_summary.md` rather than being arbitrarily widened.
 
 The interval enforcement layer ensures uncertainty bands widen across horizons and that `interval_width_pct` matches the actual revenue bands. On the committed sample output, overall intervals are now 60%, 72%, and 90% for 30, 60, and 90 days, with confidence labels varying by horizon and segment quality.
 

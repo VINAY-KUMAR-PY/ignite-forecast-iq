@@ -25,6 +25,17 @@ residual correction over the baseline rather than raw revenue. At inference time
 This residual-correction architecture means the model needs fewer samples to
 generalize and degrades gracefully to the baseline when ML evidence is weak.
 
+### Offline Budget Saturation
+
+The optional fourth `run.sh` argument (`--budget-json` internally) uses the same
+business assumption as the live simulator: media response is not infinitely
+linear. `backend/segment_utils.py::spend_response_multiplier` keeps planned
+spend close to linear up to roughly 1.5x recent channel spend, then applies a
+concave elasticity curve so marginal revenue declines as budgets become
+aggressive. When spend is reduced, revenue falls less than spend up to a capped
+efficiency gain, so ROAS can improve under lower budget scenarios. CI now checks
+that 10x Google Ads spend produces lower ROAS than a conservative budget.
+
 ### Model Selection
 
 ForecastIQ intentionally uses different model choices for the live product and
@@ -117,12 +128,13 @@ GradientBoostingRegressor random states per horizon/target.
 Artifact environment: Python 3.14.4, pandas 3.0.3, numpy 2.4.6,
 scikit-learn 1.9.0, scipy 1.17.1, joblib 1.5.3, packaging 24.1.
 
-Compatibility evidence: a clean local verification produced bit-for-bit
-identical committed-sample `predictions.csv` under scikit-learn 1.8.0 and
-1.9.0 (`sha256=d5383019dffa4b6d3dae742d3c57a91a98ff53a334742437ec6bf2b9d44a5e7f`,
-54 rows, `model_type=trained_model`). The evaluator CI repeats this check on
-Ubuntu without pip cache. PyPI currently exposes only one 1.9.x release, so CI
-tests the exact build version plus the previous compatible 1.8.x line.
+Compatibility evidence: the evaluator CI job `exact-sklearn-zero-fallback`
+installs `requirements.txt` without pip cache, force-reinstalls the exact
+artifact build dependency `scikit-learn==1.9.0` with `--no-deps`, runs
+`backend.predict`, and fails if stdout contains the sklearn mismatch warning
+`differs from artifact build version`. The same job asserts 54 committed-sample
+rows and `model_type=trained_model`, proving the supported evaluator runtime is
+using the trained artifact rather than the safe baseline.
 
 ## Seasonality Handling
 
@@ -147,6 +159,11 @@ the live forecast path and the offline evaluator path:
 - When `level="campaign_type"`, both paths first filter rows to that
   campaign_type, so the seasonal features are learned and applied within the
   selected campaign_type history rather than only at the global account level.
+- Region handling is configurable through `FORECASTIQ_SEASONALITY_REGION`.
+  The default `US` mode enables built-in US retail holiday, Q4, and Black
+  Friday proximity flags. The `none` mode disables those hardcoded retail flags
+  and keeps only cyclic/day/week/month signals and learned rolling-window
+  seasonality, which is safer for non-US or unknown-market datasets.
 
 ## Feature Engineering — All 48 Features
 
@@ -303,7 +320,12 @@ ROAS is set to `expected_roas = lower_roas = upper_roas = 0` and
   simulations are allowed, but positive `targetRevenue` or `targetRoas` goals
   require at least one positive planned budget or observed spend signal.
 - The offline evaluator does not call Gemini or any external network service.
-- Seasonality flags use US calendar; non-US holiday patterns are not modeled.
+  This deliberately follows the Hackathon Submission Guide Section 8
+  no-network-runtime boundary for the graded artifact. Live Gemini integration
+  is available only through the FastAPI app.
+- Seasonality flags default to the US retail calendar. Set
+  `FORECASTIQ_SEASONALITY_REGION=none` to disable hardcoded US holiday/Q4/Black
+  Friday flags while preserving cyclic and data-derived seasonality features.
 
 - The model does not ingest promotions, inventory levels, pricing changes,
   competitor activity, or macroeconomic signals.
@@ -344,18 +366,21 @@ PASS offline evaluator: 54 rows ['trained_model']
 PASS causal summary: 3793 bytes
 
 Backend tests:
-139 passed, 1 skipped, 7 warnings in 267.25s
+144 passed, 1 skipped, 7 warnings in 375.92s
 
 Frontend validation:
-npm ci: added 566 packages, audited 567 packages
-npm run check: tsc, eslint, and Vite build passed
+npm install: up to date, audited 567 packages
+npm run check: tsc, eslint, and Vite build passed in 9.96s
 npm run test: 1 file passed, 5 tests passed
-npm run test:e2e: 1 Playwright Chromium test passed
+npm run test:e2e: 1 Playwright Chromium test passed in 16.8s
+npm run lint: eslint passed
+npm audit --omit=dev --audit-level=high: passed; one low-severity dev-server advisory remains
 
-Sklearn compatibility:
-scikit-learn 1.8.0 and 1.9.0 produced bit-for-bit identical
-predictions.csv outputs on committed sample data, both with model_type=trained_model.
-See TEST_RESULTS.md for command details and the SHA-256 hash.
+Sklearn zero-fallback guard:
+the CI job `exact-sklearn-zero-fallback` installs the pinned evaluator runtime
+without pip cache, force-reinstalls `scikit-learn==1.9.0` with `--no-deps`,
+and fails if the sklearn mismatch warning appears. It also asserts 54 rows and
+model_type=trained_model.
 ```
 
 ### Evaluator pipeline verification
@@ -378,6 +403,10 @@ See TEST_RESULTS.md for command details and the SHA-256 hash.
   push.
 - Budget-JSON 4th argument is supported:
   `./run.sh ./data ./pickle/model.pkl ./output/predictions.csv '{"Google Ads":60000}'`.
+  The evaluator path applies a concave spend-response curve so high budgets
+  lower marginal ROAS instead of scaling revenue linearly forever.
+  Latest CLI budget validation: Google Ads 30-day ROAS was 5.09 at 0.5x recent
+  budget, 4.59 at 1.0x, and 3.04 at 10x.
 - Large synthetic stress fixture: 50,400 rows completed the full `run.sh`
   evaluator path in 5.87 seconds on the local Windows/Git Bash environment
   using Python 3.14.4, producing a valid 12-column CSV with horizons {30, 60,
@@ -444,7 +473,10 @@ using the same summary data and the same `InsightsResponse` schema.
 a difference-in-differences style analysis compares each affected channel's
 post-anomaly revenue movement against unaffected channels. Results are written
 to `output/causal_summary.txt` alongside `predictions.csv` without calling
-any external service.
+Gemini, another LLM, or any external service. The deterministic narrative
+mirrors the live Gemini prompt structure with executive interpretation,
+ranked anomaly evidence, causal hypotheses, competing explanations, risks, and
+budget actions.
 
 ## Architecture Summary
 

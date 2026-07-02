@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import csv
-import os
 from pathlib import Path
 from typing import Any
 
@@ -517,7 +516,7 @@ def generate_offline_causal_summary(
     if planned_budgets:
         planned_budget_note = "Planned budget input received: " + ", ".join(
             f"{channel}: ${safe_float(budget):,.0f}" for channel, budget in planned_budgets.items()
-        ) + "."
+        ) + ". Offline budget response applies diminishing returns after aggressive spend increases."
     spend_estimation_lines = []
     if estimated_spend_mode:
         spend_estimation_lines.append(
@@ -550,6 +549,13 @@ def generate_offline_causal_summary(
             "Causal hypothesis: no abnormal channel break was detected, so the most defensible explanation "
             "is continuation of recent ROAS and spend trajectory."
         )
+    framing_templates = [
+        "Competing explanation to test: budget pressure, creative fatigue, or auction changes could also explain the move; confirm with campaign-level diagnostics before scaling.",
+        "Competing explanation to test: seasonality and promotion cadence may be amplifying the channel signal; compare against a geo or audience holdout before treating it as incrementality.",
+        "Competing explanation to test: tracking mix or revenue recognition timing could affect the estimate; validate the direction with source-platform conversion quality metrics.",
+    ]
+    template_index = int(abs(revenue_delta_pct) + len(top_anomalies) + len(causal_estimates)) % len(framing_templates)
+    competing_hypothesis_line = framing_templates[template_index]
 
     lines = [
         "=== ForecastIQ Causal Summary (offline, deterministic) ===",
@@ -569,6 +575,7 @@ def generate_offline_causal_summary(
         "Causal effect estimates (observational DiD, not experimental incrementality):",
         *causal_lines,
         hypothesis_line,
+        competing_hypothesis_line,
         "Action: if blended ROAS is above target, test incremental budget in the leading "
         "channel before reallocating away from stable performers.",
         f"Budget recommendation: test a controlled shift toward {top_channel} while reviewing "
@@ -580,55 +587,17 @@ def generate_offline_causal_summary(
         "decisions should be validated with geo, audience, or campaign holdout tests where possible.",
     ]
 
-    # Optional: attempt to enrich the summary with an LLM call.
-    # This is intentionally last and completely optional - the evaluator
-    # still returns the deterministic summary if the call fails.
-    _gemini_api_key = None
-    try:
-        import os
-
-        _gemini_api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
-    except Exception:
-        pass
-
-    if _gemini_api_key:
-        try:
-            import google.genai as genai
-
-            _client = genai.Client(api_key=_gemini_api_key)
-            _prompt = (
-                "You are a senior ecommerce marketing analyst. Based on the following data-grounded "
-                "forecast summary, write ONE additional paragraph (max 80 words) identifying the "
-                "single most important strategic action for the next 30 days. Be specific and direct.\n\n"
-                + "\n".join(lines[:10])
-            )
-            _response = _client.models.generate_content(
-                model=os.environ.get("GEMINI_MODEL", "gemini-2.5-flash"),
-                contents=_prompt,
-            )
-            _ai_paragraph = (_response.text or "").strip()
-            if _ai_paragraph:
-                lines.append("")
-                lines.append("=== AI Strategic Recommendation (Gemini) ===")
-                lines.append(_ai_paragraph)
-        except Exception as _exc:
-            lines.append("")
-            lines.append("=== AI Strategic Recommendation (Gemini) ===")
-            lines.append(
-                f"[Gemini enrichment could not complete ({type(_exc).__name__}). "
-                "The predictions.csv evaluator contract is unaffected. "
-                "Re-run with a valid GEMINI_API_KEY to enable live strategic recommendations.]"
-            )
-    else:
-        lines.append("")
-        lines.append("=== AI Strategic Recommendation ===")
-        lines.append(
-            f"Offline recommendation: prioritize {top_channel}, the strongest ROAS channel, while "
-            f"tightening {weakest_channel}, the highest-risk channel in this dataset. Keep the next "
-            "budget move small enough to validate inside the 30-day forecast band before using the "
-            "wider 60 and 90-day planning ranges. Live Gemini enrichment is optional and does not "
-            "affect predictions.csv."
-        )
+    # The offline evaluator is deliberately LLM-free: run.sh must not depend on
+    # network access or provider availability. The live FastAPI app owns Gemini.
+    lines.append("")
+    lines.append("=== AI Strategic Recommendation ===")
+    lines.append(
+        f"Offline deterministic recommendation: prioritize {top_channel}, the strongest ROAS channel, while "
+        f"tightening {weakest_channel}, the highest-risk channel in this dataset. Keep the next "
+        "budget move small enough to validate inside the 30-day forecast band before using the "
+        "wider 60 and 90-day planning ranges. Live Gemini insights are available in the FastAPI app, "
+        "but run.sh intentionally performs no LLM or network calls."
+    )
 
     return "\n".join(lines)
 

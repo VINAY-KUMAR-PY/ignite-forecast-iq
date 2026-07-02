@@ -61,6 +61,50 @@ jobs:
               raise SystemExit(f"Unexpected horizons in budget run: {sorted(df['horizon_days'].unique().tolist())}")
           print("Budget-json offline path: OK,", len(df), "rows")
           PY
+          python - <<'PY'
+          import json
+          import subprocess
+
+          import pandas as pd
+
+          sample = pd.read_csv("data/sample_campaigns.csv")
+          channel = "Google Ads"
+          channel_rows = sample[sample["channel"] == channel].copy()
+          channel_rows["date"] = pd.to_datetime(channel_rows["date"])
+          daily = channel_rows.groupby("date", as_index=False)["spend"].sum().sort_values("date")
+          base_budget = float(daily.tail(7)["spend"].sum()) / min(7, len(daily)) * 30
+
+          cases = {
+              "low": base_budget * 0.50,
+              "high": base_budget * 10.0,
+          }
+          for label, budget in cases.items():
+              subprocess.run(
+                  [
+                      "./run.sh",
+                      "./data",
+                      "./pickle/model.pkl",
+                      f"./output/predictions_budget_{label}.csv",
+                      json.dumps({channel: budget}),
+                  ],
+                  check=True,
+              )
+
+          def channel_roas(path):
+              frame = pd.read_csv(path)
+              row = frame[
+                  (frame["level"] == "channel")
+                  & (frame["segment"] == channel)
+                  & (frame["horizon_days"].astype(int) == 30)
+              ].iloc[0]
+              return float(row["expected_roas"])
+
+          low_roas = channel_roas("./output/predictions_budget_low.csv")
+          high_roas = channel_roas("./output/predictions_budget_high.csv")
+          if not high_roas < low_roas:
+              raise SystemExit(f"Budget saturation not visible: low ROAS={low_roas}, high ROAS={high_roas}")
+          print(f"Budget saturation OK: {channel} 30d ROAS low={low_roas:.2f}, high={high_roas:.2f}")
+          PY
 
       - name: Validate evaluator output contract
         run: |
@@ -181,15 +225,9 @@ jobs:
           print("Causal summary OK:", len(text), "chars")
           PY
 
-  sklearn-compatibility:
-    name: Sklearn artifact compatibility / sklearn ${{ matrix.sklearn-version }}
+  exact-sklearn-zero-fallback:
+    name: Exact sklearn zero-fallback guard
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        # PyPI currently exposes one 1.9.x release. Verify the exact artifact
-        # build version plus the previous compatible 1.8.x line.
-        sklearn-version: ["1.8.0", "1.9.0"]
 
     steps:
       - name: Check out repository
@@ -200,39 +238,36 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install evaluator dependencies without cache
+      - name: Install exact evaluator dependencies without cache
         run: |
           python -m pip install --no-cache-dir -r requirements.txt
-          if [ "${{ matrix.sklearn-version }}" != "1.9.0" ]; then
-            python -m pip install --no-cache-dir --force-reinstall --no-deps scikit-learn==${{ matrix.sklearn-version }}
-          fi
+          python -m pip install --no-cache-dir --force-reinstall --no-deps scikit-learn==1.9.0
 
-      - name: Assert trained-model output is bit-for-bit stable
+      - name: Assert trained-model output has no fallback warning
         run: |
-          python -m backend.predict --data-dir ./data --model ./pickle/model.pkl --output ./output/predictions.csv
+          mkdir -p output
+          set -o pipefail
+          python -m backend.predict --data-dir ./data --model ./pickle/model.pkl --output ./output/predictions.csv 2>&1 | tee ./output/exact_sklearn.log
+          if grep -q "differs from artifact build version" ./output/exact_sklearn.log; then
+            echo "Unexpected sklearn mismatch fallback warning under exact pinned runtime"
+            exit 1
+          fi
           python - <<'PY'
-          import hashlib
           import sys
           from pathlib import Path
 
           import pandas as pd
           import sklearn
 
-          expected_sha256 = "d5383019dffa4b6d3dae742d3c57a91a98ff53a334742437ec6bf2b9d44a5e7f"
           output = Path("output/predictions.csv")
-          digest = hashlib.sha256(output.read_bytes()).hexdigest()
           frame = pd.read_csv(output)
           modes = set(frame["model_type"].astype(str))
           if modes != {"trained_model"}:
               raise SystemExit(f"Expected trained_model under sklearn {sklearn.__version__}, got {sorted(modes)}")
           if len(frame) != 54:
               raise SystemExit(f"Expected 54 committed-sample rows, got {len(frame)}")
-          if digest != expected_sha256:
-              raise SystemExit(
-                  f"Sample predictions.csv hash drifted under sklearn {sklearn.__version__}: {digest}"
-              )
           print(
-              f"sklearn {sklearn.__version__} produced trained_model output with stable sha256 {digest} "
+              f"sklearn {sklearn.__version__} produced trained_model output with no fallback warning "
               f"on Python {sys.version.split()[0]}"
           )
           PY

@@ -373,6 +373,7 @@ pandas 3.0.3
 numpy 2.4.6
 
 Offline evaluator:
+[ForecastIQ] Trained-model forecast coverage: 54/54 rows (100.0%) used artifact-backed estimates; 0 row(s) used safe segment fallback.
 [ForecastIQ] Wrote 54 rows to ./output/predictions.csv
 [ForecastIQ] Causal summary written to output\causal_summary.txt
 [ForecastIQ] scikit-learn version: 1.9.0 (artifact built on 1.9.0)
@@ -380,7 +381,7 @@ PASS offline evaluator: 54 rows ['trained_model']
 PASS causal summary: 4834 bytes, including OFFLINE_DETERMINISTIC_FALLBACK and DISTILLED_LLM_DERIVED_OFFLINE_CACHE labels
 
 Backend tests:
-160 passed, 1 skipped, 7 warnings in 240.57s
+162 passed, 1 skipped, 7 warnings in 533.66s from a clean checkout with `requirements-app.txt`
 
 Frontend validation:
 npm install: up to date, audited 567 packages in 2s; one low-severity

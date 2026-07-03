@@ -152,11 +152,29 @@ ForecastIQ keeps one canonical evidence map here to reduce duplicate documentati
 |---|---|
 | Evaluator contract | `run.sh`, `backend/predict.py`, `backend/evaluator_contract.py`, `tests/test_evaluator_contract.py`, `tests/test_evaluator_e2e.py`, `tests/test_scale_evaluator.py`, `.github/workflows/evaluator-ci.yml` |
 | Forecast model | `backend/inference.py`, `pickle/model.pkl`, `reports/backtest_report.json`, `reports/backtest_summary.md`, `reports/coverage_summary.md`, `tests/test_interval_monotonicity.py`, `tests/test_offline_predict.py` |
-| Data compatibility | `backend/schema_adapters.py`, `backend/data_preprocessing.py`, `tests/test_schema_adapters.py` for GA4, Shopify, Google Ads micros, Meta Ads, Microsoft/Bing Ads, and duplicate-revenue guards |
+| Data compatibility | `backend/schema_adapters.py`, `backend/data_preprocessing.py`, `tests/test_schema_adapters.py`, `tests/fixtures/ga4_variant_hidden_export.csv` for GA4 variants, Shopify, Google Ads micros, Meta Ads, Microsoft/Bing Ads, and duplicate-revenue guards |
 | AI and causal layer | `backend/gemini.py`, `backend/gemini_offline_cache.py`, `backend/causal_lite.py`, `scripts/verify_gemini_live.py`, `.github/workflows/gemini-live-smoke.yml`, `tests/test_gemini_parsing.py`, `tests/test_causal_lite.py`, `tests/test_offline_predict.py`, `docs/gemini_sample_transcripts/` |
 | Product demo | `src/routes/index.tsx`, `src/routes/`, `src/routes/app-pages.test.tsx`, `tests/e2e/demo.spec.ts`, `reports/e2e_summary.md`, `DEMO_GUIDE.md`, `TECHNICAL.md` |
 | CI jobs | `evaluator`, `sklearn-version-drift-smoke`, `app-tests`, `frontend`, `e2e-demo`, `hackathon-evaluator-protocol`, and `gemini-live-smoke` |
 | Exact sklearn guard | `exact-sklearn-zero-fallback` in `.github/workflows/evaluator-ci.yml` installs the pinned evaluator runtime and rejects sklearn mismatch/fallback warnings |
+
+Latest clean-checkout verification on July 3, 2026:
+
+```text
+pip install -r requirements.txt
+chmod +x run.sh
+./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
+
+[ForecastIQ] Trained-model forecast coverage: 54/54 rows (100.0%) used artifact-backed estimates; 0 row(s) used safe segment fallback.
+rows 54
+columns_exact True
+model_types ['trained_model']
+safe_baseline_count 0
+
+pip install -r requirements-app.txt
+pytest -q
+162 passed, 1 skipped, 7 warnings in 533.66s
+```
 
 The latest backtest compares trained-model and deterministic-baseline behavior
 using MAE, RMSE, MAPE, interval coverage, and per-horizon performance. The

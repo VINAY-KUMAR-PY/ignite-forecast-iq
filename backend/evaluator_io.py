@@ -852,7 +852,7 @@ def _forecast_signals(segment: pd.DataFrame, row: dict, horizon: int) -> list[st
     if segment.empty:
         return [
             "No matching historical segment rows; forecast was generated from safe evaluator defaults.",
-            f"Interval width is {safe_float(row.get('interval_width_pct')):.1f}%, reflecting low direct evidence.",
+            _confidence_rationale(segment, row, horizon),
             "Seasonality could not be inferred because no valid dated history was present.",
         ]
 
@@ -884,9 +884,42 @@ def _forecast_signals(segment: pd.DataFrame, row: dict, horizon: int) -> list[st
         f"with confidence label {row.get('forecast_confidence', 'unknown')}."
     )
     return [
+        _confidence_rationale(segment, row, horizon),
         f"Recent 28-day revenue trend: {revenue_trend_pct:+.1f}% versus the prior half-window.",
-        seasonality_signal,
-        roas_signal,
+        f"{seasonality_signal} {roas_signal}",
         f"Recent 28-day spend trend: {spend_trend_pct:+.1f}% versus the prior half-window.",
         interval_signal,
     ]
+
+
+def _confidence_rationale(segment: pd.DataFrame, row: dict, horizon: int) -> str:
+    label = str(row.get("forecast_confidence") or "unknown")
+    interval_pct = safe_float(row.get("interval_width_pct"))
+    model_type = str(row.get("model_type") or "unknown")
+    history_days = 0
+    if not segment.empty and "date" in segment:
+        history_days = int(pd.to_datetime(segment["date"], errors="coerce").dropna().dt.normalize().nunique())
+
+    reasons: list[str] = []
+    if model_type == TRAINED_ESTIMATED_SPEND_MODEL_TYPE:
+        reasons.append("spend was inferred or the segment was sparse")
+    elif model_type == SAFE_BASELINE_MODEL_TYPE:
+        reasons.append("the trained artifact could not score this input safely")
+    if history_days < 30:
+        reasons.append(f"only {history_days} usable historical days were available")
+    elif history_days >= 90:
+        reasons.append(f"{history_days} historical days support the segment")
+    else:
+        reasons.append(f"{history_days} historical days provide a moderate evidence base")
+    if horizon >= 90:
+        reasons.append("the 90-day horizon compounds seasonality and residual volatility")
+    elif horizon >= 60:
+        reasons.append("the 60-day horizon carries more uncertainty than the 30-day plan")
+    if interval_pct >= 90:
+        reasons.append(f"the revenue interval is wide at {interval_pct:.1f}%")
+    elif interval_pct <= 70:
+        reasons.append(f"the revenue interval is comparatively tighter at {interval_pct:.1f}%")
+    else:
+        reasons.append(f"the revenue interval is moderate at {interval_pct:.1f}%")
+
+    return f"Confidence rationale: {label} because " + "; ".join(reasons) + "."

@@ -458,6 +458,7 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertIn("Recent 28-day revenue trend", notes)
         self.assertIn("ROAS stability", notes)
         self.assertIn("Seasonality marker", notes)
+        self.assertIn("Confidence rationale", notes)
         with tempfile.TemporaryDirectory() as tmp:
             path = write_explainability_notes(cleaned.frame, rows, tmp)
             self.assertTrue(path.exists())

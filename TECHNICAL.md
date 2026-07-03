@@ -56,15 +56,20 @@ not only whether intervals cover actuals, but whether they are sharp enough to
 support budget decisions.
 
 ### Blend Weight Gate
-Revenue and ROAS blend weights are determined by a two-gate holdout test stored
-in the artifact's `confidence` block:
+Revenue and ROAS blend weights are determined by holdout evidence stored in the
+artifact's `confidence` block. The 30-day revenue path uses the trained
+residual correction when it beats the seasonal baseline. The 60 and 90-day
+revenue paths are horizon-gated to the deterministic seasonal baseline inside
+the trained artifact because rolling-origin backtests show that this is the
+more reliable long-horizon revenue anchor. This still emits `trained_model` for
+the supported sample because the committed artifact loaded and made the
+transparent per-horizon selection; it is not a crash fallback.
 
-| Gate | Revenue condition | Revenue weight |
-|---|---|---|
-| Strong | CV R2 >= 0.15 AND holdout beats baseline | 0.60 (30d), 0.10 (60d), 0.50 (90d) |
-| Moderate | CV R2 >= 0.05 AND holdout beats baseline | 0.25 (30d), 0.10 (60d), 0.40 (90d) |
-| Weak | Holdout beats baseline but CV R2 < 0.05 | 0.10 all horizons |
-| None | Holdout does not beat baseline | 0.00 all horizons |
+| Horizon | Revenue model condition | Revenue weight |
+|---|---|---:|
+| 30 days | Holdout residual correction beats baseline MAPE | 0.60 |
+| 60 days | Seasonal baseline ties/wins rolling-origin revenue MAPE | 0.00 |
+| 90 days | Seasonal baseline ties/wins rolling-origin revenue MAPE | 0.00 |
 
 | Gate | ROAS condition | ROAS weight |
 |---|---|---|
@@ -76,7 +81,7 @@ target date. This prevents CV overfitting on small per-horizon slices.
 
 ### Horizon-Dedicated Sample Counts
 The artifact stores dedicated training-sample counts by horizon:
-- 30-day: 468 samples
+- 30-day: 486 samples
 - 60-day: 216 samples
 - 90-day: 126 samples
 
@@ -337,10 +342,12 @@ also asserts the trained artifact remains active for sparse but valid data.
   with a `budget_extrapolation` risk. At 50x or with no recent spend history,
   the risk is marked high severity because projected returns are outside the
   observed response range and should be treated as low-confidence.
-- The offline evaluator does not call Gemini or any external network service.
-  This deliberately follows the Hackathon Submission Guide Section 8
+- The default offline evaluator does not call Gemini or any external network
+  service. This deliberately follows the Hackathon Submission Guide Section 8
   no-network-runtime boundary for the graded artifact. Live Gemini integration
-  is available only through the FastAPI app.
+  is available through the FastAPI app and through an explicit local-only
+  `run.sh --enable-live-ai` flag when `GEMINI_API_KEY` is configured; the flag
+  is off by default and is not required for grading.
 - Seasonality flags default to the US retail calendar. Set
   `FORECASTIQ_SEASONALITY_REGION=none` to disable hardcoded US holiday/Q4/Black
   Friday flags while preserving cyclic and data-derived seasonality features.
@@ -360,6 +367,22 @@ also asserts the trained artifact remains active for sparse but valid data.
   shrunken trained-model estimate when feature construction is possible and
   fall back only when the segment is genuinely unsupported.
 - The model does not support multi-touch attribution across channels.
+
+### Mitigation Strategy for Unmodeled Factors
+
+ForecastIQ is designed so v2 can absorb business context without a full
+marketing-mix model rebuild. A merchant can add optional columns or a sidecar
+calendar keyed by date/campaign with fields such as `promo_flag`,
+`promo_type`, `discount_pct`, `inventory_available`, `stockout_flag`, `price`,
+`margin`, and `launch_flag`. The schema adapters would preserve those fields
+through validation, and the existing feature pipeline would treat them as
+exogenous regressors next to spend, seasonality, and rolling trend features.
+When a known promotion or stockout window is present but the corresponding
+context file is missing, the confidence layer should downgrade affected
+segments and cite the missing factor in `explainability_notes.txt`. This keeps
+near-term planning practical: budget teams can explain promotion, inventory,
+and price shocks directly without waiting for randomized incrementality or a
+full MMM program.
 
 ## Test & Backtest Evidence
 
@@ -449,8 +472,8 @@ preventing silent bad predictions under reviewer-side dependency experiments.
 | Horizon | Successful folds | Trained revenue MAPE | Baseline revenue MAPE | Revenue coverage | Mean revenue interval width |
 |---:|---:|---:|---:|---:|---:|
 | 30 days | 3 | 2.23% | 3.15% | 100.0% | 66.5% |
-| 60 days | 3 | 10.59% | 9.54% | 100.0% | 79.8% |
-| 90 days | 2 | 11.21% | 7.89% | 100.0% | 99.75% |
+| 60 days | 3 | 9.54% | 9.54% | 100.0% | 79.8% |
+| 90 days | 2 | 7.89% | 7.89% | 100.0% | 99.75% |
 
 The third attempted 90-day fold is reported as an insufficient-history fold in
 `reports/backtest_summary.md` rather than being silently dropped. Coverage
@@ -569,6 +592,12 @@ When `GEMINI_API_KEY` is present, the endpoint calls Gemini and returns
 `X-ForecastIQ-AI-Source: gemini`; without a key or during provider failures it
 returns the same structured schema with deterministic fallback content and
 `X-ForecastIQ-AI-Source: fallback`.
+
+The CLI also supports explicit local experimentation with
+`./run.sh ./data ./pickle/model.pkl ./output/predictions.csv --enable-live-ai`.
+That flag is ignored by the normal evaluator protocol, defaults to off, and
+falls back to the deterministic summary if Gemini credentials, app
+dependencies, or network access are unavailable.
 
 ## Architecture Overview
 

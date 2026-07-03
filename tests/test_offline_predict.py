@@ -243,6 +243,39 @@ class OfflinePredictionTests(unittest.TestCase):
             self.assertEqual(list(written.columns), OUTPUT_COLUMNS)
             self.assertFalse(written.empty)
 
+    def test_predict_main_live_ai_flag_falls_back_without_key(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            data_dir = root / "data"
+            data_dir.mkdir()
+            output = root / "predictions.csv"
+            data_dir.joinpath("campaigns.csv").write_text(
+                "date,channel,campaign_type,campaign_name,spend,clicks,impressions,conversions,revenue,roas\n"
+                "2026-01-01,Google Ads,Search,Brand,100,40,1000,5,420,4.2\n"
+                "2026-01-02,Google Ads,Search,Brand,120,44,1100,6,510,4.25\n"
+                "2026-01-03,Meta Ads,Paid Social,Prospecting,90,35,1300,3,260,2.8889\n",
+                encoding="utf-8",
+            )
+            argv = [
+                "backend.predict",
+                "--data-dir",
+                str(data_dir),
+                "--model",
+                str(Path("pickle/model.pkl").resolve()),
+                "--output",
+                str(output),
+                "--enable-live-ai",
+            ]
+            with patch.object(sys, "argv", argv), patch.dict(os.environ, {"GEMINI_API_KEY": ""}):
+                predict_module.main()
+
+            written = pd.read_csv(output)
+            summary = output.parent / "causal_summary.txt"
+            self.assertEqual(list(written.columns), OUTPUT_COLUMNS)
+            self.assertFalse(written.empty)
+            self.assertIn("Optional Live Gemini Enrichment", summary.read_text(encoding="utf-8"))
+            self.assertIn("GEMINI_API_KEY was not configured", summary.read_text(encoding="utf-8"))
+
     def test_ga4_headers_only_normalize_and_predict(self) -> None:
         raw = pd.DataFrame(
             {

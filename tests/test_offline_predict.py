@@ -419,6 +419,9 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertIn("no live LLM call was made in this run", summary.splitlines()[0])
         self.assertIn("DISTILLED_LLM_DERIVED_OFFLINE_CACHE", summary)
         self.assertIn("Distilled LLM reasoning pattern:", summary)
+        self.assertIn("top anomaly", summary)
+        self.assertIn("strongest DiD estimate", summary)
+        self.assertIn("segment drivers", summary)
         self.assertGreater(len(summary), 100)
         self.assertRegex(summary, r"ROAS|roas")
         self.assertIn("$", summary)
@@ -450,8 +453,9 @@ class OfflinePredictionTests(unittest.TestCase):
             }
         ]
 
-        first = select_distilled_reasoning([], evidence)
-        second = select_distilled_reasoning([], evidence)
+        drivers = [{"role": "leading_roas", "segment": "Microsoft Ads", "metric": "5.4x ROAS"}]
+        first = select_distilled_reasoning([], evidence, segment_drivers=drivers)
+        second = select_distilled_reasoning([], evidence, segment_drivers=drivers)
         uncertain = select_distilled_reasoning(
             [{"channel": "Meta Ads", "date": "2026-01-01"}],
             [{**evidence[0], "lowerRevenue": -1000}],
@@ -459,6 +463,8 @@ class OfflinePredictionTests(unittest.TestCase):
 
         self.assertEqual(first, second)
         self.assertEqual(first["label"], "incremental_growth")
+        self.assertIn("Microsoft Ads", first["evidence_focus"])
+        self.assertIn("strongest DiD estimate Google Ads", first["summary"])
         self.assertEqual(uncertain["label"], "volatility_watch")
 
     def test_causal_summary_stays_offline_when_gemini_env_is_configured(self) -> None:

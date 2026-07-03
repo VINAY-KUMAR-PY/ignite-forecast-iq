@@ -261,6 +261,7 @@ def test_insights_anomalies_and_spend_curve_happy_paths(sample_campaign_rows) ->
 
     insights = client.post("/api/insights", json={"summary": summary})
     assert insights.status_code == 200, insights.text
+    assert insights.headers.get("X-ForecastIQ-AI-Source") in {"gemini", "fallback"}
     assert insights.json()["executiveSummary"]
     assert insights.json()["actionPlan"]
 

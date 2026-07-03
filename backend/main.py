@@ -18,7 +18,7 @@ from .data_preprocessing import validate_records
 from .decision_support import compute_driver_evidence, estimate_causal_effects
 from .anomaly import compute_trend_breaks, detect_anomalies
 from .forecasting import forecast_frame
-from .gemini import generate_gemini_insights
+from .gemini import generate_gemini_insights_with_source
 from .lightweight_api import (
     aggregate_channel_summaries,
     build_lightweight_decision_support,
@@ -332,9 +332,11 @@ def decision_support(request: Request, body: DecisionSupportRequest) -> Decision
 
 @app.post("/api/insights", response_model=InsightsResponse)
 @limiter.limit("30/minute")
-async def insights(request: Request, body: InsightsRequest) -> InsightsResponse:
+async def insights(request: Request, body: InsightsRequest, response: Response) -> InsightsResponse:
     """Turn forecast and performance summaries into executive recommendations."""
-    return await generate_gemini_insights(body.summary)
+    result, source = await generate_gemini_insights_with_source(body.summary)
+    response.headers["X-ForecastIQ-AI-Source"] = source
+    return result
 
 
 @app.post("/api/train", response_model=TrainResponse)

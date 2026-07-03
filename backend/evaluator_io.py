@@ -400,6 +400,11 @@ def generate_offline_causal_summary(
         if "channel" in frame and not frame.empty
         else top_channel
     )
+    segment_drivers = [
+        {"role": "leading_roas", "segment": top_channel, "metric": f"{top_roas:.2f}x ROAS"},
+        {"role": "highest_revenue", "segment": top_revenue_channel, "metric": "largest revenue contribution"},
+        {"role": "risk_roas", "segment": weakest_channel, "metric": f"{weakest_roas:.2f}x ROAS"},
+    ]
 
     try:
         anomalies = detect_anomalies(frame)
@@ -582,6 +587,7 @@ def generate_offline_causal_summary(
         [item.to_dict() for item in top_anomalies],
         causal_estimates,
         planned_budgets,
+        segment_drivers,
     )
 
     lines = [

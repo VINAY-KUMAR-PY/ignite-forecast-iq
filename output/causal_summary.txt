@@ -2,8 +2,8 @@ AI mode: OFFLINE_DETERMINISTIC_FALLBACK (no live LLM call was made in this run; 
 AI interpretation mode: DISTILLED_LLM_DERIVED_OFFLINE_CACHE (distilled LLM-derived interpretation, selected offline, no live API call per no-network evaluator rule).
 === ForecastIQ Causal Summary (offline, deterministic) ===
 Distilled LLM reasoning pattern: volatility_watch
-Interpretation: The evidence contains anomaly or trend-break behavior, but the causal estimate is not strong enough to treat as proven incrementality. Forecast ranges should be used as planning guardrails rather than precise targets.
-Evidence focus: detected anomalies, sparse pre/post windows, or confidence intervals crossing zero
+Interpretation: The evidence contains anomaly or trend-break behavior, but the causal estimate is not strong enough to treat as proven incrementality. Forecast ranges should be used as planning guardrails rather than precise targets. Evidence used: top anomaly Google Ads roas on 2026-06-11 (warning, z=-2.5); strongest DiD estimate Google Ads incremental revenue $-2,892 (95% CI $-6,306 to $1,192, confidence=low); segment drivers leading_roas: Microsoft Ads 5.44x ROAS; highest_revenue: Google Ads largest revenue contribution; risk_roas: Meta Ads 3.00x ROAS.
+Evidence focus: detected anomalies, sparse pre/post windows, or confidence intervals crossing zero. top anomaly Google Ads roas on 2026-06-11 (warning, z=-2.5); strongest DiD estimate Google Ads incremental revenue $-2,892 (95% CI $-6,306 to $1,192, confidence=low); segment drivers leading_roas: Microsoft Ads 5.44x ROAS; highest_revenue: Google Ads largest revenue contribution; risk_roas: Meta Ads 3.00x ROAS.
 Recommended action: Inspect tracking, promotion timing, and campaign changes before reallocating material budget.
 Executive interpretation: revenue is flat versus the trailing 30-day average by $-193 per day (-1.2%). The strongest observational DiD signal is Google Ads, showing $-2,892 of estimated revenue drag (low confidence), so the forecast range is anchored to a measured channel movement rather than a generic trend.
 Historical period: 2025-08-22 to 2026-06-17 (300 days)

@@ -535,6 +535,11 @@ mirrors the live Gemini prompt structure with executive interpretation,
 ranked anomaly evidence, causal hypotheses, competing explanations, risks, and
 budget actions.
 
+The graded path avoids live LLM calls as a compliance decision, not because the
+AI layer is absent. The Hackathon Submission Guide states: "No network calls at
+run time." Therefore `run.sh` keeps all reasoning local and deterministic,
+while the full FastAPI app uses Gemini when `GEMINI_API_KEY` is configured.
+
 ### AI Integration in the Offline Evaluator
 
 The scored `run.sh` path is intentionally network-free, so it cannot make a
@@ -542,10 +547,16 @@ live Gemini call during evaluation. To keep the AI reasoning visible in the
 offline artifact, `backend/gemini_offline_cache.py` ships distilled
 LLM-derived reasoning patterns created from the redacted Gemini transcripts in
 `docs/gemini_sample_transcripts/`. `backend/evaluator_io.py` selects one
-pattern deterministically from the run's anomaly and DiD evidence and writes
-the header `DISTILLED_LLM_DERIVED_OFFLINE_CACHE` into `causal_summary.txt`.
+pattern deterministically from the run's anomaly, DiD, and segment-driver
+evidence and writes the header `DISTILLED_LLM_DERIVED_OFFLINE_CACHE` into `causal_summary.txt`.
 This is an offline interpretation cache, not a live model response; the first
 two lines of the summary make that boundary explicit.
+
+The full app exposes optional live enrichment through `POST /api/insights`.
+When `GEMINI_API_KEY` is present, the endpoint calls Gemini and returns
+`X-ForecastIQ-AI-Source: gemini`; without a key or during provider failures it
+returns the same structured schema with deterministic fallback content and
+`X-ForecastIQ-AI-Source: fallback`.
 
 ## Architecture Overview
 

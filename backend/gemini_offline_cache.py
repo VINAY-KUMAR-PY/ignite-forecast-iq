@@ -90,11 +90,15 @@ def select_distilled_reasoning(
     anomalies: list[Any] | None,
     causal_estimates: list[dict[str, Any]] | None,
     planned_budgets: dict[str, float] | None = None,
+    segment_drivers: list[dict[str, Any]] | None = None,
 ) -> dict[str, str]:
     """Select one offline reasoning pattern deterministically from evidence."""
     estimates = causal_estimates or []
+    anomaly_text = _describe_anomalies(anomalies or [])
+    did_text = _describe_did(estimates)
+    driver_text = _describe_segment_drivers(segment_drivers or [])
     if planned_budgets:
-        return _PATTERNS["budget_reallocation"].copy()
+        return _with_evidence(_PATTERNS["budget_reallocation"], anomaly_text, did_text, driver_text)
     if estimates:
         strongest = max(estimates, key=lambda item: abs(safe_float(item.get("incrementalRevenue"))))
         lower = safe_float(strongest.get("lowerRevenue"))
@@ -102,10 +106,60 @@ def select_distilled_reasoning(
         effect = safe_float(strongest.get("incrementalRevenue"))
         confidence = str(strongest.get("confidence") or "low").lower()
         if lower <= 0 <= upper or confidence == "low":
-            return _PATTERNS["volatility_watch"].copy()
+            return _with_evidence(_PATTERNS["volatility_watch"], anomaly_text, did_text, driver_text)
         if effect < 0:
-            return _PATTERNS["efficiency_compression"].copy()
-        return _PATTERNS["incremental_growth"].copy()
+            return _with_evidence(_PATTERNS["efficiency_compression"], anomaly_text, did_text, driver_text)
+        return _with_evidence(_PATTERNS["incremental_growth"], anomaly_text, did_text, driver_text)
     if anomalies:
-        return _PATTERNS["volatility_watch"].copy()
-    return _PATTERNS["stable_run_rate"].copy()
+        return _with_evidence(_PATTERNS["volatility_watch"], anomaly_text, did_text, driver_text)
+    return _with_evidence(_PATTERNS["stable_run_rate"], anomaly_text, did_text, driver_text)
+
+
+def _with_evidence(pattern: dict[str, str], anomaly_text: str, did_text: str, driver_text: str) -> dict[str, str]:
+    enriched = pattern.copy()
+    enriched["summary"] = f"{pattern['summary']} Evidence used: {anomaly_text}; {did_text}; {driver_text}."
+    enriched["evidence_focus"] = f"{pattern['evidence_focus']}. {anomaly_text}; {did_text}; {driver_text}."
+    return enriched
+
+
+def _describe_anomalies(anomalies: list[Any]) -> str:
+    if not anomalies:
+        return "no material anomaly was detected"
+    item = anomalies[0]
+    if hasattr(item, "to_dict"):
+        item = item.to_dict()
+    channel = str(item.get("channel") or "unknown channel")
+    metric = str(item.get("metric") or "metric")
+    date = str(item.get("date") or "unknown date")
+    severity = str(item.get("severity") or "observed")
+    z_score = safe_float(item.get("z_score") or item.get("zScore"))
+    if z_score:
+        return f"top anomaly {channel} {metric} on {date} ({severity}, z={z_score:.1f})"
+    return f"top anomaly {channel} {metric} on {date} ({severity})"
+
+
+def _describe_did(estimates: list[dict[str, Any]]) -> str:
+    if not estimates:
+        return "no stable DiD estimate was available"
+    strongest = max(estimates, key=lambda item: abs(safe_float(item.get("incrementalRevenue"))))
+    channel = str(strongest.get("channel") or "unknown channel")
+    effect = safe_float(strongest.get("incrementalRevenue"))
+    lower = safe_float(strongest.get("lowerRevenue"))
+    upper = safe_float(strongest.get("upperRevenue"))
+    confidence = str(strongest.get("confidence") or "low")
+    return (
+        f"strongest DiD estimate {channel} incremental revenue ${effect:,.0f} "
+        f"(95% CI ${lower:,.0f} to ${upper:,.0f}, confidence={confidence})"
+    )
+
+
+def _describe_segment_drivers(drivers: list[dict[str, Any]]) -> str:
+    if not drivers:
+        return "segment driver evidence was unavailable"
+    parts = []
+    for item in drivers[:3]:
+        role = str(item.get("role") or "segment")
+        segment = str(item.get("segment") or item.get("channel") or "unknown")
+        metric = str(item.get("metric") or item.get("value") or "")
+        parts.append(f"{role}: {segment} {metric}".strip())
+    return "segment drivers " + "; ".join(parts)

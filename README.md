@@ -142,6 +142,8 @@ This job is separate from broader backend, frontend, and Playwright checks so th
 
 `run.sh` makes no live Gemini or network call. Instead, `backend/gemini_offline_cache.py` selects a deterministic distilled LLM-derived reasoning pattern from the run's anomaly and DiD evidence, using patterns derived from the redacted live Gemini transcripts in `docs/gemini_sample_transcripts/`. The selected pattern is written into `output/causal_summary.txt` with the label `DISTILLED_LLM_DERIVED_OFFLINE_CACHE`, so the scored artifact shows the AI reasoning boundary clearly.
 
+Optional live enrichment is available only in the full FastAPI app. To test it locally with your own key, run `pip install -r requirements-app.txt`, set `GEMINI_API_KEY`, start `python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000`, and call `POST /api/insights`; the response header `X-ForecastIQ-AI-Source: gemini` confirms live Gemini augmented the executive insight response. If the key is missing or Gemini is unavailable, the same endpoint returns deterministic fallback insights and `X-ForecastIQ-AI-Source: fallback`.
+
 ## Evidence & Validation
 
 ForecastIQ keeps one canonical evidence map here to reduce duplicate documentation.

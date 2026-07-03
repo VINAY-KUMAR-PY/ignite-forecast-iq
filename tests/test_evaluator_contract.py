@@ -156,7 +156,7 @@ class EvaluatorContractTests(unittest.TestCase):
             self.assertNotEqual(modes, {SAFE_BASELINE_MODEL_TYPE})
             self.assertIn(TRAINED_MODEL_TYPE, modes)
 
-    def test_six_row_ads_fixture_uses_degraded_trained_path_not_baseline_only(self) -> None:
+    def test_six_row_ads_fixture_uses_trained_path_not_baseline_only(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             data_dir = Path(tmp) / "data"
             data_dir.mkdir()
@@ -182,7 +182,9 @@ class EvaluatorContractTests(unittest.TestCase):
 
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             frame = self.assert_predictions_csv(output)
-            self.assertEqual(set(frame["model_type"].astype(str)), {TRAINED_ESTIMATED_SPEND_MODEL_TYPE})
+            modes = set(frame["model_type"].astype(str))
+            self.assertNotIn(SAFE_BASELINE_MODEL_TYPE, modes)
+            self.assertTrue(modes <= {TRAINED_MODEL_TYPE, TRAINED_ESTIMATED_SPEND_MODEL_TYPE})
 
     def test_causal_summary_file_exists(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

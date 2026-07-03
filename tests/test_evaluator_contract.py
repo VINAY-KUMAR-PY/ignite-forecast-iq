@@ -60,6 +60,7 @@ class EvaluatorContractTests(unittest.TestCase):
 
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertIn("Prediction mode: trained_model", result.stdout)
+            self.assertIn("Trained-model forecast coverage: 54/54 rows (100.0%)", result.stdout)
             self.assert_predictions_csv(output, TRAINED_MODEL_TYPE)
 
     def test_missing_model_cli_falls_back_with_exact_schema(self) -> None:

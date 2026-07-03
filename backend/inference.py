@@ -480,6 +480,13 @@ def build_trained_predictions(
 
     if segment_fallback_count:
         log(f"Trained model used with {segment_fallback_count} segment-level safe fallbacks")
+    if rows:
+        coverage_pct = trained_count / len(rows) * 100
+        log(
+            f"Trained-model forecast coverage: {trained_count}/{len(rows)} rows "
+            f"({coverage_pct:.1f}%) used artifact-backed estimates; "
+            f"{segment_fallback_count} row(s) used safe segment fallback."
+        )
     return rows, trained_count
 
 def build_predictions(

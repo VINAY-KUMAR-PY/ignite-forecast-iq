@@ -380,6 +380,18 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assert_valid_prediction_rows(rows)
         self.assertEqual({row["model_type"] for row in rows}, {TRAINED_MODEL_TYPE})
 
+    def test_committed_sample_uses_trained_estimates_for_every_forecast_row(self) -> None:
+        raw = read_csv_folder("data")
+        cleaned = canonicalize_frame(raw)
+        rows = build_predictions(cleaned.frame, safe_load_model("pickle/model.pkl"))
+
+        trained_rows = sum(1 for row in rows if row["model_type"] == TRAINED_MODEL_TYPE)
+        trained_ratio = trained_rows / len(rows)
+
+        self.assertEqual(len(rows), 54)
+        self.assertGreaterEqual(trained_ratio, 0.99)
+        self.assertEqual(trained_rows, len(rows))
+
     def test_adaptive_blend_weight_matches_artifact(self) -> None:
         """Artifact revenue_blend_weight and roas_blend_weight must equal mean of per-horizon weights."""
         artifact = Path("pickle/model.pkl")

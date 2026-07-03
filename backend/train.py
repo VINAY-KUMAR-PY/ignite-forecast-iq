@@ -97,13 +97,14 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
 
     for level, segment_name, segment in segment_specs(frame):
         daily = aggregate_segment_daily(segment)
-        if len(daily) < 45:
+        if len(daily) < 35:
             continue
         for horizon in HORIZONS:
-            if len(daily) <= horizon + 14:
+            min_history_days = max(MIN_TRAINED_MODEL_ROWS, min(10, horizon // 3))
+            if len(daily) <= horizon + min_history_days:
                 continue
             step = max(7, horizon // 3)
-            for cut in range(14, len(daily) - horizon + 1, step):
+            for cut in range(min_history_days, len(daily) - horizon + 1, step):
                 history_dates = set(daily.iloc[:cut]["date"].astype(str))
                 history = segment[segment["date"].astype(str).isin(history_dates)].copy()
                 future = daily.iloc[cut : cut + horizon]

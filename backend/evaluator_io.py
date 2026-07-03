@@ -36,7 +36,7 @@ from .evaluator_contract import (
 )
 from .evaluator_intervals import DEFAULT_HORIZON_CONFIDENCE_Z
 from .gemini_offline_cache import DISTILLED_LLM_REASONING_HEADER, select_distilled_reasoning
-from .segment_utils import FEATURE_COLUMNS, safe_ratio, window_trend
+from .segment_utils import FEATURE_COLUMNS, aggregate_segment_daily, safe_ratio, window_trend
 
 OFFLINE_AI_MODE_HEADER = (
     "AI mode: OFFLINE_DETERMINISTIC_FALLBACK "
@@ -668,3 +668,96 @@ def write_causal_summary(
         encoding="utf-8",
     )
     return summary_path
+
+
+def generate_explainability_notes(frame: pd.DataFrame, rows: list[dict]) -> str:
+    """Generate deterministic local explanations for evaluator forecasts."""
+    lines = [
+        "=== ForecastIQ Explainability Notes (offline, deterministic) ===",
+        "Purpose: explain why each evaluator forecast moved, using local historical signals rather than generic feature importance.",
+        "Signals: recent revenue trend, spend trend, ROAS stability, seasonality marker, and interval width/confidence.",
+        "",
+    ]
+    if frame.empty or not rows:
+        lines.append("No usable rows were available; fallback predictions are driven by evaluator-safe defaults.")
+        return "\n".join(lines)
+
+    for row in rows:
+        horizon = int(safe_float(row.get("horizon_days"), 0))
+        segment_frame = _explainability_segment_frame(frame, row)
+        signals = _forecast_signals(segment_frame, row, horizon)
+        lines.append(
+            f"- {row.get('level', 'unknown')} | {row.get('segment', 'unknown')} | {horizon}d | "
+            f"model_type={row.get('model_type', 'unknown')} | confidence={row.get('forecast_confidence', 'unknown')}"
+        )
+        for signal in signals[:3]:
+            lines.append(f"  - {signal}")
+    return "\n".join(lines)
+
+
+def write_explainability_notes(
+    frame: pd.DataFrame,
+    rows: list[dict],
+    output_dir: str | Path | None = None,
+) -> Path:
+    """Write explainability_notes.txt beside evaluator predictions."""
+    target_dir = Path(output_dir or "output")
+    target_dir.mkdir(parents=True, exist_ok=True)
+    notes_path = target_dir / "explainability_notes.txt"
+    notes_path.write_text(generate_explainability_notes(frame, rows), encoding="utf-8")
+    return notes_path
+
+
+def _explainability_segment_frame(frame: pd.DataFrame, row: dict) -> pd.DataFrame:
+    level = str(row.get("level") or "overall")
+    segment = str(row.get("segment") or "all")
+    if frame.empty or level == "overall":
+        return frame.copy()
+    column = "campaign_name" if level == "campaign" else level
+    if column not in frame:
+        return pd.DataFrame(columns=frame.columns)
+    return frame[frame[column].astype(str) == segment].copy()
+
+
+def _forecast_signals(segment: pd.DataFrame, row: dict, horizon: int) -> list[str]:
+    if segment.empty:
+        return [
+            "No matching historical segment rows; forecast was generated from safe evaluator defaults.",
+            f"Interval width is {safe_float(row.get('interval_width_pct')):.1f}%, reflecting low direct evidence.",
+            "Seasonality could not be inferred because no valid dated history was present.",
+        ]
+
+    daily = aggregate_segment_daily(segment)
+    revenue_trend_pct = window_trend(daily, "revenue", 28) * 100
+    spend_trend_pct = window_trend(daily, "spend", 28) * 100
+    recent = daily.tail(min(28, len(daily))).copy()
+    roas = np.where(recent["spend"] > 0, recent["revenue"] / recent["spend"], np.nan)
+    roas = pd.Series(roas).replace([np.inf, -np.inf], np.nan).dropna()
+    if len(roas):
+        roas_mean = safe_float(roas.mean())
+        roas_cv = safe_ratio(safe_float(roas.std(ddof=0)), roas_mean) * 100 if roas_mean else 0.0
+        roas_signal = f"ROAS stability: recent average {roas_mean:.2f}x with {roas_cv:.1f}% coefficient of variation."
+    else:
+        roas_signal = "ROAS stability: not computable because recent spend was zero or missing."
+
+    parsed_dates = pd.to_datetime(daily["date"], errors="coerce").dropna()
+    if not parsed_dates.empty and horizon > 0:
+        forecast_end = parsed_dates.max() + pd.Timedelta(days=horizon)
+        seasonality_signal = (
+            f"Seasonality marker: {horizon}d forecast ends in month {forecast_end.month} "
+            f"on weekday {forecast_end.dayofweek}, using model month/day-of-week features."
+        )
+    else:
+        seasonality_signal = "Seasonality marker: unavailable because dated history was incomplete."
+
+    interval_signal = (
+        f"Uncertainty: interval width {safe_float(row.get('interval_width_pct')):.1f}% "
+        f"with confidence label {row.get('forecast_confidence', 'unknown')}."
+    )
+    return [
+        f"Recent 28-day revenue trend: {revenue_trend_pct:+.1f}% versus the prior half-window.",
+        seasonality_signal,
+        roas_signal,
+        f"Recent 28-day spend trend: {spend_trend_pct:+.1f}% versus the prior half-window.",
+        interval_signal,
+    ]

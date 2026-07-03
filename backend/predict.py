@@ -25,11 +25,13 @@ from .evaluator_contract import (
 from .evaluator_io import (
     canonicalize_frame,
     fallback_model_config,
+    generate_explainability_notes,
     generate_offline_causal_summary,
     is_trained_model_artifact,
     read_csv_folder,
     safe_load_model,
     write_causal_summary,
+    write_explainability_notes,
     write_predictions,
 )
 from .inference import (
@@ -110,8 +112,10 @@ def main() -> None:
         output_dir=Path(args.output).parent,
         planned_budgets=planned_budgets,
     )
+    explainability_path = write_explainability_notes(cleaned.frame, rows, output_dir=Path(args.output).parent)
     log(f"Wrote {len(rows)} rows to {args.output}")
     log(f"Causal summary written to {summary_path}")
+    log(f"Explainability notes written to {explainability_path}")
     log(f"scikit-learn version: {sklearn.__version__} (artifact built on 1.9.0)")
 
 

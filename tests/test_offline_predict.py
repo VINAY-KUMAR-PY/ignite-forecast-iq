@@ -28,6 +28,7 @@ from backend.predict import (
     confidence_interval_width,
     estimate_missing_spend_for_trained_mode,
     fallback_model_config,
+    generate_explainability_notes,
     generate_offline_causal_summary,
     planned_projected_spend,
     read_csv_folder,
@@ -35,6 +36,7 @@ from backend.predict import (
     sanitize_rows,
     spend_response_multiplier,
     unseen_category_diagnostics,
+    write_explainability_notes,
     window_sum,
     write_predictions,
 )
@@ -444,6 +446,21 @@ class OfflinePredictionTests(unittest.TestCase):
             f"Causal summary contains no recognized channel names. Expected one of {known_channels}. "
             f"Summary start: {summary[:200]}",
         )
+
+    def test_explainability_notes_are_generated_for_offline_predictions(self) -> None:
+        raw = pd.read_csv("data/sample_campaigns.csv").head(180)
+        cleaned = canonicalize_frame(raw)
+        rows = build_predictions(cleaned.frame, fallback_model_config("explainability test"))
+        notes = generate_explainability_notes(cleaned.frame, rows)
+
+        self.assertIn("ForecastIQ Explainability Notes", notes)
+        self.assertIn("Recent 28-day revenue trend", notes)
+        self.assertIn("ROAS stability", notes)
+        self.assertIn("Seasonality marker", notes)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = write_explainability_notes(cleaned.frame, rows, tmp)
+            self.assertTrue(path.exists())
+            self.assertIn("overall | all | 30d", path.read_text(encoding="utf-8"))
 
     def test_causal_summary_sparse_input_has_executive_and_confidence_notes(self) -> None:
         summary = generate_offline_causal_summary(pd.DataFrame(), [])

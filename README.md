@@ -88,7 +88,7 @@ For AI Integration scoring in the offline evaluator, check the first two lines o
 Note: `requirements.txt` pins `scikit-learn==1.9.0` to match the committed artifact. The supported evaluator runtime is Python 3.11-3.14 with the exact pinned dependencies; CI requires `model_type=trained_model` across that full matrix.
 `requirements.txt` is the minimal offline-evaluator dependency set; `requirements-app.txt` is a superset needed only for running the full FastAPI backend, tests, Gemini integration, and local frontend demo.
 
-The trained `pickle/model.pkl` artifact was rebuilt and last verified with Python 3.14.4 on Windows 11 AMD64. Live Gemini output verification is handled by [scripts/verify_gemini_live.py](./scripts/verify_gemini_live.py) and the Gemini Live Smoke workflow; successful secret-backed runs write redacted replayable transcripts to [docs/gemini_sample_transcripts](./docs/gemini_sample_transcripts/). The latest checked-in live transcript is `live_gemini_transcript_20260702T132317Z.json` for `gemini-2.5-flash`; local offline evaluator runs use deterministic fallback only.
+The trained `pickle/model.pkl` artifact was rebuilt with Python 3.14.4 and verified on both Windows 11 AMD64 and Ubuntu Linux GitHub Actions runners. Live Gemini output verification is handled by [scripts/verify_gemini_live.py](./scripts/verify_gemini_live.py) and the Gemini Live Smoke workflow; successful secret-backed runs write redacted replayable transcripts to [docs/gemini_sample_transcripts](./docs/gemini_sample_transcripts/). The latest checked-in live transcript is `live_gemini_transcript_20260702T132317Z.json` for `gemini-2.5-flash`; local offline evaluator runs use deterministic fallback only.
 
 Dependency verification evidence from a clean Python 3.14.4 virtual environment:
 
@@ -107,7 +107,7 @@ The evaluator CI runs the same pinned install on Ubuntu runners for Python 3.11,
 
 ### Reproducibility
 
-The canonical evaluator runtime is the exact pinned dependency set in `requirements.txt`. A separate sklearn drift-tolerance CI job intentionally installs available older sklearn minor versions (`1.7.2` and `1.8.0`; no above-`1.9.0` release is available on the configured package index yet) and requires one of two clear outcomes: valid `trained_model` output, or a loud compatibility warning before any `safe_baseline_fallback` output is accepted. This prevents silent bad predictions when a reviewer experiments outside the pinned runtime.
+The canonical evaluator runtime is the exact pinned dependency set in `requirements.txt`. Linux verification is enforced by `.github/workflows/evaluator-ci.yml`: the `evaluator`, `exact-sklearn-zero-fallback`, and `hackathon-evaluator-protocol` jobs install dependencies fresh on Ubuntu, run the committed artifact, and require `model_type=trained_model` for supported sample and held-out-style data. A separate sklearn drift-tolerance CI job intentionally installs available older sklearn minor versions (`1.7.2` and `1.8.0`; no above-`1.9.0` release is available on the configured package index yet) and requires one of two clear outcomes: valid `trained_model` output, or a loud compatibility warning before any `safe_baseline_fallback` output is accepted. This prevents silent bad predictions when a reviewer experiments outside the pinned runtime.
 
 Expected output:
 

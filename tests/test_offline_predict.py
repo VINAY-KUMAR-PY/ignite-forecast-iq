@@ -45,6 +45,7 @@ from backend.evaluator_io import trained_model_functional_smoke_test
 from backend.gemini_offline_cache import (
     build_reasoning_trace,
     build_structured_causal_evidence,
+    compose_distilled_explanation,
     select_distilled_reasoning,
 )
 from backend.utils import read_csv_folder as read_training_csv_folder
@@ -576,6 +577,58 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertIn("Meta Ads", trace[0])
         self.assertTrue(any("selected_skeleton=efficiency_compression" in step for step in trace))
         self.assertTrue(any("FINAL_COMPOSITION" in step for step in trace))
+
+    def test_reasoning_trace_covers_negative_unavailable_ci_and_anomaly_objects(self) -> None:
+        class AnomalyLike:
+            def to_dict(self) -> dict:
+                return {
+                    "channel": "Meta Ads",
+                    "date": "2026-02-01",
+                    "metric": "revenue",
+                    "severity": "high",
+                    "zScore": 3.4,
+                }
+
+        negative = select_distilled_reasoning(
+            [AnomalyLike()],
+            [
+                {
+                    "channel": "Meta Ads",
+                    "date": "2026-02-01",
+                    "incrementalRevenue": -4200.0,
+                    "lowerRevenue": -6200.0,
+                    "upperRevenue": -1800.0,
+                    "confidence": "high",
+                    "effectDirection": "negative",
+                    "pValue": 0.02,
+                    "tStatistic": -2.4,
+                    "effectStrength": 2.1,
+                    "parallelTrendPassed": True,
+                }
+            ],
+        )
+        unavailable_ci = compose_distilled_explanation(
+            {
+                "channel": "portfolio",
+                "campaign_type": "portfolio",
+                "intervention_detected": False,
+                "effect_direction": "neutral",
+                "effect_size": 0,
+                "confidence": "low",
+                "baseline_roas": 0,
+                "observed_roas": 0,
+                "delta_percent": 0,
+                "supporting_metrics": {"confidence_interval": ["only-one-side"]},
+                "primary_driver": {},
+                "limitations": [],
+            },
+            "stable_run_rate",
+        )
+
+        self.assertEqual(negative["label"], "efficiency_compression")
+        self.assertIn("top anomaly Meta Ads revenue", negative["evidence_object"]["supporting_metrics"]["anomaly_context"])
+        self.assertTrue(any("selected_skeleton=efficiency_compression" in step for step in negative["reasoning_trace"]))
+        self.assertIn("CI=unavailable", unavailable_ci["evidence_focus"])
 
     def test_structured_causal_evidence_object_uses_runtime_statistics(self) -> None:
         evidence = build_structured_causal_evidence(

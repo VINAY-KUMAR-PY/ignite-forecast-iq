@@ -20,7 +20,15 @@ from backend.evaluator_contract import (
 )
 from backend.evaluator_io import canonicalize_frame, read_csv_folder, safe_load_model
 from backend.gemini import _fallback_insights, _validate_insights_payload, generate_gemini_insights_with_source
-from backend.inference import build_predictions, forecast_segment, trained_forecast_segment
+from backend.inference import (
+    build_predictions,
+    forecast_segment,
+    revenue_residuals,
+    roas_interval_from_residuals,
+    roas_interval_from_revenue,
+    roas_residuals,
+    trained_forecast_segment,
+)
 from backend.segment_utils import FEATURE_COLUMNS
 from backend.train import train_and_save
 
@@ -106,6 +114,46 @@ def test_inference_blends_trained_prediction_with_baseline() -> None:
     assert forecast["expected_revenue"] > baseline["expected_revenue"]
     assert forecast["expected_revenue"] < baseline["expected_revenue"] * 2.05
     assert forecast["lower_revenue"] <= forecast["expected_revenue"] <= forecast["upper_revenue"]
+
+
+def test_roas_uncertainty_helpers_cover_residual_and_legacy_paths() -> None:
+    frame = _campaign_frame(18)
+    google = frame[frame["channel"] == "Google Ads"].copy()
+
+    legacy_lower, legacy_expected, legacy_upper, legacy_confidence = roas_interval_from_revenue(
+        lower_revenue=80,
+        expected_revenue=100,
+        upper_revenue=130,
+        expected_spend=20,
+    )
+    zero_lower, zero_expected, zero_upper, zero_confidence = roas_interval_from_revenue(0, 0, 0, 0)
+    residual_lower, residual_expected, residual_upper, residual_confidence = roas_interval_from_residuals(
+        google,
+        expected_roas=4.8,
+        expected_spend=1800,
+        horizon=60,
+        model={"confidence": {"horizon_confidence_z": {"60": 1.25}}},
+    )
+    sparse_lower, sparse_expected, sparse_upper, sparse_confidence = roas_interval_from_residuals(
+        google.head(1),
+        expected_roas=4.8,
+        expected_spend=1800,
+        horizon=30,
+        model={},
+    )
+    no_spend_interval = roas_interval_from_residuals(google, 4.8, 0, 30, {})
+
+    assert (legacy_lower, legacy_expected, legacy_upper, legacy_confidence) == (4.0, 5.0, 6.5, None)
+    assert zero_confidence == "not_computable"
+    assert (zero_lower, zero_expected, zero_upper) == (0.0, 0.0, 0.0)
+    assert residual_lower < residual_expected < residual_upper
+    assert residual_confidence is None
+    assert sparse_lower < sparse_expected < sparse_upper
+    assert sparse_confidence is None
+    assert no_spend_interval == (0.0, 0.0, 0.0, "not_computable")
+    assert len(revenue_residuals(google)) > 0
+    assert len(roas_residuals(google)) > 0
+    assert len(roas_residuals(pd.DataFrame(columns=["date", "spend", "revenue"]))) == 0
 
 
 def test_inference_falls_back_for_corrupted_or_tiny_trained_inputs() -> None:

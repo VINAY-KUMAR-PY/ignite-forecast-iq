@@ -7,7 +7,7 @@
 Clone: `git clone https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq.git`
 Live demo: https://ignite-forecast-iq.vercel.app
 
-Backend coverage: **90.31% measured locally** with `pytest --cov=backend --cov-report=term-missing`; Evaluator CI enforces a **90.0%** minimum with `--cov-fail-under=90.0`.
+Backend coverage: **90.306% measured locally** (`90.31%` displayed) with `pytest --cov=backend --cov-report=term-missing`; the Evaluator CI `Run tests with coverage` step enforces **90.30%** with `--cov-fail-under=90.30`.
 
 ## Which Requirements File Do I Need?
 
@@ -38,7 +38,7 @@ For automated evaluation, `pickle/model.pkl` is the canonical offline artifact: 
 | Practical Relevance | Budget simulator and decision-support evidence in `backend/decision_support.py`, `src/routes/app.simulator.tsx`, and `TECHNICAL.md` |
 | AI Integration | Offline distilled LLM reasoning in `backend/gemini_offline_cache.py`, causal evidence in `output/causal_summary.txt`, and optional live Gemini checks in `docs/gemini_sample_transcripts/` |
 | Product Thinking | One-click demo flow, Upload -> Dashboard -> Forecast -> Simulator -> Insights journey, and `DEMO_GUIDE.md` |
-| Engineering Quality | Evaluator CI, frontend CI, Playwright flow, 90.0% enforced backend coverage gate, `requirements.txt`/`requirements-app.txt` separation |
+| Engineering Quality | Evaluator CI, frontend CI, Playwright flow, 90.30% enforced backend coverage gate, `requirements.txt`/`requirements-app.txt` separation |
 
 ## Architecture At A Glance
 

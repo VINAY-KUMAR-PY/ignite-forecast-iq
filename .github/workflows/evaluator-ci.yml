@@ -354,7 +354,7 @@ jobs:
       - name: Run tests with coverage
         run: |
           pip install pytest-cov
-          pytest tests/ --cov=backend --cov-report=term-missing --cov-report=json --cov-fail-under=90.0
+          pytest tests/ --cov=backend --cov-report=term-missing --cov-report=json --cov-fail-under=90.30
           python - <<'PY'
           import json
           import os
@@ -388,7 +388,7 @@ jobs:
           with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as handle:
               handle.write("## Backend coverage\n\n")
               handle.write(f"- Overall backend coverage: **{total:.2f}%**\n")
-              handle.write("- Required gate: **90.0%** via `--cov-fail-under=90.0`\n")
+              handle.write("- Required gate: **90.30%** via `--cov-fail-under=90.30`\n")
               handle.write("- Required high-risk module gate: **75%** each\n")
               for module, pct in module_rows:
                   handle.write(f"  - `{module}`: **{pct:.2f}%**\n")

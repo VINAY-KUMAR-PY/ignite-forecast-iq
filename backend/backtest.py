@@ -888,11 +888,11 @@ is only good at account level or remains stable at thinner segment grains.
 | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 {segment_level_rows}
 
-Note on 30-day ROAS interval coverage: ROAS confidence intervals are derived from revenue intervals
-divided by projected spend, so revenue interval width drives ROAS interval width. The 30-day revenue
-multiplier ({model["confidence"]["horizon_interval_multiplier"]["30"]}) and minimum-width floor are calibrated
-against walk-forward evidence; the current trained-model ROAS coverage is {roas_30_coverage}%.
-A future calibration pass dedicated to ROAS residuals could refine interval efficiency further.
+Note on 30-day ROAS interval coverage: ROAS confidence intervals now use a direct residual-volatility
+estimate from historical daily ROAS for each segment, with a minimum ROAS floor when history is thin.
+Revenue intervals still use quantile/residual revenue calibration, but ROAS bounds are no longer a fixed
+linear transform of revenue bounds divided by projected spend. The current trained-model ROAS coverage is
+{roas_30_coverage}%.
 
 ## Interval Calibration Before/After
 

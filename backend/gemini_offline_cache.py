@@ -231,14 +231,92 @@ def compose_distilled_explanation(evidence: dict[str, Any], label: str | None = 
     selected_label = label or _select_skeleton_label(evidence, None)
     skeleton = _SKELETONS.get(selected_label, _SKELETONS["stable_run_rate"])
     values = _format_values(evidence)
+    reasoning_trace = build_reasoning_trace(evidence, selected_label)
     return {
         "label": skeleton["label"],
         "summary": skeleton["summary_skeleton"].format_map(values),
         "evidence_focus": skeleton["evidence_focus_skeleton"].format_map(values),
         "recommended_action": skeleton["recommended_action_skeleton"].format_map(values),
         "evidence_object": evidence,
+        "reasoning_trace": reasoning_trace,
         "prompt_template": LLM_REASONING_PROMPT_TEMPLATE.strip(),
     }
+
+
+def build_reasoning_trace(evidence: dict[str, Any], label: str | None = None) -> list[str]:
+    """Return an audit-style reasoning trace for offline causal interpretation.
+
+    This is not a hidden model chain-of-thought. It is a deterministic,
+    reviewer-visible sequence of evidence checks that mirrors the structure of
+    the distilled Gemini prompt: inspect input evidence, apply explicit
+    decision rules, then compose the final explanation skeleton.
+    """
+    selected_label = label or _select_skeleton_label(evidence, None)
+    metrics = evidence.get("supporting_metrics") if isinstance(evidence.get("supporting_metrics"), dict) else {}
+    interval = metrics.get("confidence_interval") if isinstance(metrics.get("confidence_interval"), list) else []
+    lower = safe_float(interval[0], 0.0) if len(interval) >= 1 else 0.0
+    upper = safe_float(interval[1], 0.0) if len(interval) >= 2 else 0.0
+    confidence = str(evidence.get("confidence") or "low").lower()
+    direction = str(evidence.get("effect_direction") or "neutral").lower()
+    effect_size = safe_float(evidence.get("effect_size"), 0.0)
+    p_value = safe_float(metrics.get("p_value"), 1.0)
+    strength = safe_float(metrics.get("effect_strength"), 0.0)
+    intervention = bool(evidence.get("intervention_detected"))
+    limitations = evidence.get("limitations") if isinstance(evidence.get("limitations"), list) else []
+    driver = evidence.get("primary_driver") if isinstance(evidence.get("primary_driver"), dict) else {}
+
+    if not intervention:
+        rule = "no intervention detected -> stable_run_rate skeleton unless budget context overrides"
+    elif confidence == "low" or lower <= 0 <= upper:
+        rule = "weak confidence or CI crosses zero -> volatility_watch skeleton"
+    elif direction == "negative" or effect_size < 0:
+        rule = "negative estimated effect -> efficiency_compression skeleton"
+    else:
+        rule = "positive statistically ranked signal -> incremental_growth skeleton"
+
+    return [
+        (
+            "INPUT_EVIDENCE: channel={channel}; campaign_type={campaign_type}; "
+            "intervention_detected={intervention}; direction={direction}; "
+            "effect_size=${effect:,.0f}; confidence={confidence}; "
+            "baseline_roas={baseline:.2f}x; observed_roas={observed:.2f}x; "
+            "delta={delta:+.1f}%"
+        ).format(
+            channel=str(evidence.get("channel") or "portfolio"),
+            campaign_type=str(evidence.get("campaign_type") or "portfolio"),
+            intervention=str(intervention).lower(),
+            direction=direction,
+            effect=effect_size,
+            confidence=confidence,
+            baseline=safe_float(evidence.get("baseline_roas"), 0.0),
+            observed=safe_float(evidence.get("observed_roas"), 0.0),
+            delta=safe_float(evidence.get("delta_percent"), 0.0),
+        ),
+        (
+            "STATISTICAL_CHECK: method={method}; p={p:.3f}; t={t:.2f}; "
+            "strength={strength:.2f}; CI=${lower:,.0f} to ${upper:,.0f}; "
+            "parallel_trend_passed={parallel}"
+        ).format(
+            method=str(metrics.get("method") or "unknown"),
+            p=p_value,
+            t=safe_float(metrics.get("t_statistic"), 0.0),
+            strength=strength,
+            lower=lower,
+            upper=upper,
+            parallel=str(bool(metrics.get("parallel_trend_passed"))).lower(),
+        ),
+        f"RULE_APPLICATION: {rule}; selected_skeleton={selected_label}",
+        (
+            "DRIVER_AND_LIMITATIONS: primary_driver={role} {segment} ({metric}); "
+            "limitations={limitations}"
+        ).format(
+            role=str(driver.get("role") or "segment"),
+            segment=str(driver.get("segment") or "portfolio"),
+            metric=str(driver.get("metric") or "observed driver"),
+            limitations="; ".join(str(item) for item in limitations) if limitations else "none identified",
+        ),
+        "FINAL_COMPOSITION: filled the selected distilled Gemini-authored skeleton with the runtime evidence above.",
+    ]
 
 
 def _select_skeleton_label(evidence: dict[str, Any], planned_budgets: dict[str, float] | None) -> str:

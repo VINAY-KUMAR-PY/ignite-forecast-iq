@@ -287,9 +287,13 @@ horizon's `interval_width_pct` is strictly larger than the previous horizon's
 by at least 2 percentage points. Lower bounds are clamped to zero; upper bounds
 are always >= expected revenue.
 
-For ROAS intervals: `lower_roas = lower_revenue / projected_spend`,
-`upper_roas = upper_revenue / projected_spend`. When projected spend is zero,
-ROAS is set to `expected_roas = lower_roas = upper_roas = 0` and
+For ROAS intervals, ForecastIQ now uses an independent residual-volatility
+estimate from historical daily ROAS at the same segment grain. Revenue intervals
+still use quantile/residual revenue calibration, but ROAS bounds are centered on
+the expected ROAS and widened by direct ROAS residuals plus a minimum ROAS floor
+for thin history. This prevents `lower_roas`/`upper_roas` from becoming a fixed
+linear transform of revenue bands divided by projected spend. When projected
+spend is zero, ROAS is set to `expected_roas = lower_roas = upper_roas = 0` and
 `forecast_confidence = not_computable`.
 
 ## Evaluator Contract Compliance
@@ -553,7 +557,9 @@ Statistics
    `{confidence}`, and `{delta_percent}`.
 4. At evaluator runtime, `run.sh` fills those placeholders from the live
    computed evidence object and writes both the JSON evidence object and the
-   generated explanation into `output/causal_summary.txt`.
+   generated explanation into `output/causal_summary.txt`. The same file now
+   includes a `REASONING_TRACE` section showing input evidence, statistical
+   checks, rule application, driver/limitation handling, and final composition.
 
 The offline evaluator never calls Gemini or any external service. Optional live
 mode is available only when explicitly requested with `--enable-live-ai` and a

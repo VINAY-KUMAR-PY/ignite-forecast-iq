@@ -39,6 +39,12 @@ Structured causal evidence object:
     "t_statistic": 1.343
   }
 }
+REASONING_TRACE
+  1. INPUT_EVIDENCE: channel=Meta Ads; campaign_type=Advantage+; intervention_detected=true; direction=positive; effect_size=$2,238; confidence=low; baseline_roas=2.96x; observed_roas=2.98x; delta=+1.6%
+  2. STATISTICAL_CHECK: method=difference_in_differences; p=0.179; t=1.34; strength=0.79; CI=$-1,105 to $5,400; parallel_trend_passed=true
+  3. RULE_APPLICATION: weak confidence or CI crosses zero -> volatility_watch skeleton; selected_skeleton=volatility_watch
+  4. DRIVER_AND_LIMITATIONS: primary_driver=leading_roas Microsoft Ads (5.44x ROAS); limitations=observational DiD, not randomized incrementality; 95% confidence interval crosses zero; p-value is not statistically strong
+  5. FINAL_COMPOSITION: filled the selected distilled Gemini-authored skeleton with the runtime evidence above.
 Generated explanation:
 Meta Ads has a low confidence positive signal with estimated revenue effect $2,238. Observed ROAS is 2.98x versus baseline 2.96x, but the +1.6% delta is not strong enough to treat as proven incrementality.
 Evidence focus: supporting metrics: method=difference_in_differences, p=0.179, t=1.34, strength=0.79, CI=$-1,105 to $5,400, event=2026-06-08; primary driver: leading_roas Microsoft Ads (5.44x ROAS); intervention_detected=true

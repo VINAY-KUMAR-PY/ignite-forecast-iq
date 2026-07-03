@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-03T09:24:07.259370+00:00",
+  "generated_at": "2026-07-03T15:37:35.178763+00:00",
   "data_dir": "data",
   "holdout_days": 30,
   "train_rows": 2160,
@@ -102,8 +102,8 @@
       "rmse": 0.06,
       "mape": 1.08,
       "interval_coverage": 100.0,
-      "mean_interval_width": 2.7572,
-      "mean_interval_width_pct": 66.52
+      "mean_interval_width": 1.12,
+      "mean_interval_width_pct": 27.01
     },
     "roas_mae": 0.04,
     "roas_rmse": 0.06,
@@ -130,8 +130,8 @@
       "rmse": 0.07,
       "mape": 1.44,
       "interval_coverage": 100.0,
-      "mean_interval_width": 2.4828,
-      "mean_interval_width_pct": 60.04
+      "mean_interval_width": 1.1167,
+      "mean_interval_width_pct": 26.99
     },
     "roas_mae": 0.05,
     "roas_rmse": 0.07,
@@ -300,8 +300,8 @@
               "rmse": 0.06,
               "mape": 1.08,
               "interval_coverage": 100.0,
-              "mean_interval_width": 2.7572,
-              "mean_interval_width_pct": 66.52
+              "mean_interval_width": 1.12,
+              "mean_interval_width_pct": 27.01
             },
             "roas_mae": 0.04,
             "roas_rmse": 0.06,
@@ -328,8 +328,8 @@
               "rmse": 0.07,
               "mape": 1.44,
               "interval_coverage": 100.0,
-              "mean_interval_width": 2.4828,
-              "mean_interval_width_pct": 60.04
+              "mean_interval_width": 1.1167,
+              "mean_interval_width_pct": 26.99
             },
             "roas_mae": 0.05,
             "roas_rmse": 0.07,
@@ -386,8 +386,8 @@
               "rmse": 0.06,
               "mape": 1.39,
               "interval_coverage": 100.0,
-              "mean_interval_width": 2.7806,
-              "mean_interval_width_pct": 67.32
+              "mean_interval_width": 1.1144,
+              "mean_interval_width_pct": 27.01
             },
             "roas_mae": 0.05,
             "roas_rmse": 0.06,
@@ -414,8 +414,8 @@
               "rmse": 0.04,
               "mape": 1.07,
               "interval_coverage": 100.0,
-              "mean_interval_width": 2.475,
-              "mean_interval_width_pct": 60.0
+              "mean_interval_width": 1.115,
+              "mean_interval_width_pct": 27.02
             },
             "roas_mae": 0.04,
             "roas_rmse": 0.04,
@@ -472,8 +472,8 @@
               "rmse": 0.05,
               "mape": 1.2,
               "interval_coverage": 100.0,
-              "mean_interval_width": 2.9233,
-              "mean_interval_width_pct": 70.52
+              "mean_interval_width": 1.1167,
+              "mean_interval_width_pct": 26.97
             },
             "roas_mae": 0.04,
             "roas_rmse": 0.05,
@@ -500,8 +500,8 @@
               "rmse": 0.08,
               "mape": 1.86,
               "interval_coverage": 100.0,
-              "mean_interval_width": 2.4861,
-              "mean_interval_width_pct": 59.94
+              "mean_interval_width": 1.1183,
+              "mean_interval_width_pct": 26.96
             },
             "roas_mae": 0.07,
             "roas_rmse": 0.08,
@@ -552,8 +552,8 @@
           "rmse": 0.06,
           "mape": 1.22,
           "interval_coverage": 100.0,
-          "mean_interval_width": 2.8204,
-          "mean_interval_width_pct": 68.12
+          "mean_interval_width": 1.117,
+          "mean_interval_width_pct": 27.0
         },
         "roas_mae": 0.05,
         "roas_rmse": 0.06,
@@ -580,8 +580,8 @@
           "rmse": 0.06,
           "mape": 1.46,
           "interval_coverage": 100.0,
-          "mean_interval_width": 2.4813,
-          "mean_interval_width_pct": 59.99
+          "mean_interval_width": 1.1167,
+          "mean_interval_width_pct": 26.99
         },
         "roas_mae": 0.05,
         "roas_rmse": 0.06,
@@ -594,44 +594,44 @@
           "trained_revenue_coverage": 100.0,
           "trained_revenue_width_pct": 60.0,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 61.59,
+          "trained_roas_width_pct": 27.03,
           "safe_revenue_coverage": 100.0,
           "safe_revenue_width_pct": 60.0,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 60.0
+          "safe_roas_width_pct": 27.05
         },
         "channel": {
           "segments_evaluated": 9,
           "trained_revenue_coverage": 100.0,
           "trained_revenue_width_pct": 63.0,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 64.64,
+          "trained_roas_width_pct": 26.99,
           "safe_revenue_coverage": 100.0,
           "safe_revenue_width_pct": 60.0,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 60.03
+          "safe_roas_width_pct": 27.0
         },
         "campaign_type": {
           "segments_evaluated": 18,
           "trained_revenue_coverage": 100.0,
           "trained_revenue_width_pct": 66.0,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 67.55,
+          "trained_roas_width_pct": 26.98,
           "safe_revenue_coverage": 100.0,
           "safe_revenue_width_pct": 60.0,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 60.0
+          "safe_roas_width_pct": 26.97
         },
         "campaign": {
           "segments_evaluated": 24,
           "trained_revenue_coverage": 100.0,
           "trained_revenue_width_pct": 69.0,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 70.66,
+          "trained_roas_width_pct": 27.01,
           "safe_revenue_coverage": 100.0,
           "safe_revenue_width_pct": 60.0,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 59.97
+          "safe_roas_width_pct": 26.99
         }
       },
       "segment_level_performance": {
@@ -657,8 +657,8 @@
               "rmse": 0.02,
               "mape": 0.36,
               "interval_coverage": 100.0,
-              "mean_interval_width": 2.5067,
-              "mean_interval_width_pct": 61.59
+              "mean_interval_width": 1.1,
+              "mean_interval_width_pct": 27.03
             },
             "roas_mae": 0.01,
             "roas_rmse": 0.02,
@@ -685,8 +685,8 @@
               "rmse": 0.02,
               "mape": 0.34,
               "interval_coverage": 100.0,
-              "mean_interval_width": 2.44,
-              "mean_interval_width_pct": 60.0
+              "mean_interval_width": 1.1,
+              "mean_interval_width_pct": 27.05
             },
             "roas_mae": 0.01,
             "roas_rmse": 0.02,
@@ -736,8 +736,8 @@
               "rmse": 0.04,
               "mape": 0.95,
               "interval_coverage": 100.0,
-              "mean_interval_width": 2.8111,
-              "mean_interval_width_pct": 64.64
+              "mean_interval_width": 1.1733,
+              "mean_interval_width_pct": 26.99
             },
             "roas_mae": 0.04,
             "roas_rmse": 0.04,
@@ -764,8 +764,8 @@
               "rmse": 0.03,
               "mape": 0.57,
               "interval_coverage": 100.0,
-              "mean_interval_width": 2.6111,
-              "mean_interval_width_pct": 60.03
+              "mean_interval_width": 1.1744,
+              "mean_interval_width_pct": 27.0
             },
             "roas_mae": 0.02,
             "roas_rmse": 0.03,
@@ -815,8 +815,8 @@
               "rmse": 0.06,
               "mape": 1.44,
               "interval_coverage": 100.0,
-              "mean_interval_width": 2.635,
-              "mean_interval_width_pct": 67.55
+              "mean_interval_width": 1.0517,
+              "mean_interval_width_pct": 26.98
             },
             "roas_mae": 0.05,
             "roas_rmse": 0.06,
@@ -843,8 +843,8 @@
               "rmse": 0.07,
               "mape": 1.79,
               "interval_coverage": 100.0,
-              "mean_interval_width": 2.3339,
-              "mean_interval_width_pct": 60.0
+              "mean_interval_width": 1.0494,
+              "mean_interval_width_pct": 26.97
             },
             "roas_mae": 0.06,
             "roas_rmse": 0.07,
@@ -894,8 +894,8 @@
               "rmse": 0.06,
               "mape": 1.27,
               "interval_coverage": 100.0,
-              "mean_interval_width": 3.0021,
-              "mean_interval_width_pct": 70.66
+              "mean_interval_width": 1.1471,
+              "mean_interval_width_pct": 27.01
             },
             "roas_mae": 0.05,
             "roas_rmse": 0.06,
@@ -922,8 +922,8 @@
               "rmse": 0.07,
               "mape": 1.68,
               "interval_coverage": 100.0,
-              "mean_interval_width": 2.5483,
-              "mean_interval_width_pct": 59.97
+              "mean_interval_width": 1.1475,
+              "mean_interval_width_pct": 26.99
             },
             "roas_mae": 0.06,
             "roas_rmse": 0.07,
@@ -974,8 +974,8 @@
             "rmse": 0.0567,
             "mape": 1.2233,
             "interval_coverage": 100.0,
-            "mean_interval_width": 2.8204,
-            "mean_interval_width_pct": 68.12
+            "mean_interval_width": 1.117,
+            "mean_interval_width_pct": 26.9967
           },
           "roas_mae": 0.0433,
           "roas_rmse": 0.0567,
@@ -1002,8 +1002,8 @@
             "rmse": 0.0633,
             "mape": 1.4567,
             "interval_coverage": 100.0,
-            "mean_interval_width": 2.4813,
-            "mean_interval_width_pct": 59.9933
+            "mean_interval_width": 1.1167,
+            "mean_interval_width_pct": 26.99
           },
           "roas_mae": 0.0533,
           "roas_rmse": 0.0633,
@@ -1071,8 +1071,8 @@
               "rmse": 0.06,
               "mape": 1.32,
               "interval_coverage": 100.0,
-              "mean_interval_width": 3.2994,
-              "mean_interval_width_pct": 79.65
+              "mean_interval_width": 1.3406,
+              "mean_interval_width_pct": 32.4
             },
             "roas_mae": 0.05,
             "roas_rmse": 0.06,
@@ -1099,8 +1099,8 @@
               "rmse": 0.05,
               "mape": 1.08,
               "interval_coverage": 100.0,
-              "mean_interval_width": 2.9756,
-              "mean_interval_width_pct": 71.95
+              "mean_interval_width": 1.3389,
+              "mean_interval_width_pct": 32.37
             },
             "roas_mae": 0.04,
             "roas_rmse": 0.05,
@@ -1157,8 +1157,8 @@
               "rmse": 0.05,
               "mape": 1.2,
               "interval_coverage": 100.0,
-              "mean_interval_width": 3.365,
-              "mean_interval_width_pct": 80.66
+              "mean_interval_width": 1.3483,
+              "mean_interval_width_pct": 32.37
             },
             "roas_mae": 0.04,
             "roas_rmse": 0.05,
@@ -1185,8 +1185,8 @@
               "rmse": 0.1,
               "mape": 2.31,
               "interval_coverage": 100.0,
-              "mean_interval_width": 3.0356,
-              "mean_interval_width_pct": 72.0
+              "mean_interval_width": 1.3661,
+              "mean_interval_width_pct": 32.4
             },
             "roas_mae": 0.09,
             "roas_rmse": 0.1,
@@ -1243,8 +1243,8 @@
               "rmse": 0.05,
               "mape": 0.81,
               "interval_coverage": 100.0,
-              "mean_interval_width": 3.31,
-              "mean_interval_width_pct": 79.86
+              "mean_interval_width": 1.3417,
+              "mean_interval_width_pct": 32.41
             },
             "roas_mae": 0.03,
             "roas_rmse": 0.05,
@@ -1271,8 +1271,8 @@
               "rmse": 0.06,
               "mape": 1.14,
               "interval_coverage": 100.0,
-              "mean_interval_width": 2.9867,
-              "mean_interval_width_pct": 72.08
+              "mean_interval_width": 1.3439,
+              "mean_interval_width_pct": 32.42
             },
             "roas_mae": 0.05,
             "roas_rmse": 0.06,
@@ -1323,8 +1323,8 @@
           "rmse": 0.05,
           "mape": 1.11,
           "interval_coverage": 100.0,
-          "mean_interval_width": 3.3248,
-          "mean_interval_width_pct": 80.06
+          "mean_interval_width": 1.3435,
+          "mean_interval_width_pct": 32.39
         },
         "roas_mae": 0.04,
         "roas_rmse": 0.05,
@@ -1351,8 +1351,8 @@
           "rmse": 0.07,
           "mape": 1.51,
           "interval_coverage": 100.0,
-          "mean_interval_width": 2.9993,
-          "mean_interval_width_pct": 72.01
+          "mean_interval_width": 1.3496,
+          "mean_interval_width_pct": 32.4
         },
         "roas_mae": 0.06,
         "roas_rmse": 0.07,
@@ -1365,44 +1365,44 @@
           "trained_revenue_coverage": 100.0,
           "trained_revenue_width_pct": 72.0,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 72.24,
+          "trained_roas_width_pct": 32.33,
           "safe_revenue_coverage": 100.0,
           "safe_revenue_width_pct": 72.0,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 72.01
+          "safe_roas_width_pct": 32.38
         },
         "channel": {
           "segments_evaluated": 9,
           "trained_revenue_coverage": 100.0,
           "trained_revenue_width_pct": 75.6,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 75.96,
+          "trained_roas_width_pct": 32.44,
           "safe_revenue_coverage": 100.0,
           "safe_revenue_width_pct": 72.0,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 72.08
+          "safe_roas_width_pct": 32.35
         },
         "campaign_type": {
           "segments_evaluated": 18,
           "trained_revenue_coverage": 100.0,
           "trained_revenue_width_pct": 79.2,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 79.35,
+          "trained_roas_width_pct": 32.39,
           "safe_revenue_coverage": 100.0,
           "safe_revenue_width_pct": 72.0,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 72.0
+          "safe_roas_width_pct": 32.4
         },
         "campaign": {
           "segments_evaluated": 24,
           "trained_revenue_coverage": 100.0,
           "trained_revenue_width_pct": 82.8,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 83.11,
+          "trained_roas_width_pct": 32.39,
           "safe_revenue_coverage": 100.0,
           "safe_revenue_width_pct": 72.0,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 71.98
+          "safe_roas_width_pct": 32.42
         }
       },
       "segment_level_performance": {
@@ -1428,8 +1428,8 @@
               "rmse": 0.03,
               "mape": 0.63,
               "interval_coverage": 100.0,
-              "mean_interval_width": 2.95,
-              "mean_interval_width_pct": 72.24
+              "mean_interval_width": 1.32,
+              "mean_interval_width_pct": 32.33
             },
             "roas_mae": 0.03,
             "roas_rmse": 0.03,
@@ -1456,8 +1456,8 @@
               "rmse": 0.05,
               "mape": 0.96,
               "interval_coverage": 100.0,
-              "mean_interval_width": 2.95,
-              "mean_interval_width_pct": 72.01
+              "mean_interval_width": 1.3267,
+              "mean_interval_width_pct": 32.38
             },
             "roas_mae": 0.04,
             "roas_rmse": 0.05,
@@ -1507,8 +1507,8 @@
               "rmse": 0.05,
               "mape": 1.0,
               "interval_coverage": 100.0,
-              "mean_interval_width": 3.3111,
-              "mean_interval_width_pct": 75.96
+              "mean_interval_width": 1.4122,
+              "mean_interval_width_pct": 32.44
             },
             "roas_mae": 0.04,
             "roas_rmse": 0.05,
@@ -1535,8 +1535,8 @@
               "rmse": 0.06,
               "mape": 1.23,
               "interval_coverage": 100.0,
-              "mean_interval_width": 3.1556,
-              "mean_interval_width_pct": 72.08
+              "mean_interval_width": 1.4167,
+              "mean_interval_width_pct": 32.35
             },
             "roas_mae": 0.05,
             "roas_rmse": 0.06,
@@ -1586,8 +1586,8 @@
               "rmse": 0.05,
               "mape": 1.23,
               "interval_coverage": 100.0,
-              "mean_interval_width": 3.1056,
-              "mean_interval_width_pct": 79.35
+              "mean_interval_width": 1.2661,
+              "mean_interval_width_pct": 32.39
             },
             "roas_mae": 0.04,
             "roas_rmse": 0.05,
@@ -1614,8 +1614,8 @@
               "rmse": 0.07,
               "mape": 1.54,
               "interval_coverage": 100.0,
-              "mean_interval_width": 2.8233,
-              "mean_interval_width_pct": 72.0
+              "mean_interval_width": 1.2706,
+              "mean_interval_width_pct": 32.4
             },
             "roas_mae": 0.06,
             "roas_rmse": 0.07,
@@ -1665,8 +1665,8 @@
               "rmse": 0.06,
               "mape": 1.12,
               "interval_coverage": 100.0,
-              "mean_interval_width": 3.5412,
-              "mean_interval_width_pct": 83.11
+              "mean_interval_width": 1.3788,
+              "mean_interval_width_pct": 32.39
             },
             "roas_mae": 0.04,
             "roas_rmse": 0.06,
@@ -1693,8 +1693,8 @@
               "rmse": 0.08,
               "mape": 1.66,
               "interval_coverage": 100.0,
-              "mean_interval_width": 3.0787,
-              "mean_interval_width_pct": 71.98
+              "mean_interval_width": 1.3867,
+              "mean_interval_width_pct": 32.42
             },
             "roas_mae": 0.07,
             "roas_rmse": 0.08,
@@ -1745,8 +1745,8 @@
             "rmse": 0.0533,
             "mape": 1.11,
             "interval_coverage": 100.0,
-            "mean_interval_width": 3.3248,
-            "mean_interval_width_pct": 80.0567
+            "mean_interval_width": 1.3435,
+            "mean_interval_width_pct": 32.3933
           },
           "roas_mae": 0.04,
           "roas_rmse": 0.0533,
@@ -1773,8 +1773,8 @@
             "rmse": 0.07,
             "mape": 1.51,
             "interval_coverage": 100.0,
-            "mean_interval_width": 2.9993,
-            "mean_interval_width_pct": 72.01
+            "mean_interval_width": 1.3496,
+            "mean_interval_width_pct": 32.3967
           },
           "roas_mae": 0.06,
           "roas_rmse": 0.07,
@@ -1842,8 +1842,8 @@
               "rmse": 0.07,
               "mape": 1.66,
               "interval_coverage": 100.0,
-              "mean_interval_width": 4.1872,
-              "mean_interval_width_pct": 100.46
+              "mean_interval_width": 1.6844,
+              "mean_interval_width_pct": 40.54
             },
             "roas_mae": 0.06,
             "roas_rmse": 0.07,
@@ -1870,8 +1870,8 @@
               "rmse": 0.12,
               "mape": 2.73,
               "interval_coverage": 100.0,
-              "mean_interval_width": 3.7767,
-              "mean_interval_width_pct": 89.98
+              "mean_interval_width": 1.6978,
+              "mean_interval_width_pct": 40.44
             },
             "roas_mae": 0.11,
             "roas_rmse": 0.12,
@@ -1928,8 +1928,8 @@
               "rmse": 0.14,
               "mape": 2.42,
               "interval_coverage": 100.0,
-              "mean_interval_width": 4.1483,
-              "mean_interval_width_pct": 99.79
+              "mean_interval_width": 1.675,
+              "mean_interval_width_pct": 40.45
             },
             "roas_mae": 0.1,
             "roas_rmse": 0.14,
@@ -1956,8 +1956,8 @@
               "rmse": 0.07,
               "mape": 1.41,
               "interval_coverage": 100.0,
-              "mean_interval_width": 3.7411,
-              "mean_interval_width_pct": 89.99
+              "mean_interval_width": 1.685,
+              "mean_interval_width_pct": 40.52
             },
             "roas_mae": 0.06,
             "roas_rmse": 0.07,
@@ -2014,8 +2014,8 @@
           "rmse": 0.11,
           "mape": 2.04,
           "interval_coverage": 100.0,
-          "mean_interval_width": 4.1678,
-          "mean_interval_width_pct": 100.12
+          "mean_interval_width": 1.6797,
+          "mean_interval_width_pct": 40.49
         },
         "roas_mae": 0.08,
         "roas_rmse": 0.11,
@@ -2042,8 +2042,8 @@
           "rmse": 0.1,
           "mape": 2.07,
           "interval_coverage": 100.0,
-          "mean_interval_width": 3.7589,
-          "mean_interval_width_pct": 89.98
+          "mean_interval_width": 1.6914,
+          "mean_interval_width_pct": 40.48
         },
         "roas_mae": 0.08,
         "roas_rmse": 0.1,
@@ -2056,44 +2056,44 @@
           "trained_revenue_coverage": 100.0,
           "trained_revenue_width_pct": 90.0,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 91.15,
+          "trained_roas_width_pct": 40.47,
           "safe_revenue_coverage": 100.0,
           "safe_revenue_width_pct": 90.0,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 90.15
+          "safe_roas_width_pct": 40.39
         },
         "channel": {
           "segments_evaluated": 6,
           "trained_revenue_coverage": 100.0,
           "trained_revenue_width_pct": 94.5,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 94.49,
+          "trained_roas_width_pct": 40.49,
           "safe_revenue_coverage": 100.0,
           "safe_revenue_width_pct": 90.0,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 89.94
+          "safe_roas_width_pct": 40.49
         },
         "campaign_type": {
           "segments_evaluated": 12,
           "trained_revenue_coverage": 100.0,
           "trained_revenue_width_pct": 99.0,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 99.09,
+          "trained_roas_width_pct": 40.49,
           "safe_revenue_coverage": 100.0,
           "safe_revenue_width_pct": 90.0,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 89.98
+          "safe_roas_width_pct": 40.49
         },
         "campaign": {
           "segments_evaluated": 16,
           "trained_revenue_coverage": 100.0,
           "trained_revenue_width_pct": 103.5,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 104.13,
+          "trained_roas_width_pct": 40.5,
           "safe_revenue_coverage": 100.0,
           "safe_revenue_width_pct": 90.0,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 89.98
+          "safe_roas_width_pct": 40.49
         }
       },
       "segment_level_performance": {
@@ -2119,8 +2119,8 @@
               "rmse": 0.04,
               "mape": 0.91,
               "interval_coverage": 100.0,
-              "mean_interval_width": 3.705,
-              "mean_interval_width_pct": 91.15
+              "mean_interval_width": 1.645,
+              "mean_interval_width_pct": 40.47
             },
             "roas_mae": 0.04,
             "roas_rmse": 0.04,
@@ -2147,8 +2147,8 @@
               "rmse": 0.06,
               "mape": 1.3,
               "interval_coverage": 100.0,
-              "mean_interval_width": 3.705,
-              "mean_interval_width_pct": 90.15
+              "mean_interval_width": 1.66,
+              "mean_interval_width_pct": 40.39
             },
             "roas_mae": 0.05,
             "roas_rmse": 0.06,
@@ -2198,8 +2198,8 @@
               "rmse": 0.07,
               "mape": 1.53,
               "interval_coverage": 100.0,
-              "mean_interval_width": 4.1383,
-              "mean_interval_width_pct": 94.49
+              "mean_interval_width": 1.7683,
+              "mean_interval_width_pct": 40.49
             },
             "roas_mae": 0.05,
             "roas_rmse": 0.07,
@@ -2226,8 +2226,8 @@
               "rmse": 0.05,
               "mape": 1.09,
               "interval_coverage": 100.0,
-              "mean_interval_width": 3.9433,
-              "mean_interval_width_pct": 89.94
+              "mean_interval_width": 1.775,
+              "mean_interval_width_pct": 40.49
             },
             "roas_mae": 0.04,
             "roas_rmse": 0.05,
@@ -2277,8 +2277,8 @@
               "rmse": 0.09,
               "mape": 2.05,
               "interval_coverage": 100.0,
-              "mean_interval_width": 3.8967,
-              "mean_interval_width_pct": 99.09
+              "mean_interval_width": 1.5867,
+              "mean_interval_width_pct": 40.49
             },
             "roas_mae": 0.08,
             "roas_rmse": 0.09,
@@ -2305,8 +2305,8 @@
               "rmse": 0.1,
               "mape": 2.32,
               "interval_coverage": 100.0,
-              "mean_interval_width": 3.5417,
-              "mean_interval_width_pct": 89.98
+              "mean_interval_width": 1.5942,
+              "mean_interval_width_pct": 40.49
             },
             "roas_mae": 0.09,
             "roas_rmse": 0.1,
@@ -2356,8 +2356,8 @@
               "rmse": 0.14,
               "mape": 2.37,
               "interval_coverage": 100.0,
-              "mean_interval_width": 4.44,
-              "mean_interval_width_pct": 104.13
+              "mean_interval_width": 1.7206,
+              "mean_interval_width_pct": 40.5
             },
             "roas_mae": 0.1,
             "roas_rmse": 0.14,
@@ -2384,8 +2384,8 @@
               "rmse": 0.11,
               "mape": 2.35,
               "interval_coverage": 100.0,
-              "mean_interval_width": 3.8594,
-              "mean_interval_width_pct": 89.98
+              "mean_interval_width": 1.7369,
+              "mean_interval_width_pct": 40.49
             },
             "roas_mae": 0.1,
             "roas_rmse": 0.11,
@@ -2436,8 +2436,8 @@
             "rmse": 0.105,
             "mape": 2.04,
             "interval_coverage": 100.0,
-            "mean_interval_width": 4.1677,
-            "mean_interval_width_pct": 100.125
+            "mean_interval_width": 1.6797,
+            "mean_interval_width_pct": 40.495
           },
           "roas_mae": 0.08,
           "roas_rmse": 0.105,
@@ -2464,8 +2464,8 @@
             "rmse": 0.095,
             "mape": 2.07,
             "interval_coverage": 100.0,
-            "mean_interval_width": 3.7589,
-            "mean_interval_width_pct": 89.985
+            "mean_interval_width": 1.6914,
+            "mean_interval_width_pct": 40.48
           },
           "roas_mae": 0.085,
           "roas_rmse": 0.095,
@@ -2514,15 +2514,15 @@
       "trained_lower_revenue": 339211.65,
       "trained_upper_revenue": 629964.49,
       "trained_expected_roas": 4.07,
-      "trained_lower_roas": 2.86,
-      "trained_upper_roas": 5.3,
+      "trained_lower_roas": 3.52,
+      "trained_upper_roas": 4.62,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 482379.32,
       "safe_lower_revenue": 337665.53,
       "safe_upper_revenue": 627093.12,
       "safe_expected_roas": 4.06,
-      "safe_lower_roas": 2.84,
-      "safe_upper_roas": 5.28
+      "safe_lower_roas": 3.51,
+      "safe_upper_roas": 4.61
     },
     {
       "level": "channel",
@@ -2534,15 +2534,15 @@
       "trained_lower_revenue": 186233.61,
       "trained_upper_revenue": 357514.15,
       "trained_expected_roas": 4.6,
-      "trained_lower_roas": 3.18,
-      "trained_upper_roas": 6.1,
+      "trained_lower_roas": 3.98,
+      "trained_upper_roas": 5.22,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 270817.94,
       "safe_lower_revenue": 189572.56,
       "safe_upper_revenue": 352063.32,
       "safe_expected_roas": 4.62,
-      "safe_lower_roas": 3.24,
-      "safe_upper_roas": 6.01
+      "safe_lower_roas": 4.0,
+      "safe_upper_roas": 5.25
     },
     {
       "level": "channel",
@@ -2554,15 +2554,15 @@
       "trained_lower_revenue": 97562.04,
       "trained_upper_revenue": 187290.62,
       "trained_expected_roas": 3.01,
-      "trained_lower_roas": 2.07,
-      "trained_upper_roas": 3.97,
+      "trained_lower_roas": 2.6,
+      "trained_upper_roas": 3.41,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 140404.68,
       "safe_lower_revenue": 98283.27,
       "safe_upper_revenue": 182526.08,
       "safe_expected_roas": 2.97,
-      "safe_lower_roas": 2.08,
-      "safe_upper_roas": 3.87
+      "safe_lower_roas": 2.57,
+      "safe_upper_roas": 3.37
     },
     {
       "level": "channel",
@@ -2574,15 +2574,15 @@
       "trained_lower_revenue": 48558.53,
       "trained_upper_revenue": 93218.2,
       "trained_expected_roas": 5.44,
-      "trained_lower_roas": 3.74,
-      "trained_upper_roas": 7.17,
+      "trained_lower_roas": 4.7,
+      "trained_upper_roas": 6.17,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 71160.51,
       "safe_lower_revenue": 49812.36,
       "safe_upper_revenue": 92508.66,
       "safe_expected_roas": 5.48,
-      "safe_lower_roas": 3.83,
-      "safe_upper_roas": 7.12
+      "safe_lower_roas": 4.74,
+      "safe_upper_roas": 6.21
     },
     {
       "level": "campaign_type",
@@ -2594,15 +2594,15 @@
       "trained_lower_revenue": 35524.11,
       "trained_upper_revenue": 70518.01,
       "trained_expected_roas": 2.99,
-      "trained_lower_roas": 1.99,
-      "trained_upper_roas": 3.96,
+      "trained_lower_roas": 2.59,
+      "trained_upper_roas": 3.39,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 51961.55,
       "safe_lower_revenue": 36373.08,
       "safe_upper_revenue": 67550.01,
       "safe_expected_roas": 2.92,
-      "safe_lower_roas": 2.04,
-      "safe_upper_roas": 3.79
+      "safe_lower_roas": 2.52,
+      "safe_upper_roas": 3.31
     },
     {
       "level": "campaign_type",
@@ -2614,15 +2614,15 @@
       "trained_lower_revenue": 64880.6,
       "trained_upper_revenue": 128792.82,
       "trained_expected_roas": 4.28,
-      "trained_lower_roas": 2.89,
-      "trained_upper_roas": 5.74,
+      "trained_lower_roas": 3.7,
+      "trained_upper_roas": 4.86,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 96286.88,
       "safe_lower_revenue": 67400.82,
       "safe_upper_revenue": 125172.95,
       "safe_expected_roas": 4.29,
-      "safe_lower_roas": 3.0,
-      "safe_upper_roas": 5.58
+      "safe_lower_roas": 3.71,
+      "safe_upper_roas": 4.87
     },
     {
       "level": "campaign_type",
@@ -2634,15 +2634,15 @@
       "trained_lower_revenue": 28351.73,
       "trained_upper_revenue": 56280.3,
       "trained_expected_roas": 3.04,
-      "trained_lower_roas": 2.04,
-      "trained_upper_roas": 4.06,
+      "trained_lower_roas": 2.63,
+      "trained_upper_roas": 3.46,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 42449.76,
       "safe_lower_revenue": 29714.83,
       "safe_upper_revenue": 55184.68,
       "safe_expected_roas": 3.06,
-      "safe_lower_roas": 2.14,
-      "safe_upper_roas": 3.98
+      "safe_lower_roas": 2.65,
+      "safe_upper_roas": 3.47
     },
     {
       "level": "campaign_type",
@@ -2654,15 +2654,15 @@
       "trained_lower_revenue": 31156.68,
       "trained_upper_revenue": 61848.34,
       "trained_expected_roas": 3.0,
-      "trained_lower_roas": 2.01,
-      "trained_upper_roas": 3.98,
+      "trained_lower_roas": 2.6,
+      "trained_upper_roas": 3.41,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 46006.26,
       "safe_lower_revenue": 32204.38,
       "safe_upper_revenue": 59808.14,
       "safe_expected_roas": 2.96,
-      "safe_lower_roas": 2.07,
-      "safe_upper_roas": 3.85
+      "safe_lower_roas": 2.56,
+      "safe_upper_roas": 3.36
     },
     {
       "level": "campaign_type",
@@ -2674,15 +2674,15 @@
       "trained_lower_revenue": 83331.59,
       "trained_upper_revenue": 165419.42,
       "trained_expected_roas": 5.66,
-      "trained_lower_roas": 3.69,
-      "trained_upper_roas": 7.32,
+      "trained_lower_roas": 4.89,
+      "trained_upper_roas": 6.42,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 125520.65,
       "safe_lower_revenue": 87864.45,
       "safe_upper_revenue": 163176.84,
       "safe_expected_roas": 5.56,
-      "safe_lower_roas": 3.89,
-      "safe_upper_roas": 7.22
+      "safe_lower_roas": 4.81,
+      "safe_upper_roas": 6.31
     },
     {
       "level": "campaign_type",
@@ -2694,15 +2694,15 @@
       "trained_lower_revenue": 81149.95,
       "trained_upper_revenue": 161088.71,
       "trained_expected_roas": 4.53,
-      "trained_lower_roas": 3.06,
-      "trained_upper_roas": 6.07,
+      "trained_lower_roas": 3.92,
+      "trained_upper_roas": 5.14,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 120172.26,
       "safe_lower_revenue": 84120.58,
       "safe_upper_revenue": 156223.94,
       "safe_expected_roas": 4.53,
-      "safe_lower_roas": 3.17,
-      "safe_upper_roas": 5.89
+      "safe_lower_roas": 3.92,
+      "safe_upper_roas": 5.14
     },
     {
       "level": "campaign",
@@ -2714,15 +2714,15 @@
       "trained_lower_revenue": 34728.8,
       "trained_upper_revenue": 71313.33,
       "trained_expected_roas": 2.99,
-      "trained_lower_roas": 1.95,
-      "trained_upper_roas": 4.0,
+      "trained_lower_roas": 2.59,
+      "trained_upper_roas": 3.39,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 51961.55,
       "safe_lower_revenue": 36373.08,
       "safe_upper_revenue": 67550.01,
       "safe_expected_roas": 2.92,
-      "safe_lower_roas": 2.04,
-      "safe_upper_roas": 3.79
+      "safe_lower_roas": 2.52,
+      "safe_upper_roas": 3.31
     },
     {
       "level": "campaign",
@@ -2734,15 +2734,15 @@
       "trained_lower_revenue": 24062.78,
       "trained_upper_revenue": 49411.35,
       "trained_expected_roas": 6.08,
-      "trained_lower_roas": 3.97,
-      "trained_upper_roas": 8.15,
+      "trained_lower_roas": 5.26,
+      "trained_upper_roas": 6.9,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 36892.53,
       "safe_lower_revenue": 25824.77,
       "safe_upper_revenue": 47960.29,
       "safe_expected_roas": 6.09,
-      "safe_lower_roas": 4.26,
-      "safe_upper_roas": 7.91
+      "safe_lower_roas": 5.26,
+      "safe_upper_roas": 6.91
     },
     {
       "level": "campaign",
@@ -2754,15 +2754,15 @@
       "trained_lower_revenue": 22372.3,
       "trained_upper_revenue": 45940.06,
       "trained_expected_roas": 4.93,
-      "trained_lower_roas": 3.23,
-      "trained_upper_roas": 6.62,
+      "trained_lower_roas": 4.26,
+      "trained_upper_roas": 5.59,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 34268.01,
       "safe_lower_revenue": 23987.61,
       "safe_upper_revenue": 44548.41,
       "safe_expected_roas": 4.94,
-      "safe_lower_roas": 3.46,
-      "safe_upper_roas": 6.42
+      "safe_lower_roas": 4.27,
+      "safe_upper_roas": 5.61
     },
     {
       "level": "campaign",
@@ -2774,15 +2774,15 @@
       "trained_lower_revenue": 57495.87,
       "trained_upper_revenue": 118064.04,
       "trained_expected_roas": 5.37,
-      "trained_lower_roas": 3.48,
-      "trained_upper_roas": 7.14,
+      "trained_lower_roas": 4.64,
+      "trained_upper_roas": 6.09,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 88628.13,
       "safe_lower_revenue": 62039.69,
       "safe_upper_revenue": 115216.57,
       "safe_expected_roas": 5.36,
-      "safe_lower_roas": 3.75,
-      "safe_upper_roas": 6.97
+      "safe_lower_roas": 4.64,
+      "safe_upper_roas": 6.09
     },
     {
       "level": "campaign",
@@ -2794,15 +2794,15 @@
       "trained_lower_revenue": 30459.14,
       "trained_upper_revenue": 62545.88,
       "trained_expected_roas": 3.0,
-      "trained_lower_roas": 1.96,
-      "trained_upper_roas": 4.03,
+      "trained_lower_roas": 2.6,
+      "trained_upper_roas": 3.41,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 46006.26,
       "safe_lower_revenue": 32204.38,
       "safe_upper_revenue": 59808.14,
       "safe_expected_roas": 2.96,
-      "safe_lower_roas": 2.07,
-      "safe_upper_roas": 3.85
+      "safe_lower_roas": 2.56,
+      "safe_upper_roas": 3.36
     },
     {
       "level": "campaign",
@@ -2814,15 +2814,15 @@
       "trained_lower_revenue": 57127.45,
       "trained_upper_revenue": 117307.51,
       "trained_expected_roas": 4.33,
-      "trained_lower_roas": 2.91,
-      "trained_upper_roas": 5.98,
+      "trained_lower_roas": 3.75,
+      "trained_upper_roas": 4.92,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 85905.37,
       "safe_lower_revenue": 60133.76,
       "safe_upper_revenue": 111676.98,
       "safe_expected_roas": 4.38,
-      "safe_lower_roas": 3.07,
-      "safe_upper_roas": 5.69
+      "safe_lower_roas": 3.79,
+      "safe_upper_roas": 4.97
     },
     {
       "level": "campaign",
@@ -2834,15 +2834,15 @@
       "trained_lower_revenue": 27716.99,
       "trained_upper_revenue": 56915.04,
       "trained_expected_roas": 3.04,
-      "trained_lower_roas": 2.0,
-      "trained_upper_roas": 4.1,
+      "trained_lower_roas": 2.63,
+      "trained_upper_roas": 3.46,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 42449.76,
       "safe_lower_revenue": 29714.83,
       "safe_upper_revenue": 55184.68,
       "safe_expected_roas": 3.06,
-      "safe_lower_roas": 2.14,
-      "safe_upper_roas": 3.98
+      "safe_lower_roas": 2.65,
+      "safe_upper_roas": 3.47
     },
     {
       "level": "campaign",
@@ -2854,15 +2854,15 @@
       "trained_lower_revenue": 63428.05,
       "trained_upper_revenue": 130245.38,
       "trained_expected_roas": 4.28,
-      "trained_lower_roas": 2.83,
-      "trained_upper_roas": 5.8,
+      "trained_lower_roas": 3.7,
+      "trained_upper_roas": 4.86,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 96286.88,
       "safe_lower_revenue": 67400.82,
       "safe_upper_revenue": 125172.95,
       "safe_expected_roas": 4.29,
-      "safe_lower_roas": 3.0,
-      "safe_upper_roas": 5.58
+      "safe_lower_roas": 3.71,
+      "safe_upper_roas": 4.87
     }
   ]
 }

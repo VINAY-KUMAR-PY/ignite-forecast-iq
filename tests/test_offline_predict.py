@@ -42,7 +42,11 @@ from backend.predict import (
     write_predictions,
 )
 from backend.evaluator_io import trained_model_functional_smoke_test
-from backend.gemini_offline_cache import build_structured_causal_evidence, select_distilled_reasoning
+from backend.gemini_offline_cache import (
+    build_reasoning_trace,
+    build_structured_causal_evidence,
+    select_distilled_reasoning,
+)
 from backend.utils import read_csv_folder as read_training_csv_folder
 
 
@@ -468,6 +472,10 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertIn("DISTILLED_LLM_DERIVED_OFFLINE_CACHE", summary)
         self.assertIn("Distilled Gemini explanation skeleton:", summary)
         self.assertIn("Structured causal evidence object:", summary)
+        self.assertIn("REASONING_TRACE", summary)
+        self.assertIn("INPUT_EVIDENCE", summary)
+        self.assertIn("STATISTICAL_CHECK", summary)
+        self.assertIn("FINAL_COMPOSITION", summary)
         self.assertIn("Generated explanation:", summary)
         self.assertIn('"effect_size"', summary)
         self.assertIn('"supporting_metrics"', summary)
@@ -506,6 +514,8 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertTrue(summary.startswith("AI mode: OFFLINE_DETERMINISTIC_FALLBACK"))
         self.assertGreater(len(summary), 400)
         self.assertIn("Executive interpretation", summary)
+        self.assertIn("REASONING_TRACE", summary)
+        self.assertIn("INPUT_EVIDENCE", summary)
         self.assertIn("Confidence note", summary)
         self.assertIn("observational difference-in-differences", summary)
 
@@ -531,12 +541,41 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertEqual(first, second)
         self.assertEqual(first["label"], "incremental_growth")
         self.assertIn("evidence_object", first)
+        self.assertIn("reasoning_trace", first)
+        self.assertGreaterEqual(len(first["reasoning_trace"]), 4)
+        self.assertTrue(any("RULE_APPLICATION" in step for step in first["reasoning_trace"]))
         self.assertEqual(first["evidence_object"]["channel"], "Google Ads")
         self.assertEqual(first["evidence_object"]["effect_size"], 12000.0)
         self.assertIn("Microsoft Ads", first["evidence_focus"])
         self.assertIn("Google Ads", first["summary"])
         self.assertIn("$12,000", first["summary"])
         self.assertEqual(uncertain["label"], "volatility_watch")
+
+    def test_reasoning_trace_is_data_dependent_and_non_empty(self) -> None:
+        evidence = build_structured_causal_evidence(
+            [{"channel": "Meta Ads", "date": "2026-02-01", "metric": "revenue"}],
+            [
+                {
+                    "channel": "Meta Ads",
+                    "date": "2026-02-01",
+                    "incrementalRevenue": -3200.0,
+                    "lowerRevenue": -5200.0,
+                    "upperRevenue": -1200.0,
+                    "confidence": "medium",
+                    "effectDirection": "negative",
+                    "pValue": 0.03,
+                    "tStatistic": -2.3,
+                    "effectStrength": 1.9,
+                    "parallelTrendPassed": True,
+                }
+            ],
+        )
+        trace = build_reasoning_trace(evidence, "efficiency_compression")
+
+        self.assertGreaterEqual(len(trace), 4)
+        self.assertIn("Meta Ads", trace[0])
+        self.assertTrue(any("selected_skeleton=efficiency_compression" in step for step in trace))
+        self.assertTrue(any("FINAL_COMPOSITION" in step for step in trace))
 
     def test_structured_causal_evidence_object_uses_runtime_statistics(self) -> None:
         evidence = build_structured_causal_evidence(

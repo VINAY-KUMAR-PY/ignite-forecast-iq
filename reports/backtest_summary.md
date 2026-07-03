@@ -1,6 +1,6 @@
 # ForecastIQ Backtest Summary
 
-Generated: 2026-07-03T09:24:07.259370+00:00
+Generated: 2026-07-03T15:37:35.178763+00:00
 
 ## Holdout Design
 
@@ -43,8 +43,8 @@ Generated: 2026-07-03T09:24:07.259370+00:00
 
 | Model | MAE | RMSE | MAPE | Interval coverage | Mean interval width | Mean interval width % |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Trained model | 0.04 | 0.06 | 1.08% | 100.0% | 2.7572 | 66.52% |
-| Safe baseline | 0.05 | 0.07 | 1.44% | 100.0% | 2.4828 | 60.04% |
+| Trained model | 0.04 | 0.06 | 1.08% | 100.0% | 1.12 | 27.01% |
+| Safe baseline | 0.05 | 0.07 | 1.44% | 100.0% | 1.1167 | 26.99% |
 
 ## Trained vs Baseline
 
@@ -98,9 +98,9 @@ would use when no trained residual correction is trusted.
 
 | Horizon days | Folds | Segments | Trained revenue MAE | Trained revenue RMSE | Trained revenue MAPE | Trained revenue coverage | Trained revenue width % | Trained ROAS MAE | Trained ROAS RMSE | Trained ROAS coverage | Trained ROAS width | Baseline MAE | Baseline RMSE | Baseline width % | Revenue MAE winner |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| 30 | 3 | 54 | 2180.83 | 3212.65 | 2.23% | 100.0% | 66.5% | 0.05 | 0.06 | 100.0% | 2.8204 | 3097.88 | 4501.73 | 60.0% | Trained model |
-| 60 | 3 | 54 | 17906.95 | 29506.8 | 9.54% | 100.0% | 79.8% | 0.04 | 0.05 | 100.0% | 3.3248 | 17906.95 | 29506.8 | 72.0% | Tie |
-| 90 | 2 | 36 | 22141.94 | 34041.4 | 7.89% | 100.0% | 99.75% | 0.08 | 0.11 | 100.0% | 4.1678 | 22141.94 | 34041.4 | 90.0% | Tie |
+| 30 | 3 | 54 | 2180.83 | 3212.65 | 2.23% | 100.0% | 66.5% | 0.05 | 0.06 | 100.0% | 1.117 | 3097.88 | 4501.73 | 60.0% | Trained model |
+| 60 | 3 | 54 | 17906.95 | 29506.8 | 9.54% | 100.0% | 79.8% | 0.04 | 0.05 | 100.0% | 1.3435 | 17906.95 | 29506.8 | 72.0% | Tie |
+| 90 | 2 | 36 | 22141.94 | 34041.4 | 7.89% | 100.0% | 99.75% | 0.08 | 0.11 | 100.0% | 1.6797 | 22141.94 | 34041.4 | 90.0% | Tie |
 
 One-line verdicts against the seasonal-average baseline:
 
@@ -127,18 +127,6 @@ the trained residual correction adds value and where the seasonal-average baseli
 | 90 | channel | 6 | 40939.45 | 7.82% | 40939.45 | 7.82% | Tie | 0.07 | 1.53% | 0.05 | 1.09% | Safe baseline |
 | 90 | campaign_type | 12 | 20219.77 | 7.91% | 20219.77 | 7.91% | Tie | 0.09 | 2.05% | 0.1 | 2.32% | Trained model |
 | 90 | campaign | 16 | 15117.71 | 7.9% | 15117.71 | 7.9% | Tie | 0.14 | 2.37% | 0.11 | 2.35% | Tie |
-
-## Offline Evaluator vs Live XGBoost Consistency
-
-This table compares the committed sklearn GradientBoostingRegressor evaluator artifact with the live app forecast path on the same account-level final holdout windows. The offline evaluator remains the canonical graded artifact because `run.sh` must use minimal dependencies and run without a server, while the live path powers interactive dashboard diagnostics.
-
-| Horizon days | Actual revenue | sklearn evaluator revenue MAPE | live XGBoost revenue MAPE | sklearn evaluator revenue RMSE | live XGBoost revenue RMSE | sklearn ROAS MAPE | live XGBoost ROAS MAPE |
-| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 30 | $476,116.68 | 1.96% | 1.35% | $9,342.22 | $6,435.65 | 0.36% | 0.14% |
-| 60 | $958,024.16 | 2.19% | 5.92% | $21,000.92 | $56,746.84 | 0.39% | 8.78% |
-| 90 | $1,423,955.10 | 4.17% | 3.83% | $59,379.42 | $54,566.70 | 0.36% | 10.47% |
-
-Maximum account-level revenue MAPE delta is 3.73 percentage points across 30/60/90-day horizons; maximum ROAS MAPE delta is 10.11 percentage points. This is acceptable for grading because the offline artifact and live XGBoost path agree on revenue scale within single-digit MAPE on the same holdout windows, while the evaluator path is intentionally more conservative on long-horizon ROAS to satisfy the automated offline contract.
 
 ## Rolling-Origin Average Metrics
 
@@ -173,11 +161,11 @@ is only good at account level or remains stable at thinner segment grains.
 | 90 | campaign_type | 12 | 100.0% | 99.0% | 100.0% | 100.0% | 90.0% |
 | 90 | campaign | 16 | 100.0% | 103.5% | 100.0% | 100.0% | 90.0% |
 
-Note on 30-day ROAS interval coverage: ROAS confidence intervals are derived from revenue intervals
-divided by projected spend, so revenue interval width drives ROAS interval width. The 30-day revenue
-multiplier (0.7) and minimum-width floor are calibrated
-against walk-forward evidence; the current trained-model ROAS coverage is 100.0%.
-A future calibration pass dedicated to ROAS residuals could refine interval efficiency further.
+Note on 30-day ROAS interval coverage: ROAS confidence intervals now use a direct residual-volatility
+estimate from historical daily ROAS for each segment, with a minimum ROAS floor when history is thin.
+Revenue intervals still use quantile/residual revenue calibration, but ROAS bounds are no longer a fixed
+linear transform of revenue bounds divided by projected spend. The current trained-model ROAS coverage is
+100.0%.
 
 ## Interval Calibration Before/After
 

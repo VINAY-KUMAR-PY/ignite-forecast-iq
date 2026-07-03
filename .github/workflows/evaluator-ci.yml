@@ -225,6 +225,24 @@ jobs:
           print("Causal summary OK:", len(text), "chars")
           PY
 
+      - name: Validate optional live-AI flag fallback path
+        env:
+          GEMINI_API_KEY: fake-ci-key
+          GEMINI_MAX_ATTEMPTS: "1"
+          GEMINI_TIMEOUT_SECONDS: "1"
+        run: |
+          ./run.sh ./data ./pickle/model.pkl ./output/predictions_live_flag.csv --enable-live-ai
+          python - <<'PY'
+          from pathlib import Path
+
+          text = Path("output/causal_summary.txt").read_text(encoding="utf-8")
+          if "Optional Live Gemini Enrichment" not in text:
+              raise SystemExit("live-AI flag did not exercise optional enrichment path")
+          if "deterministic offline causal summary above remains the authoritative evaluator output" not in text:
+              raise SystemExit("live-AI fallback did not preserve deterministic evaluator summary")
+          print("Optional live-AI flag fallback path OK")
+          PY
+
   exact-sklearn-zero-fallback:
     name: Exact sklearn zero-fallback guard
     runs-on: ubuntu-latest

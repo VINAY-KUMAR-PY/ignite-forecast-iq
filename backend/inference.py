@@ -49,7 +49,7 @@ def roas_interval_from_revenue(
     upper_revenue: float,
     expected_spend: float,
 ) -> tuple[float, float, float, str | None]:
-    """Convert a revenue interval into a ROAS interval when spend is present."""
+    """Legacy compatibility helper that converts a revenue interval into ROAS bounds."""
     spend = safe_float(expected_spend)
     if spend <= 1e-9:
         return 0.0, 0.0, 0.0, ROAS_NOT_COMPUTABLE_CONFIDENCE
@@ -57,6 +57,40 @@ def roas_interval_from_revenue(
     expected_roas = max(lower_roas, safe_float(expected_revenue) / spend)
     upper_roas = max(expected_roas, safe_float(upper_revenue) / spend)
     return lower_roas, expected_roas, upper_roas, None
+
+def roas_interval_from_residuals(
+    segment: pd.DataFrame,
+    expected_roas: float,
+    expected_spend: float,
+    horizon: int,
+    model: dict[str, Any] | None = None,
+) -> tuple[float, float, float, str | None]:
+    """Estimate ROAS uncertainty directly from historical ROAS residuals.
+
+    Revenue intervals still quantify revenue uncertainty. ROAS gets its own
+    residual-volatility estimate so the ROAS band is not merely a fixed
+    revenue/spend transform.
+    """
+    spend = safe_float(expected_spend)
+    if spend <= 1e-9:
+        return 0.0, 0.0, 0.0, ROAS_NOT_COMPUTABLE_CONFIDENCE
+
+    center = max(0.0, safe_float(expected_roas))
+    confidence = (model or {}).get("confidence") if isinstance((model or {}).get("confidence"), dict) else (model or {})
+    z = horizon_confidence_z(confidence, horizon)
+    residuals = roas_residuals(segment)
+    if len(residuals) >= 3:
+        residual_std = safe_float(np.std(residuals, ddof=1), 0.0)
+        statistical = z * residual_std * math.sqrt(max(horizon, 1) / 30.0)
+    else:
+        statistical = 0.0
+
+    floor_pct = max(0.035, min(0.30, horizon_floor_pct(horizon) * 0.45))
+    floor = center * floor_pct
+    margin = max(statistical, floor, 0.02 if center > 0 else 0.0)
+    lower_roas = max(0.0, center - margin)
+    upper_roas = max(center, center + margin)
+    return lower_roas, center, upper_roas, None
 
 def forecast_segment(
     segment: pd.DataFrame,
@@ -102,11 +136,13 @@ def forecast_segment(
     interval = confidence_interval_width(daily["revenue"], expected_revenue, horizon, model)
     lower = max(0.0, expected_revenue - interval)
     upper = max(lower, expected_revenue + interval)
-    lower_roas, expected_roas, upper_roas, roas_confidence = roas_interval_from_revenue(
-        lower,
-        expected_revenue,
-        upper,
+    spend_based_roas = safe_ratio(expected_revenue, expected_spend)
+    lower_roas, expected_roas, upper_roas, roas_confidence = roas_interval_from_residuals(
+        segment,
+        spend_based_roas,
         expected_spend,
+        horizon,
+        model,
     )
     return {
         "expected_revenue": clean_number(expected_revenue),
@@ -148,6 +184,20 @@ def revenue_residuals(segment: pd.DataFrame) -> np.ndarray:
     """Return recent daily revenue residuals for local interval calibration."""
     daily = aggregate_segment_daily(segment)
     values = pd.to_numeric(daily.get("revenue"), errors="coerce").replace([np.inf, -np.inf], np.nan).dropna()
+    if len(values) < 2:
+        return np.asarray([], dtype=float)
+    baseline = values.shift(1).rolling(min(7, len(values)), min_periods=1).mean()
+    residuals = (values - baseline).dropna().to_numpy(dtype=float)
+    return residuals[np.isfinite(residuals)]
+
+def roas_residuals(segment: pd.DataFrame) -> np.ndarray:
+    """Return recent daily ROAS residuals for independent ROAS intervals."""
+    daily = aggregate_segment_daily(segment)
+    if daily.empty or not {"spend", "revenue"}.issubset(daily.columns):
+        return np.asarray([], dtype=float)
+    spend = pd.to_numeric(daily["spend"], errors="coerce").replace([np.inf, -np.inf], np.nan)
+    revenue = pd.to_numeric(daily["revenue"], errors="coerce").replace([np.inf, -np.inf], np.nan)
+    values = (revenue / spend.where(spend > 1e-9)).replace([np.inf, -np.inf], np.nan).dropna()
     if len(values) < 2:
         return np.asarray([], dtype=float)
     baseline = values.shift(1).rolling(min(7, len(values)), min_periods=1).mean()
@@ -335,11 +385,12 @@ def trained_forecast_segment(
         daily = aggregate_segment_daily(segment)
         lookback = min(28, len(daily))
         expected_spend = safe_float(daily["spend"].tail(lookback).sum()) / max(lookback, 1) * horizon
-    lower_roas, spend_based_roas, upper_roas, roas_confidence = roas_interval_from_revenue(
-        lower,
-        expected_revenue,
-        upper,
+    lower_roas, spend_based_roas, upper_roas, roas_confidence = roas_interval_from_residuals(
+        segment,
+        expected_roas,
         expected_spend,
+        horizon,
+        model,
     )
     if roas_confidence:
         expected_roas = spend_based_roas

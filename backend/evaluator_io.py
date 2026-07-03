@@ -351,6 +351,8 @@ def generate_offline_causal_summary(
             f"Distilled Gemini explanation skeleton: {distilled['label']}\n"
             "Structured causal evidence object:\n"
             f"{json.dumps(distilled['evidence_object'], indent=2, sort_keys=True)}\n"
+            "REASONING_TRACE\n"
+            f"{_format_reasoning_trace(distilled)}\n"
             f"Generated explanation: {distilled['summary']}\n"
             f"Recommended action: {distilled['recommended_action']}\n"
             "Executive interpretation: the submitted data did not contain enough usable rows to "
@@ -649,6 +651,8 @@ def generate_offline_causal_summary(
         f"Distilled Gemini explanation skeleton: {distilled['label']}",
         "Structured causal evidence object:",
         json.dumps(distilled["evidence_object"], indent=2, sort_keys=True),
+        "REASONING_TRACE",
+        _format_reasoning_trace(distilled),
         "Generated explanation:",
         distilled["summary"],
         f"Evidence focus: {distilled['evidence_focus']}",
@@ -694,6 +698,14 @@ def generate_offline_causal_summary(
     )
 
     return "\n".join(lines)
+
+
+def _format_reasoning_trace(distilled: dict[str, Any]) -> str:
+    """Format deterministic offline reasoning steps for causal_summary.txt."""
+    trace = distilled.get("reasoning_trace") if isinstance(distilled, dict) else None
+    if not isinstance(trace, list) or not trace:
+        return "  1. No intermediate reasoning steps were available for this fallback explanation."
+    return "\n".join(f"  {index}. {step}" for index, step in enumerate(trace, start=1))
 
 
 def _causal_channel_metrics(frame: pd.DataFrame) -> dict[str, dict[str, Any]]:
@@ -809,7 +821,8 @@ def _generate_live_ai_causal_appendix(
         return (
             "=== Optional Live Gemini Enrichment ===\n"
             "Gemini returned deterministic fallback insights during explicit live mode, so the offline "
-            "causal summary remains authoritative."
+            "causal summary remains authoritative. The deterministic offline causal summary above remains "
+            "the authoritative evaluator output."
         )
     dumped = insights.model_dump(mode="json")
     actions = dumped.get("actionPlan") or []

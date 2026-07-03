@@ -97,6 +97,14 @@ chmod +x run.sh
 ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
 ```
 
+Optional live-AI causal reasoning check for reviewers with a Gemini key:
+
+```bash
+GEMINI_API_KEY=your_key ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv --enable-live-ai
+```
+
+If the key is missing, invalid, or Gemini is unavailable, the command still exits safely and keeps the deterministic offline causal summary.
+
 For AI Integration scoring in the offline evaluator, check the first two lines of `output/causal_summary.txt`; they explicitly label the run as `OFFLINE_DETERMINISTIC_FALLBACK` and `DISTILLED_LLM_DERIVED_OFFLINE_CACHE` when no live Gemini call is allowed. Optional live enrichment exists behind `--enable-live-ai`, but that flag is not part of the graded evaluator contract and defaults to off.
 
 Note: `requirements.txt` pins `scikit-learn==1.9.0` to match the committed artifact. The supported evaluator runtime is Python 3.11-3.14 with the exact pinned dependencies; CI requires `model_type=trained_model` across that full matrix.
@@ -233,6 +241,8 @@ volatility guardrails, horizon-specific widening, and segment-level widening:
 The resulting 60-90% planning bands are intentional for ecommerce media forecasts, especially over 60- and 90-day horizons where seasonality, promotion cadence, auction volatility, and channel mix shifts compound uncertainty. Tighter bands would overstate confidence and can mislead budget decisions; these intervals are calibrated against the rolling-origin backtest in `reports/backtest_summary.md` rather than being arbitrarily widened.
 
 The interval enforcement layer ensures uncertainty bands widen across horizons and that `interval_width_pct` matches the actual revenue bands. On the committed sample output, overall intervals are now 60%, 72%, and 90% for 30, 60, and 90 days, with confidence labels varying by horizon and segment quality.
+
+ROAS intervals are calibrated independently from historical daily ROAS residuals, with a minimum ROAS floor for thin segments, so `lower_roas` and `upper_roas` are not just revenue confidence bounds divided by projected spend.
 
 Budget overrides in the offline evaluator use a concave spend-response curve: moderate increases can lift revenue, but revenue gains flatten after about 1.5x recent channel spend and ROAS declines under extreme 10x budget scenarios. This keeps `--budget-json` useful for evaluator what-if checks without implying unlimited linear media returns.
 

@@ -100,3 +100,33 @@ def test_sample_forecast_confidence_is_not_constant():
         confidence_values = set(df["forecast_confidence"].astype(str))
         assert len(confidence_values) > 1
         assert confidence_values & {"medium", "high"}
+
+
+def test_roas_intervals_are_not_fixed_revenue_transforms():
+    """ROAS bands should use independent ROAS residual uncertainty, not revenue ratios."""
+    with tempfile.TemporaryDirectory() as tmp:
+        output = Path(tmp) / "predictions.csv"
+        result = subprocess.run(
+            [
+                sys.executable, "-m", "backend.predict",
+                "--data-dir", "./data",
+                "--model", "./pickle/model.pkl",
+                "--output", str(output),
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=120,
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+
+        df = pd.read_csv(output)
+        eligible = df[(df["expected_revenue"] > 0) & (df["expected_roas"] > 0)].copy()
+        revenue_lower_ratio = eligible["lower_revenue"] / eligible["expected_revenue"]
+        revenue_upper_ratio = eligible["upper_revenue"] / eligible["expected_revenue"]
+        roas_lower_ratio = eligible["lower_roas"] / eligible["expected_roas"]
+        roas_upper_ratio = eligible["upper_roas"] / eligible["expected_roas"]
+
+        lower_delta = (revenue_lower_ratio - roas_lower_ratio).abs().max()
+        upper_delta = (revenue_upper_ratio - roas_upper_ratio).abs().max()
+        assert max(float(lower_delta), float(upper_delta)) > 0.02

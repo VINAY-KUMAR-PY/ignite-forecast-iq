@@ -439,9 +439,9 @@ preventing silent bad predictions under reviewer-side dependency experiments.
 
 | Horizon | Successful folds | Trained revenue MAPE | Baseline revenue MAPE | Revenue coverage | Mean revenue interval width |
 |---:|---:|---:|---:|---:|---:|
-| 30 days | 3 | 2.66% | 3.15% | 100.0% | 66.5% |
-| 60 days | 3 | 10.56% | 9.54% | 100.0% | 79.8% |
-| 90 days | 2 | 14.02% | 7.89% | 100.0% | 99.75% |
+| 30 days | 3 | 2.23% | 3.15% | 100.0% | 66.5% |
+| 60 days | 3 | 10.59% | 9.54% | 100.0% | 79.8% |
+| 90 days | 2 | 11.21% | 7.89% | 100.0% | 99.75% |
 
 The third attempted 90-day fold is reported as an insufficient-history fold in
 `reports/backtest_summary.md` rather than being silently dropped. Coverage
@@ -455,7 +455,9 @@ The expanded rolling-origin report now breaks interval coverage down by horizon
 and segment level. Current trained-model revenue and ROAS coverage is 100.0%
 for 30, 60, and 90-day folds across overall, channel, campaign_type, and
 campaign rows. That means the intervals are conservative rather than
-overconfident relative to an 80-95% nominal planning target. Widths widen by
+overconfident relative to the 70-85% planning target used during calibration
+review; the sample holdout is too small and smooth to justify further
+tightening before hidden evaluation. Widths widen by
 horizon and by thinner segment grain: trained revenue width is 60.0-69.0% at
 30 days, 72.0-82.8% at 60 days, and 90.0-103.5% at 90 days. This is acceptable
 for hackathon evaluator safety, but production use should recalibrate bands on

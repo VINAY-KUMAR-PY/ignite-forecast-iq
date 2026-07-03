@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import os
 from pathlib import Path
 from typing import Any
 
@@ -464,11 +465,15 @@ def generate_offline_causal_summary(
             upper = safe_float(item.get("upperRevenue"))
             roas = safe_float(item.get("roasEffect"))
             confidence = str(item.get("confidence") or "low")
+            p_value = safe_float(item.get("pValue"), 1.0)
+            t_stat = safe_float(item.get("tStatistic"), 0.0)
+            strength = safe_float(item.get("effectStrength"), 0.0)
             direction = "rose" if effect >= 0 else "fell"
             causal_lines.append(
                 "  - {channel} on {date}: incremental revenue ${effect:,.0f} "
                 "(95% CI ${lower:,.0f} to ${upper:,.0f}), ROAS effect {roas:.2f}x, "
-                "confidence={confidence}. Pre window: {pre_window}; post window: {post_window}. "
+                "confidence={confidence}, t={t_stat:.2f}, p={p_value:.3f}, strength={strength:.2f}. "
+                "Pre window: {pre_window}; post window: {post_window}. "
                 "{channel} revenue {direction} after the detected event on {date}, compared with "
                 "movement in control channels, suggesting the event had observable impact while "
                 "still requiring an experiment for proof.".format(
@@ -479,6 +484,9 @@ def generate_offline_causal_summary(
                     upper=upper,
                     roas=roas,
                     confidence=confidence,
+                    t_stat=t_stat,
+                    p_value=p_value,
+                    strength=strength,
                     pre_window=pre_window,
                     post_window=post_window,
                     direction=direction,
@@ -569,22 +577,32 @@ def generate_offline_causal_summary(
         else "Anomaly scan result:"
     )
     if causal_estimates:
-        top_causal = max(causal_estimates, key=lambda item: abs(safe_float(item.get("incrementalRevenue"))))
+        top_causal = max(
+            causal_estimates,
+            key=lambda item: (
+                safe_float(item.get("effectStrength"), 0.0),
+                abs(safe_float(item.get("incrementalRevenue"))),
+            ),
+        )
         top_confidence = str(top_causal.get("confidence") or "low").lower()
         confidence_phrase = f"{top_confidence} confidence"
+        top_p = safe_float(top_causal.get("pValue"), 1.0)
+        top_t = safe_float(top_causal.get("tStatistic"), 0.0)
+        top_strength = safe_float(top_causal.get("effectStrength"), 0.0)
         if top_confidence == "low":
             hypothesis_line = (
                 f"Causal hypothesis ({confidence_phrase}; directional only): "
                 f"{top_causal.get('channel', 'the leading channel')} is a diagnostic candidate because its "
-                f"observational DiD estimate has the largest absolute revenue effect "
-                f"(${safe_float(top_causal.get('incrementalRevenue')):,.0f}), but the estimate should be "
+                f"ranked DiD strength is {top_strength:.2f} (t={top_t:.2f}, p={top_p:.3f}) with "
+                f"estimated revenue effect ${safe_float(top_causal.get('incrementalRevenue')):,.0f}, but the estimate should be "
                 "de-emphasized until validated with a holdout or experiment."
             )
         else:
             hypothesis_line = (
                 f"Causal hypothesis ({confidence_phrase}): {top_causal.get('channel', 'the leading channel')} "
-                f"is the primary explanatory candidate because its DiD estimate has the largest absolute "
-                f"revenue effect (${safe_float(top_causal.get('incrementalRevenue')):,.0f}). "
+                f"is the primary explanatory candidate because it has the strongest ranked DiD signal "
+                f"(strength={top_strength:.2f}, t={top_t:.2f}, p={top_p:.3f}) and estimated revenue "
+                f"effect ${safe_float(top_causal.get('incrementalRevenue')):,.0f}. "
                 "Other anomaly signals remain supporting evidence until validated with a holdout test."
             )
     elif top_anomalies:
@@ -669,16 +687,116 @@ def write_causal_summary(
     rows: list[dict],
     output_dir: str | Path | None = None,
     planned_budgets: dict[str, float] | None = None,
+    enable_live_ai: bool = False,
 ) -> Path:
     """Write causal_summary.txt beside predictions.csv or an explicit output directory."""
     target_dir = Path(output_dir or "output")
     target_dir.mkdir(parents=True, exist_ok=True)
     summary_path = target_dir / "causal_summary.txt"
     summary_path.write_text(
-        generate_offline_causal_summary(frame, rows, planned_budgets),
+        generate_causal_summary(frame, rows, planned_budgets, enable_live_ai=enable_live_ai),
         encoding="utf-8",
     )
     return summary_path
+
+
+def generate_causal_summary(
+    frame: pd.DataFrame,
+    rows: list[dict],
+    planned_budgets: dict[str, float] | None = None,
+    enable_live_ai: bool = False,
+) -> str:
+    """Generate the evaluator causal summary, with optional live Gemini enrichment."""
+    offline = generate_offline_causal_summary(frame, rows, planned_budgets)
+    if not enable_live_ai:
+        return offline
+    return _append_live_ai_enrichment(offline, frame, rows, planned_budgets)
+
+
+def _append_live_ai_enrichment(
+    offline_summary: str,
+    frame: pd.DataFrame,
+    rows: list[dict],
+    planned_budgets: dict[str, float] | None = None,
+) -> str:
+    if not (os.getenv("GEMINI_API_KEY") or "").strip():
+        return (
+            f"{offline_summary}\n\n"
+            "=== Optional Live Gemini Enrichment ===\n"
+            "Live AI mode was explicitly requested, but GEMINI_API_KEY was not configured. "
+            "The deterministic offline causal summary above remains the authoritative evaluator output."
+        )
+    try:
+        appendix = _generate_live_ai_causal_appendix(frame, rows, planned_budgets)
+    except Exception as exc:
+        return (
+            f"{offline_summary}\n\n"
+            "=== Optional Live Gemini Enrichment ===\n"
+            f"Live AI mode was explicitly requested, but Gemini enrichment failed safely ({type(exc).__name__}). "
+            "The deterministic offline causal summary above remains the authoritative evaluator output."
+        )
+    return f"{offline_summary}\n\n{appendix}"
+
+
+def _generate_live_ai_causal_appendix(
+    frame: pd.DataFrame,
+    rows: list[dict],
+    planned_budgets: dict[str, float] | None = None,
+) -> str:
+    import asyncio
+
+    from .gemini import generate_gemini_insights_with_source
+
+    summary = _live_ai_summary_payload(frame, rows, planned_budgets)
+    insights, source = asyncio.run(generate_gemini_insights_with_source(summary))
+    if source != "gemini":
+        return (
+            "=== Optional Live Gemini Enrichment ===\n"
+            "Gemini returned deterministic fallback insights during explicit live mode, so the offline "
+            "causal summary remains authoritative."
+        )
+    dumped = insights.model_dump(mode="json")
+    actions = dumped.get("actionPlan") or []
+    risks = dumped.get("risks") or []
+    opportunities = dumped.get("growthOpportunities") or []
+    lines = [
+        "AI mode: LIVE_GEMINI_OPTIONAL_ENRICHMENT (explicit --enable-live-ai + GEMINI_API_KEY; default grading path remains offline).",
+        "=== Optional Live Gemini Enrichment ===",
+        f"Executive summary: {dumped.get('executiveSummary', '').strip()}",
+        "Gemini risks: " + "; ".join(str(item) for item in risks[:3]) if risks else "Gemini risks: none returned.",
+        "Gemini opportunities: " + "; ".join(str(item) for item in opportunities[:3]) if opportunities else "Gemini opportunities: none returned.",
+        "Gemini action plan:",
+    ]
+    lines.extend(f"  - {item}" for item in actions[:5])
+    return "\n".join(lines)
+
+
+def _live_ai_summary_payload(
+    frame: pd.DataFrame,
+    rows: list[dict],
+    planned_budgets: dict[str, float] | None = None,
+) -> dict[str, Any]:
+    from .anomaly import detect_anomalies
+    from .causal_lite import estimate_causal_effects
+
+    anomalies = []
+    causal_estimates = []
+    try:
+        anomalies = [item.to_dict() for item in detect_anomalies(frame)[:5]]
+        causal_estimates = estimate_causal_effects(frame, anomalies)
+    except Exception:
+        anomalies = []
+        causal_estimates = []
+    return {
+        "forecasts": rows[:12],
+        "plannedBudgets": planned_budgets or {},
+        "anomalies": anomalies,
+        "causalEvidence": causal_estimates,
+        "executiveContext": (
+            "Generate a concise causal narrative grounded only in the supplied DiD estimates, p-values, "
+            "confidence labels, date windows, anomalies, and forecast intervals."
+        ),
+    }
 
 
 def generate_explainability_notes(frame: pd.DataFrame, rows: list[dict]) -> str:

@@ -7,6 +7,7 @@ installed.
 
 from __future__ import annotations
 
+import math
 import zlib
 from typing import List, Optional
 
@@ -51,7 +52,13 @@ def estimate_causal_effects(frame: pd.DataFrame, events: Optional[List[dict]] = 
         if estimate:
             estimates.append(estimate)
 
-    estimates.sort(key=lambda item: abs(float(item.get("incrementalRevenue", 0))), reverse=True)
+    estimates.sort(
+        key=lambda item: (
+            float(item.get("effectStrength") or 0.0),
+            abs(float(item.get("incrementalRevenue", 0))),
+        ),
+        reverse=True,
+    )
     return estimates[:5]
 
 
@@ -141,13 +148,17 @@ def _estimate_event_effect(daily: pd.DataFrame, event: dict, window: int = 14) -
     else:
         lower_revenue = lower_boot
         upper_revenue = upper_boot
+    effect_se = _effect_standard_error(residuals, post_days)
+    t_statistic = incremental_revenue / effect_se if effect_se > 1e-9 else 0.0
+    p_value = math.erfc(abs(t_statistic) / math.sqrt(2)) if effect_se > 1e-9 else 1.0
     roas_effect = (affected_post_roas - affected_pre_roas) - control_roas_change
     width = abs(upper_revenue - lower_revenue)
+    effect_strength = _effect_strength(t_statistic, p_value, parallel["passed"], post_days)
     confidence = (
         "high"
-        if post_days >= 12 and parallel["passed"] and width <= abs(incremental_revenue) * 2.5
+        if post_days >= 12 and parallel["passed"] and p_value <= 0.05 and width <= abs(incremental_revenue) * 2.5
         else "medium"
-        if post_days >= 8 and parallel["passed"]
+        if post_days >= 8 and parallel["passed"] and p_value <= 0.15
         else "low"
     )
     if lower_revenue <= 0 <= upper_revenue:
@@ -168,15 +179,37 @@ def _estimate_event_effect(daily: pd.DataFrame, event: dict, window: int = 14) -
         "parallelTrendPassed": bool(parallel["passed"]),
         "ciMethod": "bootstrap" if bootstrap_iterations else "analytic",
         "bootstrapIterations": bootstrap_iterations,
+        "effectStandardError": _round_money(effect_se),
+        "tStatistic": round(float(t_statistic), 3),
+        "pValue": round(float(min(max(p_value, 0.0), 1.0)), 4),
+        "effectStrength": round(float(effect_strength), 3),
+        "effectDirection": "positive" if incremental_revenue >= 0 else "negative",
         "confidence": confidence,
         "interpretation": (
             f"Estimated incremental effect for {channel}: ${incremental_revenue:,.0f} "
             f"(95% CI ${lower_revenue:,.0f} to ${upper_revenue:,.0f}); "
+            f"t={t_statistic:.2f}, p={p_value:.3f}; "
             f"parallel-trends check {'passed' if parallel['passed'] else 'is weak'} "
             f"({parallel['pct']:.1f}% pre-trend gap); observational difference-in-differences, "
             "not proof of incrementality."
         ),
     }
+
+
+def _effect_standard_error(residuals: np.ndarray, post_days: int) -> float:
+    clean = np.asarray(residuals, dtype=float)
+    clean = clean[np.isfinite(clean)]
+    if len(clean) < 2 or post_days <= 0:
+        return 0.0
+    daily_se = float(np.std(clean, ddof=1) / math.sqrt(len(clean)))
+    return max(0.0, daily_se * post_days)
+
+
+def _effect_strength(t_statistic: float, p_value: float, parallel_passed: bool, post_days: int) -> float:
+    significance = max(0.0, 1.0 - min(max(float(p_value), 0.0), 1.0))
+    trend_discount = 1.0 if parallel_passed else 0.6
+    sample_weight = min(1.0, max(0.35, post_days / 14.0))
+    return abs(float(t_statistic)) * significance * trend_discount * sample_weight
 
 
 def _parallel_trends_check(affected_pre: pd.DataFrame, control_pre: pd.DataFrame) -> dict:

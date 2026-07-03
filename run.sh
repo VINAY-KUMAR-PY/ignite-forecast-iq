@@ -7,8 +7,21 @@ cd "$SCRIPT_DIR"
 DATA_DIR="${1:-./data}"
 MODEL_PATH="${2:-./pickle/model.pkl}"
 OUTPUT_PATH="${3:-./output/predictions.csv}"
-BUDGET_JSON="${4:-}"
+BUDGET_JSON=""
+ENABLE_LIVE_AI=0
 PYTHON_BIN="${PYTHON:-}"
+
+if [[ $# -ge 4 ]]; then
+  for ARG in "${@:4}"; do
+    if [[ "$ARG" == "--enable-live-ai" ]]; then
+      ENABLE_LIVE_AI=1
+    elif [[ -z "$BUDGET_JSON" ]]; then
+      BUDGET_JSON="$ARG"
+    else
+      echo "[ForecastIQ] WARNING: ignoring extra argument: $ARG" >&2
+    fi
+  done
+fi
 
 if [[ -n "$BUDGET_JSON" ]]; then
   if ! echo "$BUDGET_JSON" | python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null; then
@@ -58,11 +71,17 @@ if [ $DEP_CHECK_EXIT -ne 0 ]; then
 fi
 
 PREDICT_EXIT=0
-"${PYTHON_CMD[@]}" -m backend.predict \
-  --data-dir "$DATA_DIR" \
-  --model "$MODEL_PATH" \
-  --output "$OUTPUT_PATH" \
-  --budget-json "$BUDGET_JSON" || PREDICT_EXIT=$?
+PREDICT_ARGS=(
+  -m backend.predict
+  --data-dir "$DATA_DIR"
+  --model "$MODEL_PATH"
+  --output "$OUTPUT_PATH"
+  --budget-json "$BUDGET_JSON"
+)
+if [[ "$ENABLE_LIVE_AI" == "1" ]]; then
+  PREDICT_ARGS+=(--enable-live-ai)
+fi
+"${PYTHON_CMD[@]}" "${PREDICT_ARGS[@]}" || PREDICT_EXIT=$?
 
 if [ $PREDICT_EXIT -ne 0 ]; then
   echo "[ForecastIQ] Prediction step failed with exit code $PREDICT_EXIT" >&2

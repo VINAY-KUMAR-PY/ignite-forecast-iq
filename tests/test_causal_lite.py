@@ -47,6 +47,12 @@ class CausalLiteTests(unittest.TestCase):
         self.assertIn("parallelTrendPassed", estimate)
         self.assertIn("parallel-trends check", estimate["interpretation"])
         self.assertIn("difference-in-differences", estimate["interpretation"])
+        self.assertIn("pValue", estimate)
+        self.assertIn("tStatistic", estimate)
+        self.assertIn("effectStrength", estimate)
+        self.assertGreaterEqual(estimate["pValue"], 0.0)
+        self.assertLessEqual(estimate["pValue"], 1.0)
+        self.assertGreater(estimate["effectStrength"], 0.0)
         self.assertGreater(estimate["upperRevenue"], estimate["lowerRevenue"])
 
     def test_did_recovers_engineered_revenue_step_change(self) -> None:
@@ -81,7 +87,9 @@ class CausalLiteTests(unittest.TestCase):
         estimate = estimates[0]
         expected_incremental = injected_daily_lift * estimate["postWindowDays"]
         self.assertEqual(estimate["channel"], "Google Ads")
+        self.assertEqual(estimate["effectDirection"], "positive")
         self.assertGreater(estimate["incrementalRevenue"], 0)
+        self.assertLess(estimate["pValue"], 0.15)
         self.assertAlmostEqual(estimate["incrementalRevenue"], expected_incremental, delta=expected_incremental * 0.12)
         self.assertTrue(estimate["parallelTrendPassed"])
         self.assertLessEqual(estimate["lowerRevenue"], estimate["incrementalRevenue"])

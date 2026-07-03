@@ -25,6 +25,7 @@ from .evaluator_contract import (
 from .evaluator_io import (
     canonicalize_frame,
     fallback_model_config,
+    generate_causal_summary,
     generate_explainability_notes,
     generate_offline_causal_summary,
     is_trained_model_artifact,
@@ -94,6 +95,11 @@ def main() -> None:
         default="",
         help='Optional JSON mapping channel names to planned spend, e.g. \'{"Google Ads":50000}\'.',
     )
+    parser.add_argument(
+        "--enable-live-ai",
+        action="store_true",
+        help="Optional: enrich causal_summary.txt with Gemini when GEMINI_API_KEY is set. Default evaluator path is offline.",
+    )
     args = parser.parse_args()
     planned_budgets = _parse_budget_json(args.budget_json)
 
@@ -111,6 +117,7 @@ def main() -> None:
         rows,
         output_dir=Path(args.output).parent,
         planned_budgets=planned_budgets,
+        enable_live_ai=args.enable_live_ai,
     )
     explainability_path = write_explainability_notes(cleaned.frame, rows, output_dir=Path(args.output).parent)
     log(f"Wrote {len(rows)} rows to {args.output}")

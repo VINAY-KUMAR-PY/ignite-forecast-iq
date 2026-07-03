@@ -28,6 +28,7 @@ from backend.predict import (
     confidence_interval_width,
     estimate_missing_spend_for_trained_mode,
     fallback_model_config,
+    generate_causal_summary,
     generate_explainability_notes,
     generate_offline_causal_summary,
     planned_projected_spend,
@@ -502,21 +503,58 @@ class OfflinePredictionTests(unittest.TestCase):
         rows = build_predictions(cleaned.frame, fallback_model_config("offline boundary test"))
 
         with patch.dict(os.environ, {"GEMINI_API_KEY": "configured"}, clear=False):
-            summary = generate_offline_causal_summary(cleaned.frame, rows)
+            with patch("backend.evaluator_io._generate_live_ai_causal_appendix") as live_appendix:
+                summary = generate_causal_summary(cleaned.frame, rows, enable_live_ai=False)
 
         self.assertIn("AI Strategic Recommendation", summary)
         self.assertIn("Offline deterministic recommendation", summary)
         self.assertIn("intentionally performs no LLM or network calls", summary)
         self.assertNotIn("AI Strategic Recommendation (Gemini)", summary)
+        live_appendix.assert_not_called()
+
+    def test_live_ai_summary_requires_explicit_flag_and_key(self) -> None:
+        raw = pd.read_csv("data/sample_campaigns.csv").head(120)
+        cleaned = canonicalize_frame(raw)
+        rows = build_predictions(cleaned.frame, fallback_model_config("live ai boundary test"))
+
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "configured"}, clear=False):
+            with patch(
+                "backend.evaluator_io._generate_live_ai_causal_appendix",
+                return_value=(
+                    "AI mode: LIVE_GEMINI_OPTIONAL_ENRICHMENT\n"
+                    "=== Optional Live Gemini Enrichment ===\n"
+                    "Executive summary: mocked"
+                ),
+            ) as live_appendix:
+                summary = generate_causal_summary(cleaned.frame, rows, enable_live_ai=True)
+
+        live_appendix.assert_called_once()
+        self.assertIn("OFFLINE_DETERMINISTIC_FALLBACK", summary)
+        self.assertIn("LIVE_GEMINI_OPTIONAL_ENRICHMENT", summary)
+
+    def test_live_ai_summary_falls_back_without_key(self) -> None:
+        raw = pd.read_csv("data/sample_campaigns.csv").head(60)
+        cleaned = canonicalize_frame(raw)
+        rows = build_predictions(cleaned.frame, fallback_model_config("live ai missing key"))
+
+        with patch.dict(os.environ, {}, clear=True):
+            with patch("backend.evaluator_io._generate_live_ai_causal_appendix") as live_appendix:
+                summary = generate_causal_summary(cleaned.frame, rows, enable_live_ai=True)
+
+        live_appendix.assert_not_called()
+        self.assertIn("GEMINI_API_KEY was not configured", summary)
+        self.assertIn("OFFLINE_DETERMINISTIC_FALLBACK", summary)
 
     def test_causal_summary_mirrors_ranked_causal_hypothesis_structure(self) -> None:
-        raw = pd.read_csv("data/sample_campaigns.csv").head(120)
+        raw = pd.read_csv("data/sample_campaigns.csv")
         cleaned = canonicalize_frame(raw)
         rows = build_predictions(cleaned.frame, fallback_model_config("causal schema test"))
         summary = generate_offline_causal_summary(cleaned.frame, rows)
 
         self.assertIn("Causal hypothesis", summary)
         self.assertRegex(summary, r"Causal hypothesis \((low|medium|high) confidence")
+        self.assertRegex(summary, r"p=|p-value|pValue")
+        self.assertRegex(summary, r"strength=")
         self.assertIn("Competing explanation to test:", summary)
         self.assertIn("observational difference-in-differences", summary)
 

@@ -525,6 +525,43 @@ coverage.
 - The model does not include promotions, inventory, pricing, or competitor
   signals.
 
+## AI Reasoning Architecture
+
+ForecastIQ separates causal statistics from language generation so the graded
+offline evaluator remains network-free while still showing LLM-assisted
+reasoning.
+
+```text
+Statistics
+  -> Evidence Object
+  -> Gemini reasoning (performed ahead of time on redacted sample prompts)
+  -> Explanation skeleton
+  -> Offline runtime composition
+```
+
+1. `backend/causal_lite.py` computes observational DiD estimates, p-values,
+   t-statistics, confidence labels, effect strength, ROAS effects, and anomaly
+   windows.
+2. `backend/gemini_offline_cache.py::build_structured_causal_evidence`
+   converts those statistics into a typed dictionary with fields such as
+   `channel`, `campaign_type`, `effect_direction`, `effect_size`,
+   `baseline_roas`, `observed_roas`, `delta_percent`, `supporting_metrics`,
+   `primary_driver`, and `limitations`.
+3. The skeleton text in `backend/gemini_offline_cache.py` is distilled from
+   genuine Gemini reasoning transcripts in `docs/gemini_sample_transcripts/`;
+   the skeletons contain placeholders such as `{channel}`, `{effect_size}`,
+   `{confidence}`, and `{delta_percent}`.
+4. At evaluator runtime, `run.sh` fills those placeholders from the live
+   computed evidence object and writes both the JSON evidence object and the
+   generated explanation into `output/causal_summary.txt`.
+
+The offline evaluator never calls Gemini or any external service. Optional live
+mode is available only when explicitly requested with `--enable-live-ai` and a
+configured `GEMINI_API_KEY`; otherwise the deterministic offline composition is
+used. Traceability details, including the prompt skeleton, genuine transcript
+references, evidence object example, and generated explanation example, are in
+`docs/gemini_sample_transcripts/OFFLINE_REASONING_PROVENANCE.md`.
+
 ## AI Integration Strategy
 
 **Live API path** (`backend/gemini.py`): a structured summary of forecast

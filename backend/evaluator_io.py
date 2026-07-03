@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import json
 import os
 from pathlib import Path
 from typing import Any
@@ -347,8 +348,10 @@ def generate_offline_causal_summary(
             f"{OFFLINE_AI_MODE_HEADER}\n"
             f"{DISTILLED_LLM_REASONING_HEADER}\n"
             "=== ForecastIQ Causal Summary (offline, deterministic) ===\n"
-            f"Distilled LLM reasoning pattern: {distilled['label']}\n"
-            f"Interpretation: {distilled['summary']}\n"
+            f"Distilled Gemini explanation skeleton: {distilled['label']}\n"
+            "Structured causal evidence object:\n"
+            f"{json.dumps(distilled['evidence_object'], indent=2, sort_keys=True)}\n"
+            f"Generated explanation: {distilled['summary']}\n"
             f"Recommended action: {distilled['recommended_action']}\n"
             "Executive interpretation: the submitted data did not contain enough usable rows to "
             "estimate a directional revenue trend, so ForecastIQ generated evaluator-safe fallback "
@@ -417,6 +420,7 @@ def generate_offline_causal_summary(
         {"role": "highest_revenue", "segment": top_revenue_channel, "metric": "largest revenue contribution"},
         {"role": "risk_roas", "segment": weakest_channel, "metric": f"{weakest_roas:.2f}x ROAS"},
     ]
+    channel_metrics = _causal_channel_metrics(frame)
 
     try:
         anomalies = detect_anomalies(frame)
@@ -496,7 +500,13 @@ def generate_offline_causal_summary(
         causal_lines = ["  - No causal estimate available; history was too sparse around detected events."]
 
     if causal_estimates:
-        strongest = max(causal_estimates, key=lambda item: abs(safe_float(item.get("incrementalRevenue"))))
+        strongest = max(
+            causal_estimates,
+            key=lambda item: (
+                safe_float(item.get("effectStrength"), 0.0),
+                abs(safe_float(item.get("incrementalRevenue"))),
+            ),
+        )
         strongest_channel = str(strongest.get("channel") or "Unknown Channel")
         strongest_effect = safe_float(strongest.get("incrementalRevenue"))
         strongest_confidence = str(strongest.get("confidence") or "low")
@@ -629,14 +639,18 @@ def generate_offline_causal_summary(
         causal_estimates,
         planned_budgets,
         segment_drivers,
+        channel_metrics,
     )
 
     lines = [
         OFFLINE_AI_MODE_HEADER,
         DISTILLED_LLM_REASONING_HEADER,
         "=== ForecastIQ Causal Summary (offline, deterministic) ===",
-        f"Distilled LLM reasoning pattern: {distilled['label']}",
-        f"Interpretation: {distilled['summary']}",
+        f"Distilled Gemini explanation skeleton: {distilled['label']}",
+        "Structured causal evidence object:",
+        json.dumps(distilled["evidence_object"], indent=2, sort_keys=True),
+        "Generated explanation:",
+        distilled["summary"],
         f"Evidence focus: {distilled['evidence_focus']}",
         f"Recommended action: {distilled['recommended_action']}",
         executive_interpretation,
@@ -680,6 +694,48 @@ def generate_offline_causal_summary(
     )
 
     return "\n".join(lines)
+
+
+def _causal_channel_metrics(frame: pd.DataFrame) -> dict[str, dict[str, Any]]:
+    """Summarize observed-vs-baseline ROAS evidence for offline AI composition."""
+    if frame.empty or not {"date", "channel", "spend", "revenue"}.issubset(frame.columns):
+        return {}
+    working = frame.copy()
+    working["date"] = pd.to_datetime(working["date"], errors="coerce")
+    working = working.dropna(subset=["date", "channel"])
+    if working.empty:
+        return {}
+
+    max_date = working["date"].max()
+    recent_start = max_date - pd.Timedelta(days=29)
+    prior_start = max_date - pd.Timedelta(days=59)
+    prior_end = recent_start - pd.Timedelta(days=1)
+    metrics: dict[str, dict[str, Any]] = {}
+    for channel, group in working.groupby("channel"):
+        recent = group[group["date"] >= recent_start]
+        prior = group[(group["date"] >= prior_start) & (group["date"] <= prior_end)]
+        if prior.empty:
+            prior = group.iloc[: max(1, len(group) // 2)]
+        if recent.empty:
+            recent = group.iloc[max(0, len(group) // 2) :]
+        campaign_type = "mixed_campaign_types"
+        if "campaign_type" in group and not group.empty:
+            by_type = group.groupby("campaign_type")["revenue"].sum().sort_values(ascending=False)
+            if not by_type.empty:
+                campaign_type = str(by_type.index[0])
+
+        baseline_revenue = safe_float(prior["revenue"].sum())
+        baseline_spend = safe_float(prior["spend"].sum())
+        observed_revenue = safe_float(recent["revenue"].sum())
+        observed_spend = safe_float(recent["spend"].sum())
+        metrics[str(channel)] = {
+            "campaign_type": campaign_type,
+            "baseline_revenue": baseline_revenue,
+            "observed_revenue": observed_revenue,
+            "baseline_roas": safe_ratio(baseline_revenue, baseline_spend),
+            "observed_roas": safe_ratio(observed_revenue, observed_spend),
+        }
+    return metrics
 
 
 def write_causal_summary(
@@ -778,6 +834,7 @@ def _live_ai_summary_payload(
 ) -> dict[str, Any]:
     from .anomaly import detect_anomalies
     from .causal_lite import estimate_causal_effects
+    from .gemini_offline_cache import build_structured_causal_evidence
 
     anomalies = []
     causal_estimates = []
@@ -787,11 +844,18 @@ def _live_ai_summary_payload(
     except Exception:
         anomalies = []
         causal_estimates = []
+    structured_evidence = build_structured_causal_evidence(
+        anomalies,
+        causal_estimates,
+        planned_budgets=planned_budgets,
+        channel_metrics=_causal_channel_metrics(frame),
+    )
     return {
         "forecasts": rows[:12],
         "plannedBudgets": planned_budgets or {},
         "anomalies": anomalies,
         "causalEvidence": causal_estimates,
+        "structuredCausalEvidence": structured_evidence,
         "executiveContext": (
             "Generate a concise causal narrative grounded only in the supplied DiD estimates, p-values, "
             "confidence labels, date windows, anomalies, and forecast intervals."

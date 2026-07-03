@@ -8,6 +8,9 @@ python scripts/replay_gemini_transcript.py docs/gemini_sample_transcripts/<trans
 ```
 
 Do not place synthetic or fallback-only output here as if it came from Gemini.
+`OFFLINE_REASONING_PROVENANCE.md` explains how those genuine transcripts were
+distilled into offline explanation skeletons that are filled from runtime
+causal evidence without making a network call.
 When `GEMINI_API_KEY` is available, capture a redacted transcript with:
 
 ```bash

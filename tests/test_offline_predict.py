@@ -42,7 +42,7 @@ from backend.predict import (
     write_predictions,
 )
 from backend.evaluator_io import trained_model_functional_smoke_test
-from backend.gemini_offline_cache import select_distilled_reasoning
+from backend.gemini_offline_cache import build_structured_causal_evidence, select_distilled_reasoning
 from backend.utils import read_csv_folder as read_training_csv_folder
 
 
@@ -466,10 +466,13 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertTrue(summary.startswith("AI mode: OFFLINE_DETERMINISTIC_FALLBACK"))
         self.assertIn("no live LLM call was made in this run", summary.splitlines()[0])
         self.assertIn("DISTILLED_LLM_DERIVED_OFFLINE_CACHE", summary)
-        self.assertIn("Distilled LLM reasoning pattern:", summary)
+        self.assertIn("Distilled Gemini explanation skeleton:", summary)
+        self.assertIn("Structured causal evidence object:", summary)
+        self.assertIn("Generated explanation:", summary)
+        self.assertIn('"effect_size"', summary)
+        self.assertIn('"supporting_metrics"', summary)
         self.assertIn("top anomaly", summary)
-        self.assertIn("strongest DiD estimate", summary)
-        self.assertIn("segment drivers", summary)
+        self.assertIn("primary driver", summary)
         self.assertGreater(len(summary), 100)
         self.assertRegex(summary, r"ROAS|roas")
         self.assertIn("$", summary)
@@ -527,9 +530,51 @@ class OfflinePredictionTests(unittest.TestCase):
 
         self.assertEqual(first, second)
         self.assertEqual(first["label"], "incremental_growth")
+        self.assertIn("evidence_object", first)
+        self.assertEqual(first["evidence_object"]["channel"], "Google Ads")
+        self.assertEqual(first["evidence_object"]["effect_size"], 12000.0)
         self.assertIn("Microsoft Ads", first["evidence_focus"])
-        self.assertIn("strongest DiD estimate Google Ads", first["summary"])
+        self.assertIn("Google Ads", first["summary"])
+        self.assertIn("$12,000", first["summary"])
         self.assertEqual(uncertain["label"], "volatility_watch")
+
+    def test_structured_causal_evidence_object_uses_runtime_statistics(self) -> None:
+        evidence = build_structured_causal_evidence(
+            [{"channel": "Google Ads", "date": "2026-01-01", "metric": "revenue"}],
+            [
+                {
+                    "channel": "Google Ads",
+                    "date": "2026-01-01",
+                    "incrementalRevenue": 2500.0,
+                    "lowerRevenue": 1000.0,
+                    "upperRevenue": 4000.0,
+                    "confidence": "medium",
+                    "effectDirection": "positive",
+                    "pValue": 0.04,
+                    "tStatistic": 2.1,
+                    "effectStrength": 1.7,
+                    "parallelTrendPassed": True,
+                    "preWindowDays": 14,
+                    "postWindowDays": 14,
+                }
+            ],
+            segment_drivers=[{"role": "leading_roas", "segment": "Google Ads", "metric": "4.8x ROAS"}],
+            channel_metrics={
+                "Google Ads": {
+                    "campaign_type": "Search",
+                    "baseline_revenue": 10000.0,
+                    "baseline_roas": 4.2,
+                    "observed_roas": 4.9,
+                }
+            },
+        )
+
+        self.assertEqual(evidence["channel"], "Google Ads")
+        self.assertEqual(evidence["campaign_type"], "Search")
+        self.assertEqual(evidence["effect_direction"], "positive")
+        self.assertEqual(evidence["delta_percent"], 25.0)
+        self.assertEqual(evidence["supporting_metrics"]["p_value"], 0.04)
+        self.assertEqual(evidence["primary_driver"]["segment"], "Google Ads")
 
     def test_causal_summary_stays_offline_when_gemini_env_is_configured(self) -> None:
         raw = pd.read_csv("data/sample_campaigns.csv").head(120)

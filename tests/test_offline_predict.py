@@ -498,7 +498,8 @@ class OfflinePredictionTests(unittest.TestCase):
         rows = build_predictions(cleaned.frame, fallback_model_config("causal schema test"))
         summary = generate_offline_causal_summary(cleaned.frame, rows)
 
-        self.assertIn("Causal hypothesis:", summary)
+        self.assertIn("Causal hypothesis", summary)
+        self.assertRegex(summary, r"Causal hypothesis \((low|medium|high) confidence")
         self.assertIn("Competing explanation to test:", summary)
         self.assertIn("observational difference-in-differences", summary)
 

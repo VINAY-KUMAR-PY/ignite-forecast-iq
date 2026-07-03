@@ -559,22 +559,34 @@ def generate_offline_causal_summary(
     )
     if causal_estimates:
         top_causal = max(causal_estimates, key=lambda item: abs(safe_float(item.get("incrementalRevenue"))))
-        hypothesis_line = (
-            f"Causal hypothesis: {top_causal.get('channel', 'the leading channel')} is the primary explanatory "
-            f"candidate because its DiD estimate has the largest absolute revenue effect "
-            f"(${safe_float(top_causal.get('incrementalRevenue')):,.0f}). "
-            "Other anomaly signals remain supporting evidence until validated with a holdout test."
-        )
+        top_confidence = str(top_causal.get("confidence") or "low").lower()
+        confidence_phrase = f"{top_confidence} confidence"
+        if top_confidence == "low":
+            hypothesis_line = (
+                f"Causal hypothesis ({confidence_phrase}; directional only): "
+                f"{top_causal.get('channel', 'the leading channel')} is a diagnostic candidate because its "
+                f"observational DiD estimate has the largest absolute revenue effect "
+                f"(${safe_float(top_causal.get('incrementalRevenue')):,.0f}), but the estimate should be "
+                "de-emphasized until validated with a holdout or experiment."
+            )
+        else:
+            hypothesis_line = (
+                f"Causal hypothesis ({confidence_phrase}): {top_causal.get('channel', 'the leading channel')} "
+                f"is the primary explanatory candidate because its DiD estimate has the largest absolute "
+                f"revenue effect (${safe_float(top_causal.get('incrementalRevenue')):,.0f}). "
+                "Other anomaly signals remain supporting evidence until validated with a holdout test."
+            )
     elif top_anomalies:
         hypothesis_line = (
-            f"Causal hypothesis: {len(top_anomalies)} anomaly signal(s) suggest recent channel disruption, "
+            f"Causal hypothesis (low confidence; directional only): {len(top_anomalies)} anomaly signal(s) "
+            "suggest recent channel disruption, "
             "but sparse pre/post windows prevent a stable dollar estimate; treat this as directional "
             "evidence for prioritizing diagnostics."
         )
     else:
         hypothesis_line = (
-            "Causal hypothesis: no abnormal channel break was detected, so the most defensible explanation "
-            "is continuation of recent ROAS and spend trajectory."
+            "Causal hypothesis (low confidence; no anomaly detected): no abnormal channel break was detected, "
+            "so the most defensible explanation is continuation of recent ROAS and spend trajectory."
         )
     framing_templates = [
         "Competing explanation to test: budget pressure, creative fatigue, or auction changes could also explain the move; confirm with campaign-level diagnostics before scaling.",

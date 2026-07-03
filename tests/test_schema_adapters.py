@@ -173,6 +173,63 @@ class SchemaAdapterTests(unittest.TestCase):
         self.assertEqual(float(row["spend"]), 100.0)
         self.assertEqual(float(row["revenue"]), 500.0)
 
+    def test_duplicate_same_date_channel_campaign_rows_are_aggregated(self) -> None:
+        raw = pd.DataFrame(
+            {
+                "date": ["2026-07-01", "2026-07-01", "2026-07-02"],
+                "channel": ["Google Ads", "Google Ads", "Google Ads"],
+                "campaign_type": ["Search", "Search", "Search"],
+                "campaign_name": ["Brand", "Brand", "Brand"],
+                "spend": [100.0, 25.0, 50.0],
+                "revenue": [500.0, 125.0, 250.0],
+            }
+        )
+
+        cleaned = canonicalize_frame(raw)
+
+        self.assertEqual(cleaned.valid_rows, 2)
+        self.assertTrue(any("duplicate date/channel/campaign rows aggregated" in issue for issue in cleaned.issues))
+        first = cleaned.frame[cleaned.frame["date"] == "2026-07-01"].iloc[0]
+        self.assertEqual(float(first["spend"]), 125.0)
+        self.assertEqual(float(first["revenue"]), 625.0)
+
+    def test_currency_and_locale_numeric_formatting_is_parsed(self) -> None:
+        raw = pd.DataFrame(
+            {
+                "date": ["2026-07-01", "2026-07-02"],
+                "channel": ["Google Ads", "Meta Ads"],
+                "campaign_name": ["Brand", "Prospecting"],
+                "campaign_type": ["Search", "Prospecting"],
+                "spend": ["$1,234.56", "1.234,56"],
+                "revenue": ["$6,789.10", "6.789,10"],
+            }
+        )
+
+        cleaned = canonicalize_frame(raw)
+
+        self.assertEqual(cleaned.valid_rows, 2)
+        self.assertTrue(math.isclose(float(cleaned.frame["spend"].sum()), 2469.12, rel_tol=0.001))
+        self.assertTrue(math.isclose(float(cleaned.frame["revenue"].sum()), 13578.20, rel_tol=0.001))
+        self.assertFalse(any("invalid numeric" in issue for issue in cleaned.issues))
+
+    def test_far_future_dates_are_clamped_with_validation_issue(self) -> None:
+        raw = pd.DataFrame(
+            {
+                "date": ["2026-07-01", "2099-01-01"],
+                "channel": ["Google Ads", "Google Ads"],
+                "campaign_name": ["Brand", "Brand"],
+                "campaign_type": ["Search", "Search"],
+                "spend": [100.0, 200.0],
+                "revenue": [500.0, 900.0],
+            }
+        )
+
+        cleaned = canonicalize_frame(raw)
+
+        self.assertEqual(cleaned.valid_rows, 1)
+        self.assertEqual(set(cleaned.frame["date"]), {"2026-07-01"})
+        self.assertTrue(any("far-future dates clamped" in issue for issue in cleaned.issues))
+
     def test_all_optional_fields_missing_rows_are_filled_safely(self) -> None:
         raw = pd.DataFrame(
             {

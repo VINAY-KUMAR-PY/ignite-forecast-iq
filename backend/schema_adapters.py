@@ -195,6 +195,42 @@ def normalize_column(name: Any) -> str:
     return re.sub(r"[^a-z0-9]+", "_", str(name).strip().lower()).strip("_")
 
 
+def parse_numeric_series(values: pd.Series | Iterable[Any], default: float = 0.0) -> pd.Series:
+    """Parse numeric marketing exports, including currency and comma-decimal formats."""
+    series = values if isinstance(values, pd.Series) else pd.Series(list(values))
+
+    def parse_one(value: Any) -> float:
+        if value is None or (isinstance(value, float) and np.isnan(value)):
+            return default
+        if isinstance(value, (int, float, np.integer, np.floating)):
+            return float(value) if np.isfinite(float(value)) else default
+        text = str(value).strip()
+        if text.lower() in {"", "nan", "none", "null"}:
+            return default
+        text = re.sub(r"[\s$€£₹]", "", text)
+        has_dot = "." in text
+        has_comma = "," in text
+        if has_dot and has_comma:
+            if text.rfind(",") > text.rfind("."):
+                text = text.replace(".", "").replace(",", ".")
+            else:
+                text = text.replace(",", "")
+        elif has_comma:
+            parts = text.split(",")
+            if len(parts) == 2 and 1 <= len(parts[1]) <= 2:
+                text = text.replace(",", ".")
+            else:
+                text = text.replace(",", "")
+        text = re.sub(r"[^0-9.\-]", "", text)
+        try:
+            parsed = float(text)
+        except ValueError:
+            return default
+        return parsed if np.isfinite(parsed) else default
+
+    return series.map(parse_one).astype(float)
+
+
 def alias_index(columns: Iterable[str]) -> dict[str, str]:
     """Return the first matching source column for each canonical field."""
     normalized = {normalize_column(column): column for column in columns}
@@ -264,9 +300,9 @@ def normalize_marketing_frame(raw: pd.DataFrame) -> AdapterResult:
 
     for column in NUMERIC_COLUMNS:
         if column == "roas":
-            frame[column] = pd.to_numeric(_coalesce_aliases(raw, column, np.nan), errors="coerce")
+            frame[column] = parse_numeric_series(_coalesce_aliases(raw, column, np.nan), default=np.nan)
             continue
-        values = pd.to_numeric(_coalesce_aliases(raw, column, 0), errors="coerce")
+        values = parse_numeric_series(_coalesce_aliases(raw, column, 0), default=0.0)
         if column == "spend" and _has_cost_micros_column(raw.columns):
             values = values / 1_000_000
         invalid = values.isna() | ~np.isfinite(values)
@@ -279,7 +315,7 @@ def normalize_marketing_frame(raw: pd.DataFrame) -> AdapterResult:
     if frame["roas"].isna().all():
         frame["roas"] = fallback_roas
     else:
-        frame["roas"] = pd.to_numeric(frame["roas"], errors="coerce").replace([np.inf, -np.inf], np.nan)
+        frame["roas"] = parse_numeric_series(frame["roas"], default=np.nan).replace([np.inf, -np.inf], np.nan)
         frame["roas"] = frame["roas"].fillna(fallback_roas)
 
     for column, default in [

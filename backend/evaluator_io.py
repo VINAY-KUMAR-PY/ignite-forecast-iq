@@ -18,6 +18,7 @@ from .schema_adapters import (
     alias_index,
     channel_from_source_file,
     normalize_marketing_frame,
+    parse_numeric_series,
     reconcile_normalized_frames,
 )
 from .evaluator_contract import (
@@ -124,13 +125,13 @@ def canonicalize_frame(raw: pd.DataFrame) -> CleanResult:
     frame["campaign_name"] = series_for("campaign_name", "Unknown Campaign")
 
     for column in ["spend", "clicks", "impressions", "conversions", "revenue", "roas"]:
-        frame[column] = pd.to_numeric(series_for(column, 0), errors="coerce")
+        frame[column] = parse_numeric_series(series_for(column, 0), default=0.0)
         invalid = frame[column].isna() | ~np.isfinite(frame[column])
         if invalid.any():
             issues.append(f"{int(invalid.sum())} invalid numeric values in '{column}' replaced with 0")
             frame.loc[invalid, column] = 0.0
 
-    parsed_dates = pd.to_datetime(frame["date"], errors="coerce")
+    parsed_dates = pd.to_datetime(frame["date"], errors="coerce", utc=True).dt.tz_convert(None)
     invalid_dates = parsed_dates.isna()
     if invalid_dates.any():
         issues.append(f"{int(invalid_dates.sum())} malformed or missing dates")
@@ -142,6 +143,16 @@ def canonicalize_frame(raw: pd.DataFrame) -> CleanResult:
         issues.append("No valid dates found; synthesizing sequential dates for evaluation")
         start = pd.Timestamp.today().normalize() - pd.Timedelta(days=max(total_rows - 1, 0))
         parsed_dates = pd.Series(pd.date_range(start=start, periods=total_rows, freq="D"), index=frame.index)
+
+    far_future_cutoff = pd.Timestamp.today().normalize() + pd.Timedelta(days=366)
+    far_future_dates = parsed_dates > far_future_cutoff
+    if far_future_dates.any():
+        credible_dates = parsed_dates[~far_future_dates]
+        replacement = credible_dates.max() if not credible_dates.empty else pd.Timestamp.today().normalize()
+        parsed_dates = parsed_dates.mask(far_future_dates, replacement)
+        issues.append(
+            f"{int(far_future_dates.sum())} far-future dates clamped to {replacement.strftime('%Y-%m-%d')}"
+        )
 
     frame["date"] = parsed_dates.dt.strftime("%Y-%m-%d")
 

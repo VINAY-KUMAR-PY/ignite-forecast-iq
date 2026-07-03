@@ -63,9 +63,10 @@ def test_missing_required_columns_and_currency_locale_values_fail_safe() -> None
     rows = build_predictions(cleaned.frame, safe_load_model("missing-model.pkl"))
 
     assert cleaned.total_rows == 3
-    assert any("invalid spend values" in issue for issue in cleaned.issues)
+    assert not any("invalid spend values" in issue for issue in cleaned.issues)
     assert any("invalid revenue values" in issue for issue in cleaned.issues)
     assert any("malformed or missing dates" in issue for issue in cleaned.issues)
+    assert float(cleaned.frame["spend"].sum()) > 2700.0
     _assert_schema_safe(rows)
 
 

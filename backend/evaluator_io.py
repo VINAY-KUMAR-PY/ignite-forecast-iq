@@ -125,10 +125,10 @@ def canonicalize_frame(raw: pd.DataFrame) -> CleanResult:
     frame["campaign_name"] = series_for("campaign_name", "Unknown Campaign")
 
     for column in ["spend", "clicks", "impressions", "conversions", "revenue", "roas"]:
-        frame[column] = parse_numeric_series(series_for(column, 0), default=0.0)
+        frame[column] = parse_numeric_series(series_for(column, 0), default=np.nan)
         invalid = frame[column].isna() | ~np.isfinite(frame[column])
         if invalid.any():
-            issues.append(f"{int(invalid.sum())} invalid numeric values in '{column}' replaced with 0")
+            issues.append(f"{int(invalid.sum())} invalid {column} values replaced with 0")
             frame.loc[invalid, column] = 0.0
 
     parsed_dates = pd.to_datetime(frame["date"], errors="coerce", utc=True).dt.tz_convert(None)

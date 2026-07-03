@@ -302,7 +302,7 @@ def normalize_marketing_frame(raw: pd.DataFrame) -> AdapterResult:
         if column == "roas":
             frame[column] = parse_numeric_series(_coalesce_aliases(raw, column, np.nan), default=np.nan)
             continue
-        values = parse_numeric_series(_coalesce_aliases(raw, column, 0), default=0.0)
+        values = parse_numeric_series(_coalesce_aliases(raw, column, 0), default=np.nan)
         if column == "spend" and _has_cost_micros_column(raw.columns):
             values = values / 1_000_000
         invalid = values.isna() | ~np.isfinite(values)

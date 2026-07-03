@@ -26,6 +26,16 @@ The offline evaluator path is intentionally isolated: it uses `run.sh`, a compac
 
 For automated evaluation, `pickle/model.pkl` is the canonical offline artifact: `run.sh` scores it with the sklearn GradientBoostingRegressor path and writes `predictions.csv`. The live FastAPI app also exposes a richer XGBoost-powered product experience for interactive dashboards and explainability; both paths are benchmarked against the same deterministic baseline in `reports/backtest_summary.md`, so the evaluator evidence is representative of the broader forecasting quality.
 
+## Evaluation Criteria Mapping
+
+| Criterion | Where to verify |
+|---|---|
+| Technical Soundness | `backend/predict.py`, `backend/inference.py`, `reports/backtest_summary.md`, `tests/test_offline_predict.py`, `tests/test_interval_monotonicity.py` |
+| Practical Relevance | Budget simulator and decision-support evidence in `backend/decision_support.py`, `src/routes/app.simulator.tsx`, and `TECHNICAL.md` |
+| AI Integration | Offline distilled LLM reasoning in `backend/gemini_offline_cache.py`, causal evidence in `output/causal_summary.txt`, and optional live Gemini checks in `docs/gemini_sample_transcripts/` |
+| Product Thinking | One-click demo flow, Upload -> Dashboard -> Forecast -> Simulator -> Insights journey, and `DEMO_GUIDE.md` |
+| Engineering Quality | Evaluator CI, frontend CI, Playwright flow, 90% coverage gate, `requirements.txt`/`requirements-app.txt` separation |
+
 ## Architecture At A Glance
 
 ```mermaid
@@ -157,6 +167,14 @@ ForecastIQ keeps one canonical evidence map here to reduce duplicate documentati
 | Product demo | `src/routes/index.tsx`, `src/routes/`, `src/routes/app-pages.test.tsx`, `tests/e2e/demo.spec.ts`, `reports/e2e_summary.md`, `DEMO_GUIDE.md`, `TECHNICAL.md` |
 | CI jobs | `evaluator`, `sklearn-version-drift-smoke`, `app-tests`, `frontend`, `e2e-demo`, `hackathon-evaluator-protocol`, and `gemini-live-smoke` |
 | Exact sklearn guard | `exact-sklearn-zero-fallback` in `.github/workflows/evaluator-ci.yml` installs the pinned evaluator runtime and rejects sklearn mismatch/fallback warnings |
+
+Backtest headline from the latest rolling-origin report:
+
+| Horizon | Revenue MAPE: trained vs seasonal baseline | ROAS MAPE: trained vs seasonal baseline | Verdict |
+|---:|---:|---:|---|
+| 30 days | 2.23% vs 3.15% | 1.22% vs 1.46% | Trained model wins revenue; ROAS is effectively tied |
+| 60 days | 10.59% vs 9.54% | 1.11% vs 1.51% | Seasonal baseline wins revenue; trained model wins ROAS |
+| 90 days | 11.21% vs 7.89% | 2.04% vs 2.07% | Seasonal baseline wins revenue; ROAS is effectively tied |
 
 Latest clean-checkout verification on July 3, 2026:
 

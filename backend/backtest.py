@@ -115,6 +115,23 @@ def _segment_level_interval_coverage(rows: list[dict[str, Any]]) -> dict[str, di
     return summary
 
 
+def _segment_level_performance(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Summarize point accuracy and calibration by forecast segment level."""
+    levels = ("overall", "channel", "campaign_type", "campaign")
+    summary: dict[str, dict[str, Any]] = {}
+    for level in levels:
+        level_rows = [row for row in rows if str(row.get("level")) == level]
+        trained = _metrics(level_rows, "trained")
+        safe = _metrics(level_rows, "safe")
+        summary[level] = {
+            "segments_evaluated": len(level_rows),
+            "trained_model_metrics": trained,
+            "seasonal_average_baseline_metrics": safe,
+            "verdict": _performance_evidence(trained, safe),
+        }
+    return summary
+
+
 def _winner_evidence(
     trained_metrics: dict[str, Any],
     safe_metrics: dict[str, Any],
@@ -446,6 +463,7 @@ def _walk_forward_horizon(frame: pd.DataFrame, horizon: int) -> dict[str, Any]:
         "trained_model_metrics": trained_metrics,
         "safe_baseline_metrics": safe_metrics,
         "segment_level_interval_coverage": _segment_level_interval_coverage(rows),
+        "segment_level_performance": _segment_level_performance(rows),
         "rolling_origin_average_metrics": _average_fold_metrics(successful_folds),
         "model_performance_evidence": evidence,
         "trained_vs_safe_baseline": {
@@ -700,6 +718,39 @@ def _summary_markdown(report: dict[str, Any]) -> str:
         for item in report["per_horizon_performance"]
         for level, metrics in item.get("segment_level_interval_coverage", {}).items()
     )
+    segment_accuracy_rows = "\n".join(
+        f'| {item["horizon_days"]} | {level} | {metrics["segments_evaluated"]} | '
+        f'{metrics["trained_model_metrics"]["rmse"]} | {metrics["trained_model_metrics"]["mape"]}% | '
+        f'{metrics["seasonal_average_baseline_metrics"]["rmse"]} | '
+        f'{metrics["seasonal_average_baseline_metrics"]["mape"]}% | '
+        f'{_winner_label(metrics["verdict"]["revenue"]["winner"])} | '
+        f'{metrics["trained_model_metrics"]["roas_rmse"]} | {metrics["trained_model_metrics"]["roas_mape"]}% | '
+        f'{metrics["seasonal_average_baseline_metrics"]["roas_rmse"]} | '
+        f'{metrics["seasonal_average_baseline_metrics"]["roas_mape"]}% | '
+        f'{_winner_label(metrics["verdict"]["roas"]["winner"])} |'
+        for item in report["per_horizon_performance"]
+        for level, metrics in item.get("segment_level_performance", {}).items()
+    )
+    horizon_verdict_lines = "\n".join(
+        "- {horizon}d: revenue {revenue}; ROAS {roas}.".format(
+            horizon=item["horizon_days"],
+            revenue=(
+                "beats the seasonal-average baseline"
+                if item["model_performance_evidence"]["revenue"]["winner"] == TRAINED_MODEL_TYPE
+                else "trails the seasonal-average baseline"
+                if item["model_performance_evidence"]["revenue"]["winner"] == SAFE_BASELINE_MODEL_TYPE
+                else "ties the seasonal-average baseline"
+            ),
+            roas=(
+                "beats the seasonal-average baseline"
+                if item["model_performance_evidence"]["roas"]["winner"] == TRAINED_MODEL_TYPE
+                else "trails the seasonal-average baseline"
+                if item["model_performance_evidence"]["roas"]["winner"] == SAFE_BASELINE_MODEL_TYPE
+                else "ties the seasonal-average baseline"
+            ),
+        )
+        for item in report["per_horizon_performance"]
+    )
     horizon_30 = next(
         (item for item in report["per_horizon_performance"] if int(item["horizon_days"]) == 30),
         None,
@@ -795,9 +846,27 @@ Recommendation: {report["roas_blend_weight_recommendation"]["recommendation"]}
 
 ## Walk-Forward Per-Horizon Performance
 
+Baseline note: the deterministic safe baseline is a naive seasonal-average/run-rate baseline that uses
+recent segment history, horizon seasonality, trend damping, and media-spend response guardrails. It is
+reported as the "seasonal-average baseline" below because that is the practical comparison a media planner
+would use when no trained residual correction is trusted.
+
 | Horizon days | Folds | Segments | Trained revenue MAE | Trained revenue RMSE | Trained revenue MAPE | Trained revenue coverage | Trained revenue width % | Trained ROAS MAE | Trained ROAS RMSE | Trained ROAS coverage | Trained ROAS width | Baseline MAE | Baseline RMSE | Baseline width % | Revenue MAE winner |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 {horizon_rows}
+
+One-line verdicts against the seasonal-average baseline:
+
+{horizon_verdict_lines}
+
+## Walk-Forward Accuracy by Horizon and Segment Level
+
+This table reports revenue and ROAS accuracy for each horizon and forecast grain. It makes clear where
+the trained residual correction adds value and where the seasonal-average baseline remains competitive.
+
+| Horizon days | Segment level | Segments scored | Trained revenue RMSE | Trained revenue MAPE | Seasonal baseline revenue RMSE | Seasonal baseline revenue MAPE | Revenue verdict | Trained ROAS RMSE | Trained ROAS MAPE | Seasonal baseline ROAS RMSE | Seasonal baseline ROAS MAPE | ROAS verdict |
+| ---: | --- | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: | ---: | ---: | --- |
+{segment_accuracy_rows}
 
 ## Rolling-Origin Average Metrics
 

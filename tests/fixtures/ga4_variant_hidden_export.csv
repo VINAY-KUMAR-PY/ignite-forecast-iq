@@ -1,0 +1,136 @@
+Event date,Session source,Session medium,Session campaign name,Advertiser ad cost,Event value,Sessions,Transactions
+2026-05-01,google,cpc,GA4 Search Brand,210.00,980.00,310,12
+2026-05-01,facebook,paid_social,GA4 Prospecting,165.00,520.00,220,7
+2026-05-01,bing,cpc,GA4 Bing Brand,88.00,420.00,160,5
+2026-05-02,google,cpc,GA4 Search Brand,212.50,991.00,312,13
+2026-05-02,facebook,paid_social,GA4 Prospecting,166.70,527.00,222,8
+2026-05-02,bing,cpc,GA4 Bing Brand,89.10,425.00,162,6
+2026-05-03,google,cpc,GA4 Search Brand,215.00,1002.00,314,14
+2026-05-03,facebook,paid_social,GA4 Prospecting,168.40,534.00,224,9
+2026-05-03,bing,cpc,GA4 Bing Brand,90.20,430.00,164,7
+2026-05-04,google,cpc,GA4 Search Brand,217.50,1013.00,316,15
+2026-05-04,facebook,paid_social,GA4 Prospecting,170.10,541.00,226,10
+2026-05-04,bing,cpc,GA4 Bing Brand,91.30,435.00,166,8
+2026-05-05,google,cpc,GA4 Search Brand,220.00,1024.00,318,12
+2026-05-05,facebook,paid_social,GA4 Prospecting,171.80,548.00,228,7
+2026-05-05,bing,cpc,GA4 Bing Brand,92.40,440.00,168,5
+2026-05-06,google,cpc,GA4 Search Brand,222.50,1035.00,320,13
+2026-05-06,facebook,paid_social,GA4 Prospecting,173.50,555.00,230,8
+2026-05-06,bing,cpc,GA4 Bing Brand,93.50,445.00,170,6
+2026-05-07,google,cpc,GA4 Search Brand,225.00,1046.00,322,14
+2026-05-07,facebook,paid_social,GA4 Prospecting,175.20,562.00,232,9
+2026-05-07,bing,cpc,GA4 Bing Brand,94.60,450.00,172,7
+2026-05-08,google,cpc,GA4 Search Brand,227.50,1057.00,324,15
+2026-05-08,facebook,paid_social,GA4 Prospecting,176.90,569.00,234,10
+2026-05-08,bing,cpc,GA4 Bing Brand,95.70,455.00,174,8
+2026-05-09,google,cpc,GA4 Search Brand,230.00,1068.00,326,12
+2026-05-09,facebook,paid_social,GA4 Prospecting,178.60,576.00,236,7
+2026-05-09,bing,cpc,GA4 Bing Brand,96.80,460.00,176,5
+2026-05-10,google,cpc,GA4 Search Brand,232.50,1079.00,328,13
+2026-05-10,facebook,paid_social,GA4 Prospecting,180.30,583.00,238,8
+2026-05-10,bing,cpc,GA4 Bing Brand,97.90,465.00,178,6
+2026-05-11,google,cpc,GA4 Search Brand,235.00,1090.00,330,14
+2026-05-11,facebook,paid_social,GA4 Prospecting,182.00,590.00,240,9
+2026-05-11,bing,cpc,GA4 Bing Brand,99.00,470.00,180,7
+2026-05-12,google,cpc,GA4 Search Brand,237.50,1101.00,332,15
+2026-05-12,facebook,paid_social,GA4 Prospecting,183.70,597.00,242,10
+2026-05-12,bing,cpc,GA4 Bing Brand,100.10,475.00,182,8
+2026-05-13,google,cpc,GA4 Search Brand,240.00,1112.00,334,12
+2026-05-13,facebook,paid_social,GA4 Prospecting,185.40,604.00,244,7
+2026-05-13,bing,cpc,GA4 Bing Brand,101.20,480.00,184,5
+2026-05-14,google,cpc,GA4 Search Brand,242.50,1123.00,336,13
+2026-05-14,facebook,paid_social,GA4 Prospecting,187.10,611.00,246,8
+2026-05-14,bing,cpc,GA4 Bing Brand,102.30,485.00,186,6
+2026-05-15,google,cpc,GA4 Search Brand,245.00,1134.00,338,14
+2026-05-15,facebook,paid_social,GA4 Prospecting,188.80,618.00,248,9
+2026-05-15,bing,cpc,GA4 Bing Brand,103.40,490.00,188,7
+2026-05-16,google,cpc,GA4 Search Brand,247.50,1145.00,340,15
+2026-05-16,facebook,paid_social,GA4 Prospecting,190.50,625.00,250,10
+2026-05-16,bing,cpc,GA4 Bing Brand,104.50,495.00,190,8
+2026-05-17,google,cpc,GA4 Search Brand,250.00,1156.00,342,12
+2026-05-17,facebook,paid_social,GA4 Prospecting,192.20,632.00,252,7
+2026-05-17,bing,cpc,GA4 Bing Brand,105.60,500.00,192,5
+2026-05-18,google,cpc,GA4 Search Brand,252.50,1167.00,344,13
+2026-05-18,facebook,paid_social,GA4 Prospecting,193.90,639.00,254,8
+2026-05-18,bing,cpc,GA4 Bing Brand,106.70,505.00,194,6
+2026-05-19,google,cpc,GA4 Search Brand,255.00,1178.00,346,14
+2026-05-19,facebook,paid_social,GA4 Prospecting,195.60,646.00,256,9
+2026-05-19,bing,cpc,GA4 Bing Brand,107.80,510.00,196,7
+2026-05-20,google,cpc,GA4 Search Brand,257.50,1189.00,348,15
+2026-05-20,facebook,paid_social,GA4 Prospecting,197.30,653.00,258,10
+2026-05-20,bing,cpc,GA4 Bing Brand,108.90,515.00,198,8
+2026-05-21,google,cpc,GA4 Search Brand,260.00,1200.00,350,12
+2026-05-21,facebook,paid_social,GA4 Prospecting,199.00,660.00,260,7
+2026-05-21,bing,cpc,GA4 Bing Brand,110.00,520.00,200,5
+2026-05-22,google,cpc,GA4 Search Brand,262.50,1211.00,352,13
+2026-05-22,facebook,paid_social,GA4 Prospecting,200.70,667.00,262,8
+2026-05-22,bing,cpc,GA4 Bing Brand,111.10,525.00,202,6
+2026-05-23,google,cpc,GA4 Search Brand,265.00,1222.00,354,14
+2026-05-23,facebook,paid_social,GA4 Prospecting,202.40,674.00,264,9
+2026-05-23,bing,cpc,GA4 Bing Brand,112.20,530.00,204,7
+2026-05-24,google,cpc,GA4 Search Brand,267.50,1233.00,356,15
+2026-05-24,facebook,paid_social,GA4 Prospecting,204.10,681.00,266,10
+2026-05-24,bing,cpc,GA4 Bing Brand,113.30,535.00,206,8
+2026-05-25,google,cpc,GA4 Search Brand,270.00,1244.00,358,12
+2026-05-25,facebook,paid_social,GA4 Prospecting,205.80,688.00,268,7
+2026-05-25,bing,cpc,GA4 Bing Brand,114.40,540.00,208,5
+2026-05-26,google,cpc,GA4 Search Brand,272.50,1255.00,360,13
+2026-05-26,facebook,paid_social,GA4 Prospecting,207.50,695.00,270,8
+2026-05-26,bing,cpc,GA4 Bing Brand,115.50,545.00,210,6
+2026-05-27,google,cpc,GA4 Search Brand,275.00,1266.00,362,14
+2026-05-27,facebook,paid_social,GA4 Prospecting,209.20,702.00,272,9
+2026-05-27,bing,cpc,GA4 Bing Brand,116.60,550.00,212,7
+2026-05-28,google,cpc,GA4 Search Brand,277.50,1277.00,364,15
+2026-05-28,facebook,paid_social,GA4 Prospecting,210.90,709.00,274,10
+2026-05-28,bing,cpc,GA4 Bing Brand,117.70,555.00,214,8
+2026-05-29,google,cpc,GA4 Search Brand,280.00,1288.00,366,12
+2026-05-29,facebook,paid_social,GA4 Prospecting,212.60,716.00,276,7
+2026-05-29,bing,cpc,GA4 Bing Brand,118.80,560.00,216,5
+2026-05-30,google,cpc,GA4 Search Brand,282.50,1299.00,368,13
+2026-05-30,facebook,paid_social,GA4 Prospecting,214.30,723.00,278,8
+2026-05-30,bing,cpc,GA4 Bing Brand,119.90,565.00,218,6
+2026-05-31,google,cpc,GA4 Search Brand,285.00,1310.00,370,14
+2026-05-31,facebook,paid_social,GA4 Prospecting,216.00,730.00,280,9
+2026-05-31,bing,cpc,GA4 Bing Brand,121.00,570.00,220,7
+2026-06-01,google,cpc,GA4 Search Brand,287.50,1321.00,372,15
+2026-06-01,facebook,paid_social,GA4 Prospecting,217.70,737.00,282,10
+2026-06-01,bing,cpc,GA4 Bing Brand,122.10,575.00,222,8
+2026-06-02,google,cpc,GA4 Search Brand,290.00,1332.00,374,12
+2026-06-02,facebook,paid_social,GA4 Prospecting,219.40,744.00,284,7
+2026-06-02,bing,cpc,GA4 Bing Brand,123.20,580.00,224,5
+2026-06-03,google,cpc,GA4 Search Brand,292.50,1343.00,376,13
+2026-06-03,facebook,paid_social,GA4 Prospecting,221.10,751.00,286,8
+2026-06-03,bing,cpc,GA4 Bing Brand,124.30,585.00,226,6
+2026-06-04,google,cpc,GA4 Search Brand,295.00,1354.00,378,14
+2026-06-04,facebook,paid_social,GA4 Prospecting,222.80,758.00,288,9
+2026-06-04,bing,cpc,GA4 Bing Brand,125.40,590.00,228,7
+2026-06-05,google,cpc,GA4 Search Brand,297.50,1365.00,380,15
+2026-06-05,facebook,paid_social,GA4 Prospecting,224.50,765.00,290,10
+2026-06-05,bing,cpc,GA4 Bing Brand,126.50,595.00,230,8
+2026-06-06,google,cpc,GA4 Search Brand,300.00,1376.00,382,12
+2026-06-06,facebook,paid_social,GA4 Prospecting,226.20,772.00,292,7
+2026-06-06,bing,cpc,GA4 Bing Brand,127.60,600.00,232,5
+2026-06-07,google,cpc,GA4 Search Brand,302.50,1387.00,384,13
+2026-06-07,facebook,paid_social,GA4 Prospecting,227.90,779.00,294,8
+2026-06-07,bing,cpc,GA4 Bing Brand,128.70,605.00,234,6
+2026-06-08,google,cpc,GA4 Search Brand,305.00,1398.00,386,14
+2026-06-08,facebook,paid_social,GA4 Prospecting,229.60,786.00,296,9
+2026-06-08,bing,cpc,GA4 Bing Brand,129.80,610.00,236,7
+2026-06-09,google,cpc,GA4 Search Brand,307.50,1409.00,388,15
+2026-06-09,facebook,paid_social,GA4 Prospecting,231.30,793.00,298,10
+2026-06-09,bing,cpc,GA4 Bing Brand,130.90,615.00,238,8
+2026-06-10,google,cpc,GA4 Search Brand,310.00,1420.00,390,12
+2026-06-10,facebook,paid_social,GA4 Prospecting,233.00,800.00,300,7
+2026-06-10,bing,cpc,GA4 Bing Brand,132.00,620.00,240,5
+2026-06-11,google,cpc,GA4 Search Brand,312.50,1431.00,392,13
+2026-06-11,facebook,paid_social,GA4 Prospecting,234.70,807.00,302,8
+2026-06-11,bing,cpc,GA4 Bing Brand,133.10,625.00,242,6
+2026-06-12,google,cpc,GA4 Search Brand,315.00,1442.00,394,14
+2026-06-12,facebook,paid_social,GA4 Prospecting,236.40,814.00,304,9
+2026-06-12,bing,cpc,GA4 Bing Brand,134.20,630.00,244,7
+2026-06-13,google,cpc,GA4 Search Brand,317.50,1453.00,396,15
+2026-06-13,facebook,paid_social,GA4 Prospecting,238.10,821.00,306,10
+2026-06-13,bing,cpc,GA4 Bing Brand,135.30,635.00,246,8
+2026-06-14,google,cpc,GA4 Search Brand,320.00,1464.00,398,12
+2026-06-14,facebook,paid_social,GA4 Prospecting,239.80,828.00,308,7
+2026-06-14,bing,cpc,GA4 Bing Brand,136.40,640.00,248,5

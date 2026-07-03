@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import math
 import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -396,6 +398,40 @@ class SchemaAdapterTests(unittest.TestCase):
         self.assertEqual(validation.validRows, 1)
         self.assertFalse(frame.empty)
         self.assertEqual(frame.iloc[0]["channel"], "Google Ads")
+
+    def test_ga4_variant_fixture_uses_trained_model_in_run_sh_equivalent_path(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            data_dir = Path(tmp) / "data"
+            data_dir.mkdir()
+            shutil.copyfile(
+                Path("tests/fixtures/ga4_variant_hidden_export.csv"),
+                data_dir / "analytics_hidden_export.csv",
+            )
+            output = Path(tmp) / "predictions.csv"
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "backend.predict",
+                    "--data-dir",
+                    str(data_dir),
+                    "--model",
+                    "pickle/model.pkl",
+                    "--output",
+                    str(output),
+                ],
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=60,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            predictions = pd.read_csv(output)
+            self.assertFalse(predictions.empty)
+            self.assertEqual(set(predictions["model_type"].astype(str)), {"trained_model"})
+            self.assertNotIn("safe_baseline_fallback", set(predictions["model_type"].astype(str)))
 
 
 if __name__ == "__main__":

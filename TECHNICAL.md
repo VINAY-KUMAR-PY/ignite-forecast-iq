@@ -333,6 +333,10 @@ also asserts the trained artifact remains active for sparse but valid data.
   overrides for channels absent from the uploaded dataset. Zero-budget
   simulations are allowed, but positive `targetRevenue` or `targetRoas` goals
   require at least one positive planned budget or observed spend signal.
+- Simulator plans that exceed recent channel spend by 20x or more are returned
+  with a `budget_extrapolation` risk. At 50x or with no recent spend history,
+  the risk is marked high severity because projected returns are outside the
+  observed response range and should be treated as low-confidence.
 - The offline evaluator does not call Gemini or any external network service.
   This deliberately follows the Hackathon Submission Guide Section 8
   no-network-runtime boundary for the graded artifact. Live Gemini integration

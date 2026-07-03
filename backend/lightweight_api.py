@@ -440,6 +440,27 @@ def _risks(
 ) -> list[dict]:
     risks = []
     for item in stats:
+        recent_spend = max(0.0, float(item["recent_spend"]))
+        budget = max(0.0, float(item["budget"]))
+        extrapolation_ratio = budget / max(recent_spend, 1.0)
+        if budget > 0 and (recent_spend <= 0 or extrapolation_ratio >= 20):
+            severity = "high" if extrapolation_ratio >= 50 or recent_spend <= 0 else "medium"
+            risks.append(
+                _detection(
+                    "budget_extrapolation",
+                    item["channel"],
+                    severity,
+                    min(100, extrapolation_ratio),
+                    (
+                        f"{item['channel']} planned budget is {extrapolation_ratio:.1f}x recent 30-day spend, "
+                        "so projected returns are extrapolated beyond observed history."
+                    ),
+                    (
+                        "Treat this scenario as low-confidence; stage the increase through controlled tests "
+                        "or add more historical evidence before approving the full budget."
+                    ),
+                )
+            )
         if item["revenue_trend_pct"] < -8:
             risks.append(_detection("revenue_decline_risk", item["channel"], "medium", abs(item["revenue_trend_pct"]), f"{item['channel']} revenue is declining versus the prior period.", "Review campaigns before scaling."))
         if item["budget_share"] - item["recent_revenue_share"] > 0.08:

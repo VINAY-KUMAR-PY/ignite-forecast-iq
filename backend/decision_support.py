@@ -372,6 +372,26 @@ def _detect_risks(
     health_by_channel = {item.channel: item for item in health}
 
     for item in stats:
+        recent_spend = max(0.0, float(item["recent_spend"]))
+        projected_budget = max(0.0, float(item["budget"]))
+        extrapolation_ratio = projected_budget / max(recent_spend, 1.0)
+        if projected_budget > 0 and (recent_spend <= 0 or extrapolation_ratio >= 20):
+            risks.append(
+                DetectionItem(
+                    type="budget_extrapolation",
+                    channel=item["channel"],
+                    severity="high" if extrapolation_ratio >= 50 or recent_spend <= 0 else "medium",
+                    score=round_money(min(100, extrapolation_ratio)),
+                    message=(
+                        f"{item['channel']} planned budget is {extrapolation_ratio:.1f}x recent 30-day spend, "
+                        "so projected returns are extrapolated beyond observed history."
+                    ),
+                    recommendation=(
+                        "Treat this scenario as low-confidence; stage the increase through controlled tests "
+                        "or add more historical evidence before approving the full budget."
+                    ),
+                )
+            )
         if item["revenue_trend_pct"] < -8:
             risks.append(
                 DetectionItem(

@@ -439,6 +439,22 @@ for hackathon evaluator safety, but production use should recalibrate bands on
 larger merchant-specific holdouts to tighten sharpness while preserving
 coverage.
 
+### Cross-Path Consistency & Adversarial Robustness
+
+- `tests/test_path_consistency.py` runs the committed sample data through the
+  offline sklearn evaluator and live forecast path, then checks directional
+  revenue agreement and a broad ROAS tolerance because the estimators differ.
+- `tests/test_adversarial_inputs.py` covers negative values, missing columns,
+  non-numeric/currency-formatted fields, and GA4 + Shopify + Ads duplicate
+  revenue guards.
+- `tests/test_causal_stability.py` perturbs spend and revenue with small
+  realistic noise and checks that the top DiD hypothesis remains stable or
+  loses confidence instead of silently flipping.
+- `.github/workflows/evaluator-ci.yml` now enforces at least 75% coverage on
+  `backend/inference.py`, `backend/train.py`, `backend/gemini.py`,
+  `backend/decision_support.py`, and `backend/evaluator_io.py` in addition to
+  the aggregate backend gate.
+
 ### Known gaps
 
 - Causal layer is observational DiD, not experimental incrementality.

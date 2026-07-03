@@ -305,11 +305,36 @@ jobs:
 
           coverage = json.loads(Path("coverage.json").read_text())
           total = coverage["totals"]["percent_covered_display"]
+          required_modules = [
+              "backend/decision_support.py",
+              "backend/evaluator_io.py",
+              "backend/gemini.py",
+              "backend/inference.py",
+              "backend/train.py",
+          ]
+          module_rows = []
+          failures = []
+          for module in required_modules:
+              file_data = coverage["files"].get(module) or coverage["files"].get(module.replace("/", "\\"))
+              if not file_data:
+                  failures.append(f"{module}: missing from coverage report")
+                  continue
+              pct = float(file_data["summary"]["percent_covered"])
+              module_rows.append((module, pct))
+              if pct < 75.0:
+                  failures.append(f"{module}: {pct:.2f}% < 75%")
+          if failures:
+              raise SystemExit("Per-module coverage gate failed:\n" + "\n".join(failures))
           print(f"Backend coverage: {total}%")
+          for module, pct in module_rows:
+              print(f"{module}: {pct:.2f}%")
           with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as handle:
               handle.write("## Backend coverage\n\n")
               handle.write(f"- Overall backend coverage: **{total}%**\n")
               handle.write("- Required gate: **90%** via `--cov-fail-under=90`\n")
+              handle.write("- Required high-risk module gate: **75%** each\n")
+              for module, pct in module_rows:
+                  handle.write(f"  - `{module}`: **{pct:.2f}%**\n")
           PY
 
       - name: Verify committed trained artifact

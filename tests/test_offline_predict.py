@@ -39,6 +39,7 @@ from backend.predict import (
     write_predictions,
 )
 from backend.evaluator_io import trained_model_functional_smoke_test
+from backend.gemini_offline_cache import select_distilled_reasoning
 from backend.utils import read_csv_folder as read_training_csv_folder
 
 
@@ -416,6 +417,8 @@ class OfflinePredictionTests(unittest.TestCase):
 
         self.assertTrue(summary.startswith("AI mode: OFFLINE_DETERMINISTIC_FALLBACK"))
         self.assertIn("no live LLM call was made in this run", summary.splitlines()[0])
+        self.assertIn("DISTILLED_LLM_DERIVED_OFFLINE_CACHE", summary)
+        self.assertIn("Distilled LLM reasoning pattern:", summary)
         self.assertGreater(len(summary), 100)
         self.assertRegex(summary, r"ROAS|roas")
         self.assertIn("$", summary)
@@ -435,6 +438,28 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertIn("Executive interpretation", summary)
         self.assertIn("Confidence note", summary)
         self.assertIn("observational difference-in-differences", summary)
+
+    def test_distilled_reasoning_cache_is_deterministic_and_signal_driven(self) -> None:
+        evidence = [
+            {
+                "channel": "Google Ads",
+                "incrementalRevenue": 12000,
+                "lowerRevenue": 5000,
+                "upperRevenue": 19000,
+                "confidence": "medium",
+            }
+        ]
+
+        first = select_distilled_reasoning([], evidence)
+        second = select_distilled_reasoning([], evidence)
+        uncertain = select_distilled_reasoning(
+            [{"channel": "Meta Ads", "date": "2026-01-01"}],
+            [{**evidence[0], "lowerRevenue": -1000}],
+        )
+
+        self.assertEqual(first, second)
+        self.assertEqual(first["label"], "incremental_growth")
+        self.assertEqual(uncertain["label"], "volatility_watch")
 
     def test_causal_summary_stays_offline_when_gemini_env_is_configured(self) -> None:
         raw = pd.read_csv("data/sample_campaigns.csv").head(120)

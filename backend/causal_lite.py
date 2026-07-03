@@ -150,6 +150,8 @@ def _estimate_event_effect(daily: pd.DataFrame, event: dict, window: int = 14) -
         if post_days >= 8 and parallel["passed"]
         else "low"
     )
+    if lower_revenue <= 0 <= upper_revenue:
+        confidence = "low"
 
     return {
         "date": event_date.strftime("%Y-%m-%d"),

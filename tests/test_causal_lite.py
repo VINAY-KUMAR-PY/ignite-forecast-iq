@@ -87,6 +87,34 @@ class CausalLiteTests(unittest.TestCase):
         self.assertLessEqual(estimate["lowerRevenue"], estimate["incrementalRevenue"])
         self.assertGreaterEqual(estimate["upperRevenue"], estimate["incrementalRevenue"])
 
+    def test_confidence_downgrades_to_low_when_ci_crosses_zero(self) -> None:
+        start = date(2026, 1, 1)
+        rows = []
+        for day in range(56):
+            current = (start + timedelta(days=day)).isoformat()
+            for channel in ["Google Ads", "Meta Ads", "Microsoft Ads"]:
+                rows.append(
+                    {
+                        "date": current,
+                        "channel": channel,
+                        "campaign_type": "Search",
+                        "campaign_name": f"{channel} Core",
+                        "spend": 100.0,
+                        "revenue": 1000.0 + day * 5,
+                    }
+                )
+
+        estimates = estimate_causal_effects(
+            pd.DataFrame(rows),
+            [{"date": "2026-01-29", "channel": "Google Ads", "metric": "revenue"}],
+        )
+
+        self.assertTrue(estimates)
+        estimate = estimates[0]
+        self.assertLessEqual(estimate["lowerRevenue"], 0)
+        self.assertGreaterEqual(estimate["upperRevenue"], 0)
+        self.assertEqual(estimate["confidence"], "low")
+
 
 if __name__ == "__main__":
     unittest.main()

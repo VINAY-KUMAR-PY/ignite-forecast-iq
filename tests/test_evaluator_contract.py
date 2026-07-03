@@ -12,7 +12,12 @@ from pathlib import Path
 import pandas as pd
 
 from backend.backtest import run_backtest
-from backend.predict import OUTPUT_COLUMNS, SAFE_BASELINE_MODEL_TYPE, TRAINED_MODEL_TYPE
+from backend.predict import (
+    OUTPUT_COLUMNS,
+    SAFE_BASELINE_MODEL_TYPE,
+    TRAINED_ESTIMATED_SPEND_MODEL_TYPE,
+    TRAINED_MODEL_TYPE,
+)
 
 
 class EvaluatorContractTests(unittest.TestCase):
@@ -108,6 +113,75 @@ class EvaluatorContractTests(unittest.TestCase):
 
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assert_predictions_csv(output)
+
+    def test_small_held_out_ads_export_uses_degraded_trained_path(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            data_dir = Path(tmp) / "data"
+            data_dir.mkdir()
+            output = Path(tmp) / "predictions.csv"
+            rows = ["date,platform,campaign,campaign_type,cost,clicks,impressions,conversions,conversion_value"]
+            for day in range(10):
+                rows.append(
+                    f"2026-06-{day + 1:02d},Google Ads,Search Brand,Search,"
+                    f"{850 + day * 15},{400 + day * 3},{12000 + day * 90},{80 + day},{6900 + day * 110}"
+                )
+                rows.append(
+                    f"2026-06-{day + 1:02d},Meta Ads,Prospecting,Paid Social,"
+                    f"{720 + day * 11},{350 + day * 2},{18000 + day * 120},{50 + day},{3700 + day * 75}"
+                )
+            (data_dir / "heldout_ads.csv").write_text("\n".join(rows), encoding="utf-8")
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "backend.predict",
+                    "--data-dir",
+                    str(data_dir),
+                    "--model",
+                    "./pickle/model.pkl",
+                    "--output",
+                    str(output),
+                ],
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=60,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            frame = self.assert_predictions_csv(output)
+            modes = set(frame["model_type"].astype(str))
+            self.assertNotEqual(modes, {SAFE_BASELINE_MODEL_TYPE})
+            self.assertIn(TRAINED_MODEL_TYPE, modes)
+
+    def test_six_row_ads_fixture_uses_degraded_trained_path_not_baseline_only(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            data_dir = Path(tmp) / "data"
+            data_dir.mkdir()
+            shutil.copy(Path("data/fixtures/ads_raw_export.csv"), data_dir / "ads_raw_export.csv")
+            output = Path(tmp) / "predictions.csv"
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "backend.predict",
+                    "--data-dir",
+                    str(data_dir),
+                    "--model",
+                    "./pickle/model.pkl",
+                    "--output",
+                    str(output),
+                ],
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=60,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            frame = self.assert_predictions_csv(output)
+            self.assertEqual(set(frame["model_type"].astype(str)), {TRAINED_ESTIMATED_SPEND_MODEL_TYPE})
 
     def test_causal_summary_file_exists(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -487,13 +487,21 @@ def build_predictions(
     model: dict[str, Any],
     planned_budgets: dict[str, float] | None = None,
 ) -> list[dict[str, Any]]:
-    if is_trained_model_artifact(model) and len(frame) >= int(
-        model.get("preprocessing", {}).get("min_prediction_rows", MIN_TRAINED_MODEL_ROWS)
-    ):
+    artifact_min_rows = int(model.get("preprocessing", {}).get("min_prediction_rows", MIN_TRAINED_MODEL_ROWS))
+    evaluator_min_rows = min(artifact_min_rows, MIN_TRAINED_MODEL_ROWS)
+    if is_trained_model_artifact(model) and len(frame) >= evaluator_min_rows:
         estimated_spend, estimation_note = estimate_missing_spend_for_trained_mode(frame, model)
-        trained_model_type = TRAINED_ESTIMATED_SPEND_MODEL_TYPE if estimated_spend else TRAINED_MODEL_TYPE
+        low_sample_degraded_mode = len(frame) < artifact_min_rows
+        trained_model_type = (
+            TRAINED_ESTIMATED_SPEND_MODEL_TYPE if estimated_spend or low_sample_degraded_mode else TRAINED_MODEL_TYPE
+        )
         if estimated_spend:
             log(estimation_note)
+        elif low_sample_degraded_mode:
+            log(
+                "Input is below the artifact's preferred row count; using artifact-backed low-sample "
+                f"inference and labeling rows as {TRAINED_ESTIMATED_SPEND_MODEL_TYPE}."
+            )
         for diagnostic in unseen_category_diagnostics(frame, model):
             log(f"Category diagnostic: {diagnostic}")
         known_channels = set((model.get("preprocessing") or {}).get("category_maps", {}).get("channel", {}).keys())

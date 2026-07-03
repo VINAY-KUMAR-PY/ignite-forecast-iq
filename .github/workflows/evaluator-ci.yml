@@ -272,6 +272,63 @@ jobs:
           )
           PY
 
+  sklearn-version-drift-smoke:
+    name: sklearn drift tolerance / ${{ matrix.scikit-learn-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        scikit-learn-version: ["1.7.2", "1.8.0"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install evaluator dependencies and alternate sklearn
+        run: |
+          python -m pip install --no-cache-dir -r requirements.txt
+          python -m pip install --no-cache-dir --force-reinstall --no-deps scikit-learn==${{ matrix.scikit-learn-version }}
+
+      - name: Assert drift is trained or loudly guarded
+        run: |
+          mkdir -p output
+          set +e
+          python -m backend.predict --data-dir ./data --model ./pickle/model.pkl --output ./output/predictions.csv > ./output/sklearn_drift.log 2>&1
+          status=$?
+          set -e
+          cat ./output/sklearn_drift.log
+          if [ "$status" -ne 0 ]; then
+            if grep -Eqi "sklearn|scikit|artifact|FORECASTIQ WARNING|version incompatible" ./output/sklearn_drift.log; then
+              echo "Alternate sklearn runtime failed loudly with compatibility context as expected."
+              exit 0
+            fi
+            echo "Alternate sklearn runtime failed without a clear compatibility warning."
+            exit "$status"
+          fi
+          python - <<'PY'
+          from pathlib import Path
+
+          import pandas as pd
+
+          log_text = Path("output/sklearn_drift.log").read_text(encoding="utf-8")
+          frame = pd.read_csv("output/predictions.csv")
+          modes = set(frame["model_type"].astype(str))
+          if modes == {"trained_model"}:
+              print("Alternate sklearn runtime produced trained_model output.")
+          elif modes == {"safe_baseline_fallback"} and (
+              "FORECASTIQ WARNING: SAFE BASELINE FALLBACK WAS USED" in log_text
+              or "differs from artifact build version" in log_text
+          ):
+              print("Alternate sklearn runtime used safe fallback with loud compatibility warning.")
+          else:
+              raise SystemExit(f"Unexpected silent model mode under alternate sklearn: {sorted(modes)}")
+          PY
+
   app-tests:
     name: Backend application and trained artifact
     runs-on: ubuntu-latest

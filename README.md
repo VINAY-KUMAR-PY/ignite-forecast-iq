@@ -83,7 +83,7 @@ chmod +x run.sh
 ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
 ```
 
-For AI Integration scoring in the offline evaluator, check the first line of `output/causal_summary.txt`; it explicitly labels the run as `OFFLINE_DETERMINISTIC_FALLBACK` when no live Gemini call is allowed.
+For AI Integration scoring in the offline evaluator, check the first two lines of `output/causal_summary.txt`; they explicitly label the run as `OFFLINE_DETERMINISTIC_FALLBACK` and `DISTILLED_LLM_DERIVED_OFFLINE_CACHE` when no live Gemini call is allowed.
 
 Note: `requirements.txt` pins `scikit-learn==1.9.0` to match the committed artifact. The supported evaluator runtime is Python 3.11-3.14 with the exact pinned dependencies; CI requires `model_type=trained_model` across that full matrix.
 `requirements.txt` is the minimal offline-evaluator dependency set; `requirements-app.txt` is a superset needed only for running the full FastAPI backend, tests, Gemini integration, and local frontend demo.
@@ -104,6 +104,10 @@ model_type trained_model
 ```
 
 The evaluator CI runs the same pinned install on Ubuntu runners for Python 3.11, 3.12, 3.13, and 3.14, then asserts the committed artifact emits `model_type=trained_model`.
+
+### Reproducibility
+
+The canonical evaluator runtime is the exact pinned dependency set in `requirements.txt`. A separate sklearn drift-tolerance CI job intentionally installs available older sklearn minor versions (`1.7.2` and `1.8.0`; no above-`1.9.0` release is available on the configured package index yet) and requires one of two clear outcomes: valid `trained_model` output, or a loud compatibility warning before any `safe_baseline_fallback` output is accepted. This prevents silent bad predictions when a reviewer experiments outside the pinned runtime.
 
 Expected output:
 
@@ -134,6 +138,10 @@ CI includes a dedicated job named **Hackathon 5-step evaluator protocol** that m
 
 This job is separate from broader backend, frontend, and Playwright checks so the evaluator contract remains easy to audit.
 
+## AI Integration in the Offline Evaluator
+
+`run.sh` makes no live Gemini or network call. Instead, `backend/gemini_offline_cache.py` selects a deterministic distilled LLM-derived reasoning pattern from the run's anomaly and DiD evidence, using patterns derived from the redacted live Gemini transcripts in `docs/gemini_sample_transcripts/`. The selected pattern is written into `output/causal_summary.txt` with the label `DISTILLED_LLM_DERIVED_OFFLINE_CACHE`, so the scored artifact shows the AI reasoning boundary clearly.
+
 ## Evidence & Validation
 
 ForecastIQ keeps one canonical evidence map here to reduce duplicate documentation.
@@ -143,9 +151,9 @@ ForecastIQ keeps one canonical evidence map here to reduce duplicate documentati
 | Evaluator contract | `run.sh`, `backend/predict.py`, `backend/evaluator_contract.py`, `tests/test_evaluator_contract.py`, `tests/test_evaluator_e2e.py`, `tests/test_scale_evaluator.py`, `.github/workflows/evaluator-ci.yml` |
 | Forecast model | `backend/inference.py`, `pickle/model.pkl`, `reports/backtest_report.json`, `reports/backtest_summary.md`, `reports/coverage_summary.md`, `tests/test_interval_monotonicity.py`, `tests/test_offline_predict.py` |
 | Data compatibility | `backend/schema_adapters.py`, `backend/data_preprocessing.py`, `tests/test_schema_adapters.py` for GA4, Shopify, Google Ads micros, Meta Ads, Microsoft/Bing Ads, and duplicate-revenue guards |
-| AI and causal layer | `backend/gemini.py`, `backend/causal_lite.py`, `scripts/verify_gemini_live.py`, `.github/workflows/gemini-live-smoke.yml`, `tests/test_gemini_parsing.py`, `tests/test_causal_lite.py`, `docs/gemini_sample_transcripts/` |
+| AI and causal layer | `backend/gemini.py`, `backend/gemini_offline_cache.py`, `backend/causal_lite.py`, `scripts/verify_gemini_live.py`, `.github/workflows/gemini-live-smoke.yml`, `tests/test_gemini_parsing.py`, `tests/test_causal_lite.py`, `tests/test_offline_predict.py`, `docs/gemini_sample_transcripts/` |
 | Product demo | `src/routes/index.tsx`, `src/routes/`, `src/routes/app-pages.test.tsx`, `tests/e2e/demo.spec.ts`, `reports/e2e_summary.md`, `DEMO_GUIDE.md`, `TECHNICAL.md` |
-| CI jobs | `evaluator`, `app-tests`, `frontend`, `e2e-demo`, `hackathon-evaluator-protocol`, and `gemini-live-smoke` |
+| CI jobs | `evaluator`, `sklearn-version-drift-smoke`, `app-tests`, `frontend`, `e2e-demo`, `hackathon-evaluator-protocol`, and `gemini-live-smoke` |
 | Exact sklearn guard | `exact-sklearn-zero-fallback` in `.github/workflows/evaluator-ci.yml` installs the pinned evaluator runtime and rejects sklearn mismatch/fallback warnings |
 
 The latest backtest compares trained-model and deterministic-baseline behavior

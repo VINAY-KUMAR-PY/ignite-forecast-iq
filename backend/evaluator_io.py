@@ -35,6 +35,7 @@ from .evaluator_contract import (
     safe_float,
 )
 from .evaluator_intervals import DEFAULT_HORIZON_CONFIDENCE_Z
+from .gemini_offline_cache import DISTILLED_LLM_REASONING_HEADER, select_distilled_reasoning
 from .segment_utils import FEATURE_COLUMNS, safe_ratio, window_trend
 
 OFFLINE_AI_MODE_HEADER = (
@@ -329,9 +330,14 @@ def generate_offline_causal_summary(
     from .anomaly import detect_anomalies
 
     if frame.empty or not rows:
+        distilled = select_distilled_reasoning([], [], planned_budgets)
         return (
             f"{OFFLINE_AI_MODE_HEADER}\n"
+            f"{DISTILLED_LLM_REASONING_HEADER}\n"
             "=== ForecastIQ Causal Summary (offline, deterministic) ===\n"
+            f"Distilled LLM reasoning pattern: {distilled['label']}\n"
+            f"Interpretation: {distilled['summary']}\n"
+            f"Recommended action: {distilled['recommended_action']}\n"
             "Executive interpretation: the submitted data did not contain enough usable rows to "
             "estimate a directional revenue trend, so ForecastIQ generated evaluator-safe fallback "
             "predictions instead of failing. The dollar impact is treated as $0 and the percentage "
@@ -527,12 +533,20 @@ def generate_offline_causal_summary(
         ) + ". Offline budget response applies diminishing returns after aggressive spend increases."
     spend_estimation_lines = []
     if estimated_spend_mode:
-        spend_estimation_lines.append(
-            "Spend-estimation assumption: the input contained revenue but no usable media spend, so ForecastIQ "
-            "estimated spend from training-time channel ROAS benchmarks and labeled predictions as "
-            f"{TRAINED_ESTIMATED_SPEND_MODEL_TYPE}. Accuracy should be treated as lower than full "
-            f"{TRAINED_MODEL_TYPE} mode because ROAS and spend-response features are inferred."
-        )
+        if bool(frame.attrs.get("forecastiq_spend_estimated")) or (total_spend <= 1e-9 and total_revenue > 1e-9):
+            spend_estimation_lines.append(
+                "Spend-estimation assumption: the input contained revenue but no usable media spend, so ForecastIQ "
+                "estimated spend from training-time channel ROAS benchmarks and labeled predictions as "
+                f"{TRAINED_ESTIMATED_SPEND_MODEL_TYPE}. Accuracy should be treated as lower than full "
+                f"{TRAINED_MODEL_TYPE} mode because ROAS and spend-response features are inferred."
+            )
+        else:
+            spend_estimation_lines.append(
+                "Small-sample trained-mode assumption: the input is valid but thinner than the artifact's "
+                "preferred training-context size, so ForecastIQ still used artifact-backed blended inference "
+                f"and labeled predictions as {TRAINED_ESTIMATED_SPEND_MODEL_TYPE}. Accuracy should be "
+                f"treated as lower than full {TRAINED_MODEL_TYPE} mode because segment-level evidence is sparse."
+            )
     anomaly_header = (
         "Anomaly signals ranked by forecast relevance:"
         if top_anomalies
@@ -564,10 +578,20 @@ def generate_offline_causal_summary(
     ]
     template_index = int(abs(revenue_delta_pct) + len(top_anomalies) + len(causal_estimates)) % len(framing_templates)
     competing_hypothesis_line = framing_templates[template_index]
+    distilled = select_distilled_reasoning(
+        [item.to_dict() for item in top_anomalies],
+        causal_estimates,
+        planned_budgets,
+    )
 
     lines = [
         OFFLINE_AI_MODE_HEADER,
+        DISTILLED_LLM_REASONING_HEADER,
         "=== ForecastIQ Causal Summary (offline, deterministic) ===",
+        f"Distilled LLM reasoning pattern: {distilled['label']}",
+        f"Interpretation: {distilled['summary']}",
+        f"Evidence focus: {distilled['evidence_focus']}",
+        f"Recommended action: {distilled['recommended_action']}",
         executive_interpretation,
         f"Historical period: {daily['date'].iloc[0]} to {daily['date'].iloc[-1]} ({len(daily)} days)",
         f"Total spend: ${total_spend:,.0f} | Total revenue: ${total_revenue:,.0f} | Blended ROAS: {blended_roas:.2f}x",

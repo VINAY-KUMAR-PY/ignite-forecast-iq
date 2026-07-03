@@ -309,9 +309,18 @@ ROAS is set to `expected_roas = lower_roas = upper_roas = 0` and
 | `model_type` value | Trigger condition | What changes internally | Accuracy expectation |
 |---|---|---|---|
 | `trained_model` | Valid data includes usable media spend and the committed artifact loads under the pinned evaluator runtime. | Uses the trained sklearn revenue, ROAS, and revenue-quantile models with deterministic guardrails. | Best supported offline path; backtest metrics in `reports/backtest_summary.md` apply most directly. |
-| `trained_model_estimated_spend` | Revenue is present but all spend is missing or zero, as in GA4-only or Shopify-only exports without Ads cost data. | Estimates spend from training-time channel/campaign-type ROAS benchmarks, reruns trained inference, and writes an explicit assumption note in `causal_summary.txt`. | Better than dropping straight to a naive baseline for revenue direction, but ROAS and spend-response accuracy are lower because spend is inferred. |
+| `trained_model_estimated_spend` | Revenue is present but all spend is missing or zero, as in GA4-only or Shopify-only exports without Ads cost data; also used for very small but valid Ads exports that are below the artifact's preferred 8-row context and above the 6-row evaluator floor. | Estimates spend from training-time channel/campaign-type ROAS benchmarks when spend is absent, or shrinks the artifact-backed blend for sparse valid exports, then writes an explicit assumption note in `causal_summary.txt`. | Better than dropping straight to a naive baseline for revenue direction, but ROAS/spend-response accuracy is lower when spend is inferred or segment history is sparse. |
 | `safe_baseline_fallback` | Model file is missing/corrupt/unsupported, data is empty or malformed, segment history is too sparse, a trained submodel cannot score safely, or all rows have zero revenue and zero spend. | Uses deterministic trailing-window revenue, trend, and residual-width rules with no learned estimator dependency. | Most conservative and crash-resistant path; useful for evaluator safety but less specific than trained inference. |
 | `not_computable` in `forecast_confidence` | Projected spend is zero after validation or fallback. | Revenue forecasts are still emitted, but ROAS fields are set to zero to avoid division by zero. | Revenue output remains schema-safe; ROAS should not be interpreted as a performance forecast. |
+
+Concrete small-data example: `data/fixtures/ads_raw_export.csv` contains six
+valid Ads rows. The offline evaluator now emits 21 rows with
+`model_type=trained_model_estimated_spend` instead of dropping straight to
+`safe_baseline_fallback`, and
+`causal_summary.txt` records this as a small-sample trained-mode assumption.
+The stricter 10-30 row held-out-style regression test in
+`tests/test_evaluator_contract.py::test_small_held_out_ads_export_uses_degraded_trained_path`
+also asserts the trained artifact remains active for sparse but valid data.
 
 ## Assumptions & Limitations
 
@@ -353,7 +362,7 @@ ROAS is set to `expected_roas = lower_roas = upper_roas = 0` and
 This section records objective verification evidence for reviewers. It replaces
 the older standalone evidence indexes.
 
-### Latest local verification (2026-07-02)
+### Latest local verification (2026-07-03)
 
 ```text
 Clean evaluator venv:
@@ -368,10 +377,10 @@ Offline evaluator:
 [ForecastIQ] Causal summary written to output\causal_summary.txt
 [ForecastIQ] scikit-learn version: 1.9.0 (artifact built on 1.9.0)
 PASS offline evaluator: 54 rows ['trained_model']
-PASS causal summary: 4202 bytes
+PASS causal summary: 4834 bytes, including OFFLINE_DETERMINISTIC_FALLBACK and DISTILLED_LLM_DERIVED_OFFLINE_CACHE labels
 
 Backend tests:
-144 passed, 1 skipped, 7 warnings in 231.38s
+160 passed, 1 skipped, 7 warnings in 240.57s
 
 Frontend validation:
 npm install: up to date, audited 567 packages in 2s; one low-severity
@@ -386,6 +395,14 @@ the CI job `exact-sklearn-zero-fallback` installs the pinned evaluator runtime
 without pip cache, force-reinstalls `scikit-learn==1.9.0` with `--no-deps`,
 and fails if the sklearn mismatch warning appears. It also asserts 54 rows and
 model_type=trained_model.
+
+Sklearn drift tolerance:
+the CI job `sklearn-version-drift-smoke` intentionally tests available older
+sklearn versions outside the pinned artifact runtime (`1.7.2` and `1.8.0`;
+the configured package index currently has no release above `1.9.0`). It
+passes only when the run either emits valid `trained_model` output or emits a
+loud compatibility warning before accepting `safe_baseline_fallback`,
+preventing silent bad predictions under reviewer-side dependency experiments.
 ```
 
 ### Evaluator pipeline verification
@@ -517,6 +534,18 @@ Gemini, another LLM, or any external service. The deterministic narrative
 mirrors the live Gemini prompt structure with executive interpretation,
 ranked anomaly evidence, causal hypotheses, competing explanations, risks, and
 budget actions.
+
+### AI Integration in the Offline Evaluator
+
+The scored `run.sh` path is intentionally network-free, so it cannot make a
+live Gemini call during evaluation. To keep the AI reasoning visible in the
+offline artifact, `backend/gemini_offline_cache.py` ships distilled
+LLM-derived reasoning patterns created from the redacted Gemini transcripts in
+`docs/gemini_sample_transcripts/`. `backend/evaluator_io.py` selects one
+pattern deterministically from the run's anomaly and DiD evidence and writes
+the header `DISTILLED_LLM_DERIVED_OFFLINE_CACHE` into `causal_summary.txt`.
+This is an offline interpretation cache, not a live model response; the first
+two lines of the summary make that boundary explicit.
 
 ## Architecture Overview
 

@@ -380,20 +380,22 @@ Offline evaluator:
 [ForecastIQ] Trained-model forecast coverage: 54/54 rows (100.0%) used artifact-backed estimates; 0 row(s) used safe segment fallback.
 [ForecastIQ] Wrote 54 rows to ./output/predictions.csv
 [ForecastIQ] Causal summary written to output\causal_summary.txt
+[ForecastIQ] Explainability notes written to output\explainability_notes.txt
 [ForecastIQ] scikit-learn version: 1.9.0 (artifact built on 1.9.0)
 PASS offline evaluator: 54 rows ['trained_model']
 PASS causal summary: 4834 bytes, including OFFLINE_DETERMINISTIC_FALLBACK and DISTILLED_LLM_DERIVED_OFFLINE_CACHE labels
+PASS explainability notes: per segment/horizon recent trend, seasonality, ROAS stability, and confidence signals
 
 Backend tests:
-162 passed, 1 skipped, 7 warnings in 533.66s from a clean checkout with `requirements-app.txt`
+167 passed, 1 skipped, 7 warnings in 229.47s from a full local backend run with `requirements-app.txt`
 
 Frontend validation:
 npm install: up to date, audited 567 packages in 2s; one low-severity
 dev-server advisory remains
 npm run check: tsc, eslint, and Vite build passed; Vite transformed 2,837
-modules and built in 8.19s
-npm run test: Vitest passed 1 file and 5 tests in 4.00s
-npm run build: Vite transformed 2,837 modules and built in 7.21s
+modules and built in 8.54s
+npm run test: Vitest passed 1 file and 5 tests in 9.12s
+npm run build: Vite transformed 2,837 modules and built in 8.58s
 
 Sklearn zero-fallback guard:
 the CI job `exact-sklearn-zero-fallback` installs the pinned evaluator runtime
@@ -426,6 +428,9 @@ preventing silent bad predictions under reviewer-side dependency experiments.
   than falling back solely because of small segment size.
 - `output/causal_summary.txt` contains anomaly signals, DiD effect estimates
   with dollar amounts, and recognized channel names.
+- `output/explainability_notes.txt` contains local forecast drivers for each
+  segment/horizon, including recent trend, seasonality marker, ROAS stability,
+  and confidence label.
 - CI runs the evaluator contract on Python 3.11, 3.12, 3.13, and 3.14 on every
   push.
 - Budget-JSON 4th argument is supported:

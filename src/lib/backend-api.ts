@@ -430,7 +430,6 @@ export function simulateBudgetsApi(
 ) {
   const cleanedRows = safeRows(rows);
   const body = { rows: cleanedRows, horizon, budgets: safeBudgetMap(cleanedRows, budgets) };
-  console.log("simulate request", body);
   return postJson<SimulationApiResponse>("/api/simulate", body);
 }
 
@@ -450,7 +449,6 @@ export function decisionSupportApi(
     ...safeTargets(targets, cleanedBudgets),
     scenarios: safeScenarios(cleanedRows, scenarios),
   };
-  console.log("decision-support request", body);
   return postJson<DecisionSupportResponse>("/api/decision-support", body);
 }
 
@@ -471,7 +469,6 @@ export function fetchSpendCurveApi(
     horizon,
     currentBudget: finiteNonNegative(currentBudget),
   };
-  console.log("spend-curve request", body);
   return postJson<SpendCurveResponse>("/api/spend-curve", body);
 }
 

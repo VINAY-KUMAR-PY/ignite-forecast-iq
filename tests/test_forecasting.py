@@ -7,7 +7,12 @@ from unittest.mock import patch
 
 import pandas as pd
 
-from backend.forecasting import compute_spend_response_curve, forecast_frame, simulate_budgets
+from backend.forecasting import (
+    _live_prediction_cap,
+    compute_spend_response_curve,
+    forecast_frame,
+    simulate_budgets,
+)
 
 
 def frame(days: int = 80) -> pd.DataFrame:
@@ -100,6 +105,31 @@ class ForecastingEngineTests(unittest.TestCase):
         shifted_width = shifted_google.projectedRevenueUpper - shifted_google.projectedRevenueLower
 
         self.assertGreater(shifted_width, stable_width)
+
+    def test_live_prediction_cap_respects_target_and_spend_context(self) -> None:
+        daily = pd.DataFrame(
+            {
+                "date": pd.date_range("2026-01-01", periods=14),
+                "spend": [100.0] * 14,
+                "revenue": [420.0 + i for i in range(14)],
+                "roas": [4.2 + i * 0.01 for i in range(14)],
+            }
+        )
+
+        baseline_cap = _live_prediction_cap(daily, "revenue", {"spend": 100.0})
+        scaled_cap = _live_prediction_cap(
+            daily,
+            "revenue",
+            {"spend": 220.0},
+            forced_daily_spend=220.0,
+        )
+        roas_cap = _live_prediction_cap(daily, "roas", {"spend": 100.0})
+        missing_target_cap = _live_prediction_cap(daily, "profit", {"spend": 100.0})
+
+        self.assertGreater(baseline_cap, 0)
+        self.assertGreater(scaled_cap, baseline_cap)
+        self.assertGreater(roas_cap, 0)
+        self.assertEqual(missing_target_cap, float("inf"))
 
 
 if __name__ == "__main__":

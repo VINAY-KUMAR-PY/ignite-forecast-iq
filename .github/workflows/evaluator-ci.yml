@@ -354,14 +354,14 @@ jobs:
       - name: Run tests with coverage
         run: |
           pip install pytest-cov
-          pytest tests/ --cov=backend --cov-report=term-missing --cov-report=json --cov-fail-under=90
+          pytest tests/ --cov=backend --cov-report=term-missing --cov-report=json --cov-fail-under=90.0
           python - <<'PY'
           import json
           import os
           from pathlib import Path
 
           coverage = json.loads(Path("coverage.json").read_text())
-          total = coverage["totals"]["percent_covered_display"]
+          total = float(coverage["totals"]["percent_covered"])
           required_modules = [
               "backend/decision_support.py",
               "backend/evaluator_io.py",
@@ -382,13 +382,13 @@ jobs:
                   failures.append(f"{module}: {pct:.2f}% < 75%")
           if failures:
               raise SystemExit("Per-module coverage gate failed:\n" + "\n".join(failures))
-          print(f"Backend coverage: {total}%")
+          print(f"Backend coverage: {total:.2f}%")
           for module, pct in module_rows:
               print(f"{module}: {pct:.2f}%")
           with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as handle:
               handle.write("## Backend coverage\n\n")
-              handle.write(f"- Overall backend coverage: **{total}%**\n")
-              handle.write("- Required gate: **90%** via `--cov-fail-under=90`\n")
+              handle.write(f"- Overall backend coverage: **{total:.2f}%**\n")
+              handle.write("- Required gate: **90.0%** via `--cov-fail-under=90.0`\n")
               handle.write("- Required high-risk module gate: **75%** each\n")
               for module, pct in module_rows:
                   handle.write(f"  - `{module}`: **{pct:.2f}%**\n")

@@ -604,6 +604,28 @@ def _fallback_forecast(daily: pd.DataFrame, horizon: int, target: str, forced_da
     return points
 
 
+def _live_prediction_cap(daily: pd.DataFrame, target: str, exog: dict, forced_daily_spend: Optional[float] = None) -> float:
+    """Keep recursive live forecasts in the historical planning range.
+
+    The live XGBoost/GBR path retrains interactively and feeds predictions back
+    into future features. This cap prevents long-horizon recursive explosions
+    while still allowing higher predictions when projected spend rises.
+    """
+    recent = daily.tail(min(28, len(daily))).copy()
+    if recent.empty or target not in recent:
+        return float("inf")
+    target_mean = max(0.0, _recent_mean(recent[target]))
+    target_std = float(np.std(recent[target], ddof=1)) if len(recent) > 1 else target_mean * 0.2
+    if target == "revenue":
+        recent_spend = max(1e-9, _recent_mean(recent["spend"])) if "spend" in recent else 1.0
+        if forced_daily_spend is not None:
+            spend_ratio = max(0.25, float(exog.get("spend", 0.0)) / recent_spend if recent_spend > 0 else 1.0)
+            spend_ratio = max(spend_ratio, forced_daily_spend / recent_spend if recent_spend > 0 else 1.0)
+            return max(target_mean * max(1.25, spend_ratio * 1.5), target_mean + 1.5 * target_std, 1.0)
+        return max(target_mean * 1.08, target_mean + target_std, 1.0)
+    return max(target_mean * 1.15, target_mean + target_std, 1.0)
+
+
 def _forecast_target(
     daily: pd.DataFrame,
     horizon: int,
@@ -628,6 +650,8 @@ def _forecast_target(
         X_future = future_features(history, target, future_date, exog)[trained.feature_columns]
         pred = float(trained.model.predict(X_future)[0])
         pred = max(0.0, pred)
+        if horizon >= 60:
+            pred = min(pred, _live_prediction_cap(daily, target, exog, forced_daily_spend))
         margin = 1.96 * max(trained.residual_std, pred * 0.06) * np.sqrt(1 + step / 30)
         lower = max(0.0, pred - margin)
         upper = pred + margin

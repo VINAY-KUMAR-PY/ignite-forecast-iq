@@ -1,19 +1,23 @@
 import { expect, test } from "@playwright/test";
 
-test("Try Live Demo covers Forecast, Simulator, and Insights", async ({ page }) => {
+test("CSV upload covers dashboard, forecasts, simulator, and fallback insights", async ({
+  page,
+}) => {
   const consoleErrors: string[] = [];
   page.on("console", (message) => {
     if (message.type() === "error") consoleErrors.push(message.text());
   });
   page.on("pageerror", (error) => consoleErrors.push(error.message));
 
-  await page.goto("/");
-  await page
-    .getByRole("link", { name: /try live demo/i })
-    .first()
-    .click();
-  await expect(page).toHaveURL(/\/app/);
+  await page.goto("/app/upload");
+  await page.locator('input[type="file"]').setInputFiles("data/sample_campaigns.csv");
+  await expect(page.getByText("Uploaded dataset")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText("Validation details")).toBeVisible();
+  await expect(page.getByText("All rows passed validation.")).toBeVisible();
+
+  await page.getByRole("link", { name: /decision center/i }).click();
   await expect(page.getByTestId("business-impact-dashboard")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByTestId("executive-decision-center")).toBeVisible();
 
   await page.getByRole("link", { name: /forecasting/i }).click();
   await expect(page.getByRole("heading", { name: "Revenue forecast" })).toBeVisible({
@@ -21,12 +25,25 @@ test("Try Live Demo covers Forecast, Simulator, and Insights", async ({ page }) 
   });
   await expect(page.getByRole("heading", { name: "ROAS forecast" })).toBeVisible();
   await expect(page.getByTestId("confidence-intervals")).toBeVisible({ timeout: 45_000 });
+  await expect(page.getByText("Expected revenue (30d)")).toBeVisible();
+
+  await page.getByRole("combobox").nth(0).click();
+  await page.getByRole("option", { name: "60 days" }).click();
+  await expect(page.getByText("Expected revenue (60d)")).toBeVisible({ timeout: 45_000 });
+
+  await page.getByRole("combobox").nth(0).click();
+  await page.getByRole("option", { name: "90 days" }).click();
+  await expect(page.getByText("Expected revenue (90d)")).toBeVisible({ timeout: 45_000 });
+  await expect(page.getByTestId("explainability-center")).toBeVisible();
 
   await page.getByRole("link", { name: /budget simulator/i }).click();
   await expect(page.getByRole("heading", { name: "What-If Scenarios" })).toBeVisible({
     timeout: 45_000,
   });
   await expect(page.getByRole("button", { name: "Base (0%)" })).toBeVisible();
+  await page.getByRole("button", { name: "+20%" }).click();
+  await expect(page.getByText("Spend efficiency analysis")).toBeVisible();
+  await page.getByRole("button", { name: "Base (0%)" }).click();
   await expect(page.getByText("Projected revenue").first()).toBeVisible();
 
   await page.route("**/api/anomalies", async (route) => {
@@ -45,7 +62,7 @@ test("Try Live Demo covers Forecast, Simulator, and Insights", async ({ page }) 
       contentType: "application/json",
       body: JSON.stringify({
         executiveSummary:
-          "ForecastIQ expects revenue growth from high-intent channels while keeping fallback AI insights deterministic for demos.",
+          "Deterministic fallback insights generated because Gemini is unavailable for this workflow test.",
         revenueDrivers: [
           {
             title: "High-intent search demand",
@@ -128,11 +145,15 @@ test("Try Live Demo covers Forecast, Simulator, and Insights", async ({ page }) 
   });
 
   await page.getByRole("link", { name: /ai insights/i }).click();
+  await expect(page.getByText(/Fallback mode is intentional/i)).toBeVisible({
+    timeout: 30_000,
+  });
   await expect(page.getByRole("button", { name: /generate insights/i })).toBeVisible({
     timeout: 30_000,
   });
   await page.getByRole("button", { name: /generate insights/i }).click();
   await expect(page.getByText(/Executive summary/i)).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByText(/Deterministic fallback insights generated/i)).toBeVisible();
   await expect(page.getByText(/Action plan/i)).toBeVisible();
 
   const actionableErrors = consoleErrors.filter(

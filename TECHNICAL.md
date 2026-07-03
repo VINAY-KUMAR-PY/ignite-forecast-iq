@@ -226,6 +226,11 @@ On Python 3.14, SHAP is not yet available; the live API falls back to
 response will read `"feature_importances_fallback"`. The evaluator offline path
 uses lightweight model diagnostics and does not depend on SHAP at any Python
 version.
+The live wiring is active: `backend/forecasting.py::forecast_diagnostics`
+places `shap_importance` and `shap_method` into the forecast diagnostics
+payload, `src/lib/backend-api.ts` types those fields, and
+`src/routes/app.forecast.tsx::ShapImportanceList` renders them in the Forecast
+Explainability Center.
 
 ## Data Preprocessing
 
@@ -454,6 +459,9 @@ coverage.
   `backend/inference.py`, `backend/train.py`, `backend/gemini.py`,
   `backend/decision_support.py`, and `backend/evaluator_io.py` in addition to
   the aggregate backend gate.
+- `reports/coverage_summary.md` records the latest measured backend coverage
+  run, and `reports/e2e_summary.md` records the latest local Playwright demo
+  verification.
 
 ### Known gaps
 
@@ -489,9 +497,12 @@ cover this behavior.
 is configured, the verifier builds a real forecast and causal evidence summary
 from `data/sample_campaigns.csv`, calls Gemini, validates the response against
 `InsightsResponse`, and writes a redacted transcript under
-`docs/gemini_sample_transcripts/`. The `gemini-live-smoke` GitHub Actions
-workflow runs this verifier with the repository secret and commits transcript
-evidence when the live call succeeds.
+`docs/gemini_sample_transcripts/`. The latest checked-in transcript,
+`live_gemini_transcript_20260702T132317Z.json`, records a `gemini-2.5-flash`
+response with 3 revenue drivers, 3 channel-performance items, and 5 causal
+hypotheses. Local verification on 2026-07-03 could replay and validate that
+transcript, but could not regenerate a newer live transcript because
+`GEMINI_API_KEY` was not configured in the local shell.
 
 **Deterministic fallback**: if Gemini is unavailable for any reason (missing
 API key, rate limit, timeout, malformed response, network failure), a

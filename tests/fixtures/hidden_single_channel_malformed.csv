@@ -1,0 +1,3 @@
+date,channel,campaign_type,campaign_name,spend,revenue
+31/31/2026,Google Ads,Search,Brand,-100,not-a-number
+bad-date,Google Ads,Search,Brand,-50,-20

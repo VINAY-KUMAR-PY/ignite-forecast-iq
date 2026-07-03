@@ -253,7 +253,7 @@ function insightsResponse(): InsightsResponse {
   };
 }
 
-describe("judge-facing route behavior", () => {
+describe("core dashboard route behavior", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     apiMocks.validateRowsApi.mockResolvedValue({
@@ -300,7 +300,7 @@ describe("judge-facing route behavior", () => {
     expect(within(table).getByText("Negative revenue")).toBeInTheDocument();
   });
 
-  it("lets a judge change the forecast horizon selector", async () => {
+  it("lets the user change the forecast horizon selector", async () => {
     const user = userEvent.setup();
     renderWithData(<ForecastPage />);
     expect(await screen.findByText("Revenue forecast")).toBeInTheDocument();

@@ -468,3 +468,24 @@ jobs:
               raise SystemExit("Held-out evaluator protocol must use trained_model on supported CI runtime")
           print("Hackathon evaluator protocol passed:", len(frame), "rows")
           PY
+
+      - name: Validate malformed hidden-data fallback fixtures
+        run: |
+          for fixture in tests/fixtures/hidden_missing_columns.csv tests/fixtures/hidden_single_channel_malformed.csv; do
+            rm -rf data output
+            mkdir -p data output
+            cp "$fixture" data/hidden_fixture.csv
+            ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
+            FIXTURE="$fixture" python - <<'PY'
+          import os
+          import pandas as pd
+
+          frame = pd.read_csv("output/predictions.csv")
+          modes = set(frame["model_type"].astype(str))
+          if modes != {"safe_baseline_fallback"}:
+              raise SystemExit(f"{os.environ['FIXTURE']} expected safe_baseline_fallback, got {sorted(modes)}")
+          if frame.empty or frame.isna().any().any():
+              raise SystemExit(f"{os.environ['FIXTURE']} produced empty or NaN output")
+          print(f"{os.environ['FIXTURE']} fallback OK: {len(frame)} rows")
+          PY
+          done

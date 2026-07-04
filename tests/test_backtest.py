@@ -10,7 +10,7 @@ from backend.backtest import run_backtest
 
 
 class BacktestReportTests(unittest.TestCase):
-    def _write_compact_backtest_fixture(self, directory: Path, days: int = 150) -> None:
+    def _write_compact_backtest_fixture(self, directory: Path, days: int = 150, segment_count: int = 3) -> None:
         path = directory / "compact_campaigns.csv"
         start = date(2025, 1, 1)
         segments = [
@@ -35,7 +35,9 @@ class BacktestReportTests(unittest.TestCase):
             )
             writer.writeheader()
             for day in range(days):
-                for index, (channel, campaign_type, campaign_name, roas, base_spend) in enumerate(segments):
+                for index, (channel, campaign_type, campaign_name, roas, base_spend) in enumerate(
+                    segments[:segment_count]
+                ):
                     weekly = 1 + ((day % 7) - 3) * 0.01
                     trend = 1 + day / 2000
                     spend = round(base_spend * weekly * trend, 2)
@@ -95,7 +97,16 @@ class BacktestReportTests(unittest.TestCase):
             self.assertIn("mae_difference_pct", evidence[target])
 
     def test_walk_forward_horizons_record_training_sample_safeguards(self) -> None:
-        report = run_backtest("data", holdout_days=30)
+        with tempfile.TemporaryDirectory() as tmp:
+            data_dir = Path(tmp)
+            self._write_compact_backtest_fixture(data_dir, segment_count=1)
+            report = run_backtest(
+                data_dir,
+                holdout_days=30,
+                rolling_windows=1,
+                blend_weights=(0.0, 0.60),
+                roas_blend_weights=(0.0, 0.60),
+            )
 
         horizons = {item["horizon_days"] for item in report["per_horizon_performance"]}
         self.assertEqual(horizons, {30, 60, 90})

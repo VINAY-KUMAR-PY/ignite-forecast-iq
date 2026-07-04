@@ -77,6 +77,8 @@ regression test in `tests/test_path_consistency.py` enforces that boundary.
 | sklearn GradientBoostingRegressor residual correction | Selected for offline evaluator | Small, joblib-compatible, deterministic under the pinned evaluator runtime, and backtested against the safe baseline in `reports/backtest_summary.md`. |
 | Deterministic safe baseline | Kept as fallback and benchmark | Provides crash-resistant forecasts for malformed, sparse, or unsupported hidden evaluator data and remains the comparison system in rolling-origin reports. |
 
+The selected GradientBoostingRegressor plus residual-based interval approach is intentionally simpler than a full quantile-regression stack, Bayesian structural time-series model, or conformal prediction layer. Quantile regression is useful for distributional targets but adds more artifact complexity for the minimal evaluator path; Bayesian structural time series can explain interventions but is heavier and more assumption-sensitive for multi-channel CSV exports; conformal prediction is the natural next iteration for stronger finite-sample interval guarantees. For this brief's "realistic prototype, not theoretical modeling" direction, the committed approach favors a compact, reproducible artifact with rolling-origin evidence and transparent fallback behavior.
+
 The rolling-origin backtest now reports point error, coverage, and mean
 interval width for both trained model and baseline. That lets reviewers compare
 not only whether intervals cover actuals, but whether they are sharp enough to

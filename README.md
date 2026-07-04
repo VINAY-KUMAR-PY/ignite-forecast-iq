@@ -1,5 +1,15 @@
 # ForecastIQ
 
+## Which Requirements File Do I Need?
+
+Use `requirements.txt` for the offline evaluator only: `./run.sh ./data ./pickle/model.pkl ./output/predictions.csv`. Use `requirements-app.txt` only for the full FastAPI app, Gemini/live insights, tests, and local frontend demo. The graded evaluator path does not need frontend packages, Gemini, servers, or internet access.
+
+## Forecast Accuracy At A Glance
+
+Latest walk-forward interval coverage is **100.0%** for 30/60/90-day trained revenue intervals.
+Revenue MAPE is **2.23% / 9.54% / 7.89%** for 30/60/90 days; overall-level ROAS MAPE is **0.36% / 0.63% / 0.91%**.
+Full tables: [reports/backtest_summary.md](./reports/backtest_summary.md).
+
 [![Evaluator CI](https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq/actions/workflows/evaluator-ci.yml/badge.svg)](https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq/actions/workflows/evaluator-ci.yml)
 [![Frontend CI](https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq/actions/workflows/frontend-ci.yml)
 
@@ -8,10 +18,6 @@ Clone: `git clone https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq.git`
 Live demo: https://ignite-forecast-iq.vercel.app
 
 Backend coverage: **92.04% measured locally** with `pytest tests/ -q --cov=backend --durations=10`; the Evaluator CI `Run tests with coverage` step enforces **90.30%** with `--cov-fail-under=90.30`.
-
-## Which Requirements File Do I Need?
-
-Use `requirements.txt` for the offline evaluator only: `./run.sh ./data ./pickle/model.pkl ./output/predictions.csv`. Use `requirements-app.txt` only for the full FastAPI app, Gemini/live insights, tests, and local frontend demo. The graded evaluator path does not need frontend packages, Gemini, servers, or internet access.
 
 ForecastIQ is an AI-powered ecommerce forecasting and budget-decision platform built for NetElixir AIgnition 3.0. It turns GA4, Shopify, Google Ads, Meta Ads, and Microsoft/Bing Ads CSV exports into revenue forecasts, ROAS forecasts, confidence intervals, budget simulations, anomaly signals, and an executive action brief.
 
@@ -43,6 +49,10 @@ On the committed sample data, ForecastIQ reports a 90-day Meta Ads ROAS range of
 | AI Integration | Offline distilled LLM reasoning in `backend/gemini_offline_cache.py`, causal evidence in `output/causal_summary.txt`, and optional live Gemini `llmHypothesisRanking` checks in `backend/gemini.py`, `scripts/verify_gemini_live.py`, and `docs/gemini_sample_transcripts/` |
 | Product Thinking | One-click demo flow, Upload -> Dashboard -> Forecast -> Simulator -> Insights journey, and `DEMO_GUIDE.md` |
 | Engineering Quality | Evaluator CI, frontend CI, Playwright flow, 90.30% enforced backend coverage gate, explicit pickle compatibility matrix, `requirements.txt`/`requirements-app.txt` separation |
+
+### Why Not a Larger Platform
+
+The brief says "the focus of the challenge is not building a full SaaS platform." ForecastIQ therefore keeps the FastAPI + React app as an optional demo layer for exploring the workflow, while the graded deliverable remains the deterministic `run.sh` + `pickle/model.pkl` path. That keeps the submission focused on forecast quality, evaluator reliability, and decision support rather than authentication, billing, or multi-tenant SaaS infrastructure.
 
 ## Architecture At A Glance
 

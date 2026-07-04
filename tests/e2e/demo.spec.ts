@@ -35,11 +35,15 @@ test("CSV upload covers dashboard, forecasts, simulator, and fallback insights",
   await page.getByRole("option", { name: "90 days" }).click();
   await expect(page.getByText("Expected revenue (90d)")).toBeVisible({ timeout: 45_000 });
   await expect(page.getByTestId("explainability-center")).toBeVisible();
+  await expect(page.getByTestId("model-validation-panel")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("heading", { name: "Model Validation" })).toBeVisible();
+  await expect(page.getByText("30 days")).toBeVisible();
 
   await page.getByRole("link", { name: /budget simulator/i }).click();
   await expect(page.getByRole("heading", { name: "What-If Scenarios" })).toBeVisible({
     timeout: 45_000,
   });
+  await expect(page.getByTestId("model-path-confidence")).toBeVisible();
   await expect(page.getByRole("button", { name: "Base (0%)" })).toBeVisible();
   await page.getByRole("button", { name: "+20%" }).click();
   await expect(page.getByText("Spend efficiency analysis")).toBeVisible();

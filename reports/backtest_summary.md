@@ -1,6 +1,6 @@
 # ForecastIQ Backtest Summary
 
-Generated: 2026-07-04T03:27:04.101098+00:00
+Generated: 2026-07-04T11:29:47.440628+00:00
 
 ## Holdout Design
 
@@ -188,6 +188,15 @@ horizon-specific widening, segment-level widening, a minimum interval width floo
 non-negative lower bounds. Thin segments are scored with a shrunken trained-model estimate
 when possible; the deterministic safe baseline remains available for genuinely unsupported
 inputs.
+
+## Live vs Offline Model Path Confidence
+
+The live FastAPI dashboard path and offline `run.sh` evaluator path are intentionally
+not point-identical. The committed consistency check shows a maximum representative
+revenue delta of 14.9% and ROAS delta of
+13.87% across the sample grains. The product UI surfaces
+a planning-confidence badge of **paths may differ up to 15.0%** so
+users see the same model-path caveat that appears in this report.
 
 
 ## Fold Errors

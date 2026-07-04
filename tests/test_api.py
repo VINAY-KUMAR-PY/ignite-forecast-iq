@@ -18,6 +18,8 @@ def test_train_without_admin_token_returns_401(valid_campaign_row) -> None:
     )
 
     assert response.status_code == 401
+    assert "Traceback" not in response.text
+    assert "Training admin token is required" in response.text
 
 
 def test_train_rejects_path_traversal_before_writing(valid_campaign_row) -> None:
@@ -71,6 +73,18 @@ def test_forecast_happy_path_returns_summary_and_diagnostics(sample_campaign_row
     attributions = payload["summary"]["diagnostics"]["shap_importance"]
     assert attributions
     assert {"feature", "importance", "label", "direction"}.issubset(attributions[0])
+
+
+def test_model_validation_endpoint_reads_committed_backtest_report() -> None:
+    response = TestClient(app).get("/api/model-validation")
+
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    assert payload["source"] == "reports/backtest_report.json"
+    assert payload["modelType"] == "trained_model"
+    assert payload["rows"]
+    assert {row["horizonDays"] for row in payload["rows"]} == {30, 60, 90}
+    assert payload["rows"][0]["trainedRevenueMape"] >= 0
 
 
 class ApiSecurityTests(unittest.TestCase):

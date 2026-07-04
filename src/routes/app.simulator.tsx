@@ -6,6 +6,7 @@ import { SimulatorResultsPanel } from "@/components/simulator/ChannelResultCard"
 import { DecisionSupportPanel } from "@/components/simulator/DecisionSupportPanel";
 import { SpendCurveChart } from "@/components/simulator/SpendCurveChart";
 import { EmptyState } from "@/components/empty-state";
+import { ModelPathConfidenceBadge } from "@/components/model-path-confidence-badge";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -269,6 +270,8 @@ export function SimulatorPage() {
         title="Budget simulator"
         description="Live budget planning for Google Ads, Meta Ads and Microsoft Ads."
       />
+
+      <ModelPathConfidenceBadge />
 
       {apiSimError && !apiSims && (
         <Card className="mb-6 border-warning/40 bg-warning/5 p-5">

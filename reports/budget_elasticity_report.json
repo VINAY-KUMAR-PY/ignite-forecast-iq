@@ -184,7 +184,7 @@
   ],
   "data_dir": "data",
   "direction_accuracy": 100.0,
-  "generated_at": "2026-07-04T03:28:31.095206+00:00",
+  "generated_at": "2026-07-04T11:24:56.318507+00:00",
   "mae": 10066.39,
   "mape": 9.49,
   "note": "Month-over-month channel periods with >=15% spend change are compared against the offline concave spend-response multiplier. Direction accuracy is more important than exact dollar error because unmodeled promos, inventory, and pricing also affect revenue.",

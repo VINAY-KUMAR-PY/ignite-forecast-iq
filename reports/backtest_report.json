@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-04T03:27:04.101098+00:00",
+  "generated_at": "2026-07-04T11:29:47.440628+00:00",
   "data_dir": "data",
   "holdout_days": 30,
   "train_rows": 2160,
@@ -2502,6 +2502,13 @@
       }
     }
   ],
+  "model_path_consistency": {
+    "max_revenue_delta_pct": 14.9,
+    "max_roas_delta_pct": 13.87,
+    "badge_pct": 15.0,
+    "source": "reports/backtest_summary.md",
+    "interpretation": "The live app and offline evaluator are directionally reconciled but not point-identical; the UI surfaces a 15% planning-confidence badge so users understand the bounded model-path spread."
+  },
   "recommendation": "Candidate revenue_model_weight=0.00 scored best on holdout RMSE. Review before updating the packaged artifact. Keep roas_model_weight=0.60; it has the best ROAS RMSE/MAE balance.",
   "rows": [
     {

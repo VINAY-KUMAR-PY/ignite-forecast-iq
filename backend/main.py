@@ -61,6 +61,7 @@ logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 MODEL_DIR = (PROJECT_ROOT / "pickle").resolve()
 LIGHTWEIGHT_ROW_CAP = 1000
+BACKTEST_REPORT_PATH = PROJECT_ROOT / "reports" / "backtest_report.json"
 
 app = FastAPI(
     title="AIgnition ForecastIQ API",
@@ -221,6 +222,56 @@ def _safe_model_path(model_path: str) -> Path:
     return resolved
 
 
+def _load_model_validation_report() -> dict:
+    """Return committed rolling-origin evidence without retraining at request time."""
+    try:
+        report = json.loads(BACKTEST_REPORT_PATH.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=503, detail="Backtest report is not available") from exc
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=503, detail="Backtest report is malformed") from exc
+
+    rows = []
+    for item in report.get("per_horizon_performance", []):
+        trained = item.get("trained_model_metrics", {})
+        trained_roas = trained.get("roas", {})
+        safe = item.get("safe_baseline_metrics", {})
+        evidence = item.get("model_performance_evidence", {})
+        rows.append(
+            {
+                "horizonDays": int(item.get("horizon_days", 0) or 0),
+                "folds": int(item.get("fold_count", 0) or 0),
+                "segments": int(item.get("segments_evaluated", 0) or 0),
+                "trainedRevenueMae": float(trained.get("mae", 0.0) or 0.0),
+                "trainedRevenueRmse": float(trained.get("rmse", 0.0) or 0.0),
+                "trainedRevenueMape": float(trained.get("mape", 0.0) or 0.0),
+                "trainedRevenueCoverage": float(trained.get("interval_coverage", 0.0) or 0.0),
+                "trainedRevenueWidthPct": float(trained.get("mean_interval_width_pct", 0.0) or 0.0),
+                "trainedRoasMae": float(trained.get("roas_mae", trained_roas.get("mae", 0.0)) or 0.0),
+                "trainedRoasRmse": float(trained.get("roas_rmse", trained_roas.get("rmse", 0.0)) or 0.0),
+                "trainedRoasCoverage": float(
+                    trained.get("roas_interval_coverage", trained_roas.get("interval_coverage", 0.0)) or 0.0
+                ),
+                "baselineRevenueMae": float(safe.get("mae", 0.0) or 0.0),
+                "baselineRevenueRmse": float(safe.get("rmse", 0.0) or 0.0),
+                "baselineRevenueMape": float(safe.get("mape", 0.0) or 0.0),
+                "revenueWinner": (
+                    evidence.get("revenue", {}).get("winner")
+                    or item.get("model_performance_evidence", {}).get("overall_winner")
+                    or "mixed"
+                ),
+            }
+        )
+    rows = [row for row in rows if row["horizonDays"] in {30, 60, 90}]
+    return {
+        "generatedAt": report.get("generated_at", ""),
+        "source": "reports/backtest_report.json",
+        "modelType": report.get("model", {}).get("model_type", "trained_model"),
+        "consistency": report.get("model_path_consistency", {}),
+        "rows": sorted(rows, key=lambda row: row["horizonDays"]),
+    }
+
+
 @app.get("/health")
 def health() -> dict:
     """Return a cheap liveness probe for local and hosted deployments."""
@@ -244,6 +295,12 @@ def validate_data(request: ValidationRequest) -> ValidationResponse:
         len(validation.issues),
     )
     return validation
+
+
+@app.get("/api/model-validation")
+def model_validation() -> dict:
+    """Expose committed rolling-origin model evidence to the product UI."""
+    return _load_model_validation_report()
 
 
 @app.post("/api/forecast", response_model=ForecastResponse)

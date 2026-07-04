@@ -24,6 +24,7 @@ const apiMocks = vi.hoisted(() => ({
   fetchSpendCurveApi: vi.fn(),
   fetchAnomaliesApi: vi.fn(),
   generateInsightsApi: vi.fn(),
+  fetchModelValidationApi: vi.fn(),
 }));
 
 const toastMocks = vi.hoisted(() => ({
@@ -43,6 +44,7 @@ vi.mock("@/lib/backend-api", async (importOriginal) => {
     fetchSpendCurveApi: apiMocks.fetchSpendCurveApi,
     fetchAnomaliesApi: apiMocks.fetchAnomaliesApi,
     generateInsightsApi: apiMocks.generateInsightsApi,
+    fetchModelValidationApi: apiMocks.fetchModelValidationApi,
   };
 });
 
@@ -193,6 +195,34 @@ function spendCurveResponse(): SpendCurveResponse {
   };
 }
 
+function modelValidationResponse() {
+  return {
+    generatedAt: "2026-07-04T00:00:00Z",
+    source: "reports/backtest_report.json",
+    modelType: "trained_model",
+    consistency: { badge_pct: 15 },
+    rows: [
+      {
+        horizonDays: 30,
+        folds: 3,
+        segments: 54,
+        trainedRevenueMae: 2180.83,
+        trainedRevenueRmse: 3212.65,
+        trainedRevenueMape: 2.23,
+        trainedRevenueCoverage: 100,
+        trainedRevenueWidthPct: 66.5,
+        trainedRoasMae: 0.05,
+        trainedRoasRmse: 0.06,
+        trainedRoasCoverage: 100,
+        baselineRevenueMae: 3097.88,
+        baselineRevenueRmse: 4501.73,
+        baselineRevenueMape: 3.15,
+        revenueWinner: "trained_model",
+      },
+    ],
+  };
+}
+
 function insightsResponse(): InsightsResponse {
   return {
     executiveSummary: "Revenue is improving because high-intent demand is expanding.",
@@ -266,6 +296,7 @@ describe("core dashboard route behavior", () => {
     apiMocks.simulateBudgetsApi.mockResolvedValue(simulationResponse());
     apiMocks.decisionSupportApi.mockResolvedValue(decisionResponse());
     apiMocks.fetchSpendCurveApi.mockResolvedValue(spendCurveResponse());
+    apiMocks.fetchModelValidationApi.mockResolvedValue(modelValidationResponse());
     apiMocks.fetchAnomaliesApi.mockResolvedValue({
       anomalies: [],
       trendBreaks: [],
@@ -322,6 +353,8 @@ describe("core dashboard route behavior", () => {
     renderWithData(<ForecastPage />);
 
     expect(await screen.findByText("Revenue forecast")).toBeInTheDocument();
+    expect(await screen.findByText("Model Validation")).toBeInTheDocument();
+    expect(screen.getByTestId("model-path-confidence")).toBeInTheDocument();
     expect(await screen.findByText("$1,200")).toBeInTheDocument();
     expect(await screen.findByText("3.20x")).toBeInTheDocument();
     await waitFor(() => expect(apiMocks.fetchForecastApi).toHaveBeenCalled());

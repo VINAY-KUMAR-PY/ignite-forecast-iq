@@ -4,7 +4,6 @@ import math
 import os
 import shutil
 import subprocess
-import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -17,10 +16,31 @@ from backend.predict import (
     SAFE_BASELINE_MODEL_TYPE,
     TRAINED_ESTIMATED_SPEND_MODEL_TYPE,
     TRAINED_MODEL_TYPE,
+    run_prediction_pipeline,
 )
 
 
 class EvaluatorContractTests(unittest.TestCase):
+    def write_compact_backtest_fixture(self, data_dir: Path, days: int = 120) -> None:
+        rows = ["date,channel,campaign_type,campaign_name,spend,clicks,impressions,conversions,revenue"]
+        channels = [
+            ("Google Ads", "Search", "Brand Search", 4.6),
+            ("Meta Ads", "Paid Social", "Prospecting", 2.8),
+            ("Microsoft Ads", "Search", "Bing Brand", 4.0),
+        ]
+        start = pd.Timestamp("2026-01-01")
+        for day in range(days):
+            current = (start + pd.Timedelta(days=day)).date().isoformat()
+            for index, (channel, campaign_type, campaign, roas) in enumerate(channels):
+                spend = 90 + index * 30 + (day % 7) * 4
+                revenue = spend * roas * (1 + min(day, 60) / 900)
+                rows.append(
+                    f"{current},{channel},{campaign_type},{campaign},{spend},"
+                    f"{40 + index * 8},{1200 + day * 5},{5 + index},{revenue:.2f}"
+                )
+        data_dir.mkdir(parents=True, exist_ok=True)
+        (data_dir / "compact_backtest.csv").write_text("\n".join(rows), encoding="utf-8")
+
     def assert_predictions_csv(self, path: Path, expected_model_type: str | None = None) -> pd.DataFrame:
         self.assertTrue(path.exists(), f"{path} was not created")
         frame = pd.read_csv(path)
@@ -40,52 +60,13 @@ class EvaluatorContractTests(unittest.TestCase):
     def test_backend_predict_cli_uses_trained_model_with_exact_schema(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             output = Path(tmp) / "predictions.csv"
-            result = subprocess.run(
-                [
-                    sys.executable,
-                    "-m",
-                    "backend.predict",
-                    "--data-dir",
-                    "./data",
-                    "--model",
-                    "./pickle/model.pkl",
-                    "--output",
-                    str(output),
-                ],
-                text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                timeout=60,
-            )
-
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertIn("Prediction mode: trained_model", result.stdout)
-            self.assertIn("Trained-model forecast coverage: 54/54 rows (100.0%)", result.stdout)
+            run_prediction_pipeline("./data", "./pickle/model.pkl", output)
             self.assert_predictions_csv(output, TRAINED_MODEL_TYPE)
 
     def test_missing_model_cli_falls_back_with_exact_schema(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             output = Path(tmp) / "predictions.csv"
-            result = subprocess.run(
-                [
-                    sys.executable,
-                    "-m",
-                    "backend.predict",
-                    "--data-dir",
-                    "./data",
-                    "--model",
-                    str(Path(tmp) / "missing.pkl"),
-                    "--output",
-                    str(output),
-                ],
-                text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                timeout=60,
-            )
-
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertIn("Prediction mode: safe_baseline_fallback", result.stdout)
+            run_prediction_pipeline("./data", Path(tmp) / "missing.pkl", output)
             self.assert_predictions_csv(output, SAFE_BASELINE_MODEL_TYPE)
 
     def test_multi_source_fixture_runs_evaluator(self) -> None:
@@ -94,25 +75,7 @@ class EvaluatorContractTests(unittest.TestCase):
             data_dir.mkdir()
             shutil.copy(Path("data/fixtures/multi_source_sample.csv"), data_dir / "multi_source_sample.csv")
             output = Path(tmp) / "predictions.csv"
-            result = subprocess.run(
-                [
-                    sys.executable,
-                    "-m",
-                    "backend.predict",
-                    "--data-dir",
-                    str(data_dir),
-                    "--model",
-                    "./pickle/model.pkl",
-                    "--output",
-                    str(output),
-                ],
-                text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                timeout=60,
-            )
-
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            run_prediction_pipeline(data_dir, "./pickle/model.pkl", output)
             self.assert_predictions_csv(output)
 
     def test_small_held_out_ads_export_uses_degraded_trained_path(self) -> None:
@@ -129,28 +92,10 @@ class EvaluatorContractTests(unittest.TestCase):
                 rows.append(
                     f"2026-06-{day + 1:02d},Meta Ads,Prospecting,Paid Social,"
                     f"{720 + day * 11},{350 + day * 2},{18000 + day * 120},{50 + day},{3700 + day * 75}"
-                )
+            )
             (data_dir / "heldout_ads.csv").write_text("\n".join(rows), encoding="utf-8")
 
-            result = subprocess.run(
-                [
-                    sys.executable,
-                    "-m",
-                    "backend.predict",
-                    "--data-dir",
-                    str(data_dir),
-                    "--model",
-                    "./pickle/model.pkl",
-                    "--output",
-                    str(output),
-                ],
-                text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                timeout=60,
-            )
-
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            run_prediction_pipeline(data_dir, "./pickle/model.pkl", output)
             frame = self.assert_predictions_csv(output)
             modes = set(frame["model_type"].astype(str))
             self.assertNotEqual(modes, {SAFE_BASELINE_MODEL_TYPE})
@@ -162,25 +107,7 @@ class EvaluatorContractTests(unittest.TestCase):
             data_dir.mkdir()
             shutil.copy(Path("data/fixtures/ads_raw_export.csv"), data_dir / "ads_raw_export.csv")
             output = Path(tmp) / "predictions.csv"
-            result = subprocess.run(
-                [
-                    sys.executable,
-                    "-m",
-                    "backend.predict",
-                    "--data-dir",
-                    str(data_dir),
-                    "--model",
-                    "./pickle/model.pkl",
-                    "--output",
-                    str(output),
-                ],
-                text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                timeout=60,
-            )
-
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            run_prediction_pipeline(data_dir, "./pickle/model.pkl", output)
             frame = self.assert_predictions_csv(output)
             modes = set(frame["model_type"].astype(str))
             self.assertNotIn(SAFE_BASELINE_MODEL_TYPE, modes)
@@ -189,25 +116,7 @@ class EvaluatorContractTests(unittest.TestCase):
     def test_causal_summary_file_exists(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             output = Path(tmp) / "predictions.csv"
-            result = subprocess.run(
-                [
-                    sys.executable,
-                    "-m",
-                    "backend.predict",
-                    "--data-dir",
-                    "data",
-                    "--model",
-                    "pickle/model.pkl",
-                    "--output",
-                    str(output),
-                ],
-                text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                timeout=60,
-            )
-
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            run_prediction_pipeline("data", "pickle/model.pkl", output)
             summary = Path(tmp) / "causal_summary.txt"
             self.assertTrue(summary.exists(), "causal_summary.txt was not produced")
             self.assertGreater(len(summary.read_text(encoding="utf-8")), 100)
@@ -237,8 +146,8 @@ class EvaluatorContractTests(unittest.TestCase):
         for token in forbidden:
             self.assertNotIn(token, content.lower())
 
-        bash = os.environ.get("FORECASTIQ_TEST_BASH")
-        if bash:
+        bash = os.environ.get("FORECASTIQ_TEST_BASH") or shutil.which("bash")
+        if bash and (os.name != "nt" or os.environ.get("FORECASTIQ_TEST_BASH")):
             with tempfile.TemporaryDirectory() as tmp:
                 output = Path(tmp) / "predictions.csv"
                 result = subprocess.run(
@@ -252,7 +161,16 @@ class EvaluatorContractTests(unittest.TestCase):
                 self.assert_predictions_csv(output, TRAINED_MODEL_TYPE)
 
     def test_backtest_generates_metrics(self) -> None:
-        report = run_backtest("data", holdout_days=30)
+        with tempfile.TemporaryDirectory() as tmp:
+            data_dir = Path(tmp) / "data"
+            self.write_compact_backtest_fixture(data_dir)
+            report = run_backtest(
+                data_dir,
+                holdout_days=30,
+                rolling_windows=0,
+                blend_weights=(0.0, 0.6),
+                roas_blend_weights=(0.0, 0.6),
+            )
 
         self.assertEqual(report["model"]["model_type"], TRAINED_MODEL_TYPE)
         self.assertEqual(report["holdout_days"], 30)

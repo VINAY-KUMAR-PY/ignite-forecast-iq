@@ -7,7 +7,7 @@
 Clone: `git clone https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq.git`
 Live demo: https://ignite-forecast-iq.vercel.app
 
-Backend coverage: **91.23% measured locally** with `pytest tests/ -q --ignore=tests/e2e --cov=backend --cov-report=term-missing`; the Evaluator CI `Run tests with coverage` step enforces **90.30%** with `--cov-fail-under=90.30`.
+Backend coverage: **92.04% measured locally** with `pytest tests/ -q --cov=backend --durations=10`; the Evaluator CI `Run tests with coverage` step enforces **90.30%** with `--cov-fail-under=90.30`.
 
 ## Which Requirements File Do I Need?
 
@@ -178,7 +178,7 @@ ForecastIQ keeps one canonical evidence map here to reduce duplicate documentati
 | Area | Evidence |
 |---|---|
 | Evaluator contract | `run.sh`, `backend/predict.py`, `backend/evaluator_contract.py`, `tests/test_evaluator_contract.py`, `tests/test_evaluator_e2e.py`, `tests/test_scale_evaluator.py`, `.github/workflows/evaluator-ci.yml` |
-| Forecast model | `backend/inference.py`, `pickle/model.pkl`, `reports/backtest_report.json`, `reports/backtest_summary.md`, `reports/coverage_summary.md`, `tests/test_interval_monotonicity.py`, `tests/test_offline_predict.py` |
+| Forecast model | `backend/inference.py`, `pickle/model.pkl`, `reports/backtest_report.json`, `reports/backtest_summary.md`, `reports/coverage_summary.md`, `backend/main.py::model_validation`, `src/components/model-path-confidence-badge.tsx`, `tests/test_interval_monotonicity.py`, `tests/test_offline_predict.py` |
 | Budget elasticity | `backend/segment_utils.py::spend_response_multiplier`, `scripts/validate_budget_elasticity.py`, `reports/budget_elasticity_report.json`, `reports/budget_elasticity_summary.md` |
 | Data compatibility | `backend/schema_adapters.py`, `backend/data_preprocessing.py`, `tests/test_schema_adapters.py`, `tests/fixtures/ga4_variant_hidden_export.csv` for GA4 variants, Shopify, Google Ads micros, Meta Ads, Microsoft/Bing Ads, and duplicate-revenue guards |
 | AI and causal layer | `backend/gemini.py`, `backend/gemini_offline_cache.py`, `backend/causal_lite.py`, `scripts/verify_gemini_live.py`, `.github/workflows/gemini-live-smoke.yml`, `tests/test_gemini_parsing.py`, `tests/test_causal_lite.py`, `tests/test_offline_predict.py`, `output/causal_summary.txt`, `output/explainability_notes.txt`, `docs/gemini_sample_transcripts/` |
@@ -210,12 +210,18 @@ Requirement already satisfied: scikit-learn==1.9.0
 [ForecastIQ] Python version: 3.14.4
 
 python -m pip install -r requirements-app.txt
-python -m pytest tests/ -q --ignore=tests/e2e --cov=backend --cov-report=term-missing
-182 passed, 1 skipped, 7 warnings with 91.23% backend coverage
+python -m pytest tests/ -q --cov=backend --durations=10
+183 passed, 1 skipped, 7 warnings with 92.04% backend coverage
 
-npm run check && npm run test -- --run
+npm ci
+added 495 packages, audited 496 packages, and emitted no deprecation warnings
+
+npm run check && npx vitest run --config vitest.config.ts
 check passed: TypeScript, ESLint, and Vite production build
 vitest passed: 1 file, 5 tests
+
+npm run test:e2e
+Playwright passed: 1 Chromium workflow covering Upload -> Dashboard -> Forecast -> Model Validation -> Simulator -> Insights
 ```
 
 Focused timing check for the two previously slow backend test files:

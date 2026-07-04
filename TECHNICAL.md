@@ -469,15 +469,14 @@ PASS causal summary: 4834 bytes, including OFFLINE_DETERMINISTIC_FALLBACK and DI
 PASS explainability notes: per segment/horizon recent trend, seasonality, ROAS stability, and confidence signals
 
 Backend tests:
-182 passed, 1 skipped, 7 warnings with 91.23% backend coverage from a full local backend run with `requirements-app.txt`
+183 passed, 1 skipped, 7 warnings with 92.04% backend coverage from a full local backend run with `requirements-app.txt`
 
 Frontend validation:
-npm install: up to date, audited 567 packages in 2s; one low-severity
-dev-server advisory remains
-npm run check: tsc, eslint, and Vite build passed; Vite transformed 2,837
-modules and built in 8.19s
-npm run test: Vitest passed 1 file and 5 tests in 4.60s
-npm run build: Vite transformed 2,837 modules and built in 8.58s
+npm ci: added 495 packages, audited 496 packages, and emitted no deprecation warnings; one low-severity advisory remains
+npm run check: tsc, eslint, and Vite build passed; Vite transformed 2,787 modules and built in 8.05s
+npx vitest run --config vitest.config.ts: Vitest passed 1 file and 5 tests in 3.22s
+npm run build: Vite transformed 2,787 modules and built in 8.29s
+npm run test:e2e: Playwright passed 1 Chromium workflow in 24.1s
 
 Sklearn zero-fallback guard:
 the CI job `exact-sklearn-zero-fallback` installs the pinned evaluator runtime
@@ -581,7 +580,11 @@ preserving coverage.
 
 - `tests/test_path_consistency.py` runs the committed sample data through the
   offline sklearn evaluator and live forecast path, then checks directional
-  revenue agreement and a broad ROAS tolerance because the estimators differ.
+  revenue agreement and the same bounded 15% model-path spread surfaced in the
+  UI confidence badge.
+- `backend/main.py::model_validation` and `src/components/model-path-confidence-badge.tsx`
+  surface the committed rolling-origin report and live/offline model-path
+  confidence note inside the product instead of leaving it only in `/reports`.
 - `tests/test_adversarial_inputs.py` covers negative values, missing columns,
   non-numeric/currency-formatted fields, and GA4 + Shopify + Ads duplicate
   revenue guards.
@@ -783,6 +786,17 @@ Primary API surface: `GET /health`, `POST /api/validate`,
 `POST /api/forecast`, `POST /api/simulate`, `POST /api/spend-curve`,
 `POST /api/decision-support`, `POST /api/insights`, and protected
 `POST /api/train`.
+
+## Operational Security
+
+`TRAINING_ADMIN_TOKEN` protects `POST /api/train`, which can overwrite the
+served evaluator model artifact path when a valid token and training payload are
+provided. Generate it as a high-entropy secret (for example, a 32+ byte random
+value from the hosting provider secret manager), store it only as a backend
+environment variable, and rotate it immediately after any teammate turnover,
+log exposure, or accidental sharing. The token must never be committed to git,
+included in frontend bundles, printed in logs, or sent to browsers; failed
+training requests return a short 401/403-style message without stack traces.
 
 | Layer | Technology |
 |---|---|

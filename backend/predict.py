@@ -84,8 +84,42 @@ def _parse_budget_json(raw_budget_json: str) -> dict[str, float]:
         return {}
 
 
-def main() -> None:
+def run_prediction_pipeline(
+    data_dir: str | Path = "data",
+    model_path: str | Path = "pickle/model.pkl",
+    output_path: str | Path = "output/predictions.csv",
+    planned_budgets: dict[str, float] | None = None,
+    enable_live_ai: bool = False,
+) -> list[dict]:
+    """Run the evaluator prediction workflow without shelling out to a subprocess."""
     np.random.seed(42)
+    planned_budgets = planned_budgets or {}
+
+    log(f"Reading CSV data from {data_dir}")
+    cleaned = canonicalize_frame(read_csv_folder(data_dir))
+    for issue in cleaned.issues:
+        log(f"Validation: {issue}")
+    log(f"Validation complete: {cleaned.valid_rows}/{cleaned.total_rows} usable rows")
+
+    model = safe_load_model(model_path)
+    rows = build_predictions(cleaned.frame, model, planned_budgets)
+    write_predictions(rows, output_path)
+    summary_path = write_causal_summary(
+        cleaned.frame,
+        rows,
+        output_dir=Path(output_path).parent,
+        planned_budgets=planned_budgets,
+        enable_live_ai=enable_live_ai,
+    )
+    explainability_path = write_explainability_notes(cleaned.frame, rows, output_dir=Path(output_path).parent)
+    log(f"Wrote {len(rows)} rows to {output_path}")
+    log(f"Causal summary written to {summary_path}")
+    log(f"Explainability notes written to {explainability_path}")
+    log(f"scikit-learn version: {sklearn.__version__} (artifact built on 1.9.0)")
+    return rows
+
+
+def main() -> None:
     parser = argparse.ArgumentParser(description="Generate evaluator-safe ForecastIQ predictions.")
     parser.add_argument("--data-dir", default="data", help="Folder containing input CSV files")
     parser.add_argument("--model", default="pickle/model.pkl", help="Lightweight joblib model metadata path")
@@ -102,28 +136,13 @@ def main() -> None:
     )
     args = parser.parse_args()
     planned_budgets = _parse_budget_json(args.budget_json)
-
-    log(f"Reading CSV data from {args.data_dir}")
-    cleaned = canonicalize_frame(read_csv_folder(args.data_dir))
-    for issue in cleaned.issues:
-        log(f"Validation: {issue}")
-    log(f"Validation complete: {cleaned.valid_rows}/{cleaned.total_rows} usable rows")
-
-    model = safe_load_model(args.model)
-    rows = build_predictions(cleaned.frame, model, planned_budgets)
-    write_predictions(rows, args.output)
-    summary_path = write_causal_summary(
-        cleaned.frame,
-        rows,
-        output_dir=Path(args.output).parent,
+    run_prediction_pipeline(
+        data_dir=args.data_dir,
+        model_path=args.model,
+        output_path=args.output,
         planned_budgets=planned_budgets,
         enable_live_ai=args.enable_live_ai,
     )
-    explainability_path = write_explainability_notes(cleaned.frame, rows, output_dir=Path(args.output).parent)
-    log(f"Wrote {len(rows)} rows to {args.output}")
-    log(f"Causal summary written to {summary_path}")
-    log(f"Explainability notes written to {explainability_path}")
-    log(f"scikit-learn version: {sklearn.__version__} (artifact built on 1.9.0)")
 
 
 if __name__ == "__main__":

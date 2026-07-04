@@ -234,6 +234,37 @@ export interface SpendCurveResponse {
   marginal_roas: number;
 }
 
+export interface ModelValidationRow {
+  horizonDays: 30 | 60 | 90;
+  folds: number;
+  segments: number;
+  trainedRevenueMae: number;
+  trainedRevenueRmse: number;
+  trainedRevenueMape: number;
+  trainedRevenueCoverage: number;
+  trainedRevenueWidthPct: number;
+  trainedRoasMae: number;
+  trainedRoasRmse: number;
+  trainedRoasCoverage: number;
+  baselineRevenueMae: number;
+  baselineRevenueRmse: number;
+  baselineRevenueMape: number;
+  revenueWinner: string;
+}
+
+export interface ModelValidationResponse {
+  generatedAt: string;
+  source: string;
+  modelType: string;
+  consistency: {
+    badge_pct?: number;
+    max_revenue_delta_pct?: number;
+    max_roas_delta_pct?: number;
+    interpretation?: string;
+  };
+  rows: ModelValidationRow[];
+}
+
 interface SpendCurveRequest {
   rows: CampaignRow[];
   channel: string;
@@ -410,6 +441,21 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+async function getJson<T>(path: string): Promise<T> {
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE}${path}`);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "network request failed";
+    throw new Error(`Failed to reach ForecastIQ backend at ${API_BASE}${path}: ${message}`);
+  }
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || `Backend request failed with ${response.status}`);
+  }
+  return response.json() as Promise<T>;
+}
+
 export function validateRowsApi(rows: CampaignRow[]) {
   return postJson<ValidationResult>("/api/validate", { rows });
 }
@@ -475,4 +521,8 @@ export function fetchSpendCurveApi(
 export function fetchAnomaliesApi(rows: CampaignRow[]) {
   const body: AnomalyRequest = { rows };
   return postJson<AnomalyResponse>("/api/anomalies", body);
+}
+
+export function fetchModelValidationApi() {
+  return getJson<ModelValidationResponse>("/api/model-validation");
 }

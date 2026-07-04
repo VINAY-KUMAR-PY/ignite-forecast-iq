@@ -1,6 +1,6 @@
 # Playwright E2E Summary
 
-Generated: 2026-07-03T10:08:31+05:30 local validation run.
+Generated: 2026-07-04T17:15:50+05:30 local validation run.
 
 Command run:
 
@@ -12,6 +12,6 @@ Result: **1 passed, 0 failed**.
 
 Spec: `tests/e2e/demo.spec.ts`
 
-Flow verified: Try Live Demo -> Forecast -> Simulator -> Insights.
+Flow verified: CSV Upload -> Dashboard -> Forecast all horizons -> Model Validation -> Simulator -> fallback Insights.
 
-Observed runtime: Playwright reported the Chromium test passed in **11.1s** and the full command completed in **18.3s**. The backend logs also showed the memory-safe simulator, decision-support, and spend-curve paths for the 4,745-row demo dataset.
+Observed runtime: Playwright reported the Chromium test passed in **19.6s** and the full command completed in **24.1s**. The backend logs also showed the memory-safe simulator, decision-support, and spend-curve paths for the 2,400-row committed sample dataset.

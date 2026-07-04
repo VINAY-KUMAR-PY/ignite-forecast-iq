@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
+import { ModelPathConfidenceBadge } from "@/components/model-path-confidence-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -36,8 +37,10 @@ import { useData } from "@/lib/data-store";
 import { aggregateDaily, filterRows } from "@/lib/forecasting";
 import {
   fetchForecastApi,
+  fetchModelValidationApi,
   type AccuracyMetrics,
   type ForecastApiResponse,
+  type ModelValidationResponse,
 } from "@/lib/backend-api";
 import { fmtCompact, fmtCurrency, fmtDate, fmtRoas } from "@/lib/format";
 import { KpiCard } from "@/components/kpi-card";
@@ -58,6 +61,8 @@ export function ForecastPage() {
   const [value, setValue] = useState<string>("");
   const [apiForecast, setApiForecast] = useState<ForecastApiResponse | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [modelValidation, setModelValidation] = useState<ModelValidationResponse | null>(null);
+  const [modelValidationError, setModelValidationError] = useState<string | null>(null);
 
   const options = useMemo(() => {
     if (level === "overall") return [];
@@ -108,6 +113,22 @@ export function ForecastPage() {
       active = false;
     };
   }, [rows, horizon, level, selectedValue]);
+
+  useEffect(() => {
+    if (!rows.length) return;
+    let active = true;
+    setModelValidationError(null);
+    fetchModelValidationApi()
+      .then((response) => {
+        if (active) setModelValidation(response);
+      })
+      .catch((error: Error) => {
+        if (active) setModelValidationError(error.message);
+      });
+    return () => {
+      active = false;
+    };
+  }, [rows.length]);
 
   const revFc = apiForecast?.revenue ?? fallbackRevFc;
   const roasFc = apiForecast?.roas ?? fallbackRoasFc;
@@ -166,6 +187,8 @@ export function ForecastPage() {
             : "XGBoost backend model with 95% confidence intervals."
         }
       />
+
+      <ModelPathConfidenceBadge />
 
       {apiError && !apiForecast && (
         <Card className="mb-6 border-warning/40 bg-warning/5 p-5">
@@ -325,6 +348,8 @@ export function ForecastPage() {
           />
         </div>
       </Card>
+
+      <ModelValidationPanel validation={modelValidation} error={modelValidationError} />
 
       <div className="mt-6 grid gap-4">
         <Card className="bg-gradient-card border-border/60 min-w-0 overflow-hidden p-5">
@@ -664,6 +689,78 @@ export function ForecastPage() {
         </>
       )}
     </>
+  );
+}
+
+function ModelValidationPanel({
+  validation,
+  error,
+}: {
+  validation: ModelValidationResponse | null;
+  error: string | null;
+}) {
+  return (
+    <Card
+      data-testid="model-validation-panel"
+      className="mt-6 bg-gradient-card border-border/60 min-w-0 overflow-hidden p-5"
+    >
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold">Model Validation</h3>
+          <p className="text-xs text-muted-foreground">
+            Rolling-origin backtest evidence from the committed report, read without retraining.
+          </p>
+        </div>
+        <span className="rounded-full border border-border/60 bg-background/60 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          {validation?.modelType ?? "report"}
+        </span>
+      </div>
+
+      {validation?.rows.length ? (
+        <div className="overflow-x-auto">
+          <table className="min-w-[720px] w-full text-sm">
+            <thead>
+              <tr className="border-b border-border/60 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                <th className="py-2 pr-3">Horizon</th>
+                <th className="px-3 py-2 text-right">Folds</th>
+                <th className="px-3 py-2 text-right">Revenue MAPE</th>
+                <th className="px-3 py-2 text-right">Revenue RMSE</th>
+                <th className="px-3 py-2 text-right">Coverage</th>
+                <th className="px-3 py-2 text-right">ROAS RMSE</th>
+                <th className="py-2 pl-3">Revenue verdict</th>
+              </tr>
+            </thead>
+            <tbody>
+              {validation.rows.map((row) => (
+                <tr key={row.horizonDays} className="border-b border-border/40 last:border-0">
+                  <td className="py-2 pr-3 font-medium">{row.horizonDays} days</td>
+                  <td className="px-3 py-2 text-right tabular-nums">{row.folds}</td>
+                  <td className="px-3 py-2 text-right tabular-nums">
+                    {row.trainedRevenueMape.toFixed(2)}%
+                  </td>
+                  <td className="px-3 py-2 text-right tabular-nums">
+                    {fmtCurrency(row.trainedRevenueRmse)}
+                  </td>
+                  <td className="px-3 py-2 text-right tabular-nums">
+                    {row.trainedRevenueCoverage.toFixed(0)}%
+                  </td>
+                  <td className="px-3 py-2 text-right tabular-nums">
+                    {row.trainedRoasRmse.toFixed(2)}
+                  </td>
+                  <td className="py-2 pl-3 capitalize">{row.revenueWinner.replaceAll("_", " ")}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          {error
+            ? `Model validation report unavailable: ${error}`
+            : "Loading rolling-origin validation evidence..."}
+        </p>
+      )}
+    </Card>
   );
 }
 

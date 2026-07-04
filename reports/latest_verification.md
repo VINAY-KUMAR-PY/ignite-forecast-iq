@@ -2,15 +2,17 @@
 
 Generated: 2026-07-03
 
-Scope: final hackathon evaluator verification after AI transparency, long-horizon
-revenue gating, confidence-rationale explanations, and documentation updates.
+Scope: final hardening verification after model-path confidence surfacing,
+frontend dependency hygiene, model-validation endpoint wiring, and evaluator
+contract test speedups.
 
 ## Local Working-Copy Checks
 
 ```text
-python -m pytest tests/ -q --ignore=tests/e2e
+python -m pytest tests/ -q --cov=backend --durations=10
 
-170 passed, 1 skipped, 7 warnings in 319.13s (0:05:19)
+183 passed, 1 skipped, 7 warnings in 175.90s (0:02:55)
+Backend coverage: 92.04%
 ```
 
 ```text
@@ -18,8 +20,8 @@ npm run check
 
 tsc --noEmit && eslint . && vite build --configLoader runner
 vite v7.3.5 building client environment for production...
-2837 modules transformed.
-built in 8.62s
+2787 modules transformed.
+built in 8.05s
 ```
 
 ```text
@@ -27,15 +29,28 @@ npm run test -- --run
 
 Test Files  1 passed (1)
 Tests       5 passed (5)
-Duration    10.09s
+Duration    3.22s
 ```
 
 ```text
 npm run build
 
 vite v7.3.5 building client environment for production...
-2837 modules transformed.
-built in 15.08s
+2787 modules transformed.
+built in 8.29s
+```
+
+```text
+npm ci
+
+added 495 packages, and audited 496 packages in 34s
+No deprecation warnings were emitted.
+```
+
+```text
+npm run test:e2e
+
+1 passed (24.1s)
 ```
 
 ```text
@@ -148,14 +163,17 @@ VARIANT_HORIZONS [30, 60, 90]
 VARIANT_HAS_NAN False
 ```
 
-Fresh clone backend suite after installing `requirements-app.txt`:
+Previous fresh clone backend suite after installing `requirements-app.txt`:
 
 ```text
 python -m pip install -r requirements-app.txt
 python -m pytest tests/ -q --ignore=tests/e2e
 
-170 passed, 1 skipped, 7 warnings in 274.64s (0:04:34)
+Passed in the earlier fresh-clone run before this hardening pass.
 ```
+
+Current working-copy backend suite with coverage is recorded above: 183 passed,
+1 skipped, 7 warnings in 175.90s, 92.04% backend coverage.
 
 ## Result
 

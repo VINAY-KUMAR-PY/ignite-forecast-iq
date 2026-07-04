@@ -1,6 +1,6 @@
 # Budget Elasticity Validation
 
-Generated: 2026-07-04T03:28:31.095206+00:00
+Generated: 2026-07-04T11:24:56.318507+00:00
 
 ## Method
 

@@ -401,14 +401,14 @@ jobs:
       - name: Compile and test backend
         run: |
           python -m compileall backend scripts tests -q
-          python -m pytest
+          python -m pytest --durations=10
           python -m backend.backtest
           python scripts/validate_budget_elasticity.py --data-dir data --output-dir reports
 
       - name: Run tests with coverage
         run: |
           pip install pytest-cov
-          pytest tests/ --cov=backend --cov-report=term-missing --cov-report=json --cov-fail-under=90.30
+          pytest tests/ --durations=10 --cov=backend --cov-report=term-missing --cov-report=json --cov-fail-under=90.30
           python - <<'PY'
           import json
           import os

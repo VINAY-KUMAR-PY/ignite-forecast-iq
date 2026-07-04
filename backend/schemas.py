@@ -407,6 +407,17 @@ class CausalHypothesis(BaseModel):
     recommendedTest: str
 
 
+class LlmHypothesisRanking(BaseModel):
+    rank: int
+    hypothesis: str
+    confidence: Literal["low", "medium", "high"]
+    confidenceScore: float
+    supportingEvidence: List[str]
+    contradictingEvidence: List[str] = Field(default_factory=list)
+    recommendedValidation: str
+    rationale: str
+
+
 class InsightsResponse(BaseModel):
     executiveSummary: str
     revenueDrivers: List[RevenueDriver]
@@ -417,6 +428,7 @@ class InsightsResponse(BaseModel):
     growthOpportunities: List[GrowthOpportunity]
     actionPlan: List[ActionPlanItem]
     causalHypotheses: List[CausalHypothesis] = Field(default_factory=list)
+    llmHypothesisRanking: List[LlmHypothesisRanking] = Field(default_factory=list)
 
 
 class TrainRequest(BaseModel):

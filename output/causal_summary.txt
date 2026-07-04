@@ -52,6 +52,8 @@ Generated explanation:
 No dominant intervention is statistically strong, so Meta Ads is best treated as a run-rate planning case. Observed ROAS is 2.98x versus baseline 2.96x, delta +1.6%, with low confidence.
 Evidence focus: supporting metrics: method=difference_in_differences, p=0.179, t=1.34, strength=0.79, CI=$-1,105 to $5,400, event=2026-06-08; primary driver: leading_roas Microsoft Ads (5.44x ROAS); intervention_detected=false
 Recommended action: Keep allocations steady, refresh the forecast after the next campaign cycle, and use small tests only where ROAS is clearly above target; limitations: observational DiD, not randomized incrementality; 95% confidence interval crosses zero; p-value is not statistically strong; minimum sample or power check did not pass.
+LLM_HYPOTHESIS_RANKING
+Status: not executed in the default offline evaluator path. Use --enable-live-ai with GEMINI_API_KEY to ask Gemini to independently rank competing explanations from the same DiD, p-value, confidence-interval, and anomaly evidence. The deterministic DiD evidence and distilled offline reasoning above remain the no-network grading path.
 Executive interpretation: revenue is flat versus the trailing 30-day average by $-193 per day (-1.2%). The strongest observational DiD diagnostic is Meta Ads, with $2,238 of estimated revenue lift (low confidence), but ForecastIQ does not label it as a detected intervention because p-value 0.179 exceeds 0.15; 95% confidence interval crosses zero.
 Historical period: 2025-08-22 to 2026-06-17 (300 days)
 Total spend: $1,027,759 | Total revenue: $4,170,596 | Blended ROAS: 4.06x

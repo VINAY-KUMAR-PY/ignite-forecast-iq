@@ -42,6 +42,7 @@ def test_live_payload_shape_normalizes_partial_response_sections() -> None:
     assert payload["risks"] == []
     assert payload["growthOpportunities"] == []
     assert payload["actionPlan"] == []
+    assert payload["llmHypothesisRanking"] == []
     assert_live_insight_payload_shape(payload)
 
 
@@ -62,6 +63,7 @@ def test_live_smoke_prompt_emphasizes_required_app_sections() -> None:
         "risks",
         "growthOpportunities",
         "actionPlan",
+        "llmHypothesisRanking",
     ):
         assert key in prompt
 

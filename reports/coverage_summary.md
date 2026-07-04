@@ -5,18 +5,18 @@ Generated: 2026-07-04 local validation run.
 Command run:
 
 ```bash
-python -m pytest tests/ -q --ignore=tests/e2e --cov=backend --cov-report=term-missing --cov-report=json --cov-fail-under=90.30
+python -m pytest tests/ -q --ignore=tests/e2e --cov=backend --cov-report=term-missing
 ```
 
-Result: **179 passed, 1 skipped, 7 warnings**.
+Result: **182 passed, 1 skipped, 7 warnings**.
 
-Overall backend coverage: **90.65%** (3859/4257 lines).
+Overall backend coverage: **91.23%** (3943/4322 lines).
 
 | Module | Coverage |
 |---|---:|
 | `backend/decision_support.py` | 94.07% |
-| `backend/evaluator_io.py` | 84.58% |
-| `backend/gemini.py` | 92.08% |
+| `backend/evaluator_io.py` | 88.91% |
+| `backend/gemini.py` | 92.39% |
 | `backend/inference.py` | 87.56% |
 | `backend/segment_utils.py` | 93.75% |
 | `backend/train.py` | 88.19% |

@@ -35,6 +35,7 @@ REQUIRED_INSIGHT_KEYS = {
     "risks": list,
     "growthOpportunities": list,
     "actionPlan": list,
+    "llmHypothesisRanking": list,
 }
 
 LIVE_SMOKE_SCHEMA_SUFFIX = """
@@ -43,11 +44,14 @@ CI LIVE-SMOKE SCHEMA CONTRACT:
 Return JSON only. The top-level object must include exactly these keys:
 executiveSummary, revenueDrivers, channelPerformance, campaignPerformance,
 budgetAllocation, risks, growthOpportunities, actionPlan, causalHypotheses.
+Also include llmHypothesisRanking, a list of independently ranked causal
+hypotheses with confidenceScore, supportingEvidence, contradictingEvidence,
+recommendedValidation, and rationale.
 Do not omit channelPerformance, campaignPerformance, budgetAllocation, risks,
-growthOpportunities, or actionPlan. If there is no evidence for a list field,
-return an empty array. If campaign evidence is unavailable, return
-campaignPerformance as {"top": [], "bottom": []}. Do not wrap the JSON in
-Markdown or explanatory prose.
+growthOpportunities, actionPlan, or llmHypothesisRanking. If there is no
+evidence for a list field, return an empty array. If campaign evidence is
+unavailable, return campaignPerformance as {"top": [], "bottom": []}. Do not
+wrap the JSON in Markdown or explanatory prose.
 """
 
 

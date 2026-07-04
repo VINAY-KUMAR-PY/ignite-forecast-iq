@@ -7,7 +7,7 @@
 Clone: `git clone https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq.git`
 Live demo: https://ignite-forecast-iq.vercel.app
 
-Backend coverage: **90.65% measured locally** with `pytest tests/ -q --ignore=tests/e2e --cov=backend --cov-report=term-missing --cov-report=json --cov-fail-under=90.30`; the Evaluator CI `Run tests with coverage` step enforces **90.30%** with `--cov-fail-under=90.30`.
+Backend coverage: **91.23% measured locally** with `pytest tests/ -q --ignore=tests/e2e --cov=backend --cov-report=term-missing`; the Evaluator CI `Run tests with coverage` step enforces **90.30%** with `--cov-fail-under=90.30`.
 
 ## Which Requirements File Do I Need?
 
@@ -40,7 +40,7 @@ On the committed sample data, ForecastIQ reports a 90-day Meta Ads ROAS range of
 |---|---|
 | Technical Soundness | `backend/predict.py`, `backend/inference.py`, `reports/backtest_summary.md` including the sklearn-vs-live XGBoost consistency table, `tests/test_offline_predict.py`, `tests/test_interval_monotonicity.py`, and the `Pickle compatibility / Python 3.11-3.14` Evaluator CI matrix |
 | Practical Relevance | Budget simulator and decision-support evidence in `backend/decision_support.py`, `backend/segment_utils.py`, `scripts/validate_budget_elasticity.py`, `reports/budget_elasticity_summary.md`, `src/routes/app.simulator.tsx`, and `TECHNICAL.md` |
-| AI Integration | Offline distilled LLM reasoning in `backend/gemini_offline_cache.py`, causal evidence in `output/causal_summary.txt`, and optional live Gemini checks in `docs/gemini_sample_transcripts/` |
+| AI Integration | Offline distilled LLM reasoning in `backend/gemini_offline_cache.py`, causal evidence in `output/causal_summary.txt`, and optional live Gemini `llmHypothesisRanking` checks in `backend/gemini.py`, `scripts/verify_gemini_live.py`, and `docs/gemini_sample_transcripts/` |
 | Product Thinking | One-click demo flow, Upload -> Dashboard -> Forecast -> Simulator -> Insights journey, and `DEMO_GUIDE.md` |
 | Engineering Quality | Evaluator CI, frontend CI, Playwright flow, 90.30% enforced backend coverage gate, explicit pickle compatibility matrix, `requirements.txt`/`requirements-app.txt` separation |
 
@@ -194,28 +194,35 @@ Backtest headline from the latest rolling-origin report:
 | 60 days | 9.54% vs 9.54% | 1.11% vs 1.51% | Revenue ties baseline; trained model wins ROAS |
 | 90 days | 7.89% vs 7.89% | 2.04% vs 2.07% | Revenue ties baseline; ROAS is effectively tied |
 
-Latest clean-checkout verification on July 3, 2026:
+Latest local verification on July 4, 2026:
 
 ```text
-pip install -r requirements.txt
-chmod +x run.sh
+python -m pip install -r requirements.txt
 ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
 
+Requirement already satisfied: pandas==3.0.3
+Requirement already satisfied: numpy==2.4.6
+Requirement already satisfied: scikit-learn==1.9.0
 [ForecastIQ] Trained-model forecast coverage: 54/54 rows (100.0%) used artifact-backed estimates; 0 row(s) used safe segment fallback.
-rows 54
-columns_exact True
-model_types ['trained_model']
-safe_baseline_count 0
+[ForecastIQ] Prediction mode: trained_model
+[ForecastIQ] Wrote 54 rows to ./output/predictions.csv
+[ForecastIQ] scikit-learn version: 1.9.0 (artifact built on 1.9.0)
+[ForecastIQ] Python version: 3.14.4
 
-pip install -r requirements-app.txt
-python -m pytest tests/ -q --ignore=tests/e2e
-179 passed, 1 skipped, 7 warnings with 90.65% backend coverage
+python -m pip install -r requirements-app.txt
+python -m pytest tests/ -q --ignore=tests/e2e --cov=backend --cov-report=term-missing
+182 passed, 1 skipped, 7 warnings with 91.23% backend coverage
 
-npm run check
-passed: TypeScript, ESLint, and production build
+npm run check && npm run test -- --run
+check passed: TypeScript, ESLint, and Vite production build
+vitest passed: 1 file, 5 tests
+```
 
-npm run test -- --run
-5 passed
+Focused timing check for the two previously slow backend test files:
+
+```text
+python -m pytest tests/test_causal_stability.py tests/test_decision_support.py -q --durations=20
+5 passed in 18.67s; slowest test 15.68s
 ```
 
 The latest backtest compares trained-model and deterministic-baseline behavior

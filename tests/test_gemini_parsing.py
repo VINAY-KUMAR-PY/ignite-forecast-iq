@@ -552,6 +552,31 @@ class GeminiParsingTests(unittest.TestCase):
                 "recommendedTest": "Refresh prospecting creative and monitor conversion-rate changes before increasing budget.",
             },
         ]
+        payload["llmHypothesisRanking"] = [
+            {
+                "rank": 1,
+                "hypothesis": "budget shift",
+                "confidence": "high",
+                "confidenceScore": 0.84,
+                "supportingEvidence": [
+                    "Google Ads DiD effect=$12,800.",
+                    "p=0.030 and CI $7,200 to $18,400.",
+                ],
+                "contradictingEvidence": ["No randomized lift test is available."],
+                "recommendedValidation": "Run a staged budget holdout for Google Ads.",
+                "rationale": "Gemini independently ranked budget shift highest because the strongest DiD evidence is channel-specific.",
+            },
+            {
+                "rank": 2,
+                "hypothesis": "creative fatigue",
+                "confidence": "medium",
+                "confidenceScore": 0.57,
+                "supportingEvidence": ["Meta Ads ROAS anomaly appears in the raw signal list."],
+                "contradictingEvidence": ["Creative history is not directly supplied."],
+                "recommendedValidation": "Compare ad-level frequency and CTR before reallocating spend.",
+                "rationale": "Gemini ranked creative fatigue as plausible but less supported than the DiD-backed budget shift.",
+            },
+        ]
 
         with patch.dict(os.environ, {"GEMINI_API_KEY": "configured", "GEMINI_MAX_ATTEMPTS": "1"}, clear=False):
             with patch("backend.gemini._generate_content", new=AsyncMock(return_value=json.dumps(payload))):
@@ -562,6 +587,19 @@ class GeminiParsingTests(unittest.TestCase):
         self.assertEqual([item.rank for item in insights.causalHypotheses[:2]], [1, 2])
         self.assertTrue(all(item.supportingEvidence for item in insights.causalHypotheses[:2]))
         self.assertTrue(any("DiD" in evidence for evidence in insights.causalHypotheses[0].supportingEvidence))
+        self.assertGreaterEqual(len(insights.llmHypothesisRanking), 2)
+        self.assertEqual(insights.llmHypothesisRanking[0].hypothesis, "budget shift")
+        self.assertGreater(insights.llmHypothesisRanking[0].confidenceScore, insights.llmHypothesisRanking[1].confidenceScore)
+
+    def test_prompt_requests_independent_llm_hypothesis_ranking(self) -> None:
+        prompt = _build_prompt(SUMMARY)
+
+        self.assertIn("STEP 2B - LLM HYPOTHESIS RANKING", prompt)
+        self.assertIn("seasonality", prompt)
+        self.assertIn("budget shift", prompt)
+        self.assertIn("creative fatigue", prompt)
+        self.assertIn("platform algorithm change", prompt)
+        self.assertIn("llmHypothesisRanking", prompt)
 
 
 if __name__ == "__main__":

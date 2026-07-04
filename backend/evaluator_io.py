@@ -689,6 +689,11 @@ def generate_offline_causal_summary(
         distilled["summary"],
         f"Evidence focus: {distilled['evidence_focus']}",
         f"Recommended action: {distilled['recommended_action']}",
+        "LLM_HYPOTHESIS_RANKING",
+        "Status: not executed in the default offline evaluator path. Use --enable-live-ai with "
+        "GEMINI_API_KEY to ask Gemini to independently rank competing explanations from the "
+        "same DiD, p-value, confidence-interval, and anomaly evidence. The deterministic "
+        "DiD evidence and distilled offline reasoning above remain the no-network grading path.",
         executive_interpretation,
         f"Historical period: {daily['date'].iloc[0]} to {daily['date'].iloc[-1]} ({len(daily)} days)",
         f"Total spend: ${total_spend:,.0f} | Total revenue: ${total_revenue:,.0f} | Blended ROAS: {blended_roas:.2f}x",
@@ -860,14 +865,34 @@ def _generate_live_ai_causal_appendix(
     actions = dumped.get("actionPlan") or []
     risks = dumped.get("risks") or []
     opportunities = dumped.get("growthOpportunities") or []
+    rankings = dumped.get("llmHypothesisRanking") or []
     lines = [
         "AI mode: LIVE_GEMINI_OPTIONAL_ENRICHMENT (explicit --enable-live-ai + GEMINI_API_KEY; default grading path remains offline).",
         "=== Optional Live Gemini Enrichment ===",
         f"Executive summary: {dumped.get('executiveSummary', '').strip()}",
         "Gemini risks: " + "; ".join(str(item) for item in risks[:3]) if risks else "Gemini risks: none returned.",
         "Gemini opportunities: " + "; ".join(str(item) for item in opportunities[:3]) if opportunities else "Gemini opportunities: none returned.",
-        "Gemini action plan:",
+        "LLM_HYPOTHESIS_RANKING",
     ]
+    if rankings:
+        for item in rankings[:5]:
+            support = "; ".join(str(value) for value in (item.get("supportingEvidence") or [])[:2])
+            contradict = "; ".join(str(value) for value in (item.get("contradictingEvidence") or [])[:2])
+            lines.append(
+                "  - rank {rank}: {hypothesis} | confidence={confidence} ({score:.2f}) | "
+                "support={support} | contradict={contradict} | validation={validation}".format(
+                    rank=item.get("rank", "?"),
+                    hypothesis=item.get("hypothesis", "hypothesis unavailable"),
+                    confidence=item.get("confidence", "unknown"),
+                    score=float(item.get("confidenceScore") or 0.0),
+                    support=support or "none supplied",
+                    contradict=contradict or "none supplied",
+                    validation=item.get("recommendedValidation", "validation unavailable"),
+                )
+            )
+    else:
+        lines.append("  - Gemini returned no separate LLM hypothesis ranking.")
+    lines.append("Gemini action plan:")
     lines.extend(f"  - {item}" for item in actions[:5])
     return "\n".join(lines)
 
@@ -901,6 +926,18 @@ def _live_ai_summary_payload(
         "anomalies": anomalies,
         "causalEvidence": causal_estimates,
         "structuredCausalEvidence": structured_evidence,
+        "llmHypothesisInstructions": {
+            "task": "Independently rank competing causal explanations from raw statistical evidence.",
+            "candidateHypotheses": [
+                "seasonality",
+                "budget shift",
+                "creative fatigue",
+                "platform algorithm change",
+                "tracking or attribution drift",
+                "product or offer demand",
+            ],
+            "requiredEvidence": ["DiD effect", "p-value", "confidence interval", "anomaly z-score"],
+        },
         "executiveContext": (
             "Generate a concise causal narrative grounded only in the supplied DiD estimates, p-values, "
             "confidence labels, date windows, anomalies, and forecast intervals."

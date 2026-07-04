@@ -188,6 +188,16 @@ def _assert_causal_schema(insights: InsightsResponse) -> None:
             raise RuntimeError(f"Causal hypothesis lacks supporting evidence: {hypothesis.title}")
         if not hypothesis.recommendedTest:
             raise RuntimeError(f"Causal hypothesis lacks recommended test: {hypothesis.title}")
+    if len(insights.llmHypothesisRanking) < 2:
+        raise RuntimeError("Gemini response must include at least two independently ranked LLM hypotheses")
+    llm_ranks = [item.rank for item in insights.llmHypothesisRanking]
+    if llm_ranks != sorted(llm_ranks):
+        raise RuntimeError(f"LLM hypothesis rankings are not ordered: {llm_ranks}")
+    for hypothesis in insights.llmHypothesisRanking[:2]:
+        if not hypothesis.supportingEvidence:
+            raise RuntimeError(f"LLM hypothesis lacks supporting evidence: {hypothesis.hypothesis}")
+        if not hypothesis.recommendedValidation:
+            raise RuntimeError(f"LLM hypothesis lacks recommended validation: {hypothesis.hypothesis}")
 
 
 async def _call_gemini(api_key: str, prompt: str) -> str:
@@ -245,6 +255,7 @@ async def verify_live(args: argparse.Namespace) -> Path | None:
         "response_text": raw_text,
         "response_json": insights.model_dump(mode="json"),
         "causal_hypothesis_count": len(insights.causalHypotheses),
+        "llm_hypothesis_ranking_count": len(insights.llmHypothesisRanking),
     }
     output_path.write_text(json.dumps(_redact_json(transcript, api_key), indent=2), encoding="utf-8")
     print(f"PASS: live Gemini response validated and transcript saved to {output_path}")

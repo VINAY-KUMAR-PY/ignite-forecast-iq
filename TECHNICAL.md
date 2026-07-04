@@ -41,6 +41,26 @@ that 10x Google Ads spend produces lower ROAS than a conservative budget.
 ForecastIQ intentionally uses different model choices for the live product and
 offline evaluator because the evaluator must run quickly with minimal
 dependencies while the app can afford richer interactive diagnostics.
+This dual-model design is safer than forcing one model everywhere: the offline
+GBR artifact is small, deterministic, and grader-safe, while the live XGBoost
+path can spend more compute on interactive diagnostics and feature importance.
+Both are held against the same deterministic baseline, so the app gets richer
+UX without putting the offline submission contract at risk.
+
+Representative committed-sample consistency check, computed on 2026-07-04 with
+the pinned evaluator artifact and the live forecast path:
+
+| Forecast grain checked | Max revenue delta vs live path | Max ROAS delta vs live path |
+|---|---:|---:|
+| overall (`all`) | 8.29% | 7.32% |
+| channel (`Google Ads`, `Meta Ads`, `Microsoft Ads`) | 9.76% | 10.74% |
+| campaign_type (`Search`) | 12.73% | 12.36% |
+| campaign (`Brand Search`) | 14.90% | 13.87% |
+
+The paths are not intended to be point-identical because the live model retrains
+interactively and the evaluator model scores a committed artifact. The
+consistency target is directional agreement and bounded deviation; the
+regression test in `tests/test_path_consistency.py` enforces that boundary.
 
 | Candidate | Decision | Rationale |
 |---|---|---|
@@ -78,6 +98,19 @@ transparent per-horizon selection; it is not a crash fallback.
 
 The gate uses the latest 20% of each horizon's dedicated training samples by
 target date. This prevents CV overfitting on small per-horizon slices.
+
+### Why the ML model intentionally defers to baseline beyond 30 days
+
+The current artifact already includes cyclic seasonality features,
+rolling-window run-rate features, channel/category encodings, and channel-mix
+signals. A long-horizon gate review kept revenue blend weight at `0.00` for 60
+and 90 days because the trained residual correction did not improve
+rolling-origin revenue MAPE at those horizons. The latest report shows 60-day
+trained revenue MAPE **9.54%** versus seasonal baseline **9.54%**, and 90-day
+trained revenue MAPE **7.89%** versus seasonal baseline **7.89%**. ForecastIQ
+therefore treats the seasonal baseline as the safer long-horizon revenue anchor
+while still using trained-model ROAS evidence where it improves MAE/MAPE. This
+is horizon-level model selection, not a runtime crash fallback.
 
 ### Horizon-Dedicated Sample Counts
 The artifact stores dedicated training-sample counts by horizon:
@@ -436,14 +469,14 @@ PASS causal summary: 4834 bytes, including OFFLINE_DETERMINISTIC_FALLBACK and DI
 PASS explainability notes: per segment/horizon recent trend, seasonality, ROAS stability, and confidence signals
 
 Backend tests:
-179 passed, 1 skipped, 7 warnings with 90.65% backend coverage from a full local backend run with `requirements-app.txt`
+182 passed, 1 skipped, 7 warnings with 91.23% backend coverage from a full local backend run with `requirements-app.txt`
 
 Frontend validation:
 npm install: up to date, audited 567 packages in 2s; one low-severity
 dev-server advisory remains
 npm run check: tsc, eslint, and Vite build passed; Vite transformed 2,837
-modules and built in 8.54s
-npm run test: Vitest passed 1 file and 5 tests in 9.12s
+modules and built in 8.19s
+npm run test: Vitest passed 1 file and 5 tests in 4.60s
 npm run build: Vite transformed 2,837 modules and built in 8.58s
 
 Sklearn zero-fallback guard:
@@ -497,6 +530,22 @@ preventing silent bad predictions under reviewer-side dependency experiments.
   evaluator path in 5.87 seconds on the local Windows/Git Bash environment
   using Python 3.14.4, producing a valid 12-column CSV with horizons {30, 60,
   90}. CI enforces a 60-second budget on Linux.
+
+### Additional stress behavior
+
+Temporary stress fixtures were generated outside the repository on 2026-07-04
+with `scripts/generate_synthetic_marketing_csv.py` and scored through the
+unchanged `run.sh` contract:
+
+| Input size | Wall-clock time | Output rows | `model_type` outcome | Interpretation |
+|---:|---:|---:|---|---|
+| 2 rows | 2.81s | 18 | `safe_baseline_fallback` | Near-empty inputs stay schema-safe and exit 0 instead of crashing. |
+| 5,000 rows | 5.97s | 42 | `trained_model` | Mid-size hidden-data-like exports use the trained artifact. |
+| 200,000 rows | 20.84s | 42 | `trained_model` | Large CSV input remains evaluator-safe on the local Windows/Git Bash runner. |
+
+The 2-row case emitted the expected loud safe-baseline warning because there is
+not enough history for trained scoring. The 5k and 200k cases used the committed
+artifact without fallback.
 
 ### Backtest results (walk-forward)
 
@@ -609,6 +658,15 @@ SDK with a senior-analyst system prompt. The response is parsed into a typed
 `InsightsResponse` Pydantic object. Retry logic handles rate limits, timeouts,
 and transient SDK errors with exponential backoff.
 
+Live Gemini now receives the raw structured statistical evidence block,
+including DiD effect size, p-value, confidence interval, anomaly context, and
+driver evidence, then returns `llmHypothesisRanking` as a separate typed field.
+That field asks Gemini to independently rank competing explanations such as
+seasonality, budget shift, creative fatigue, platform algorithm change,
+tracking drift, and product/offer demand. `output/causal_summary.txt` displays
+this as `LLM_HYPOTHESIS_RANKING` only when explicit live mode succeeds, keeping
+it distinct from deterministic DiD evidence.
+
 The offline evaluator path is implemented by `backend/evaluator_io.py`,
 `backend/causal_lite.py`, and `backend/gemini_offline_cache.py`: it composes
 distilled Gemini-derived reasoning from local anomaly and DiD evidence, writes
@@ -638,7 +696,10 @@ from `data/sample_campaigns.csv`, calls Gemini, validates the response against
 response with 3 revenue drivers, 3 channel-performance items, and 5 causal
 hypotheses. Local verification on 2026-07-03 could replay and validate that
 transcript, but could not regenerate a newer live transcript because
-`GEMINI_API_KEY` was not configured in the local shell.
+`GEMINI_API_KEY` was not configured in the local shell. The
+`scripts/verify_gemini_live.py` verifier has been strengthened so future
+secret-backed captures must include at least two `llmHypothesisRanking` items
+with supporting evidence and recommended validation.
 
 **Deterministic fallback**: if Gemini is unavailable for any reason (missing
 API key, rate limit, timeout, malformed response, network failure), a

@@ -88,6 +88,41 @@ $2,238. Observed ROAS is 2.98x versus baseline 2.96x, but the +1.6% delta is
 not strong enough to treat as proven incrementality.
 ```
 
+## Live LLM Hypothesis Ranking
+
+The live Gemini prompt in `backend/gemini.py` now includes an additional
+instruction block named `STEP 2B - LLM HYPOTHESIS RANKING`. When a reviewer runs
+the optional live path with `GEMINI_API_KEY`, Gemini receives the same raw
+statistical evidence object plus DiD effect, p-value, confidence interval, and
+anomaly z-score references, then returns a separate `llmHypothesisRanking` list.
+That ranking is distinct from deterministic `causalHypotheses` and is written
+to `output/causal_summary.txt` under `LLM_HYPOTHESIS_RANKING` only when explicit
+live mode succeeds.
+
+Expected live response shape:
+
+```json
+{
+  "llmHypothesisRanking": [
+    {
+      "rank": 1,
+      "hypothesis": "budget shift",
+      "confidence": "high",
+      "confidenceScore": 0.84,
+      "supportingEvidence": ["DiD effect, p-value, confidence interval, or anomaly z-score reference"],
+      "contradictingEvidence": ["Alternative explanation or missing experimental evidence"],
+      "recommendedValidation": "Holdout, staged ramp, or tracking audit",
+      "rationale": "Why this explanation outranks alternatives"
+    }
+  ]
+}
+```
+
+No new live transcript was generated during the 2026-07-04 local pass because
+`GEMINI_API_KEY` was not configured. Existing checked-in transcripts remain
+genuine historical Gemini outputs; future secret-backed captures are validated
+by `scripts/verify_gemini_live.py` and must include this ranking field.
+
 ## Boundary
 
 - Default `run.sh` path: no internet, no Gemini call, deterministic placeholder

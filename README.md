@@ -7,7 +7,7 @@
 Clone: `git clone https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq.git`
 Live demo: https://ignite-forecast-iq.vercel.app
 
-Backend coverage: **90.306% measured locally** (`90.31%` displayed) with `pytest --cov=backend --cov-report=term-missing`; the Evaluator CI `Run tests with coverage` step enforces **90.30%** with `--cov-fail-under=90.30`.
+Backend coverage: **90.65% measured locally** with `pytest tests/ -q --ignore=tests/e2e --cov=backend --cov-report=term-missing --cov-report=json --cov-fail-under=90.30`; the Evaluator CI `Run tests with coverage` step enforces **90.30%** with `--cov-fail-under=90.30`.
 
 ## Which Requirements File Do I Need?
 
@@ -34,11 +34,11 @@ For automated evaluation, `pickle/model.pkl` is the canonical offline artifact: 
 
 | Criterion | Where to verify |
 |---|---|
-| Technical Soundness | `backend/predict.py`, `backend/inference.py`, `reports/backtest_summary.md` including the sklearn-vs-live XGBoost consistency table, `tests/test_offline_predict.py`, `tests/test_interval_monotonicity.py` |
-| Practical Relevance | Budget simulator and decision-support evidence in `backend/decision_support.py`, `src/routes/app.simulator.tsx`, and `TECHNICAL.md` |
+| Technical Soundness | `backend/predict.py`, `backend/inference.py`, `reports/backtest_summary.md` including the sklearn-vs-live XGBoost consistency table, `tests/test_offline_predict.py`, `tests/test_interval_monotonicity.py`, and the `Pickle compatibility / Python 3.11-3.14` Evaluator CI matrix |
+| Practical Relevance | Budget simulator and decision-support evidence in `backend/decision_support.py`, `backend/segment_utils.py`, `scripts/validate_budget_elasticity.py`, `reports/budget_elasticity_summary.md`, `src/routes/app.simulator.tsx`, and `TECHNICAL.md` |
 | AI Integration | Offline distilled LLM reasoning in `backend/gemini_offline_cache.py`, causal evidence in `output/causal_summary.txt`, and optional live Gemini checks in `docs/gemini_sample_transcripts/` |
 | Product Thinking | One-click demo flow, Upload -> Dashboard -> Forecast -> Simulator -> Insights journey, and `DEMO_GUIDE.md` |
-| Engineering Quality | Evaluator CI, frontend CI, Playwright flow, 90.30% enforced backend coverage gate, `requirements.txt`/`requirements-app.txt` separation |
+| Engineering Quality | Evaluator CI, frontend CI, Playwright flow, 90.30% enforced backend coverage gate, explicit pickle compatibility matrix, `requirements.txt`/`requirements-app.txt` separation |
 
 ## Architecture At A Glance
 
@@ -125,7 +125,7 @@ artifact_version 5
 model_type trained_model
 ```
 
-The evaluator CI runs the same pinned install on Ubuntu runners for Python 3.11, 3.12, 3.13, and 3.14, then asserts the committed artifact emits `model_type=trained_model`.
+The evaluator CI runs the same pinned install on Ubuntu runners for Python 3.11, 3.12, 3.13, and 3.14, then asserts the committed artifact emits `model_type=trained_model`. The **Evaluator CI** badge above includes the dedicated `Pickle compatibility / Python 3.11-3.14` matrix job.
 
 ### Reproducibility
 
@@ -175,10 +175,11 @@ ForecastIQ keeps one canonical evidence map here to reduce duplicate documentati
 |---|---|
 | Evaluator contract | `run.sh`, `backend/predict.py`, `backend/evaluator_contract.py`, `tests/test_evaluator_contract.py`, `tests/test_evaluator_e2e.py`, `tests/test_scale_evaluator.py`, `.github/workflows/evaluator-ci.yml` |
 | Forecast model | `backend/inference.py`, `pickle/model.pkl`, `reports/backtest_report.json`, `reports/backtest_summary.md`, `reports/coverage_summary.md`, `tests/test_interval_monotonicity.py`, `tests/test_offline_predict.py` |
+| Budget elasticity | `backend/segment_utils.py::spend_response_multiplier`, `scripts/validate_budget_elasticity.py`, `reports/budget_elasticity_report.json`, `reports/budget_elasticity_summary.md` |
 | Data compatibility | `backend/schema_adapters.py`, `backend/data_preprocessing.py`, `tests/test_schema_adapters.py`, `tests/fixtures/ga4_variant_hidden_export.csv` for GA4 variants, Shopify, Google Ads micros, Meta Ads, Microsoft/Bing Ads, and duplicate-revenue guards |
 | AI and causal layer | `backend/gemini.py`, `backend/gemini_offline_cache.py`, `backend/causal_lite.py`, `scripts/verify_gemini_live.py`, `.github/workflows/gemini-live-smoke.yml`, `tests/test_gemini_parsing.py`, `tests/test_causal_lite.py`, `tests/test_offline_predict.py`, `output/causal_summary.txt`, `output/explainability_notes.txt`, `docs/gemini_sample_transcripts/` |
 | Product demo | `src/routes/index.tsx`, `src/routes/`, `src/routes/app-pages.test.tsx`, `tests/e2e/demo.spec.ts`, `reports/e2e_summary.md`, `DEMO_GUIDE.md`, `TECHNICAL.md` |
-| CI jobs | `evaluator`, `sklearn-version-drift-smoke`, `app-tests`, `frontend`, `e2e-demo`, `hackathon-evaluator-protocol`, and `gemini-live-smoke` |
+| CI jobs | `evaluator`, `pickle-compatibility-matrix`, `sklearn-version-drift-smoke`, `app-tests`, `frontend`, `e2e-demo`, `hackathon-evaluator-protocol`, and `gemini-live-smoke` |
 | Exact sklearn guard | `exact-sklearn-zero-fallback` in `.github/workflows/evaluator-ci.yml` installs the pinned evaluator runtime and rejects sklearn mismatch/fallback warnings |
 
 Backtest headline from the latest rolling-origin report:
@@ -204,7 +205,7 @@ safe_baseline_count 0
 
 pip install -r requirements-app.txt
 python -m pytest tests/ -q --ignore=tests/e2e
-167 passed, 1 skipped, 7 warnings in 229.47s
+179 passed, 1 skipped, 7 warnings with 90.65% backend coverage
 
 npm run check
 passed: TypeScript, ESLint, and production build
@@ -235,16 +236,16 @@ volatility guardrails, horizon-specific widening, and segment-level widening:
 | Horizon | Residual multiplier | Planning floor |
 |---|---:|---:|
 | 30 days | 0.70 | 30% |
-| 60 days | 0.90 | 36% |
-| 90 days | 1.10 | 45% |
+| 60 days | 0.90 | 34% |
+| 90 days | 1.10 | 40% |
 
-The resulting 60-90% planning bands are intentional for ecommerce media forecasts, especially over 60- and 90-day horizons where seasonality, promotion cadence, auction volatility, and channel mix shifts compound uncertainty. Tighter bands would overstate confidence and can mislead budget decisions; these intervals are calibrated against the rolling-origin backtest in `reports/backtest_summary.md` rather than being arbitrarily widened.
+The resulting 60-80% overall planning bands are intentional for ecommerce media forecasts, especially over 60- and 90-day horizons where seasonality, promotion cadence, auction volatility, and channel mix shifts compound uncertainty. Tighter bands would overstate confidence and can mislead budget decisions; these intervals are calibrated against the rolling-origin backtest in `reports/backtest_summary.md` rather than being arbitrarily widened.
 
-The interval enforcement layer ensures uncertainty bands widen across horizons and that `interval_width_pct` matches the actual revenue bands. On the committed sample output, overall intervals are now 60%, 72%, and 90% for 30, 60, and 90 days, with confidence labels varying by horizon and segment quality.
+The interval enforcement layer ensures uncertainty bands widen across horizons and that `interval_width_pct` matches the actual revenue bands. On the committed sample output, overall intervals are now 60%, 68%, and 80% for 30, 60, and 90 days, with confidence labels varying by horizon and segment quality.
 
 ROAS intervals are calibrated independently from historical daily ROAS residuals, with a minimum ROAS floor for thin segments, so `lower_roas` and `upper_roas` are not just revenue confidence bounds divided by projected spend.
 
-Budget overrides in the offline evaluator use a concave spend-response curve: moderate increases can lift revenue, but revenue gains flatten after about 1.5x recent channel spend and ROAS declines under extreme 10x budget scenarios. This keeps `--budget-json` useful for evaluator what-if checks without implying unlimited linear media returns.
+Budget overrides in the offline evaluator use a concave spend-response curve: moderate increases can lift revenue, but revenue gains flatten after about 1.5x recent channel spend and ROAS declines under extreme 10x budget scenarios. `scripts/validate_budget_elasticity.py` validates that curve against historical month-over-month spend moves; the latest report covers 12 qualifying channel-month cases with 100.00% direction accuracy and 9.49% revenue-response MAPE.
 
 For full methodology, feature list, assumptions, and limitations, see [TECHNICAL.md](./TECHNICAL.md).
 

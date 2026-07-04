@@ -1,6 +1,6 @@
 # ForecastIQ Backtest Summary
 
-Generated: 2026-07-03T15:37:35.178763+00:00
+Generated: 2026-07-04T03:27:04.101098+00:00
 
 ## Holdout Design
 
@@ -99,8 +99,8 @@ would use when no trained residual correction is trusted.
 | Horizon days | Folds | Segments | Trained revenue MAE | Trained revenue RMSE | Trained revenue MAPE | Trained revenue coverage | Trained revenue width % | Trained ROAS MAE | Trained ROAS RMSE | Trained ROAS coverage | Trained ROAS width | Baseline MAE | Baseline RMSE | Baseline width % | Revenue MAE winner |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 | 30 | 3 | 54 | 2180.83 | 3212.65 | 2.23% | 100.0% | 66.5% | 0.05 | 0.06 | 100.0% | 1.117 | 3097.88 | 4501.73 | 60.0% | Trained model |
-| 60 | 3 | 54 | 17906.95 | 29506.8 | 9.54% | 100.0% | 79.8% | 0.04 | 0.05 | 100.0% | 1.3435 | 17906.95 | 29506.8 | 72.0% | Tie |
-| 90 | 2 | 36 | 22141.94 | 34041.4 | 7.89% | 100.0% | 99.75% | 0.08 | 0.11 | 100.0% | 1.6797 | 22141.94 | 34041.4 | 90.0% | Tie |
+| 60 | 3 | 54 | 17906.95 | 29506.8 | 9.54% | 100.0% | 75.37% | 0.04 | 0.05 | 100.0% | 1.2702 | 17906.95 | 29506.8 | 68.0% | Tie |
+| 90 | 2 | 36 | 22141.94 | 34041.4 | 7.89% | 100.0% | 88.67% | 0.08 | 0.11 | 100.0% | 1.4939 | 22141.94 | 34041.4 | 80.0% | Tie |
 
 One-line verdicts against the seasonal-average baseline:
 
@@ -137,8 +137,8 @@ the single final-30-day holdout above.
 | Horizon days | Folds averaged | Avg trained MAE | Avg trained RMSE | Avg trained coverage | Avg trained width % | Avg trained ROAS MAE | Avg baseline MAE | Avg baseline RMSE | Avg baseline coverage | Avg baseline width % |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | 30 | 3 | 2180.8267 | 3150.5833 | 100.0% | 66.5% | 0.0433 | 3097.8833 | 4350.7967 | 100.0% | 60.0% |
-| 60 | 3 | 17906.95 | 25640.2433 | 100.0% | 79.8% | 0.04 | 17906.95 | 25640.2433 | 100.0% | 72.0% |
-| 90 | 2 | 22141.945 | 31514.105 | 100.0% | 99.75% | 0.08 | 22141.945 | 31514.105 | 100.0% | 90.0% |
+| 60 | 3 | 17906.95 | 25640.2433 | 100.0% | 75.37% | 0.04 | 17906.95 | 25640.2433 | 100.0% | 68.0% |
+| 90 | 2 | 22141.945 | 31514.105 | 100.0% | 88.67% | 0.08 | 22141.945 | 31514.105 | 100.0% | 80.0% |
 
 ## Interval Coverage by Horizon and Segment Level
 
@@ -152,14 +152,14 @@ is only good at account level or remains stable at thinner segment grains.
 | 30 | channel | 9 | 100.0% | 63.0% | 100.0% | 100.0% | 60.0% |
 | 30 | campaign_type | 18 | 100.0% | 66.0% | 100.0% | 100.0% | 60.0% |
 | 30 | campaign | 24 | 100.0% | 69.0% | 100.0% | 100.0% | 60.0% |
-| 60 | overall | 3 | 100.0% | 72.0% | 100.0% | 100.0% | 72.0% |
-| 60 | channel | 9 | 100.0% | 75.6% | 100.0% | 100.0% | 72.0% |
-| 60 | campaign_type | 18 | 100.0% | 79.2% | 100.0% | 100.0% | 72.0% |
-| 60 | campaign | 24 | 100.0% | 82.8% | 100.0% | 100.0% | 72.0% |
-| 90 | overall | 2 | 100.0% | 90.0% | 100.0% | 100.0% | 90.0% |
-| 90 | channel | 6 | 100.0% | 94.5% | 100.0% | 100.0% | 90.0% |
-| 90 | campaign_type | 12 | 100.0% | 99.0% | 100.0% | 100.0% | 90.0% |
-| 90 | campaign | 16 | 100.0% | 103.5% | 100.0% | 100.0% | 90.0% |
+| 60 | overall | 3 | 100.0% | 68.0% | 100.0% | 100.0% | 68.0% |
+| 60 | channel | 9 | 100.0% | 71.4% | 100.0% | 100.0% | 68.0% |
+| 60 | campaign_type | 18 | 100.0% | 74.8% | 100.0% | 100.0% | 68.0% |
+| 60 | campaign | 24 | 100.0% | 78.2% | 100.0% | 100.0% | 68.0% |
+| 90 | overall | 2 | 100.0% | 80.0% | 100.0% | 100.0% | 80.0% |
+| 90 | channel | 6 | 100.0% | 84.0% | 100.0% | 100.0% | 80.0% |
+| 90 | campaign_type | 12 | 100.0% | 88.0% | 100.0% | 100.0% | 80.0% |
+| 90 | campaign | 16 | 100.0% | 92.0% | 100.0% | 100.0% | 80.0% |
 
 Note on 30-day ROAS interval coverage: ROAS confidence intervals now use a direct residual-volatility
 estimate from historical daily ROAS for each segment, with a minimum ROAS floor when history is thin.

@@ -50,3 +50,31 @@ def test_causal_did_top_hypothesis_is_stable_under_small_realistic_noise() -> No
         assert noisy_top["confidence"] in {"medium", "high"}
     else:
         assert noisy_top["confidence"] == "low"
+
+
+def test_low_power_did_does_not_claim_intervention_detected() -> None:
+    start = date(2026, 1, 1)
+    rows: list[dict] = []
+    for day in range(56):
+        current = (start + timedelta(days=day)).isoformat()
+        for channel in ["Google Ads", "Meta Ads", "Microsoft Ads"]:
+            rows.append(
+                {
+                    "date": current,
+                    "channel": channel,
+                    "spend": 100.0,
+                    "revenue": 420.0 + day * 2.0,
+                }
+            )
+
+    estimates = estimate_causal_effects(
+        pd.DataFrame(rows),
+        [{"date": "2026-01-29", "channel": "Google Ads", "metric": "revenue"}],
+    )
+
+    assert estimates
+    top = estimates[0]
+    assert top["confidence"] == "low"
+    assert top["interventionDetected"] is False
+    assert top["powerCheckPassed"] is False
+    assert "confidence interval crosses zero" in top["lowPowerReason"] or float(top["pValue"]) > 0.15

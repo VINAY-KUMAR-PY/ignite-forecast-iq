@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-03T15:37:35.178763+00:00",
+  "generated_at": "2026-07-04T03:27:04.101098+00:00",
   "data_dir": "data",
   "holdout_days": 30,
   "train_rows": 2160,
@@ -1056,23 +1056,23 @@
             "rmse": 6906.01,
             "mape": 2.24,
             "interval_coverage": 100.0,
-            "mean_interval_width": 161186.3133,
-            "mean_interval_width_pct": 79.8,
+            "mean_interval_width": 152231.5178,
+            "mean_interval_width_pct": 75.37,
             "revenue": {
               "mae": 4728.39,
               "rmse": 6906.01,
               "mape": 2.24,
               "interval_coverage": 100.0,
-              "mean_interval_width": 161186.3133,
-              "mean_interval_width_pct": 79.8
+              "mean_interval_width": 152231.5178,
+              "mean_interval_width_pct": 75.37
             },
             "roas": {
               "mae": 0.05,
               "rmse": 0.06,
               "mape": 1.32,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.3406,
-              "mean_interval_width_pct": 32.4
+              "mean_interval_width": 1.2667,
+              "mean_interval_width_pct": 30.62
             },
             "roas_mae": 0.05,
             "roas_rmse": 0.06,
@@ -1084,23 +1084,23 @@
             "rmse": 6906.01,
             "mape": 2.24,
             "interval_coverage": 100.0,
-            "mean_interval_width": 149940.1861,
-            "mean_interval_width_pct": 72.0,
+            "mean_interval_width": 141610.175,
+            "mean_interval_width_pct": 68.0,
             "revenue": {
               "mae": 4728.39,
               "rmse": 6906.01,
               "mape": 2.24,
               "interval_coverage": 100.0,
-              "mean_interval_width": 149940.1861,
-              "mean_interval_width_pct": 72.0
+              "mean_interval_width": 141610.175,
+              "mean_interval_width_pct": 68.0
             },
             "roas": {
               "mae": 0.04,
               "rmse": 0.05,
               "mape": 1.08,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.3389,
-              "mean_interval_width_pct": 32.37
+              "mean_interval_width": 1.2639,
+              "mean_interval_width_pct": 30.56
             },
             "roas_mae": 0.04,
             "roas_rmse": 0.05,
@@ -1142,23 +1142,23 @@
             "rmse": 27483.03,
             "mape": 9.17,
             "interval_coverage": 100.0,
-            "mean_interval_width": 142018.0444,
-            "mean_interval_width_pct": 79.8,
+            "mean_interval_width": 134128.1533,
+            "mean_interval_width_pct": 75.37,
             "revenue": {
               "mae": 19172.03,
               "rmse": 27483.03,
               "mape": 9.17,
               "interval_coverage": 100.0,
-              "mean_interval_width": 142018.0444,
-              "mean_interval_width_pct": 79.8
+              "mean_interval_width": 134128.1533,
+              "mean_interval_width_pct": 75.37
             },
             "roas": {
               "mae": 0.04,
               "rmse": 0.05,
               "mape": 1.2,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.3483,
-              "mean_interval_width_pct": 32.37
+              "mean_interval_width": 1.2783,
+              "mean_interval_width_pct": 30.69
             },
             "roas_mae": 0.04,
             "roas_rmse": 0.05,
@@ -1170,23 +1170,23 @@
             "rmse": 27483.03,
             "mape": 9.17,
             "interval_coverage": 100.0,
-            "mean_interval_width": 132109.3156,
-            "mean_interval_width_pct": 72.0,
+            "mean_interval_width": 124769.9083,
+            "mean_interval_width_pct": 68.0,
             "revenue": {
               "mae": 19172.03,
               "rmse": 27483.03,
               "mape": 9.17,
               "interval_coverage": 100.0,
-              "mean_interval_width": 132109.3156,
-              "mean_interval_width_pct": 72.0
+              "mean_interval_width": 124769.9083,
+              "mean_interval_width_pct": 68.0
             },
             "roas": {
               "mae": 0.09,
               "rmse": 0.1,
               "mape": 2.31,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.3661,
-              "mean_interval_width_pct": 32.4
+              "mean_interval_width": 1.2889,
+              "mean_interval_width_pct": 30.56
             },
             "roas_mae": 0.09,
             "roas_rmse": 0.1,
@@ -1228,23 +1228,23 @@
             "rmse": 42531.69,
             "mape": 17.22,
             "interval_coverage": 100.0,
-            "mean_interval_width": 153650.2778,
-            "mean_interval_width_pct": 79.8,
+            "mean_interval_width": 145114.1511,
+            "mean_interval_width_pct": 75.37,
             "revenue": {
               "mae": 29820.43,
               "rmse": 42531.69,
               "mape": 17.22,
               "interval_coverage": 100.0,
-              "mean_interval_width": 153650.2778,
-              "mean_interval_width_pct": 79.8
+              "mean_interval_width": 145114.1511,
+              "mean_interval_width_pct": 75.37
             },
             "roas": {
               "mae": 0.03,
               "rmse": 0.05,
               "mape": 0.81,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.3417,
-              "mean_interval_width_pct": 32.41
+              "mean_interval_width": 1.2656,
+              "mean_interval_width_pct": 30.58
             },
             "roas_mae": 0.03,
             "roas_rmse": 0.05,
@@ -1256,23 +1256,23 @@
             "rmse": 42531.69,
             "mape": 17.22,
             "interval_coverage": 100.0,
-            "mean_interval_width": 142929.9422,
-            "mean_interval_width_pct": 72.0,
+            "mean_interval_width": 134989.3894,
+            "mean_interval_width_pct": 68.0,
             "revenue": {
               "mae": 29820.43,
               "rmse": 42531.69,
               "mape": 17.22,
               "interval_coverage": 100.0,
-              "mean_interval_width": 142929.9422,
-              "mean_interval_width_pct": 72.0
+              "mean_interval_width": 134989.3894,
+              "mean_interval_width_pct": 68.0
             },
             "roas": {
               "mae": 0.05,
               "rmse": 0.06,
               "mape": 1.14,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.3439,
-              "mean_interval_width_pct": 32.42
+              "mean_interval_width": 1.2694,
+              "mean_interval_width_pct": 30.64
             },
             "roas_mae": 0.05,
             "roas_rmse": 0.06,
@@ -1308,23 +1308,23 @@
         "rmse": 29506.8,
         "mape": 9.54,
         "interval_coverage": 100.0,
-        "mean_interval_width": 152284.8785,
-        "mean_interval_width_pct": 79.8,
+        "mean_interval_width": 143824.6074,
+        "mean_interval_width_pct": 75.37,
         "revenue": {
           "mae": 17906.95,
           "rmse": 29506.8,
           "mape": 9.54,
           "interval_coverage": 100.0,
-          "mean_interval_width": 152284.8785,
-          "mean_interval_width_pct": 79.8
+          "mean_interval_width": 143824.6074,
+          "mean_interval_width_pct": 75.37
         },
         "roas": {
           "mae": 0.04,
           "rmse": 0.05,
           "mape": 1.11,
           "interval_coverage": 100.0,
-          "mean_interval_width": 1.3435,
-          "mean_interval_width_pct": 32.39
+          "mean_interval_width": 1.2702,
+          "mean_interval_width_pct": 30.63
         },
         "roas_mae": 0.04,
         "roas_rmse": 0.05,
@@ -1336,23 +1336,23 @@
         "rmse": 29506.8,
         "mape": 9.54,
         "interval_coverage": 100.0,
-        "mean_interval_width": 141659.8146,
-        "mean_interval_width_pct": 72.0,
+        "mean_interval_width": 133789.8243,
+        "mean_interval_width_pct": 68.0,
         "revenue": {
           "mae": 17906.95,
           "rmse": 29506.8,
           "mape": 9.54,
           "interval_coverage": 100.0,
-          "mean_interval_width": 141659.8146,
-          "mean_interval_width_pct": 72.0
+          "mean_interval_width": 133789.8243,
+          "mean_interval_width_pct": 68.0
         },
         "roas": {
           "mae": 0.06,
           "rmse": 0.07,
           "mape": 1.51,
           "interval_coverage": 100.0,
-          "mean_interval_width": 1.3496,
-          "mean_interval_width_pct": 32.4
+          "mean_interval_width": 1.2741,
+          "mean_interval_width_pct": 30.59
         },
         "roas_mae": 0.06,
         "roas_rmse": 0.07,
@@ -1363,46 +1363,46 @@
         "overall": {
           "segments_evaluated": 3,
           "trained_revenue_coverage": 100.0,
-          "trained_revenue_width_pct": 72.0,
+          "trained_revenue_width_pct": 68.0,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 32.33,
+          "trained_roas_width_pct": 30.61,
           "safe_revenue_coverage": 100.0,
-          "safe_revenue_width_pct": 72.0,
+          "safe_revenue_width_pct": 68.0,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 32.38
+          "safe_roas_width_pct": 30.51
         },
         "channel": {
           "segments_evaluated": 9,
           "trained_revenue_coverage": 100.0,
-          "trained_revenue_width_pct": 75.6,
+          "trained_revenue_width_pct": 71.4,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 32.44,
+          "trained_roas_width_pct": 30.6,
           "safe_revenue_coverage": 100.0,
-          "safe_revenue_width_pct": 72.0,
+          "safe_revenue_width_pct": 68.0,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 32.35
+          "safe_roas_width_pct": 30.6
         },
         "campaign_type": {
           "segments_evaluated": 18,
           "trained_revenue_coverage": 100.0,
-          "trained_revenue_width_pct": 79.2,
+          "trained_revenue_width_pct": 74.8,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 32.39,
+          "trained_roas_width_pct": 30.64,
           "safe_revenue_coverage": 100.0,
-          "safe_revenue_width_pct": 72.0,
+          "safe_revenue_width_pct": 68.0,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 32.4
+          "safe_roas_width_pct": 30.6
         },
         "campaign": {
           "segments_evaluated": 24,
           "trained_revenue_coverage": 100.0,
-          "trained_revenue_width_pct": 82.8,
+          "trained_revenue_width_pct": 78.2,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 32.39,
+          "trained_roas_width_pct": 30.63,
           "safe_revenue_coverage": 100.0,
-          "safe_revenue_width_pct": 72.0,
+          "safe_revenue_width_pct": 68.0,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 32.42
+          "safe_roas_width_pct": 30.59
         }
       },
       "segment_level_performance": {
@@ -1413,23 +1413,23 @@
             "rmse": 92879.43,
             "mape": 9.78,
             "interval_coverage": 100.0,
-            "mean_interval_width": 637400.3933,
-            "mean_interval_width_pct": 72.0,
+            "mean_interval_width": 601989.2533,
+            "mean_interval_width_pct": 68.0,
             "revenue": {
               "mae": 80484.17,
               "rmse": 92879.43,
               "mape": 9.78,
               "interval_coverage": 100.0,
-              "mean_interval_width": 637400.3933,
-              "mean_interval_width_pct": 72.0
+              "mean_interval_width": 601989.2533,
+              "mean_interval_width_pct": 68.0
             },
             "roas": {
               "mae": 0.03,
               "rmse": 0.03,
               "mape": 0.63,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.32,
-              "mean_interval_width_pct": 32.33
+              "mean_interval_width": 1.25,
+              "mean_interval_width_pct": 30.61
             },
             "roas_mae": 0.03,
             "roas_rmse": 0.03,
@@ -1441,23 +1441,23 @@
             "rmse": 92879.43,
             "mape": 9.78,
             "interval_coverage": 100.0,
-            "mean_interval_width": 637400.3933,
-            "mean_interval_width_pct": 72.0,
+            "mean_interval_width": 601989.2533,
+            "mean_interval_width_pct": 68.0,
             "revenue": {
               "mae": 80484.17,
               "rmse": 92879.43,
               "mape": 9.78,
               "interval_coverage": 100.0,
-              "mean_interval_width": 637400.3933,
-              "mean_interval_width_pct": 72.0
+              "mean_interval_width": 601989.2533,
+              "mean_interval_width_pct": 68.0
             },
             "roas": {
               "mae": 0.04,
               "rmse": 0.05,
               "mape": 0.96,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.3267,
-              "mean_interval_width_pct": 32.38
+              "mean_interval_width": 1.25,
+              "mean_interval_width_pct": 30.51
             },
             "roas_mae": 0.04,
             "roas_rmse": 0.05,
@@ -1492,23 +1492,23 @@
             "rmse": 35911.25,
             "mape": 9.58,
             "interval_coverage": 100.0,
-            "mean_interval_width": 223110.1689,
-            "mean_interval_width_pct": 75.6,
+            "mean_interval_width": 210715.1556,
+            "mean_interval_width_pct": 71.4,
             "revenue": {
               "mae": 26821.95,
               "rmse": 35911.25,
               "mape": 9.58,
               "interval_coverage": 100.0,
-              "mean_interval_width": 223110.1689,
-              "mean_interval_width_pct": 75.6
+              "mean_interval_width": 210715.1556,
+              "mean_interval_width_pct": 71.4
             },
             "roas": {
               "mae": 0.04,
               "rmse": 0.05,
               "mape": 1.0,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.4122,
-              "mean_interval_width_pct": 32.44
+              "mean_interval_width": 1.3322,
+              "mean_interval_width_pct": 30.6
             },
             "roas_mae": 0.04,
             "roas_rmse": 0.05,
@@ -1520,23 +1520,23 @@
             "rmse": 35911.25,
             "mape": 9.58,
             "interval_coverage": 100.0,
-            "mean_interval_width": 212485.8744,
-            "mean_interval_width_pct": 72.0,
+            "mean_interval_width": 200681.1033,
+            "mean_interval_width_pct": 68.0,
             "revenue": {
               "mae": 26821.95,
               "rmse": 35911.25,
               "mape": 9.58,
               "interval_coverage": 100.0,
-              "mean_interval_width": 212485.8744,
-              "mean_interval_width_pct": 72.0
+              "mean_interval_width": 200681.1033,
+              "mean_interval_width_pct": 68.0
             },
             "roas": {
               "mae": 0.05,
               "rmse": 0.06,
               "mape": 1.23,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.4167,
-              "mean_interval_width_pct": 32.35
+              "mean_interval_width": 1.3389,
+              "mean_interval_width_pct": 30.6
             },
             "roas_mae": 0.05,
             "roas_rmse": 0.06,
@@ -1571,23 +1571,23 @@
             "rmse": 17467.21,
             "mape": 9.4,
             "interval_coverage": 100.0,
-            "mean_interval_width": 116873.1944,
-            "mean_interval_width_pct": 79.2,
+            "mean_interval_width": 110380.2389,
+            "mean_interval_width_pct": 74.8,
             "revenue": {
               "mae": 13414.36,
               "rmse": 17467.21,
               "mape": 9.4,
               "interval_coverage": 100.0,
-              "mean_interval_width": 116873.1944,
-              "mean_interval_width_pct": 79.2
+              "mean_interval_width": 110380.2389,
+              "mean_interval_width_pct": 74.8
             },
             "roas": {
               "mae": 0.04,
               "rmse": 0.05,
               "mape": 1.23,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.2661,
-              "mean_interval_width_pct": 32.39
+              "mean_interval_width": 1.1978,
+              "mean_interval_width_pct": 30.64
             },
             "roas_mae": 0.04,
             "roas_rmse": 0.05,
@@ -1599,23 +1599,23 @@
             "rmse": 17467.21,
             "mape": 9.4,
             "interval_coverage": 100.0,
-            "mean_interval_width": 106248.36,
-            "mean_interval_width_pct": 72.0,
+            "mean_interval_width": 100345.6739,
+            "mean_interval_width_pct": 68.0,
             "revenue": {
               "mae": 13414.36,
               "rmse": 17467.21,
               "mape": 9.4,
               "interval_coverage": 100.0,
-              "mean_interval_width": 106248.36,
-              "mean_interval_width_pct": 72.0
+              "mean_interval_width": 100345.6739,
+              "mean_interval_width_pct": 68.0
             },
             "roas": {
               "mae": 0.06,
               "rmse": 0.07,
               "mape": 1.54,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.2706,
-              "mean_interval_width_pct": 32.4
+              "mean_interval_width": 1.2,
+              "mean_interval_width_pct": 30.6
             },
             "roas_mae": 0.06,
             "roas_rmse": 0.07,
@@ -1650,23 +1650,23 @@
             "rmse": 12969.49,
             "mape": 9.6,
             "interval_coverage": 100.0,
-            "mean_interval_width": 91644.7183,
-            "mean_interval_width_pct": 82.8,
+            "mean_interval_width": 86553.3475,
+            "mean_interval_width_pct": 78.2,
             "revenue": {
               "mae": 10111.12,
               "rmse": 12969.49,
               "mape": 9.6,
               "interval_coverage": 100.0,
-              "mean_interval_width": 91644.7183,
-              "mean_interval_width_pct": 82.8
+              "mean_interval_width": 86553.3475,
+              "mean_interval_width_pct": 78.2
             },
             "roas": {
               "mae": 0.04,
               "rmse": 0.06,
               "mape": 1.12,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.3788,
-              "mean_interval_width_pct": 32.39
+              "mean_interval_width": 1.3038,
+              "mean_interval_width_pct": 30.63
             },
             "roas_mae": 0.04,
             "roas_rmse": 0.06,
@@ -1678,23 +1678,23 @@
             "rmse": 12969.49,
             "mape": 9.6,
             "interval_coverage": 100.0,
-            "mean_interval_width": 79691.0608,
-            "mean_interval_width_pct": 72.0,
+            "mean_interval_width": 75263.7787,
+            "mean_interval_width_pct": 68.0,
             "revenue": {
               "mae": 10111.12,
               "rmse": 12969.49,
               "mape": 9.6,
               "interval_coverage": 100.0,
-              "mean_interval_width": 79691.0608,
-              "mean_interval_width_pct": 72.0
+              "mean_interval_width": 75263.7787,
+              "mean_interval_width_pct": 68.0
             },
             "roas": {
               "mae": 0.07,
               "rmse": 0.08,
               "mape": 1.66,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.3867,
-              "mean_interval_width_pct": 32.42
+              "mean_interval_width": 1.3083,
+              "mean_interval_width_pct": 30.59
             },
             "roas_mae": 0.07,
             "roas_rmse": 0.08,
@@ -1730,23 +1730,23 @@
           "rmse": 25640.2433,
           "mape": 9.5433,
           "interval_coverage": 100.0,
-          "mean_interval_width": 152284.8785,
-          "mean_interval_width_pct": 79.8,
+          "mean_interval_width": 143824.6074,
+          "mean_interval_width_pct": 75.37,
           "revenue": {
             "mae": 17906.95,
             "rmse": 25640.2433,
             "mape": 9.5433,
             "interval_coverage": 100.0,
-            "mean_interval_width": 152284.8785,
-            "mean_interval_width_pct": 79.8
+            "mean_interval_width": 143824.6074,
+            "mean_interval_width_pct": 75.37
           },
           "roas": {
             "mae": 0.04,
             "rmse": 0.0533,
             "mape": 1.11,
             "interval_coverage": 100.0,
-            "mean_interval_width": 1.3435,
-            "mean_interval_width_pct": 32.3933
+            "mean_interval_width": 1.2702,
+            "mean_interval_width_pct": 30.63
           },
           "roas_mae": 0.04,
           "roas_rmse": 0.0533,
@@ -1758,23 +1758,23 @@
           "rmse": 25640.2433,
           "mape": 9.5433,
           "interval_coverage": 100.0,
-          "mean_interval_width": 141659.8146,
-          "mean_interval_width_pct": 72.0,
+          "mean_interval_width": 133789.8242,
+          "mean_interval_width_pct": 68.0,
           "revenue": {
             "mae": 17906.95,
             "rmse": 25640.2433,
             "mape": 9.5433,
             "interval_coverage": 100.0,
-            "mean_interval_width": 141659.8146,
-            "mean_interval_width_pct": 72.0
+            "mean_interval_width": 133789.8242,
+            "mean_interval_width_pct": 68.0
           },
           "roas": {
             "mae": 0.06,
             "rmse": 0.07,
             "mape": 1.51,
             "interval_coverage": 100.0,
-            "mean_interval_width": 1.3496,
-            "mean_interval_width_pct": 32.3967
+            "mean_interval_width": 1.2741,
+            "mean_interval_width_pct": 30.5867
           },
           "roas_mae": 0.06,
           "roas_rmse": 0.07,
@@ -1827,23 +1827,23 @@
             "rmse": 18642.51,
             "mape": 4.4,
             "interval_coverage": 100.0,
-            "mean_interval_width": 293434.5956,
-            "mean_interval_width_pct": 99.75,
+            "mean_interval_width": 260830.7522,
+            "mean_interval_width_pct": 88.67,
             "revenue": {
               "mae": 13145.11,
               "rmse": 18642.51,
               "mape": 4.4,
               "interval_coverage": 100.0,
-              "mean_interval_width": 293434.5956,
-              "mean_interval_width_pct": 99.75
+              "mean_interval_width": 260830.7522,
+              "mean_interval_width_pct": 88.67
             },
             "roas": {
               "mae": 0.06,
               "rmse": 0.07,
               "mape": 1.66,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.6844,
-              "mean_interval_width_pct": 40.54
+              "mean_interval_width": 1.495,
+              "mean_interval_width_pct": 35.97
             },
             "roas_mae": 0.06,
             "roas_rmse": 0.07,
@@ -1855,23 +1855,23 @@
             "rmse": 18642.51,
             "mape": 4.4,
             "interval_coverage": 100.0,
-            "mean_interval_width": 272960.4178,
-            "mean_interval_width_pct": 90.0,
+            "mean_interval_width": 242631.48,
+            "mean_interval_width_pct": 80.0,
             "revenue": {
               "mae": 13145.11,
               "rmse": 18642.51,
               "mape": 4.4,
               "interval_coverage": 100.0,
-              "mean_interval_width": 272960.4178,
-              "mean_interval_width_pct": 90.0
+              "mean_interval_width": 242631.48,
+              "mean_interval_width_pct": 80.0
             },
             "roas": {
               "mae": 0.11,
               "rmse": 0.12,
               "mape": 2.73,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.6978,
-              "mean_interval_width_pct": 40.44
+              "mean_interval_width": 1.5111,
+              "mean_interval_width_pct": 36.01
             },
             "roas_mae": 0.11,
             "roas_rmse": 0.12,
@@ -1913,23 +1913,23 @@
             "rmse": 44385.7,
             "mape": 11.39,
             "interval_coverage": 100.0,
-            "mean_interval_width": 289234.95,
-            "mean_interval_width_pct": 99.75,
+            "mean_interval_width": 257097.7344,
+            "mean_interval_width_pct": 88.67,
             "revenue": {
               "mae": 31138.78,
               "rmse": 44385.7,
               "mape": 11.39,
               "interval_coverage": 100.0,
-              "mean_interval_width": 289234.95,
-              "mean_interval_width_pct": 99.75
+              "mean_interval_width": 257097.7344,
+              "mean_interval_width_pct": 88.67
             },
             "roas": {
               "mae": 0.1,
               "rmse": 0.14,
               "mape": 2.42,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.675,
-              "mean_interval_width_pct": 40.45
+              "mean_interval_width": 1.4928,
+              "mean_interval_width_pct": 36.03
             },
             "roas_mae": 0.1,
             "roas_rmse": 0.14,
@@ -1941,23 +1941,23 @@
             "rmse": 44385.7,
             "mape": 11.39,
             "interval_coverage": 100.0,
-            "mean_interval_width": 269054.2206,
-            "mean_interval_width_pct": 90.0,
+            "mean_interval_width": 239159.3067,
+            "mean_interval_width_pct": 80.0,
             "revenue": {
               "mae": 31138.78,
               "rmse": 44385.7,
               "mape": 11.39,
               "interval_coverage": 100.0,
-              "mean_interval_width": 269054.2206,
-              "mean_interval_width_pct": 90.0
+              "mean_interval_width": 239159.3067,
+              "mean_interval_width_pct": 80.0
             },
             "roas": {
               "mae": 0.06,
               "rmse": 0.07,
               "mape": 1.41,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.685,
-              "mean_interval_width_pct": 40.52
+              "mean_interval_width": 1.4944,
+              "mean_interval_width_pct": 35.94
             },
             "roas_mae": 0.06,
             "roas_rmse": 0.07,
@@ -1999,23 +1999,23 @@
         "rmse": 34041.4,
         "mape": 7.89,
         "interval_coverage": 100.0,
-        "mean_interval_width": 291334.7728,
-        "mean_interval_width_pct": 99.75,
+        "mean_interval_width": 258964.2433,
+        "mean_interval_width_pct": 88.67,
         "revenue": {
           "mae": 22141.94,
           "rmse": 34041.4,
           "mape": 7.89,
           "interval_coverage": 100.0,
-          "mean_interval_width": 291334.7728,
-          "mean_interval_width_pct": 99.75
+          "mean_interval_width": 258964.2433,
+          "mean_interval_width_pct": 88.67
         },
         "roas": {
           "mae": 0.08,
           "rmse": 0.11,
           "mape": 2.04,
           "interval_coverage": 100.0,
-          "mean_interval_width": 1.6797,
-          "mean_interval_width_pct": 40.49
+          "mean_interval_width": 1.4939,
+          "mean_interval_width_pct": 36.0
         },
         "roas_mae": 0.08,
         "roas_rmse": 0.11,
@@ -2027,23 +2027,23 @@
         "rmse": 34041.4,
         "mape": 7.89,
         "interval_coverage": 100.0,
-        "mean_interval_width": 271007.3192,
-        "mean_interval_width_pct": 90.0,
+        "mean_interval_width": 240895.3933,
+        "mean_interval_width_pct": 80.0,
         "revenue": {
           "mae": 22141.94,
           "rmse": 34041.4,
           "mape": 7.89,
           "interval_coverage": 100.0,
-          "mean_interval_width": 271007.3192,
-          "mean_interval_width_pct": 90.0
+          "mean_interval_width": 240895.3933,
+          "mean_interval_width_pct": 80.0
         },
         "roas": {
           "mae": 0.08,
           "rmse": 0.1,
           "mape": 2.07,
           "interval_coverage": 100.0,
-          "mean_interval_width": 1.6914,
-          "mean_interval_width_pct": 40.48
+          "mean_interval_width": 1.5028,
+          "mean_interval_width_pct": 35.97
         },
         "roas_mae": 0.08,
         "roas_rmse": 0.1,
@@ -2054,46 +2054,46 @@
         "overall": {
           "segments_evaluated": 2,
           "trained_revenue_coverage": 100.0,
-          "trained_revenue_width_pct": 90.0,
+          "trained_revenue_width_pct": 80.0,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 40.47,
+          "trained_roas_width_pct": 36.04,
           "safe_revenue_coverage": 100.0,
-          "safe_revenue_width_pct": 90.0,
+          "safe_revenue_width_pct": 80.0,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 40.39
+          "safe_roas_width_pct": 36.01
         },
         "channel": {
           "segments_evaluated": 6,
           "trained_revenue_coverage": 100.0,
-          "trained_revenue_width_pct": 94.5,
+          "trained_revenue_width_pct": 84.0,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 40.49,
+          "trained_roas_width_pct": 35.94,
           "safe_revenue_coverage": 100.0,
-          "safe_revenue_width_pct": 90.0,
+          "safe_revenue_width_pct": 80.0,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 40.49
+          "safe_roas_width_pct": 36.04
         },
         "campaign_type": {
           "segments_evaluated": 12,
           "trained_revenue_coverage": 100.0,
-          "trained_revenue_width_pct": 99.0,
+          "trained_revenue_width_pct": 88.0,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 40.49,
+          "trained_roas_width_pct": 35.97,
           "safe_revenue_coverage": 100.0,
-          "safe_revenue_width_pct": 90.0,
+          "safe_revenue_width_pct": 80.0,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 40.49
+          "safe_roas_width_pct": 35.95
         },
         "campaign": {
           "segments_evaluated": 16,
           "trained_revenue_coverage": 100.0,
-          "trained_revenue_width_pct": 103.5,
+          "trained_revenue_width_pct": 92.0,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 40.5,
+          "trained_roas_width_pct": 36.04,
           "safe_revenue_coverage": 100.0,
-          "safe_revenue_width_pct": 90.0,
+          "safe_revenue_width_pct": 80.0,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 40.49
+          "safe_roas_width_pct": 35.96
         }
       },
       "segment_level_performance": {
@@ -2104,23 +2104,23 @@
             "rmse": 107467.14,
             "mape": 7.89,
             "interval_coverage": 100.0,
-            "mean_interval_width": 1219330.75,
-            "mean_interval_width_pct": 90.0,
+            "mean_interval_width": 1083849.55,
+            "mean_interval_width_pct": 80.0,
             "revenue": {
               "mae": 99640.51,
               "rmse": 107467.14,
               "mape": 7.89,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1219330.75,
-              "mean_interval_width_pct": 90.0
+              "mean_interval_width": 1083849.55,
+              "mean_interval_width_pct": 80.0
             },
             "roas": {
               "mae": 0.04,
               "rmse": 0.04,
               "mape": 0.91,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.645,
-              "mean_interval_width_pct": 40.47
+              "mean_interval_width": 1.465,
+              "mean_interval_width_pct": 36.04
             },
             "roas_mae": 0.04,
             "roas_rmse": 0.04,
@@ -2132,23 +2132,23 @@
             "rmse": 107467.14,
             "mape": 7.89,
             "interval_coverage": 100.0,
-            "mean_interval_width": 1219330.75,
-            "mean_interval_width_pct": 90.0,
+            "mean_interval_width": 1083849.555,
+            "mean_interval_width_pct": 80.0,
             "revenue": {
               "mae": 99640.51,
               "rmse": 107467.14,
               "mape": 7.89,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1219330.75,
-              "mean_interval_width_pct": 90.0
+              "mean_interval_width": 1083849.555,
+              "mean_interval_width_pct": 80.0
             },
             "roas": {
               "mae": 0.05,
               "rmse": 0.06,
               "mape": 1.3,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.66,
-              "mean_interval_width_pct": 40.39
+              "mean_interval_width": 1.48,
+              "mean_interval_width_pct": 36.01
             },
             "roas_mae": 0.05,
             "roas_rmse": 0.06,
@@ -2183,23 +2183,23 @@
             "rmse": 40939.45,
             "mape": 7.82,
             "interval_coverage": 100.0,
-            "mean_interval_width": 426816.51,
-            "mean_interval_width_pct": 94.5,
+            "mean_interval_width": 379392.4567,
+            "mean_interval_width_pct": 84.0,
             "revenue": {
               "mae": 33228.6,
               "rmse": 40939.45,
               "mape": 7.82,
               "interval_coverage": 100.0,
-              "mean_interval_width": 426816.51,
-              "mean_interval_width_pct": 94.5
+              "mean_interval_width": 379392.4567,
+              "mean_interval_width_pct": 84.0
             },
             "roas": {
               "mae": 0.05,
               "rmse": 0.07,
               "mape": 1.53,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.7683,
-              "mean_interval_width_pct": 40.49
+              "mean_interval_width": 1.57,
+              "mean_interval_width_pct": 35.94
             },
             "roas_mae": 0.05,
             "roas_rmse": 0.07,
@@ -2211,23 +2211,23 @@
             "rmse": 40939.45,
             "mape": 7.82,
             "interval_coverage": 100.0,
-            "mean_interval_width": 406491.9167,
-            "mean_interval_width_pct": 90.0,
+            "mean_interval_width": 361326.1483,
+            "mean_interval_width_pct": 80.0,
             "revenue": {
               "mae": 33228.6,
               "rmse": 40939.45,
               "mape": 7.82,
               "interval_coverage": 100.0,
-              "mean_interval_width": 406491.9167,
-              "mean_interval_width_pct": 90.0
+              "mean_interval_width": 361326.1483,
+              "mean_interval_width_pct": 80.0
             },
             "roas": {
               "mae": 0.04,
               "rmse": 0.05,
               "mape": 1.09,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.775,
-              "mean_interval_width_pct": 40.49
+              "mean_interval_width": 1.58,
+              "mean_interval_width_pct": 36.04
             },
             "roas_mae": 0.04,
             "roas_rmse": 0.05,
@@ -2262,23 +2262,23 @@
             "rmse": 20219.77,
             "mape": 7.91,
             "interval_coverage": 100.0,
-            "mean_interval_width": 223587.5167,
-            "mean_interval_width_pct": 99.0,
+            "mean_interval_width": 198744.4583,
+            "mean_interval_width_pct": 88.0,
             "revenue": {
               "mae": 16606.0,
               "rmse": 20219.77,
               "mape": 7.91,
               "interval_coverage": 100.0,
-              "mean_interval_width": 223587.5167,
-              "mean_interval_width_pct": 99.0
+              "mean_interval_width": 198744.4583,
+              "mean_interval_width_pct": 88.0
             },
             "roas": {
               "mae": 0.08,
               "rmse": 0.09,
               "mape": 2.05,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.5867,
-              "mean_interval_width_pct": 40.49
+              "mean_interval_width": 1.41,
+              "mean_interval_width_pct": 35.97
             },
             "roas_mae": 0.08,
             "roas_rmse": 0.09,
@@ -2290,23 +2290,23 @@
             "rmse": 20219.77,
             "mape": 7.91,
             "interval_coverage": 100.0,
-            "mean_interval_width": 203261.3775,
-            "mean_interval_width_pct": 90.0,
+            "mean_interval_width": 180676.7783,
+            "mean_interval_width_pct": 80.0,
             "revenue": {
               "mae": 16606.0,
               "rmse": 20219.77,
               "mape": 7.91,
               "interval_coverage": 100.0,
-              "mean_interval_width": 203261.3775,
-              "mean_interval_width_pct": 90.0
+              "mean_interval_width": 180676.7783,
+              "mean_interval_width_pct": 80.0
             },
             "roas": {
               "mae": 0.09,
               "rmse": 0.1,
               "mape": 2.32,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.5942,
-              "mean_interval_width_pct": 40.49
+              "mean_interval_width": 1.415,
+              "mean_interval_width_pct": 35.95
             },
             "roas_mae": 0.09,
             "roas_rmse": 0.1,
@@ -2341,23 +2341,23 @@
             "rmse": 15117.71,
             "mape": 7.9,
             "interval_coverage": 100.0,
-            "mean_interval_width": 175340.0663,
-            "mean_interval_width_pct": 103.5,
+            "mean_interval_width": 155857.8387,
+            "mean_interval_width_pct": 92.0,
             "revenue": {
               "mae": 12449.09,
               "rmse": 15117.71,
               "mape": 7.9,
               "interval_coverage": 100.0,
-              "mean_interval_width": 175340.0663,
-              "mean_interval_width_pct": 103.5
+              "mean_interval_width": 155857.8387,
+              "mean_interval_width_pct": 92.0
             },
             "roas": {
               "mae": 0.1,
               "rmse": 0.14,
               "mape": 2.37,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.7206,
-              "mean_interval_width_pct": 40.5
+              "mean_interval_width": 1.5319,
+              "mean_interval_width_pct": 36.04
             },
             "roas_mae": 0.1,
             "roas_rmse": 0.14,
@@ -2369,23 +2369,23 @@
             "rmse": 15117.71,
             "mape": 7.9,
             "interval_coverage": 100.0,
-            "mean_interval_width": 152469.6225,
-            "mean_interval_width_pct": 90.0,
+            "mean_interval_width": 135528.5512,
+            "mean_interval_width_pct": 80.0,
             "revenue": {
               "mae": 12449.09,
               "rmse": 15117.71,
               "mape": 7.9,
               "interval_coverage": 100.0,
-              "mean_interval_width": 152469.6225,
-              "mean_interval_width_pct": 90.0
+              "mean_interval_width": 135528.5512,
+              "mean_interval_width_pct": 80.0
             },
             "roas": {
               "mae": 0.1,
               "rmse": 0.11,
               "mape": 2.35,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.7369,
-              "mean_interval_width_pct": 40.49
+              "mean_interval_width": 1.5425,
+              "mean_interval_width_pct": 35.96
             },
             "roas_mae": 0.1,
             "roas_rmse": 0.11,
@@ -2421,23 +2421,23 @@
           "rmse": 31514.105,
           "mape": 7.895,
           "interval_coverage": 100.0,
-          "mean_interval_width": 291334.7728,
-          "mean_interval_width_pct": 99.75,
+          "mean_interval_width": 258964.2433,
+          "mean_interval_width_pct": 88.67,
           "revenue": {
             "mae": 22141.945,
             "rmse": 31514.105,
             "mape": 7.895,
             "interval_coverage": 100.0,
-            "mean_interval_width": 291334.7728,
-            "mean_interval_width_pct": 99.75
+            "mean_interval_width": 258964.2433,
+            "mean_interval_width_pct": 88.67
           },
           "roas": {
             "mae": 0.08,
             "rmse": 0.105,
             "mape": 2.04,
             "interval_coverage": 100.0,
-            "mean_interval_width": 1.6797,
-            "mean_interval_width_pct": 40.495
+            "mean_interval_width": 1.4939,
+            "mean_interval_width_pct": 36.0
           },
           "roas_mae": 0.08,
           "roas_rmse": 0.105,
@@ -2449,23 +2449,23 @@
           "rmse": 31514.105,
           "mape": 7.895,
           "interval_coverage": 100.0,
-          "mean_interval_width": 271007.3192,
-          "mean_interval_width_pct": 90.0,
+          "mean_interval_width": 240895.3933,
+          "mean_interval_width_pct": 80.0,
           "revenue": {
             "mae": 22141.945,
             "rmse": 31514.105,
             "mape": 7.895,
             "interval_coverage": 100.0,
-            "mean_interval_width": 271007.3192,
-            "mean_interval_width_pct": 90.0
+            "mean_interval_width": 240895.3933,
+            "mean_interval_width_pct": 80.0
           },
           "roas": {
             "mae": 0.085,
             "rmse": 0.095,
             "mape": 2.07,
             "interval_coverage": 100.0,
-            "mean_interval_width": 1.6914,
-            "mean_interval_width_pct": 40.48
+            "mean_interval_width": 1.5028,
+            "mean_interval_width_pct": 35.975
           },
           "roas_mae": 0.085,
           "roas_rmse": 0.095,

@@ -243,6 +243,41 @@ jobs:
           print("Optional live-AI flag fallback path OK")
           PY
 
+  pickle-compatibility-matrix:
+    name: Pickle compatibility / Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install evaluator dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Run committed pickle through offline evaluator
+        run: |
+          chmod +x run.sh
+          ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
+          python - <<'PY'
+          import pandas as pd
+          frame = pd.read_csv("output/predictions.csv")
+          modes = set(frame["model_type"].astype(str))
+          if modes != {"trained_model"}:
+              raise SystemExit(f"Expected only trained_model from committed pickle, got {sorted(modes)}")
+          if len(frame) != 54:
+              raise SystemExit(f"Expected 54 rows from committed sample data, got {len(frame)}")
+          print("Pickle compatibility OK:", len(frame), "rows", sorted(modes))
+          PY
+
   exact-sklearn-zero-fallback:
     name: Exact sklearn zero-fallback guard
     runs-on: ubuntu-latest
@@ -368,6 +403,7 @@ jobs:
           python -m compileall backend scripts tests -q
           python -m pytest
           python -m backend.backtest
+          python scripts/validate_budget_elasticity.py --data-dir data --output-dir reports
 
       - name: Run tests with coverage
         run: |

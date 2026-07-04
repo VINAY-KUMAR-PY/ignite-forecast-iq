@@ -154,21 +154,43 @@ def _estimate_event_effect(daily: pd.DataFrame, event: dict, window: int = 14) -
     roas_effect = (affected_post_roas - affected_pre_roas) - control_roas_change
     width = abs(upper_revenue - lower_revenue)
     effect_strength = _effect_strength(t_statistic, p_value, parallel["passed"], post_days)
+    ci_crosses_zero = lower_revenue <= 0 <= upper_revenue
+    min_power_days = 10
+    power_check_passed = (
+        len(affected_pre) >= min_power_days
+        and post_days >= min_power_days
+        and parallel["passed"]
+        and p_value <= 0.15
+        and not ci_crosses_zero
+    )
+    low_power_reasons: list[str] = []
+    if len(affected_pre) < min_power_days or post_days < min_power_days:
+        low_power_reasons.append(
+            f"minimum sample check failed: pre={len(affected_pre)}, post={post_days}, required={min_power_days}"
+        )
+    if p_value > 0.15:
+        low_power_reasons.append(f"p-value {p_value:.3f} exceeds 0.15")
+    if ci_crosses_zero:
+        low_power_reasons.append("95% confidence interval crosses zero")
+    if not parallel["passed"]:
+        low_power_reasons.append("parallel-trends check is weak")
     confidence = (
         "high"
-        if post_days >= 12 and parallel["passed"] and p_value <= 0.05 and width <= abs(incremental_revenue) * 2.5
+        if power_check_passed and post_days >= 12 and p_value <= 0.05 and width <= abs(incremental_revenue) * 2.5
         else "medium"
-        if post_days >= 8 and parallel["passed"] and p_value <= 0.15
+        if power_check_passed
         else "low"
     )
-    if lower_revenue <= 0 <= upper_revenue:
-        confidence = "low"
 
     return {
         "date": event_date.strftime("%Y-%m-%d"),
         "channel": channel,
         "metric": str(event.get("metric") or "revenue"),
         "method": "difference_in_differences",
+        "interventionDetected": bool(power_check_passed),
+        "statisticallySupported": bool(power_check_passed),
+        "powerCheckPassed": bool(power_check_passed),
+        "lowPowerReason": "; ".join(low_power_reasons) if low_power_reasons else "",
         "preWindowDays": int(len(affected_pre)),
         "postWindowDays": post_days,
         "incrementalRevenue": _round_money(incremental_revenue),
@@ -191,6 +213,7 @@ def _estimate_event_effect(daily: pd.DataFrame, event: dict, window: int = 14) -
             f"t={t_statistic:.2f}, p={p_value:.3f}; "
             f"parallel-trends check {'passed' if parallel['passed'] else 'is weak'} "
             f"({parallel['pct']:.1f}% pre-trend gap); observational difference-in-differences, "
+            f"{'statistically supported directional evidence' if power_check_passed else 'low-power directional diagnostic only'}; "
             "not proof of incrementality."
         ),
     }

@@ -268,8 +268,8 @@ residual volatility from rolling historical forecasts:
 | Horizon | Interval Multiplier | Floor (% of expected) | Confidence Z |
 |---|---|---|---|
 | 30 days | 0.70 | 30.0% | 0.95 |
-| 60 days | 0.90 | 36.0% | 1.00 |
-| 90 days | 1.10 | 45.0% | 1.10 |
+| 60 days | 0.90 | 34.0% | 1.00 |
+| 90 days | 1.10 | 40.0% | 1.10 |
 
 The earlier evaluator artifact produced 100.0% walk-forward revenue coverage at
 30, 60, and 90 days, which was safe but too wide for budget planning. The
@@ -279,7 +279,7 @@ guardrails. The residual-volatility table remains as a safety floor, and the
 monotonic enforcement pass still audits the final bands before CSV writing. The
 sample holdout remains fully covered because realized errors are small, but the
 committed sample intervals are materially narrower: overall 30/60/90-day widths
-are 60%, 72%, and 90%. The regenerated backtest includes both a final 30-day
+are 60%, 68%, and 80%. The regenerated backtest includes both a final 30-day
 holdout and rolling-origin fold averages across 30, 60, and 90-day horizons.
 
 The monotonic enforcement pass (in `backend/inference.py`) ensures that each
@@ -393,7 +393,7 @@ full MMM program.
 This section records objective verification evidence for reviewers. It replaces
 the older standalone evidence indexes.
 
-### Latest local verification (2026-07-03)
+### Latest local verification (2026-07-04)
 
 ```text
 Clean evaluator venv:
@@ -414,7 +414,7 @@ PASS causal summary: 4834 bytes, including OFFLINE_DETERMINISTIC_FALLBACK and DI
 PASS explainability notes: per segment/horizon recent trend, seasonality, ROAS stability, and confidence signals
 
 Backend tests:
-167 passed, 1 skipped, 7 warnings in 229.47s from a full local backend run with `requirements-app.txt`
+179 passed, 1 skipped, 7 warnings with 90.65% backend coverage from a full local backend run with `requirements-app.txt`
 
 Frontend validation:
 npm install: up to date, audited 567 packages in 2s; one low-severity
@@ -448,8 +448,8 @@ preventing silent bad predictions under reviewer-side dependency experiments.
   {30, 60, 90}, finite values, non-negative lower bounds, and monotonically
   widening interval widths across horizons.
 - Committed sample intervals are narrower and differentiated: overall
-  30/60/90-day widths are 60%, 72%, and 90%; row-level widths range from 60%
-  to 103.5%.
+  30/60/90-day widths are 60%, 68%, and 80%; row-level widths range from 60%
+  to 92.0%.
 - `data/fixtures` out-of-distribution evaluator runs emit trained-model rows
   for all 174 predictions; thin campaigns are marked low confidence rather
   than falling back solely because of small segment size.
@@ -466,6 +466,11 @@ preventing silent bad predictions under reviewer-side dependency experiments.
   lower marginal ROAS instead of scaling revenue linearly forever.
   Latest CLI budget validation: Google Ads 30-day ROAS was 5.09 at 0.5x recent
   budget, 4.59 at 1.0x, and 3.04 at 10x.
+- Budget elasticity validation: `scripts/validate_budget_elasticity.py` found
+  12 historical channel-month periods with at least 15% spend movement. The
+  concave response curve matched revenue direction in 100.00% of cases with
+  9.49% revenue-response MAPE and $10,066.39 MAE; see
+  `reports/budget_elasticity_summary.md`.
 - Large synthetic stress fixture: 50,400 rows completed the full `run.sh`
   evaluator path in 5.87 seconds on the local Windows/Git Bash environment
   using Python 3.14.4, producing a valid 12-column CSV with horizons {30, 60,
@@ -476,8 +481,8 @@ preventing silent bad predictions under reviewer-side dependency experiments.
 | Horizon | Successful folds | Trained revenue MAPE | Baseline revenue MAPE | Revenue coverage | Mean revenue interval width |
 |---:|---:|---:|---:|---:|---:|
 | 30 days | 3 | 2.23% | 3.15% | 100.0% | 66.5% |
-| 60 days | 3 | 9.54% | 9.54% | 100.0% | 79.8% |
-| 90 days | 2 | 7.89% | 7.89% | 100.0% | 99.75% |
+| 60 days | 3 | 9.54% | 9.54% | 100.0% | 75.37% |
+| 90 days | 2 | 7.89% | 7.89% | 100.0% | 88.67% |
 
 The third attempted 90-day fold is reported as an insufficient-history fold in
 `reports/backtest_summary.md` rather than being silently dropped. Coverage
@@ -495,10 +500,11 @@ overconfident relative to the 70-85% planning target used during calibration
 review; the sample holdout is too small and smooth to justify further
 tightening before hidden evaluation. Widths widen by
 horizon and by thinner segment grain: trained revenue width is 60.0-69.0% at
-30 days, 72.0-82.8% at 60 days, and 90.0-103.5% at 90 days. This is acceptable
-for hackathon evaluator safety, but production use should recalibrate bands on
-larger merchant-specific holdouts to tighten sharpness while preserving
-coverage.
+30 days, 68.0-78.2% at 60 days, and 80.0-92.0% at 90 days. This is a sharper
+planning range than the prior calibration while still retaining at least 90%
+coverage in the rolling-origin report. Production use should recalibrate bands
+on larger merchant-specific holdouts to tighten sharpness further while
+preserving coverage.
 
 ### Cross-Path Consistency & Adversarial Robustness
 
@@ -525,9 +531,13 @@ coverage.
 - SHAP attribution is live-API only; offline path uses lightweight model
   diagnostics.
 - Confidence intervals combine quantile regressors with residual guardrails and
-  should be recalibrated with production holdout data.
+  were tightened in the latest pass while preserving 90%+ walk-forward
+  coverage; they should still be recalibrated with production holdout data.
 - The model does not include promotions, inventory, pricing, or competitor
   signals.
+- Spend-response elasticity is validated on observed month-over-month channel
+  shifts, but it remains a concave planning assumption rather than experimental
+  incrementality.
 
 ## AI Reasoning Architecture
 

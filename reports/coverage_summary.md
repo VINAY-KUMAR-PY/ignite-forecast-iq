@@ -1,24 +1,24 @@
 # Backend Coverage Summary
 
-Generated: 2026-07-03T10:08:00+05:30 local validation run.
+Generated: 2026-07-04 local validation run.
 
 Command run:
 
 ```bash
-python -m pytest --cov=backend --cov-report=term --cov-report=xml
+python -m pytest tests/ -q --ignore=tests/e2e --cov=backend --cov-report=term-missing --cov-report=json --cov-fail-under=90.30
 ```
 
-Result: **156 passed, 1 skipped, 7 warnings**.
+Result: **179 passed, 1 skipped, 7 warnings**.
 
-Overall backend coverage: **90.97%** (3456/3799 lines).
+Overall backend coverage: **90.65%** (3859/4257 lines).
 
 | Module | Coverage |
 |---|---:|
-| `backend/decision_support.py` | 94.35% |
-| `backend/evaluator_io.py` | 89.66% |
-| `backend/gemini.py` | 92.47% |
-| `backend/inference.py` | 86.23% |
-| `backend/segment_utils.py` | 92.97% |
-| `backend/train.py` | 88.03% |
+| `backend/decision_support.py` | 94.07% |
+| `backend/evaluator_io.py` | 84.58% |
+| `backend/gemini.py` | 92.08% |
+| `backend/inference.py` | 87.56% |
+| `backend/segment_utils.py` | 93.75% |
+| `backend/train.py` | 88.19% |
 
-CI enforcement: `.github/workflows/evaluator-ci.yml` runs `pytest tests/ --cov=backend --cov-report=term-missing --cov-report=json --cov-fail-under=90`, so the build fails if aggregate backend coverage drops below 90%. It also fails if any high-risk module listed above drops below 75%.
+CI enforcement: `.github/workflows/evaluator-ci.yml` runs `pytest tests/ --cov=backend --cov-report=term-missing --cov-report=json --cov-fail-under=90.30`, so the build fails if aggregate backend coverage drops below 90.30%. It also fails if any high-risk module listed above drops below 75%.

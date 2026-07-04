@@ -4,6 +4,7 @@ from __future__ import annotations
 import subprocess
 import sys
 import tempfile
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -130,3 +131,39 @@ def test_roas_intervals_are_not_fixed_revenue_transforms():
         lower_delta = (revenue_lower_ratio - roas_lower_ratio).abs().max()
         upper_delta = (revenue_upper_ratio - roas_upper_ratio).abs().max()
         assert max(float(lower_delta), float(upper_delta)) > 0.02
+
+
+def test_tightened_long_horizon_widths_keep_monotonic_planning_bounds():
+    """Regression guard: 60/90d bands stay narrower than the earlier wide calibration."""
+    with tempfile.TemporaryDirectory() as tmp:
+        output = Path(tmp) / "predictions.csv"
+        result = subprocess.run(
+            [
+                sys.executable, "-m", "backend.predict",
+                "--data-dir", "./data",
+                "--model", "./pickle/model.pkl",
+                "--output", str(output),
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=120,
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+
+        df = pd.read_csv(output)
+        overall = df[df["level"] == "overall"].set_index("horizon_days")
+        w30 = float(overall.loc[30, "interval_width_pct"])
+        w60 = float(overall.loc[60, "interval_width_pct"])
+        w90 = float(overall.loc[90, "interval_width_pct"])
+
+        assert w30 < w60 < w90
+        assert w60 <= 70.0
+        assert w90 <= 82.0
+
+
+def test_backtest_report_keeps_tightened_interval_coverage_above_90_percent():
+    report = json.loads(Path("reports/backtest_report.json").read_text(encoding="utf-8"))
+    for item in report["per_horizon_performance"]:
+        coverage = float(item["trained_model_metrics"]["interval_coverage"])
+        assert coverage >= 90.0, f"{item['horizon_days']}d coverage dropped below 90%: {coverage}"

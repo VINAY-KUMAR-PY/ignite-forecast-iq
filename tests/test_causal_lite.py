@@ -90,6 +90,9 @@ class CausalLiteTests(unittest.TestCase):
         self.assertEqual(estimate["effectDirection"], "positive")
         self.assertGreater(estimate["incrementalRevenue"], 0)
         self.assertLess(estimate["pValue"], 0.15)
+        self.assertTrue(estimate["interventionDetected"])
+        self.assertTrue(estimate["powerCheckPassed"])
+        self.assertEqual(estimate["lowPowerReason"], "")
         self.assertAlmostEqual(estimate["incrementalRevenue"], expected_incremental, delta=expected_incremental * 0.12)
         self.assertTrue(estimate["parallelTrendPassed"])
         self.assertLessEqual(estimate["lowerRevenue"], estimate["incrementalRevenue"])
@@ -122,6 +125,9 @@ class CausalLiteTests(unittest.TestCase):
         self.assertLessEqual(estimate["lowerRevenue"], 0)
         self.assertGreaterEqual(estimate["upperRevenue"], 0)
         self.assertEqual(estimate["confidence"], "low")
+        self.assertFalse(estimate["interventionDetected"])
+        self.assertFalse(estimate["powerCheckPassed"])
+        self.assertIn("confidence interval crosses zero", estimate["lowPowerReason"])
 
 
 if __name__ == "__main__":

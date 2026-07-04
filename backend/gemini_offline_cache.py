@@ -148,7 +148,12 @@ def build_structured_causal_evidence(
             strongest.get("roasEffect"), 0.0
         ) * 100
         campaign_type = str(channel_metric.get("campaign_type") or "mixed_campaign_types")
-        intervention_detected = True
+        intervention_detected = bool(
+            strongest.get(
+                "intervention_detected",
+                strongest.get("interventionDetected", strongest.get("statisticallySupported", True)),
+            )
+        )
         supporting_metrics = {
             "method": strongest.get("method") or "difference_in_differences",
             "event_date": strongest.get("date") or "unknown",
@@ -160,6 +165,8 @@ def build_structured_causal_evidence(
                 safe_float(strongest.get("upperRevenue"), 0.0),
             ],
             "parallel_trend_passed": bool(strongest.get("parallelTrendPassed")),
+            "power_check_passed": bool(strongest.get("powerCheckPassed", intervention_detected)),
+            "low_power_reason": str(strongest.get("lowPowerReason") or ""),
             "pre_window_days": int(safe_float(strongest.get("preWindowDays"), 0)),
             "post_window_days": int(safe_float(strongest.get("postWindowDays"), 0)),
             "anomaly_context": anomaly_text,
@@ -369,6 +376,8 @@ def _limitations(estimate: dict[str, Any], anomaly_text: str) -> list[str]:
         limitations.append("parallel-trends check is weak")
     if safe_float(estimate.get("pValue"), 1.0) > 0.15:
         limitations.append("p-value is not statistically strong")
+    if not bool(estimate.get("powerCheckPassed", True)):
+        limitations.append("minimum sample or power check did not pass")
     if "no material anomaly" in anomaly_text:
         limitations.append("no material anomaly supported the event timing")
     return limitations

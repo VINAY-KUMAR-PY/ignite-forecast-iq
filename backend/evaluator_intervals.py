@@ -16,7 +16,7 @@ from .evaluator_contract import safe_float
 DEFAULT_HORIZON_CONFIDENCE_Z = {"30": 0.95, "60": 1.00, "90": 1.10}
 DEFAULT_HORIZON_INTERVAL_MULTIPLIER = {"30": 0.70, "60": 0.90, "90": 1.10}
 LOW_SAMPLE_HORIZON_INTERVAL_MULTIPLIER = {"30": 0.85, "60": 1.00, "90": 1.20}
-HORIZON_INTERVAL_FLOOR_PCT = {30: 0.30, 60: 0.36, 90: 0.45}
+HORIZON_INTERVAL_FLOOR_PCT = {30: 0.30, 60: 0.34, 90: 0.40}
 
 
 def horizon_confidence_z(config: dict[str, Any], horizon: int, default: float = 1.64) -> float:

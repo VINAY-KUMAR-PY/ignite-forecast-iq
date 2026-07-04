@@ -475,14 +475,27 @@ def generate_offline_causal_summary(
             t_stat = safe_float(item.get("tStatistic"), 0.0)
             strength = safe_float(item.get("effectStrength"), 0.0)
             direction = "rose" if effect >= 0 else "fell"
+            detected = bool(
+                item.get(
+                    "interventionDetected",
+                    item.get("statisticallySupported", confidence.lower() != "low"),
+                )
+            )
+            implication = (
+                "supporting a statistically screened intervention hypothesis"
+                if detected
+                else "but the power check does not establish a real intervention; treat this as directional diagnostics only"
+            )
+            low_power_reason = str(item.get("lowPowerReason") or "").strip()
+            low_power_note = f" Power note: {low_power_reason}." if low_power_reason else ""
             causal_lines.append(
                 "  - {channel} on {date}: incremental revenue ${effect:,.0f} "
                 "(95% CI ${lower:,.0f} to ${upper:,.0f}), ROAS effect {roas:.2f}x, "
                 "confidence={confidence}, t={t_stat:.2f}, p={p_value:.3f}, strength={strength:.2f}. "
                 "Pre window: {pre_window}; post window: {post_window}. "
                 "{channel} revenue {direction} after the detected event on {date}, compared with "
-                "movement in control channels, suggesting the event had observable impact while "
-                "still requiring an experiment for proof.".format(
+                "movement in control channels, {implication} while "
+                "still requiring an experiment for proof.{low_power_note}".format(
                     channel=channel,
                     date=event_label,
                     effect=effect,
@@ -496,6 +509,8 @@ def generate_offline_causal_summary(
                     pre_window=pre_window,
                     post_window=post_window,
                     direction=direction,
+                    implication=implication,
+                    low_power_note=low_power_note,
                 )
             )
     else:
@@ -512,15 +527,32 @@ def generate_offline_causal_summary(
         strongest_channel = str(strongest.get("channel") or "Unknown Channel")
         strongest_effect = safe_float(strongest.get("incrementalRevenue"))
         strongest_confidence = str(strongest.get("confidence") or "low")
-        effect_direction = "lift" if strongest_effect >= 0 else "drag"
-        executive_interpretation = (
-            f"Executive interpretation: revenue is {revenue_direction} versus the trailing 30-day "
-            f"average by ${revenue_delta_dollars:,.0f} per day ({revenue_delta_pct:+.1f}%). "
-            f"The strongest observational DiD signal is {strongest_channel}, showing "
-            f"${strongest_effect:,.0f} of estimated revenue {effect_direction} "
-            f"({strongest_confidence} confidence), so the forecast range is anchored to a measured "
-            "channel movement rather than a generic trend."
+        strongest_detected = bool(
+            strongest.get(
+                "interventionDetected",
+                strongest.get("statisticallySupported", strongest_confidence.lower() != "low"),
+            )
         )
+        effect_direction = "lift" if strongest_effect >= 0 else "drag"
+        if strongest_detected:
+            executive_interpretation = (
+                f"Executive interpretation: revenue is {revenue_direction} versus the trailing 30-day "
+                f"average by ${revenue_delta_dollars:,.0f} per day ({revenue_delta_pct:+.1f}%). "
+                f"The strongest observational DiD signal is {strongest_channel}, showing "
+                f"${strongest_effect:,.0f} of estimated revenue {effect_direction} "
+                f"({strongest_confidence} confidence), so the forecast range is anchored to a measured "
+                "channel movement rather than a generic trend."
+            )
+        else:
+            reason = str(strongest.get("lowPowerReason") or "p-value/interval power check did not pass")
+            executive_interpretation = (
+                f"Executive interpretation: revenue is {revenue_direction} versus the trailing 30-day "
+                f"average by ${revenue_delta_dollars:,.0f} per day ({revenue_delta_pct:+.1f}%). "
+                f"The strongest observational DiD diagnostic is {strongest_channel}, with "
+                f"${strongest_effect:,.0f} of estimated revenue {effect_direction} "
+                f"({strongest_confidence} confidence), but ForecastIQ does not label it as a detected "
+                f"intervention because {reason}."
+            )
     elif top_anomalies:
         executive_interpretation = (
             f"Executive interpretation: revenue is {revenue_direction} versus the trailing 30-day "

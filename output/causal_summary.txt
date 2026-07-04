@@ -1,7 +1,7 @@
 AI mode: OFFLINE_DETERMINISTIC_FALLBACK (no live LLM call was made in this run; Gemini requires GEMINI_API_KEY and network access, disabled in the evaluator contract).
 AI interpretation mode: DISTILLED_LLM_DERIVED_OFFLINE_CACHE (distilled LLM-derived interpretation, selected offline, no live API call per no-network evaluator rule).
 === ForecastIQ Causal Summary (offline, deterministic) ===
-Distilled Gemini explanation skeleton: volatility_watch
+Distilled Gemini explanation skeleton: stable_run_rate
 Structured causal evidence object:
 {
   "baseline_roas": 2.9629,
@@ -11,11 +11,12 @@ Structured causal evidence object:
   "delta_percent": 1.6,
   "effect_direction": "positive",
   "effect_size": 2237.68,
-  "intervention_detected": true,
+  "intervention_detected": false,
   "limitations": [
     "observational DiD, not randomized incrementality",
     "95% confidence interval crosses zero",
-    "p-value is not statistically strong"
+    "p-value is not statistically strong",
+    "minimum sample or power check did not pass"
   ],
   "observed_roas": 2.9754,
   "primary_driver": {
@@ -31,25 +32,27 @@ Structured causal evidence object:
     ],
     "effect_strength": 0.787,
     "event_date": "2026-06-08",
+    "low_power_reason": "p-value 0.179 exceeds 0.15; 95% confidence interval crosses zero",
     "method": "difference_in_differences",
     "p_value": 0.1792,
     "parallel_trend_passed": true,
     "post_window_days": 10,
+    "power_check_passed": false,
     "pre_window_days": 14,
     "t_statistic": 1.343
   }
 }
 REASONING_TRACE
-  1. INPUT_EVIDENCE: channel=Meta Ads; campaign_type=Advantage+; intervention_detected=true; direction=positive; effect_size=$2,238; confidence=low; baseline_roas=2.96x; observed_roas=2.98x; delta=+1.6%
+  1. INPUT_EVIDENCE: channel=Meta Ads; campaign_type=Advantage+; intervention_detected=false; direction=positive; effect_size=$2,238; confidence=low; baseline_roas=2.96x; observed_roas=2.98x; delta=+1.6%
   2. STATISTICAL_CHECK: method=difference_in_differences; p=0.179; t=1.34; strength=0.79; CI=$-1,105 to $5,400; parallel_trend_passed=true
-  3. RULE_APPLICATION: weak confidence or CI crosses zero -> volatility_watch skeleton; selected_skeleton=volatility_watch
-  4. DRIVER_AND_LIMITATIONS: primary_driver=leading_roas Microsoft Ads (5.44x ROAS); limitations=observational DiD, not randomized incrementality; 95% confidence interval crosses zero; p-value is not statistically strong
+  3. RULE_APPLICATION: no intervention detected -> stable_run_rate skeleton unless budget context overrides; selected_skeleton=stable_run_rate
+  4. DRIVER_AND_LIMITATIONS: primary_driver=leading_roas Microsoft Ads (5.44x ROAS); limitations=observational DiD, not randomized incrementality; 95% confidence interval crosses zero; p-value is not statistically strong; minimum sample or power check did not pass
   5. FINAL_COMPOSITION: filled the selected distilled Gemini-authored skeleton with the runtime evidence above.
 Generated explanation:
-Meta Ads has a low confidence positive signal with estimated revenue effect $2,238. Observed ROAS is 2.98x versus baseline 2.96x, but the +1.6% delta is not strong enough to treat as proven incrementality.
-Evidence focus: supporting metrics: method=difference_in_differences, p=0.179, t=1.34, strength=0.79, CI=$-1,105 to $5,400, event=2026-06-08; primary driver: leading_roas Microsoft Ads (5.44x ROAS); intervention_detected=true
-Recommended action: Use the forecast interval as a planning guardrail, inspect the anomaly window, and avoid major reallocation until these limitations are resolved: observational DiD, not randomized incrementality; 95% confidence interval crosses zero; p-value is not statistically strong.
-Executive interpretation: revenue is flat versus the trailing 30-day average by $-193 per day (-1.2%). The strongest observational DiD signal is Meta Ads, showing $2,238 of estimated revenue lift (low confidence), so the forecast range is anchored to a measured channel movement rather than a generic trend.
+No dominant intervention is statistically strong, so Meta Ads is best treated as a run-rate planning case. Observed ROAS is 2.98x versus baseline 2.96x, delta +1.6%, with low confidence.
+Evidence focus: supporting metrics: method=difference_in_differences, p=0.179, t=1.34, strength=0.79, CI=$-1,105 to $5,400, event=2026-06-08; primary driver: leading_roas Microsoft Ads (5.44x ROAS); intervention_detected=false
+Recommended action: Keep allocations steady, refresh the forecast after the next campaign cycle, and use small tests only where ROAS is clearly above target; limitations: observational DiD, not randomized incrementality; 95% confidence interval crosses zero; p-value is not statistically strong; minimum sample or power check did not pass.
+Executive interpretation: revenue is flat versus the trailing 30-day average by $-193 per day (-1.2%). The strongest observational DiD diagnostic is Meta Ads, with $2,238 of estimated revenue lift (low confidence), but ForecastIQ does not label it as a detected intervention because p-value 0.179 exceeds 0.15; 95% confidence interval crosses zero.
 Historical period: 2025-08-22 to 2026-06-17 (300 days)
 Total spend: $1,027,759 | Total revenue: $4,170,596 | Blended ROAS: 4.06x
 Performance is stable (spend and revenue trends within +/-5% over recent 28 days).
@@ -61,9 +64,9 @@ Anomaly signals ranked by forecast relevance:
   - 2026-06-08 | Meta Ads | roas: actual=3.31, expected=2.94, z=2.5 (warning)
   - 2026-05-29 | Meta Ads | roas: actual=3.29, expected=2.94, z=2.8 (warning)
 Causal effect estimates (observational DiD, not experimental incrementality):
-  - Meta Ads on 2026-06-08: incremental revenue $2,238 (95% CI $-1,105 to $5,400), ROAS effect 0.16x, confidence=low, t=1.34, p=0.179, strength=0.79. Pre window: 2026-05-25 to 2026-06-07; post window: 2026-06-08 to 2026-06-17. Meta Ads revenue rose after the detected event on 2026-06-08, compared with movement in control channels, suggesting the event had observable impact while still requiring an experiment for proof.
-  - Google Ads on 2026-06-11: incremental revenue $-2,892 (95% CI $-6,306 to $1,192), ROAS effect -0.23x, confidence=low, t=-1.32, p=0.185, strength=0.54. Pre window: 2026-05-28 to 2026-06-10; post window: 2026-06-11 to 2026-06-17. Google Ads revenue fell after the detected event on 2026-06-11, compared with movement in control channels, suggesting the event had observable impact while still requiring an experiment for proof.
-  - Meta Ads on 2026-05-29: incremental revenue $1,344 (95% CI $-2,143 to $4,797), ROAS effect 0.13x, confidence=low, t=0.68, p=0.497, strength=0.34. Pre window: 2026-05-15 to 2026-05-28; post window: 2026-05-29 to 2026-06-11. Meta Ads revenue rose after the detected event on 2026-05-29, compared with movement in control channels, suggesting the event had observable impact while still requiring an experiment for proof.
+  - Meta Ads on 2026-06-08: incremental revenue $2,238 (95% CI $-1,105 to $5,400), ROAS effect 0.16x, confidence=low, t=1.34, p=0.179, strength=0.79. Pre window: 2026-05-25 to 2026-06-07; post window: 2026-06-08 to 2026-06-17. Meta Ads revenue rose after the detected event on 2026-06-08, compared with movement in control channels, but the power check does not establish a real intervention; treat this as directional diagnostics only while still requiring an experiment for proof. Power note: p-value 0.179 exceeds 0.15; 95% confidence interval crosses zero.
+  - Google Ads on 2026-06-11: incremental revenue $-2,892 (95% CI $-6,306 to $1,192), ROAS effect -0.23x, confidence=low, t=-1.32, p=0.185, strength=0.54. Pre window: 2026-05-28 to 2026-06-10; post window: 2026-06-11 to 2026-06-17. Google Ads revenue fell after the detected event on 2026-06-11, compared with movement in control channels, but the power check does not establish a real intervention; treat this as directional diagnostics only while still requiring an experiment for proof. Power note: minimum sample check failed: pre=14, post=7, required=10; p-value 0.185 exceeds 0.15; 95% confidence interval crosses zero.
+  - Meta Ads on 2026-05-29: incremental revenue $1,344 (95% CI $-2,143 to $4,797), ROAS effect 0.13x, confidence=low, t=0.68, p=0.497, strength=0.34. Pre window: 2026-05-15 to 2026-05-28; post window: 2026-05-29 to 2026-06-11. Meta Ads revenue rose after the detected event on 2026-05-29, compared with movement in control channels, but the power check does not establish a real intervention; treat this as directional diagnostics only while still requiring an experiment for proof. Power note: p-value 0.497 exceeds 0.15; 95% confidence interval crosses zero.
 Causal hypothesis (low confidence; directional only): Meta Ads is a diagnostic candidate because its ranked DiD strength is 0.79 (t=1.34, p=0.179) with estimated revenue effect $2,238, but the estimate should be de-emphasized until validated with a holdout or experiment.
 Competing explanation to test: seasonality and promotion cadence may be amplifying the channel signal; compare against a geo or audience holdout before treating it as incrementality.
 Action: if blended ROAS is above target, test incremental budget in the leading channel before reallocating away from stable performers.

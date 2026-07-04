@@ -66,6 +66,14 @@ def test_live_smoke_prompt_emphasizes_required_app_sections() -> None:
         assert key in prompt
 
 
+def test_evaluator_ci_does_not_invoke_live_network_gemini_scripts() -> None:
+    workflow = Path(".github/workflows/evaluator-ci.yml").read_text(encoding="utf-8")
+
+    assert "scripts/gemini_live_smoke.py" not in workflow
+    assert "scripts/verify_gemini_live.py" not in workflow
+    assert "gemini-live-smoke.yml" not in workflow
+
+
 def test_verify_live_exits_zero_for_provider_unavailable(tmp_path: Path) -> None:
     args = argparse.Namespace(
         data=Path("unused.csv"),

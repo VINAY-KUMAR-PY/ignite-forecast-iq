@@ -30,6 +30,10 @@ The default offline evaluator path is intentionally isolated: it uses `run.sh`, 
 
 For automated evaluation, `pickle/model.pkl` is the canonical offline artifact: `run.sh` scores it with the sklearn GradientBoostingRegressor path and writes `predictions.csv`. The live FastAPI app also exposes a richer XGBoost-powered product experience for interactive dashboards and explainability; both paths are benchmarked against the same deterministic baseline in `reports/backtest_summary.md`, so the evaluator evidence is representative of the broader forecasting quality.
 
+### Example Decision
+
+On the committed sample data, ForecastIQ reports a 90-day Meta Ads ROAS range of **2.48x-3.57x** and flags Google Ads underperformance as low-confidence directional evidence: Google Ads revenue fell after the June 11 event with **p=0.185**, so it is a diagnostic signal rather than proven incrementality. A marketer can test a controlled reallocation by moving **$10,000** from Google Ads to Microsoft Ads; the memory-safe spend-response simulator projects 90-day revenue moving from **$1,428,350** to **$1,434,421**, or about **$6,071** incremental revenue, while total spend stays unchanged.
+
 ## Evaluation Criteria Mapping
 
 | Criterion | Where to verify |

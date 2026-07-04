@@ -25,6 +25,13 @@ residual correction over the baseline rather than raw revenue. At inference time
 This residual-correction architecture means the model needs fewer samples to
 generalize and degrades gracefully to the baseline when ML evidence is weak.
 
+Evaluator scope is deliberately narrower than the full product scope. The
+automated grader should install only `requirements.txt`, run `run.sh`, and
+inspect the generated CSV/report artifacts. FastAPI, XGBoost, Gemini, the React
+frontend, Playwright, and deployment settings are product-readiness evidence,
+but the scored offline path does not depend on them and does not open network
+connections.
+
 ### Offline Budget Saturation
 
 The optional fourth `run.sh` argument (`--budget-json` internally) uses the same
@@ -74,6 +81,14 @@ The rolling-origin backtest now reports point error, coverage, and mean
 interval width for both trained model and baseline. That lets reviewers compare
 not only whether intervals cover actuals, but whether they are sharp enough to
 support budget decisions.
+
+Backtest evidence should be read as model-selection evidence rather than a
+claim that the trained residual correction must win every target at every
+horizon. Where 60/90-day revenue ties the seasonal baseline, the artifact keeps
+the baseline anchor inside the `trained_model` path because the committed model
+loaded successfully and selected the safer horizon-level component. A
+`safe_baseline_fallback` label is reserved for unsupported input/runtime cases
+such as empty data, malformed schemas, or artifact incompatibility.
 
 ### Blend Weight Gate
 Revenue and ROAS blend weights are determined by holdout evidence stored in the

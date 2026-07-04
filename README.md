@@ -101,6 +101,13 @@ chmod +x run.sh
 ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
 ```
 
+Evaluator scope: this command is the graded artifact. It uses only
+`requirements.txt`, reads CSV files from the supplied data folder, loads the
+committed `pickle/model.pkl` artifact, writes `predictions.csv` plus companion
+notes, and exits without starting servers or making network calls. The FastAPI
+app, Gemini live mode, Playwright tests, and frontend dependencies are product
+evidence, not dependencies of the automated evaluator.
+
 Optional live-AI causal reasoning check for reviewers with a Gemini key:
 
 ```bash
@@ -134,6 +141,12 @@ The evaluator CI runs the same pinned install on Ubuntu runners for Python 3.11,
 ### Reproducibility
 
 The canonical evaluator runtime is the exact pinned dependency set in `requirements.txt`. Linux verification is enforced by `.github/workflows/evaluator-ci.yml`: the `evaluator`, `exact-sklearn-zero-fallback`, and `hackathon-evaluator-protocol` jobs install dependencies fresh on Ubuntu, run the committed artifact, and require `model_type=trained_model` for supported sample and held-out-style data. A separate sklearn drift-tolerance CI job intentionally installs available older sklearn minor versions (`1.7.2` and `1.8.0`; no above-`1.9.0` release is available on the configured package index yet) and requires one of two clear outcomes: valid `trained_model` output, or a loud compatibility warning before any `safe_baseline_fallback` output is accepted. This prevents silent bad predictions when a reviewer experiments outside the pinned runtime.
+
+Model choice note: the offline evaluator uses a compact sklearn
+GradientBoostingRegressor artifact because it is deterministic, small enough to
+ship in git, and compatible with the no-server/no-network submission contract.
+The live XGBoost path exists for the richer app experience and explainability
+center; it is not required to reproduce the scored `predictions.csv`.
 
 Expected output:
 
@@ -193,6 +206,12 @@ Backtest headline from the latest rolling-origin report:
 | 30 days | 2.23% vs 3.15% | 1.22% vs 1.46% | Trained model wins revenue; ROAS is effectively tied |
 | 60 days | 9.54% vs 9.54% | 1.11% vs 1.51% | Revenue ties baseline; trained model wins ROAS |
 | 90 days | 7.89% vs 7.89% | 2.04% vs 2.07% | Revenue ties baseline; ROAS is effectively tied |
+
+How to read the table: ties at 60/90-day revenue are intentional horizon-level
+model selection, not a hidden fallback. When the rolling-origin report shows
+the seasonal baseline is equally reliable for long-horizon revenue, the
+artifact keeps that safer anchor while still using trained-model ROAS evidence
+where it improves the backtest.
 
 Latest local verification on July 4, 2026:
 

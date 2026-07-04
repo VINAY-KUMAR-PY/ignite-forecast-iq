@@ -1,14 +1,71 @@
 from __future__ import annotations
 
-from datetime import date
+import csv
+from datetime import date, timedelta
+from pathlib import Path
+import tempfile
 import unittest
 
 from backend.backtest import run_backtest
 
 
 class BacktestReportTests(unittest.TestCase):
+    def _write_compact_backtest_fixture(self, directory: Path, days: int = 150) -> None:
+        path = directory / "compact_campaigns.csv"
+        start = date(2025, 1, 1)
+        segments = [
+            ("Google Ads", "Search", "Brand Search", 4.8, 100.0),
+            ("Meta Ads", "Prospecting", "Lookalike Prospecting", 2.8, 85.0),
+            ("Microsoft Ads", "Shopping", "Bing Shopping", 4.1, 45.0),
+        ]
+        with path.open("w", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(
+                handle,
+                fieldnames=[
+                    "date",
+                    "channel",
+                    "campaign_type",
+                    "campaign_name",
+                    "spend",
+                    "clicks",
+                    "impressions",
+                    "conversions",
+                    "revenue",
+                ],
+            )
+            writer.writeheader()
+            for day in range(days):
+                for index, (channel, campaign_type, campaign_name, roas, base_spend) in enumerate(segments):
+                    weekly = 1 + ((day % 7) - 3) * 0.01
+                    trend = 1 + day / 2000
+                    spend = round(base_spend * weekly * trend, 2)
+                    revenue = round(spend * roas * (1 + (index * 0.01) + ((day % 11) * 0.002)), 2)
+                    clicks = int(spend * (1.8 + index * 0.15))
+                    writer.writerow(
+                        {
+                            "date": (start + timedelta(days=day)).isoformat(),
+                            "channel": channel,
+                            "campaign_type": campaign_type,
+                            "campaign_name": campaign_name,
+                            "spend": spend,
+                            "clicks": clicks,
+                            "impressions": clicks * (40 + index * 6),
+                            "conversions": round(max(1.0, clicks * (0.04 + index * 0.004)), 2),
+                            "revenue": revenue,
+                        }
+                    )
+
     def test_backtest_reports_revenue_and_roas_metrics(self) -> None:
-        report = run_backtest("data", holdout_days=30)
+        with tempfile.TemporaryDirectory() as tmp:
+            data_dir = Path(tmp)
+            self._write_compact_backtest_fixture(data_dir)
+            report = run_backtest(
+                data_dir,
+                holdout_days=30,
+                rolling_windows=0,
+                blend_weights=(0.0, 0.60),
+                roas_blend_weights=(0.0, 0.60),
+            )
 
         for group in ["trained_model_metrics", "safe_baseline_metrics"]:
             metrics = report[group]

@@ -30,7 +30,7 @@ from .predict import (
 )
 
 BLEND_WEIGHT_CANDIDATES = (0.0, 0.10, 0.25, 0.40, 0.50, 0.60)
-_BACKTEST_CACHE: dict[tuple[str, int, tuple[tuple[str, int, int], ...]], dict[str, Any]] = {}
+_BACKTEST_CACHE: dict[tuple[Any, ...], dict[str, Any]] = {}
 
 
 def _safe_float(value: Any, default: float = 0.0) -> float:
@@ -409,11 +409,12 @@ def _compare_roas_blend_weights(
     }
 
 
-def _walk_forward_horizon(frame: pd.DataFrame, horizon: int) -> dict[str, Any]:
+def _walk_forward_horizon(frame: pd.DataFrame, horizon: int, rolling_windows: int = 3) -> dict[str, Any]:
     max_date = frame["date_dt"].max()
     folds: list[dict[str, Any]] = []
     rows: list[dict[str, Any]] = []
-    for fold_index, offset in enumerate((0, horizon, horizon * 2), start=1):
+    offsets = [horizon * index for index in range(max(0, int(rolling_windows)))]
+    for fold_index, offset in enumerate(offsets, start=1):
         start = max_date - pd.Timedelta(days=horizon - 1 + offset)
         end = start + pd.Timedelta(days=horizon - 1)
         train_frame = frame[frame["date_dt"] < start].drop(columns=["date_dt"]).copy()
@@ -525,9 +526,17 @@ def _average_fold_metrics(folds: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def run_backtest(data_dir: str | Path = "data", holdout_days: int = 30) -> dict[str, Any]:
+def run_backtest(
+    data_dir: str | Path = "data",
+    holdout_days: int = 30,
+    rolling_windows: int = 3,
+    blend_weights: tuple[float, ...] = BLEND_WEIGHT_CANDIDATES,
+    roas_blend_weights: tuple[float, ...] = BLEND_WEIGHT_CANDIDATES,
+) -> dict[str, Any]:
     """Train on historical rows, score holdouts, and compare trained vs baseline behavior."""
-    cache_key = _backtest_cache_key(data_dir, holdout_days)
+    blend_weights = tuple(float(value) for value in blend_weights)
+    roas_blend_weights = tuple(float(value) for value in roas_blend_weights)
+    cache_key = _backtest_cache_key(data_dir, holdout_days, rolling_windows, blend_weights, roas_blend_weights)
     if cache_key in _BACKTEST_CACHE:
         return copy.deepcopy(_BACKTEST_CACHE[cache_key])
 
@@ -542,10 +551,20 @@ def run_backtest(data_dir: str | Path = "data", holdout_days: int = 30) -> dict[
 
     train_frame, test_frame = _split_holdout(frame, holdout_days)
     primary = _score_split(train_frame, test_frame, holdout_days)
-    blend_comparison, blend_recommendation = _compare_blend_weights(train_frame, test_frame, holdout_days)
-    roas_blend_comparison, roas_blend_recommendation = _compare_roas_blend_weights(train_frame, test_frame, holdout_days)
+    blend_comparison, blend_recommendation = _compare_blend_weights(
+        train_frame,
+        test_frame,
+        holdout_days,
+        weights=blend_weights,
+    )
+    roas_blend_comparison, roas_blend_recommendation = _compare_roas_blend_weights(
+        train_frame,
+        test_frame,
+        holdout_days,
+        weights=roas_blend_weights,
+    )
 
-    per_horizon = [_walk_forward_horizon(frame, horizon) for horizon in HORIZONS]
+    per_horizon = [_walk_forward_horizon(frame, horizon, rolling_windows=rolling_windows) for horizon in HORIZONS]
 
     report = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -573,7 +592,13 @@ def run_backtest(data_dir: str | Path = "data", holdout_days: int = 30) -> dict[
     return report
 
 
-def _backtest_cache_key(data_dir: str | Path, holdout_days: int) -> tuple[str, int, tuple[tuple[str, int, int], ...]]:
+def _backtest_cache_key(
+    data_dir: str | Path,
+    holdout_days: int,
+    rolling_windows: int = 3,
+    blend_weights: tuple[float, ...] = BLEND_WEIGHT_CANDIDATES,
+    roas_blend_weights: tuple[float, ...] = BLEND_WEIGHT_CANDIDATES,
+) -> tuple[Any, ...]:
     data_path = Path(data_dir)
     try:
         resolved = str(data_path.resolve())
@@ -587,7 +612,14 @@ def _backtest_cache_key(data_dir: str | Path, holdout_days: int) -> tuple[str, i
                 signature.append((file.name, int(stat.st_mtime_ns), int(stat.st_size)))
             except OSError:
                 signature.append((file.name, 0, 0))
-    return resolved, int(holdout_days), tuple(signature)
+    return (
+        resolved,
+        int(holdout_days),
+        int(rolling_windows),
+        tuple(float(value) for value in blend_weights),
+        tuple(float(value) for value in roas_blend_weights),
+        tuple(signature),
+    )
 
 
 def _environment_metadata() -> dict[str, str]:

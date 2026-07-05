@@ -1,6 +1,6 @@
 # ForecastIQ Backtest Summary
 
-Generated: 2026-07-05T15:17:47.517002+00:00
+Generated: 2026-07-05T16:19:56.042884+00:00
 
 ## Holdout Design
 
@@ -89,16 +89,17 @@ than overstating a point-estimate win.
 | 90 | REVENUE | 36 | 0.0 | 0.0 to 0.0 | 1.0 | Statistical tie |
 | 90 | ROAS | 36 | -0.0005 | -0.0274 to 0.025 | 0.95 | Statistical tie |
 
-## Bounded Revenue Accuracy Improvement Attempts
+## Revenue Configuration Review
 
-ForecastIQ rechecked two low-risk ways to close the revenue gap without
-switching model families or weakening the evaluator contract. The shipped
-configuration is retained only where the evidence supports it.
+ForecastIQ reviewed the already-computed blend sweep and round-2 paired-bootstrap
+evidence before deciding whether to change the revenue gate. No new engineered
+feature or ensemble prediction path was shipped in this pass; the section below
+documents why the current configuration remains the honest supported choice.
 
-| Attempt | Decision | Interpretation |
+| Review item | Decision | Interpretation |
 | --- | --- | --- |
-| weighted_blend_grid | not_shipped_as_global_change | The single final holdout prefers a lower uniform revenue blend, but this is only one market window. ForecastIQ keeps the horizon gate because the pooled paired-bootstrap evidence favors the trained 30-day signal and shows parity, not regression, at longer revenue horizons. |
-| paired_bootstrap_gate_review | keep_current_horizon_gate | Revenue bootstrap verdicts were 30d=trained_model, 60d=statistical_tie, 90d=statistical_tie. This supports keeping trained influence at 30 days and baseline anchoring at 60/90 days rather than forcing residual correction where the statistical evidence is a tie. |
+| existing_weighted_blend_grid | review_only_no_new_code_path | This is a review of the existing diagnostic blend sweep, not a newly shipped ensemble path. The single final holdout prefers a lower uniform revenue blend, but this is only one market window. ForecastIQ keeps the current horizon gate because the pooled paired-bootstrap evidence favors the trained 30-day signal and shows parity, not regression, at longer revenue horizons. |
+| round_2_paired_bootstrap_gate_evidence | keep_current_horizon_gate | This reviews the round-2 bootstrap verdicts rather than a new feature experiment. Revenue bootstrap verdicts were 30d=trained_model, 60d=statistical_tie, 90d=statistical_tie. This supports keeping trained influence at 30 days and baseline anchoring at 60/90 days rather than forcing residual correction where the statistical evidence is a tie. |
 
 ## Revenue Blend Weight Comparison
 

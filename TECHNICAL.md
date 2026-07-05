@@ -97,10 +97,11 @@ same fold/segment errors. On the committed sample, revenue is statistically
 favored at 30 days, revenue is a statistical tie at 60 and 90 days, ROAS is
 statistically favored at 60 days, and the other ROAS horizons are statistical
 ties. ForecastIQ therefore describes longer-horizon parity as an evidence-backed
-tie, not as an unqualified trained-model win. This pass also rechecked a uniform
-weighted-blend grid and a paired-bootstrap gate retune; neither justified
-changing the committed artifact because the pooled evidence already supports
-the current 30-day trained influence and 60/90-day baseline anchoring.
+tie, not as an unqualified trained-model win. The revenue configuration section
+in `reports/backtest_summary.md` is a review of already-computed evidence: the
+existing blend-weight sweep and the round-2 paired-bootstrap verdicts. No new
+feature or ensemble code path was tried in that review, so the conclusion is
+scoped as configuration confirmation rather than a negative-result experiment.
 
 ### Blend Weight Gate
 Revenue and ROAS blend weights are determined by holdout evidence stored in the

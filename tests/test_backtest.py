@@ -88,12 +88,16 @@ class BacktestReportTests(unittest.TestCase):
         self.assertIn("roas_blend_weight_comparison", report)
         self.assertTrue(report["roas_blend_weight_comparison"])
         self.assertIn("roas_blend_weight_recommendation", report)
-        self.assertIn("accuracy_improvement_attempts", report)
-        attempts = {item["attempt"]: item for item in report["accuracy_improvement_attempts"]}
-        self.assertIn("weighted_blend_grid", attempts)
-        self.assertIn("paired_bootstrap_gate_review", attempts)
-        self.assertIn("decision", attempts["weighted_blend_grid"])
-        self.assertIn("revenue_verdict_by_horizon", attempts["paired_bootstrap_gate_review"]["evidence"])
+        self.assertIn("revenue_configuration_review", report)
+        review = {item["review_item"]: item for item in report["revenue_configuration_review"]}
+        self.assertIn("existing_weighted_blend_grid", review)
+        self.assertIn("round_2_paired_bootstrap_gate_evidence", review)
+        self.assertIn("decision", review["existing_weighted_blend_grid"])
+        self.assertIn("review", review["existing_weighted_blend_grid"]["interpretation"].lower())
+        self.assertIn(
+            "revenue_verdict_by_horizon",
+            review["round_2_paired_bootstrap_gate_evidence"]["evidence"],
+        )
         self.assertIn("model_performance_evidence", report)
         evidence = report["model_performance_evidence"]
         self.assertIn(evidence["overall_winner"], {"trained_model", "safe_baseline_fallback", "mixed", "tie"})

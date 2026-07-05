@@ -181,12 +181,12 @@ def _paired_statistical_comparison(rows: list[dict[str, Any]]) -> dict[str, Any]
     }
 
 
-def _accuracy_improvement_attempts(
+def _revenue_configuration_review(
     blend_comparison: list[dict[str, Any]],
     blend_recommendation: dict[str, Any],
     per_horizon: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
-    """Record bounded model-improvement attempts without mutating the artifact blindly."""
+    """Record the evidence review used to keep or change revenue gating."""
     best_blend = min(blend_comparison, key=lambda item: (item["rmse"], item["mae"], item["mape"])) if blend_comparison else {}
     bootstrap_verdicts = {
         str(item["horizon_days"]): item.get("statistical_comparison", {}).get("revenue", {}).get("verdict", "unknown")
@@ -195,7 +195,7 @@ def _accuracy_improvement_attempts(
     bootstrap_summary = ", ".join(f"{horizon}d={verdict}" for horizon, verdict in bootstrap_verdicts.items())
     return [
         {
-            "attempt": "weighted_blend_grid",
+            "review_item": "existing_weighted_blend_grid",
             "scope": "Uniform trained-vs-baseline revenue blend over the primary 30-day holdout",
             "evidence": {
                 "candidate_weights": [item["revenue_model_weight"] for item in blend_comparison],
@@ -203,15 +203,16 @@ def _accuracy_improvement_attempts(
                 "current_primary_holdout_weight": blend_recommendation.get("current_revenue_model_weight"),
                 "selection_metric": blend_recommendation.get("selection_metric"),
             },
-            "decision": "not_shipped_as_global_change",
+            "decision": "review_only_no_new_code_path",
             "interpretation": (
+                "This is a review of the existing diagnostic blend sweep, not a newly shipped ensemble path. "
                 "The single final holdout prefers a lower uniform revenue blend, but this is only one market window. "
-                "ForecastIQ keeps the horizon gate because the pooled paired-bootstrap evidence favors the trained "
-                "30-day signal and shows parity, not regression, at longer revenue horizons."
+                "ForecastIQ keeps the current horizon gate because the pooled paired-bootstrap evidence favors "
+                "the trained 30-day signal and shows parity, not regression, at longer revenue horizons."
             ),
         },
         {
-            "attempt": "paired_bootstrap_gate_review",
+            "review_item": "round_2_paired_bootstrap_gate_evidence",
             "scope": "Retune per-horizon revenue gate using rolling-origin paired-bootstrap verdicts",
             "evidence": {
                 "revenue_verdict_by_horizon": bootstrap_verdicts,
@@ -222,6 +223,7 @@ def _accuracy_improvement_attempts(
             },
             "decision": "keep_current_horizon_gate",
             "interpretation": (
+                f"This reviews the round-2 bootstrap verdicts rather than a new feature experiment. "
                 f"Revenue bootstrap verdicts were {bootstrap_summary}. This supports keeping trained influence at "
                 "30 days and baseline anchoring at 60/90 days rather than forcing residual correction where the "
                 "statistical evidence is a tie."
@@ -717,7 +719,7 @@ def run_backtest(
     )
 
     per_horizon = [_walk_forward_horizon(frame, horizon, rolling_windows=rolling_windows) for horizon in HORIZONS]
-    accuracy_improvement_attempts = _accuracy_improvement_attempts(
+    revenue_configuration_review = _revenue_configuration_review(
         blend_comparison,
         blend_recommendation,
         per_horizon,
@@ -742,7 +744,7 @@ def run_backtest(
         "roas_blend_weight_comparison": roas_blend_comparison,
         "roas_blend_weight_recommendation": roas_blend_recommendation,
         "per_horizon_performance": per_horizon,
-        "accuracy_improvement_attempts": accuracy_improvement_attempts,
+        "revenue_configuration_review": revenue_configuration_review,
         "model_path_consistency": MODEL_PATH_CONSISTENCY,
         "recommendation": f'{blend_recommendation["recommendation"]} {roas_blend_recommendation["recommendation"]}',
         "rows": primary["rows"],
@@ -945,9 +947,9 @@ def _summary_markdown(report: dict[str, Any]) -> str:
         for target, stats in item.get("statistical_comparison", {}).items()
         if target in {"revenue", "roas"}
     )
-    attempt_rows = "\n".join(
-        f'| {item["attempt"]} | {item["decision"]} | {item["interpretation"]} |'
-        for item in report.get("accuracy_improvement_attempts", [])
+    review_rows = "\n".join(
+        f'| {item["review_item"]} | {item["decision"]} | {item["interpretation"]} |'
+        for item in report.get("revenue_configuration_review", [])
     )
     horizon_verdict_lines = "\n".join(
         "- {horizon}d: revenue {revenue}; ROAS {roas}.".format(
@@ -1067,15 +1069,16 @@ than overstating a point-estimate win.
 | ---: | --- | ---: | ---: | ---: | ---: | --- |
 {statistical_rows}
 
-## Bounded Revenue Accuracy Improvement Attempts
+## Revenue Configuration Review
 
-ForecastIQ rechecked two low-risk ways to close the revenue gap without
-switching model families or weakening the evaluator contract. The shipped
-configuration is retained only where the evidence supports it.
+ForecastIQ reviewed the already-computed blend sweep and round-2 paired-bootstrap
+evidence before deciding whether to change the revenue gate. No new engineered
+feature or ensemble prediction path was shipped in this pass; the section below
+documents why the current configuration remains the honest supported choice.
 
-| Attempt | Decision | Interpretation |
+| Review item | Decision | Interpretation |
 | --- | --- | --- |
-{attempt_rows}
+{review_rows}
 
 ## Revenue Blend Weight Comparison
 

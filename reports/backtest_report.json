@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-05T15:17:47.517002+00:00",
+  "generated_at": "2026-07-05T16:19:56.042884+00:00",
   "data_dir": "data",
   "holdout_days": 30,
   "train_rows": 2160,
@@ -2586,9 +2586,9 @@
       }
     }
   ],
-  "accuracy_improvement_attempts": [
+  "revenue_configuration_review": [
     {
-      "attempt": "weighted_blend_grid",
+      "review_item": "existing_weighted_blend_grid",
       "scope": "Uniform trained-vs-baseline revenue blend over the primary 30-day holdout",
       "evidence": {
         "candidate_weights": [
@@ -2603,11 +2603,11 @@
         "current_primary_holdout_weight": 0.6,
         "selection_metric": "lowest RMSE, then MAE, then MAPE"
       },
-      "decision": "not_shipped_as_global_change",
-      "interpretation": "The single final holdout prefers a lower uniform revenue blend, but this is only one market window. ForecastIQ keeps the horizon gate because the pooled paired-bootstrap evidence favors the trained 30-day signal and shows parity, not regression, at longer revenue horizons."
+      "decision": "review_only_no_new_code_path",
+      "interpretation": "This is a review of the existing diagnostic blend sweep, not a newly shipped ensemble path. The single final holdout prefers a lower uniform revenue blend, but this is only one market window. ForecastIQ keeps the current horizon gate because the pooled paired-bootstrap evidence favors the trained 30-day signal and shows parity, not regression, at longer revenue horizons."
     },
     {
-      "attempt": "paired_bootstrap_gate_review",
+      "review_item": "round_2_paired_bootstrap_gate_evidence",
       "scope": "Retune per-horizon revenue gate using rolling-origin paired-bootstrap verdicts",
       "evidence": {
         "revenue_verdict_by_horizon": {
@@ -2618,7 +2618,7 @@
         "decision_rule": "Use trained residual correction only when the paired-bootstrap interval favors trained model; use the seasonal baseline anchor when the verdict is a statistical tie or safe-baseline win."
       },
       "decision": "keep_current_horizon_gate",
-      "interpretation": "Revenue bootstrap verdicts were 30d=trained_model, 60d=statistical_tie, 90d=statistical_tie. This supports keeping trained influence at 30 days and baseline anchoring at 60/90 days rather than forcing residual correction where the statistical evidence is a tie."
+      "interpretation": "This reviews the round-2 bootstrap verdicts rather than a new feature experiment. Revenue bootstrap verdicts were 30d=trained_model, 60d=statistical_tie, 90d=statistical_tie. This supports keeping trained influence at 30 days and baseline anchoring at 60/90 days rather than forcing residual correction where the statistical evidence is a tie."
     }
   ],
   "model_path_consistency": {

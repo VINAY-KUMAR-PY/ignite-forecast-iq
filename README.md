@@ -11,13 +11,13 @@ Revenue MAPE is **2.23% / 9.54% / 7.89%** for 30/60/90 days; overall-level ROAS 
 Full tables: [reports/backtest_summary.md](./reports/backtest_summary.md).
 
 [![Evaluator CI](https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq/actions/workflows/evaluator-ci.yml/badge.svg)](https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq/actions/workflows/evaluator-ci.yml)
-[![Frontend CI](https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq/actions/workflows/frontend-ci.yml)
 
 ## Repository
 Clone: `git clone https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq.git`
 Live demo: https://ignite-forecast-iq.vercel.app
 
 Backend coverage: **92.04% measured locally** with `pytest tests/ -q --cov=backend --durations=10`; the Evaluator CI `Run tests with coverage` step enforces **90.30%** with `--cov-fail-under=90.30`.
+The canonical Evaluator CI workflow writes backend coverage and frontend validation snapshots to the GitHub Actions job summary on every run.
 
 ForecastIQ is an AI-powered ecommerce forecasting and budget-decision platform built for NetElixir AIgnition 3.0. It turns GA4, Shopify, Google Ads, Meta Ads, and Microsoft/Bing Ads CSV exports into revenue forecasts, ROAS forecasts, confidence intervals, budget simulations, anomaly signals, and an executive action brief.
 

@@ -92,6 +92,13 @@ loaded successfully and selected the safer horizon-level component. A
 `safe_baseline_fallback` label is reserved for unsupported input/runtime cases
 such as empty data, malformed schemas, or artifact incompatibility.
 
+The current report also includes a paired-bootstrap significance check over the
+same fold/segment errors. On the committed sample, revenue is statistically
+favored at 30 days, revenue is a statistical tie at 60 and 90 days, ROAS is
+statistically favored at 60 days, and the other ROAS horizons are statistical
+ties. ForecastIQ therefore describes longer-horizon parity as an evidence-backed
+tie, not as an unqualified trained-model win.
+
 ### Blend Weight Gate
 Revenue and ROAS blend weights are determined by holdout evidence stored in the
 artifact's `confidence` block. The 30-day revenue path uses the trained
@@ -416,6 +423,9 @@ also asserts the trained artifact remains active for sparse but valid data.
 
 - Existing channel-level attribution is treated as the source of truth; no
   custom attribution engine is built.
+- ForecastIQ does not perform multi-touch attribution and relies on
+  platform-reported conversion/revenue as authoritative per the brief's
+  source-of-truth constraint.
 - ROAS is `revenue / spend`; zero spend → `not_computable`.
 - Historical spend patterns are used as projected spend when no budget override
   is provided.

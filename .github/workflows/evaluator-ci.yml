@@ -488,6 +488,17 @@ jobs:
       - name: Reject high-severity production advisories
         run: npm audit --omit=dev --audit-level=high
 
+      - name: Publish frontend validation summary
+        if: always()
+        run: |
+          {
+            echo "## Frontend validation"
+            echo
+            echo "- npm unit tests: completed in the \`Run frontend unit tests\` step"
+            echo "- TypeScript, lint, and production build: completed in the \`Check frontend\` and \`Build frontend\` steps"
+            echo "- Production audit: high-severity advisories rejected by \`npm audit --omit=dev --audit-level=high\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
   e2e-demo:
     name: Playwright judge demo flow
     runs-on: ubuntu-latest

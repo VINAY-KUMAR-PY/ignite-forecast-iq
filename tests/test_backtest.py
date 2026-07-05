@@ -135,6 +135,20 @@ class BacktestReportTests(unittest.TestCase):
             self.assertEqual(item["rolling_origin_average_metrics"]["folds_averaged"], item["fold_count"])
             self.assertIn("trained_model_metrics", item["rolling_origin_average_metrics"])
             self.assertIn("safe_baseline_metrics", item["rolling_origin_average_metrics"])
+            self.assertIn("statistical_comparison", item)
+            comparison = item["statistical_comparison"]
+            self.assertEqual(comparison["method"], "paired_bootstrap_absolute_error_delta")
+            for target in ["revenue", "roas"]:
+                self.assertIn(target, comparison)
+                stats = comparison[target]
+                self.assertGreater(stats["sample_count"], 0)
+                self.assertEqual(len(stats["confidence_interval_95"]), 2)
+                self.assertGreaterEqual(stats["p_value"], 0)
+                self.assertLessEqual(stats["p_value"], 1)
+                self.assertIn(
+                    stats["verdict"],
+                    {"trained_model", "safe_baseline_fallback", "statistical_tie", "insufficient_samples"},
+                )
             successful_folds = [fold for fold in item["folds"] if "error" not in fold]
             chronological = sorted(successful_folds, key=lambda fold: fold["start_date"])
             for earlier, later in zip(chronological, chronological[1:]):

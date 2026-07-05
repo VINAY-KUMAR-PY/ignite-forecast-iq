@@ -89,6 +89,98 @@ def _target_metrics(rows: list[dict[str, Any]], prefix: str, target: str) -> dic
     }
 
 
+def _paired_bootstrap_comparison(
+    rows: list[dict[str, Any]],
+    target: str,
+    *,
+    iterations: int = 2000,
+    seed: int = 42,
+) -> dict[str, Any]:
+    """Compare trained and safe-baseline absolute errors with paired bootstrap.
+
+    The signed statistic is trained absolute error minus safe-baseline absolute
+    error, so negative values favor the trained model.
+    """
+    usable = [
+        row
+        for row in rows
+        if all(
+            key in row
+            for key in [
+                f"actual_{target}",
+                f"trained_expected_{target}",
+                f"safe_expected_{target}",
+            ]
+        )
+    ]
+    if not usable:
+        return {
+            "target": target,
+            "sample_count": 0,
+            "mean_absolute_error_delta": 0.0,
+            "confidence_interval_95": [0.0, 0.0],
+            "p_value": 1.0,
+            "verdict": "insufficient_samples",
+            "interpretation": "No paired rows were available for statistical comparison.",
+        }
+
+    actual = np.asarray([_safe_float(row[f"actual_{target}"]) for row in usable], dtype=float)
+    trained = np.asarray([_safe_float(row[f"trained_expected_{target}"]) for row in usable], dtype=float)
+    safe = np.asarray([_safe_float(row[f"safe_expected_{target}"]) for row in usable], dtype=float)
+    deltas = np.abs(actual - trained) - np.abs(actual - safe)
+    observed = float(np.mean(deltas))
+
+    if len(deltas) < 2 or math.isclose(float(np.std(deltas)), 0.0, abs_tol=1e-12):
+        ci = [observed, observed]
+        if observed < 0:
+            verdict = TRAINED_MODEL_TYPE
+        elif observed > 0:
+            verdict = SAFE_BASELINE_MODEL_TYPE
+        else:
+            verdict = "statistical_tie"
+        p_value = 1.0 if math.isclose(observed, 0.0, abs_tol=1e-12) else 0.0
+    else:
+        rng = np.random.default_rng(seed)
+        sample_indexes = rng.integers(0, len(deltas), size=(iterations, len(deltas)))
+        bootstrap_means = deltas[sample_indexes].mean(axis=1)
+        ci = [float(np.percentile(bootstrap_means, 2.5)), float(np.percentile(bootstrap_means, 97.5))]
+        p_value = min(1.0, 2.0 * min(float(np.mean(bootstrap_means <= 0)), float(np.mean(bootstrap_means >= 0))))
+        if ci[1] < 0:
+            verdict = TRAINED_MODEL_TYPE
+        elif ci[0] > 0:
+            verdict = SAFE_BASELINE_MODEL_TYPE
+        else:
+            verdict = "statistical_tie"
+
+    if verdict == TRAINED_MODEL_TYPE:
+        interpretation = f"Trained model has statistically lower {target} absolute error on paired rows."
+    elif verdict == SAFE_BASELINE_MODEL_TYPE:
+        interpretation = f"Safe baseline has statistically lower {target} absolute error on paired rows."
+    elif verdict == "insufficient_samples":
+        interpretation = "Not enough paired rows were available for a statistical verdict."
+    else:
+        interpretation = f"Paired bootstrap does not show a statistically clear {target} winner."
+
+    return {
+        "target": target,
+        "sample_count": int(len(deltas)),
+        "mean_absolute_error_delta": _round(observed, 4),
+        "confidence_interval_95": [_round(ci[0], 4), _round(ci[1], 4)],
+        "p_value": _round(float(p_value), 4),
+        "verdict": verdict,
+        "interpretation": interpretation,
+    }
+
+
+def _paired_statistical_comparison(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    return {
+        "method": "paired_bootstrap_absolute_error_delta",
+        "delta_definition": "trained_absolute_error_minus_safe_baseline_absolute_error",
+        "revenue": _paired_bootstrap_comparison(rows, "revenue"),
+        "roas": _paired_bootstrap_comparison(rows, "roas"),
+    }
+
+
 def _metrics(rows: list[dict[str, Any]], prefix: str) -> dict[str, Any]:
     revenue = _target_metrics(rows, prefix, "revenue")
     roas = _target_metrics(rows, prefix, "roas")
@@ -477,6 +569,7 @@ def _walk_forward_horizon(frame: pd.DataFrame, horizon: int, rolling_windows: in
         "segment_level_performance": _segment_level_performance(rows),
         "rolling_origin_average_metrics": _average_fold_metrics(successful_folds),
         "model_performance_evidence": evidence,
+        "statistical_comparison": _paired_statistical_comparison(rows),
         "trained_vs_safe_baseline": {
             "mae_delta": _round(safe_metrics["mae"] - trained_metrics["mae"], 2),
             "rmse_delta": _round(safe_metrics["rmse"] - trained_metrics["rmse"], 2),
@@ -682,6 +775,8 @@ def _winner_label(value: str) -> str:
         TRAINED_MODEL_TYPE: "Trained model",
         SAFE_BASELINE_MODEL_TYPE: "Safe baseline",
         "tie": "Tie",
+        "statistical_tie": "Statistical tie",
+        "insufficient_samples": "Insufficient samples",
         "mixed": "Mixed",
     }
     return labels.get(value, value)
@@ -697,6 +792,17 @@ def _summary_markdown(report: dict[str, Any]) -> str:
     consistency = report.get("model_path_consistency", MODEL_PATH_CONSISTENCY)
     env = report["environment"]
     model = report["model"]
+    confidence = model.get("confidence", {}) or {}
+    revenue_weights_by_horizon = confidence.get("revenue_model_weight_by_horizon") or {}
+    roas_weights_by_horizon = confidence.get("roas_model_weight_by_horizon") or {}
+    effective_revenue_weights = ", ".join(
+        f"{horizon}d {float(revenue_weights_by_horizon.get(str(horizon), confidence.get('revenue_model_weight', 0.0))):.2f}"
+        for horizon in HORIZONS
+    )
+    effective_roas_weights = ", ".join(
+        f"{horizon}d {float(roas_weights_by_horizon.get(str(horizon), confidence.get('roas_model_weight', 0.0))):.2f}"
+        for horizon in HORIZONS
+    )
     blend_rows = "\n".join(
         f'| {item["revenue_model_weight"]:.2f} | {item["mae"]} | {item["rmse"]} | '
         f'{item["mape"]}% | {item["interval_coverage"]}% |'
@@ -775,22 +881,31 @@ def _summary_markdown(report: dict[str, Any]) -> str:
         for item in report["per_horizon_performance"]
         for level, metrics in item.get("segment_level_performance", {}).items()
     )
+    statistical_rows = "\n".join(
+        f'| {item["horizon_days"]} | {target.upper()} | {stats["sample_count"]} | '
+        f'{stats["mean_absolute_error_delta"]} | '
+        f'{stats["confidence_interval_95"][0]} to {stats["confidence_interval_95"][1]} | '
+        f'{stats["p_value"]} | {_winner_label(stats["verdict"])} |'
+        for item in report["per_horizon_performance"]
+        for target, stats in item.get("statistical_comparison", {}).items()
+        if target in {"revenue", "roas"}
+    )
     horizon_verdict_lines = "\n".join(
         "- {horizon}d: revenue {revenue}; ROAS {roas}.".format(
             horizon=item["horizon_days"],
             revenue=(
-                "beats the seasonal-average baseline"
-                if item["model_performance_evidence"]["revenue"]["winner"] == TRAINED_MODEL_TYPE
-                else "trails the seasonal-average baseline"
-                if item["model_performance_evidence"]["revenue"]["winner"] == SAFE_BASELINE_MODEL_TYPE
-                else "ties the seasonal-average baseline"
+                "is statistically favored"
+                if item.get("statistical_comparison", {}).get("revenue", {}).get("verdict") == TRAINED_MODEL_TYPE
+                else "is statistically behind the seasonal-average baseline"
+                if item.get("statistical_comparison", {}).get("revenue", {}).get("verdict") == SAFE_BASELINE_MODEL_TYPE
+                else "is a statistical tie with the seasonal-average baseline"
             ),
             roas=(
-                "beats the seasonal-average baseline"
-                if item["model_performance_evidence"]["roas"]["winner"] == TRAINED_MODEL_TYPE
-                else "trails the seasonal-average baseline"
-                if item["model_performance_evidence"]["roas"]["winner"] == SAFE_BASELINE_MODEL_TYPE
-                else "ties the seasonal-average baseline"
+                "is statistically favored"
+                if item.get("statistical_comparison", {}).get("roas", {}).get("verdict") == TRAINED_MODEL_TYPE
+                else "is statistically behind the seasonal-average baseline"
+                if item.get("statistical_comparison", {}).get("roas", {}).get("verdict") == SAFE_BASELINE_MODEL_TYPE
+                else "is a statistical tie with the seasonal-average baseline"
             ),
         )
         for item in report["per_horizon_performance"]
@@ -836,8 +951,10 @@ Generated: {report["generated_at"]}
 - Artifact version: {model["artifact_version"]}
 - Training rows: {model["training_rows"]}
 - Rolling training samples: {model["training_samples"]}
-- Revenue blend weight: {model["confidence"]["revenue_model_weight"]}
-- ROAS blend weight: {model["confidence"]["roas_model_weight"]}
+- Revenue blend weight default: {confidence["revenue_model_weight"]} (artifact metadata; effective scoring is horizon-gated)
+- Effective revenue blend weights by horizon: {effective_revenue_weights}
+- ROAS blend weight default: {confidence["roas_model_weight"]}
+- Effective ROAS blend weights by horizon: {effective_roas_weights}
 
 ## Primary 30-Day Metrics
 
@@ -871,6 +988,18 @@ Generated: {report["generated_at"]}
 | ROAS | {evidence["roas"]["trained_mae"]} | {evidence["roas"]["safe_baseline_mae"]} | {evidence["roas"]["mae_difference_pct"]}% | {_winner_label(evidence["roas"]["winner"])} |
 
 Plain-English interpretation: {evidence["interpretation"]}
+
+## Paired Bootstrap Significance by Horizon
+
+The signed statistic below is trained absolute error minus safe-baseline absolute
+error on the same fold/segment rows. Negative values favor the trained model;
+positive values favor the seasonal-average baseline. A statistical tie means the
+95% paired bootstrap interval crosses zero, so ForecastIQ reports parity rather
+than overstating a point-estimate win.
+
+| Horizon days | Target | Paired rows | Mean absolute-error delta | 95% bootstrap CI | p-value | Statistical verdict |
+| ---: | --- | ---: | ---: | ---: | ---: | --- |
+{statistical_rows}
 
 ## Revenue Blend Weight Comparison
 

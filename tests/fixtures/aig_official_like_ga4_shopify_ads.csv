@@ -1,0 +1,13 @@
+event_date,sessionSource,sessionMedium,sessionCampaignName,purchaseRevenue,eventValue,sessions,transactions,created_at,total_price,orders,product_type,platform,campaign,cost,clicks,impressions,conversion_value
+2026-04-01,google,cpc,Search Brand,920.00,920.00,320,11,2026-04-01T10:00:00Z,920.00,11,All Products,Google Ads,Search Brand,185.00,118,6100,920.00
+2026-04-01,facebook,paid_social,Meta Prospecting,540.00,540.00,250,7,2026-04-01T11:00:00Z,540.00,7,All Products,Meta Ads,Meta Prospecting,155.00,86,7200,540.00
+2026-04-01,bing,cpc,Bing Shopping,410.00,410.00,160,5,2026-04-01T12:00:00Z,410.00,5,All Products,Microsoft Ads,Bing Shopping,95.00,54,3100,410.00
+2026-04-02,google,cpc,Search Brand,945.00,945.00,332,12,2026-04-02T10:00:00Z,945.00,12,All Products,Google Ads,Search Brand,188.00,121,6250,945.00
+2026-04-02,facebook,paid_social,Meta Prospecting,558.00,558.00,258,8,2026-04-02T11:00:00Z,558.00,8,All Products,Meta Ads,Meta Prospecting,158.00,88,7350,558.00
+2026-04-02,bing,cpc,Bing Shopping,424.00,424.00,165,5,2026-04-02T12:00:00Z,424.00,5,All Products,Microsoft Ads,Bing Shopping,97.00,55,3180,424.00
+2026-04-03,google,cpc,Search Brand,970.00,970.00,340,12,2026-04-03T10:00:00Z,970.00,12,All Products,Google Ads,Search Brand,190.00,124,6380,970.00
+2026-04-03,facebook,paid_social,Meta Prospecting,575.00,575.00,264,8,2026-04-03T11:00:00Z,575.00,8,All Products,Meta Ads,Meta Prospecting,160.00,90,7480,575.00
+2026-04-03,bing,cpc,Bing Shopping,438.00,438.00,169,6,2026-04-03T12:00:00Z,438.00,6,All Products,Microsoft Ads,Bing Shopping,98.00,56,3260,438.00
+2026-04-04,google,cpc,Search Brand,998.00,998.00,348,13,2026-04-04T10:00:00Z,998.00,13,All Products,Google Ads,Search Brand,194.00,127,6510,998.00
+2026-04-04,facebook,paid_social,Meta Prospecting,592.00,592.00,271,8,2026-04-04T11:00:00Z,592.00,8,All Products,Meta Ads,Meta Prospecting,162.00,92,7620,592.00
+2026-04-04,bing,cpc,Bing Shopping,451.00,451.00,174,6,2026-04-04T12:00:00Z,451.00,6,All Products,Microsoft Ads,Bing Shopping,100.00,58,3340,451.00

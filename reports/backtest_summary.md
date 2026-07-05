@@ -1,6 +1,6 @@
 # ForecastIQ Backtest Summary
 
-Generated: 2026-07-04T11:29:47.440628+00:00
+Generated: 2026-07-05T11:15:45.934056+00:00
 
 ## Holdout Design
 
@@ -27,8 +27,10 @@ Generated: 2026-07-04T11:29:47.440628+00:00
 - Artifact version: 5
 - Training rows: 2160
 - Rolling training samples: 738
-- Revenue blend weight: 0.2
-- ROAS blend weight: 0.6
+- Revenue blend weight default: 0.2 (artifact metadata; effective scoring is horizon-gated)
+- Effective revenue blend weights by horizon: 30d 0.60, 60d 0.00, 90d 0.00
+- ROAS blend weight default: 0.6
+- Effective ROAS blend weights by horizon: 30d 0.60, 60d 0.60, 90d 0.60
 
 ## Primary 30-Day Metrics
 
@@ -62,6 +64,23 @@ Generated: 2026-07-04T11:29:47.440628+00:00
 | ROAS | 0.04 | 0.05 | -20.0% | Trained model |
 
 Plain-English interpretation: Revenue: The safe baseline has lower revenue MAE than the trained model by 8.90% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 20.00% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability.
+
+## Paired Bootstrap Significance by Horizon
+
+The signed statistic below is trained absolute error minus safe-baseline absolute
+error on the same fold/segment rows. Negative values favor the trained model;
+positive values favor the seasonal-average baseline. A statistical tie means the
+95% paired bootstrap interval crosses zero, so ForecastIQ reports parity rather
+than overstating a point-estimate win.
+
+| Horizon days | Target | Paired rows | Mean absolute-error delta | 95% bootstrap CI | p-value | Statistical verdict |
+| ---: | --- | ---: | ---: | ---: | ---: | --- |
+| 30 | REVENUE | 54 | -917.0544 | -1529.992 to -333.6207 | 0.005 | Trained model |
+| 30 | ROAS | 54 | -0.0075 | -0.0168 to 0.0017 | 0.104 | Statistical tie |
+| 60 | REVENUE | 54 | 0.0 | 0.0 to 0.0 | 1.0 | Statistical tie |
+| 60 | ROAS | 54 | -0.019 | -0.0304 to -0.0079 | 0.001 | Trained model |
+| 90 | REVENUE | 36 | 0.0 | 0.0 to 0.0 | 1.0 | Statistical tie |
+| 90 | ROAS | 36 | -0.0005 | -0.0274 to 0.025 | 0.95 | Statistical tie |
 
 ## Revenue Blend Weight Comparison
 
@@ -104,9 +123,9 @@ would use when no trained residual correction is trusted.
 
 One-line verdicts against the seasonal-average baseline:
 
-- 30d: revenue beats the seasonal-average baseline; ROAS ties the seasonal-average baseline.
-- 60d: revenue ties the seasonal-average baseline; ROAS beats the seasonal-average baseline.
-- 90d: revenue ties the seasonal-average baseline; ROAS ties the seasonal-average baseline.
+- 30d: revenue is statistically favored; ROAS is a statistical tie with the seasonal-average baseline.
+- 60d: revenue is a statistical tie with the seasonal-average baseline; ROAS is statistically favored.
+- 90d: revenue is a statistical tie with the seasonal-average baseline; ROAS is a statistical tie with the seasonal-average baseline.
 
 ## Walk-Forward Accuracy by Horizon and Segment Level
 

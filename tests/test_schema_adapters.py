@@ -490,6 +490,26 @@ class SchemaAdapterTests(unittest.TestCase):
             self.assertEqual(set(predictions["model_type"].astype(str)), {"trained_model"})
             self.assertNotIn("safe_baseline_fallback", set(predictions["model_type"].astype(str)))
 
+    def test_aig_official_like_ga4_shopify_ads_fixture_normalizes(self) -> None:
+        """Model a plausible official GA4 + Shopify + Ads export shape.
+
+        The exact organizer hidden dataset is unavailable in this environment,
+        so this fixture uses the GA4, Shopify, and Ads conventions named in the
+        project brief: sessionSource/sessionMedium, created_at/total_price, and
+        platform/cost/conversion_value.
+        """
+        fixture = Path("tests/fixtures/aig_official_like_ga4_shopify_ads.csv")
+        raw = pd.read_csv(fixture)
+        adapted = normalize_marketing_frame(raw)
+        cleaned = canonicalize_frame(raw)
+
+        self.assertEqual(adapted.schema_type, "mixed")
+        self.assertEqual(cleaned.valid_rows, 12)
+        self.assertEqual(set(cleaned.frame["channel"]), {"Google Ads", "Meta Ads", "Microsoft Ads"})
+        self.assertGreater(float(cleaned.frame["spend"].sum()), 0.0)
+        self.assertGreater(float(cleaned.frame["revenue"].sum()), 0.0)
+        self.assertFalse(cleaned.frame[["spend", "revenue", "roas"]].isna().any().any())
+
 
 if __name__ == "__main__":
     unittest.main()

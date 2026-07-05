@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-04T11:29:47.440628+00:00",
+  "generated_at": "2026-07-05T11:15:45.934056+00:00",
   "data_dir": "data",
   "holdout_days": 30,
   "train_rows": 2160,
@@ -1031,6 +1031,34 @@
         },
         "interpretation": "Revenue: The trained model has lower revenue MAE than the safe baseline by 29.60% on this slice. ROAS: The trained model and safe baseline are tied on roas MAE for this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
       },
+      "statistical_comparison": {
+        "method": "paired_bootstrap_absolute_error_delta",
+        "delta_definition": "trained_absolute_error_minus_safe_baseline_absolute_error",
+        "revenue": {
+          "target": "revenue",
+          "sample_count": 54,
+          "mean_absolute_error_delta": -917.0544,
+          "confidence_interval_95": [
+            -1529.992,
+            -333.6207
+          ],
+          "p_value": 0.005,
+          "verdict": "trained_model",
+          "interpretation": "Trained model has statistically lower revenue absolute error on paired rows."
+        },
+        "roas": {
+          "target": "roas",
+          "sample_count": 54,
+          "mean_absolute_error_delta": -0.0075,
+          "confidence_interval_95": [
+            -0.0168,
+            0.0017
+          ],
+          "p_value": 0.104,
+          "verdict": "statistical_tie",
+          "interpretation": "Paired bootstrap does not show a statistically clear roas winner."
+        }
+      },
       "trained_vs_safe_baseline": {
         "mae_delta": 917.05,
         "rmse_delta": 1289.08,
@@ -1802,6 +1830,34 @@
         },
         "interpretation": "Revenue: The trained model and safe baseline are tied on revenue MAE for this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 33.33% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
       },
+      "statistical_comparison": {
+        "method": "paired_bootstrap_absolute_error_delta",
+        "delta_definition": "trained_absolute_error_minus_safe_baseline_absolute_error",
+        "revenue": {
+          "target": "revenue",
+          "sample_count": 54,
+          "mean_absolute_error_delta": 0.0,
+          "confidence_interval_95": [
+            0.0,
+            0.0
+          ],
+          "p_value": 1.0,
+          "verdict": "statistical_tie",
+          "interpretation": "Paired bootstrap does not show a statistically clear revenue winner."
+        },
+        "roas": {
+          "target": "roas",
+          "sample_count": 54,
+          "mean_absolute_error_delta": -0.019,
+          "confidence_interval_95": [
+            -0.0304,
+            -0.0079
+          ],
+          "p_value": 0.001,
+          "verdict": "trained_model",
+          "interpretation": "Trained model has statistically lower roas absolute error on paired rows."
+        }
+      },
       "trained_vs_safe_baseline": {
         "mae_delta": 0.0,
         "rmse_delta": 0.0,
@@ -2492,6 +2548,34 @@
           "interpretation": "The trained model and safe baseline are tied on roas MAE for this slice."
         },
         "interpretation": "Revenue: The trained model and safe baseline are tied on revenue MAE for this slice. ROAS: The trained model and safe baseline are tied on roas MAE for this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+      },
+      "statistical_comparison": {
+        "method": "paired_bootstrap_absolute_error_delta",
+        "delta_definition": "trained_absolute_error_minus_safe_baseline_absolute_error",
+        "revenue": {
+          "target": "revenue",
+          "sample_count": 36,
+          "mean_absolute_error_delta": 0.0,
+          "confidence_interval_95": [
+            0.0,
+            0.0
+          ],
+          "p_value": 1.0,
+          "verdict": "statistical_tie",
+          "interpretation": "Paired bootstrap does not show a statistically clear revenue winner."
+        },
+        "roas": {
+          "target": "roas",
+          "sample_count": 36,
+          "mean_absolute_error_delta": -0.0005,
+          "confidence_interval_95": [
+            -0.0274,
+            0.025
+          ],
+          "p_value": 0.95,
+          "verdict": "statistical_tie",
+          "interpretation": "Paired bootstrap does not show a statistically clear roas winner."
+        }
       },
       "trained_vs_safe_baseline": {
         "mae_delta": 0.0,

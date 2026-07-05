@@ -158,12 +158,12 @@ export function UploadPage() {
         <Button variant="hero" className="mt-6" onClick={() => inputRef.current?.click()}>
           Choose file
         </Button>
-        <p style={{ fontSize: "13px", color: "var(--muted-foreground)", marginTop: "8px" }}>
+        <p className="mt-2 text-[13px] text-muted-foreground">
           Need sample data?{" "}
           <a
             href="/data/sample_campaigns.csv"
             download="sample_campaigns.csv"
-            style={{ color: "var(--primary)" }}
+            className="text-primary underline-offset-4 hover:underline"
           >
             Download sample CSV
           </a>

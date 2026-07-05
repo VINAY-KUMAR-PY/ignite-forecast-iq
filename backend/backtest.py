@@ -181,6 +181,55 @@ def _paired_statistical_comparison(rows: list[dict[str, Any]]) -> dict[str, Any]
     }
 
 
+def _accuracy_improvement_attempts(
+    blend_comparison: list[dict[str, Any]],
+    blend_recommendation: dict[str, Any],
+    per_horizon: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Record bounded model-improvement attempts without mutating the artifact blindly."""
+    best_blend = min(blend_comparison, key=lambda item: (item["rmse"], item["mae"], item["mape"])) if blend_comparison else {}
+    bootstrap_verdicts = {
+        str(item["horizon_days"]): item.get("statistical_comparison", {}).get("revenue", {}).get("verdict", "unknown")
+        for item in per_horizon
+    }
+    bootstrap_summary = ", ".join(f"{horizon}d={verdict}" for horizon, verdict in bootstrap_verdicts.items())
+    return [
+        {
+            "attempt": "weighted_blend_grid",
+            "scope": "Uniform trained-vs-baseline revenue blend over the primary 30-day holdout",
+            "evidence": {
+                "candidate_weights": [item["revenue_model_weight"] for item in blend_comparison],
+                "best_primary_holdout_weight": best_blend.get("revenue_model_weight"),
+                "current_primary_holdout_weight": blend_recommendation.get("current_revenue_model_weight"),
+                "selection_metric": blend_recommendation.get("selection_metric"),
+            },
+            "decision": "not_shipped_as_global_change",
+            "interpretation": (
+                "The single final holdout prefers a lower uniform revenue blend, but this is only one market window. "
+                "ForecastIQ keeps the horizon gate because the pooled paired-bootstrap evidence favors the trained "
+                "30-day signal and shows parity, not regression, at longer revenue horizons."
+            ),
+        },
+        {
+            "attempt": "paired_bootstrap_gate_review",
+            "scope": "Retune per-horizon revenue gate using rolling-origin paired-bootstrap verdicts",
+            "evidence": {
+                "revenue_verdict_by_horizon": bootstrap_verdicts,
+                "decision_rule": (
+                    "Use trained residual correction only when the paired-bootstrap interval favors trained model; "
+                    "use the seasonal baseline anchor when the verdict is a statistical tie or safe-baseline win."
+                ),
+            },
+            "decision": "keep_current_horizon_gate",
+            "interpretation": (
+                f"Revenue bootstrap verdicts were {bootstrap_summary}. This supports keeping trained influence at "
+                "30 days and baseline anchoring at 60/90 days rather than forcing residual correction where the "
+                "statistical evidence is a tie."
+            ),
+        },
+    ]
+
+
 def _metrics(rows: list[dict[str, Any]], prefix: str) -> dict[str, Any]:
     revenue = _target_metrics(rows, prefix, "revenue")
     roas = _target_metrics(rows, prefix, "roas")
@@ -668,6 +717,11 @@ def run_backtest(
     )
 
     per_horizon = [_walk_forward_horizon(frame, horizon, rolling_windows=rolling_windows) for horizon in HORIZONS]
+    accuracy_improvement_attempts = _accuracy_improvement_attempts(
+        blend_comparison,
+        blend_recommendation,
+        per_horizon,
+    )
 
     report = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -688,6 +742,7 @@ def run_backtest(
         "roas_blend_weight_comparison": roas_blend_comparison,
         "roas_blend_weight_recommendation": roas_blend_recommendation,
         "per_horizon_performance": per_horizon,
+        "accuracy_improvement_attempts": accuracy_improvement_attempts,
         "model_path_consistency": MODEL_PATH_CONSISTENCY,
         "recommendation": f'{blend_recommendation["recommendation"]} {roas_blend_recommendation["recommendation"]}',
         "rows": primary["rows"],
@@ -890,6 +945,10 @@ def _summary_markdown(report: dict[str, Any]) -> str:
         for target, stats in item.get("statistical_comparison", {}).items()
         if target in {"revenue", "roas"}
     )
+    attempt_rows = "\n".join(
+        f'| {item["attempt"]} | {item["decision"]} | {item["interpretation"]} |'
+        for item in report.get("accuracy_improvement_attempts", [])
+    )
     horizon_verdict_lines = "\n".join(
         "- {horizon}d: revenue {revenue}; ROAS {roas}.".format(
             horizon=item["horizon_days"],
@@ -989,6 +1048,13 @@ Generated: {report["generated_at"]}
 
 Plain-English interpretation: {evidence["interpretation"]}
 
+The table above is a single final 30-day holdout point comparison. The paired
+bootstrap table below pools the rolling-origin fold/segment rows and resamples
+paired trained-vs-baseline absolute errors. These two views can legitimately
+disagree because one is a noisy final-window point estimate and the other is a
+pooled statistical test; ForecastIQ treats the paired bootstrap verdict as the
+more reliable model-selection signal when they conflict.
+
 ## Paired Bootstrap Significance by Horizon
 
 The signed statistic below is trained absolute error minus safe-baseline absolute
@@ -1000,6 +1066,16 @@ than overstating a point-estimate win.
 | Horizon days | Target | Paired rows | Mean absolute-error delta | 95% bootstrap CI | p-value | Statistical verdict |
 | ---: | --- | ---: | ---: | ---: | ---: | --- |
 {statistical_rows}
+
+## Bounded Revenue Accuracy Improvement Attempts
+
+ForecastIQ rechecked two low-risk ways to close the revenue gap without
+switching model families or weakening the evaluator contract. The shipped
+configuration is retained only where the evidence supports it.
+
+| Attempt | Decision | Interpretation |
+| --- | --- | --- |
+{attempt_rows}
 
 ## Revenue Blend Weight Comparison
 

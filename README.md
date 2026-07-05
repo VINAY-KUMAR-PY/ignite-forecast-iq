@@ -285,13 +285,13 @@ volatility guardrails, horizon-specific widening, and segment-level widening:
 
 | Horizon | Residual multiplier | Planning floor |
 |---|---:|---:|
-| 30 days | 0.70 | 30% |
-| 60 days | 0.90 | 34% |
-| 90 days | 1.10 | 40% |
+| 30 days | 0.65 | 24% |
+| 60 days | 0.82 | 28% |
+| 90 days | 1.02 | 34% |
 
-The resulting 60-80% overall planning bands are intentional for ecommerce media forecasts, especially over 60- and 90-day horizons where seasonality, promotion cadence, auction volatility, and channel mix shifts compound uncertainty. Tighter bands would overstate confidence and can mislead budget decisions; these intervals are calibrated against the rolling-origin backtest in `reports/backtest_summary.md` rather than being arbitrarily widened.
+The resulting 48-68% overall planning bands are intentionally conservative for ecommerce media forecasts, especially over 60- and 90-day horizons where seasonality, promotion cadence, auction volatility, and channel mix shifts compound uncertainty. The latest calibration narrowed mean walk-forward revenue width to 53.2%, 62.07%, and 75.37% for 30/60/90 days while retaining 100.0% sample coverage; these intervals are calibrated against `reports/backtest_summary.md` rather than arbitrarily widened.
 
-The interval enforcement layer ensures uncertainty bands widen across horizons and that `interval_width_pct` matches the actual revenue bands. On the committed sample output, overall intervals are now 60%, 68%, and 80% for 30, 60, and 90 days, with confidence labels varying by horizon and segment quality.
+The interval enforcement layer ensures uncertainty bands widen across horizons and that `interval_width_pct` matches the actual revenue bands. On the committed sample output, overall intervals are now 48%, 56%, and 68% for 30, 60, and 90 days, with confidence labels varying by horizon and segment quality.
 
 ROAS intervals are calibrated independently from historical daily ROAS residuals, with a minimum ROAS floor for thin segments, so `lower_roas` and `upper_roas` are not just revenue confidence bounds divided by projected spend.
 

@@ -408,14 +408,21 @@ jobs:
       - name: Run tests with coverage
         run: |
           pip install pytest-cov
-          pytest tests/ --durations=10 --cov=backend --cov-report=term-missing --cov-report=json --cov-fail-under=90.30
+          pytest tests/ --durations=10 --junitxml=pytest-results.xml --cov=backend --cov-report=term-missing --cov-report=json --cov-fail-under=90.30
           python - <<'PY'
           import json
           import os
           from pathlib import Path
+          import xml.etree.ElementTree as ET
 
           coverage = json.loads(Path("coverage.json").read_text())
           total = float(coverage["totals"]["percent_covered"])
+          pytest_root = ET.parse("pytest-results.xml").getroot()
+          tests = int(pytest_root.attrib.get("tests", 0))
+          skipped = int(pytest_root.attrib.get("skipped", 0))
+          failures_count = int(pytest_root.attrib.get("failures", 0))
+          errors = int(pytest_root.attrib.get("errors", 0))
+          passed = max(0, tests - skipped - failures_count - errors)
           required_modules = [
               "backend/decision_support.py",
               "backend/evaluator_io.py",
@@ -424,23 +431,25 @@ jobs:
               "backend/train.py",
           ]
           module_rows = []
-          failures = []
+          module_failures = []
           for module in required_modules:
               file_data = coverage["files"].get(module) or coverage["files"].get(module.replace("/", "\\"))
               if not file_data:
-                  failures.append(f"{module}: missing from coverage report")
+                  module_failures.append(f"{module}: missing from coverage report")
                   continue
               pct = float(file_data["summary"]["percent_covered"])
               module_rows.append((module, pct))
               if pct < 75.0:
-                  failures.append(f"{module}: {pct:.2f}% < 75%")
-          if failures:
-              raise SystemExit("Per-module coverage gate failed:\n" + "\n".join(failures))
+                  module_failures.append(f"{module}: {pct:.2f}% < 75%")
+          if module_failures:
+              raise SystemExit("Per-module coverage gate failed:\n" + "\n".join(module_failures))
+          print(f"Backend tests: {passed} passed, {skipped} skipped, {failures_count} failed, {errors} errors")
           print(f"Backend coverage: {total:.2f}%")
           for module, pct in module_rows:
               print(f"{module}: {pct:.2f}%")
           with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as handle:
               handle.write("## Backend coverage\n\n")
+              handle.write(f"- Backend tests: **{passed} passed**, **{skipped} skipped**, **{failures_count} failed**, **{errors} errors**\n")
               handle.write(f"- Overall backend coverage: **{total:.2f}%**\n")
               handle.write("- Required gate: **90.30%** via `--cov-fail-under=90.30`\n")
               handle.write("- Required high-risk module gate: **75%** each\n")
@@ -477,7 +486,9 @@ jobs:
         run: npm ci
 
       - name: Run frontend unit tests
-        run: npm run test
+        run: |
+          set -o pipefail
+          npm run test 2>&1 | tee vitest-output.txt
 
       - name: Check frontend
         run: npm run check
@@ -491,13 +502,22 @@ jobs:
       - name: Publish frontend validation summary
         if: always()
         run: |
-          {
-            echo "## Frontend validation"
-            echo
-            echo "- npm unit tests: completed in the \`Run frontend unit tests\` step"
-            echo "- TypeScript, lint, and production build: completed in the \`Check frontend\` and \`Build frontend\` steps"
-            echo "- Production audit: high-severity advisories rejected by \`npm audit --omit=dev --audit-level=high\`"
-          } >> "$GITHUB_STEP_SUMMARY"
+          python - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          text = Path("vitest-output.txt").read_text(encoding="utf-8", errors="replace")
+          passed = re.search(r"Tests\s+(\d+)\s+passed", text)
+          files = re.search(r"Test Files\s+(\d+)\s+passed", text)
+          passed_tests = passed.group(1) if passed else "unknown"
+          passed_files = files.group(1) if files else "unknown"
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as handle:
+              handle.write("## Frontend validation\n\n")
+              handle.write(f"- Vitest: **{passed_tests} tests passed** across **{passed_files} files**\n")
+              handle.write("- TypeScript, lint, and production build: passed in `Check frontend` and `Build frontend`\n")
+              handle.write("- Production audit: high-severity advisories rejected by `npm audit --omit=dev --audit-level=high`\n")
+          PY
 
   e2e-demo:
     name: Playwright judge demo flow

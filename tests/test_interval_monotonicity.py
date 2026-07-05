@@ -158,8 +158,8 @@ def test_tightened_long_horizon_widths_keep_monotonic_planning_bounds():
         w90 = float(overall.loc[90, "interval_width_pct"])
 
         assert w30 < w60 < w90
-        assert w60 <= 70.0
-        assert w90 <= 82.0
+        assert w60 <= 58.0
+        assert w90 <= 70.0
 
 
 def test_backtest_report_keeps_tightened_interval_coverage_above_90_percent():

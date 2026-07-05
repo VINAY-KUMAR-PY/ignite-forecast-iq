@@ -40,6 +40,7 @@ from .evaluator_contract import (
 from .evaluator_intervals import DEFAULT_HORIZON_CONFIDENCE_Z
 from .gemini_offline_cache import DISTILLED_LLM_REASONING_HEADER, select_distilled_reasoning
 from .segment_utils import FEATURE_COLUMNS, aggregate_segment_daily, safe_ratio, window_trend
+from .utils import parse_dates_safely
 
 OFFLINE_AI_MODE_HEADER = (
     "AI mode: OFFLINE_DETERMINISTIC_FALLBACK "
@@ -133,7 +134,7 @@ def canonicalize_frame(raw: pd.DataFrame) -> CleanResult:
             issues.append(f"{int(invalid.sum())} invalid {column} values replaced with 0")
             frame.loc[invalid, column] = 0.0
 
-    parsed_dates = pd.to_datetime(frame["date"], errors="coerce", utc=True).dt.tz_convert(None)
+    parsed_dates = parse_dates_safely(frame["date"], utc=True).dt.tz_convert(None)
     invalid_dates = parsed_dates.isna()
     if invalid_dates.any():
         issues.append(f"{int(invalid_dates.sum())} malformed or missing dates")
@@ -450,7 +451,7 @@ def generate_offline_causal_summary(
     if causal_estimates:
         causal_lines = []
         for item in causal_estimates[:3]:
-            event_date = pd.to_datetime(item.get("date"), errors="coerce")
+            event_date = parse_dates_safely(item.get("date"))
             pre_days = int(safe_float(item.get("preWindowDays"), 0))
             post_days = int(safe_float(item.get("postWindowDays"), 0))
             if pd.isna(event_date):
@@ -750,7 +751,7 @@ def _causal_channel_metrics(frame: pd.DataFrame) -> dict[str, dict[str, Any]]:
     if frame.empty or not {"date", "channel", "spend", "revenue"}.issubset(frame.columns):
         return {}
     working = frame.copy()
-    working["date"] = pd.to_datetime(working["date"], errors="coerce")
+    working["date"] = parse_dates_safely(working["date"])
     working = working.dropna(subset=["date", "channel"])
     if working.empty:
         return {}
@@ -1015,7 +1016,7 @@ def _forecast_signals(segment: pd.DataFrame, row: dict, horizon: int) -> list[st
     else:
         roas_signal = "ROAS stability: not computable because recent spend was zero or missing."
 
-    parsed_dates = pd.to_datetime(daily["date"], errors="coerce").dropna()
+    parsed_dates = parse_dates_safely(daily["date"]).dropna()
     if not parsed_dates.empty and horizon > 0:
         forecast_end = parsed_dates.max() + pd.Timedelta(days=horizon)
         seasonality_signal = (
@@ -1044,7 +1045,7 @@ def _confidence_rationale(segment: pd.DataFrame, row: dict, horizon: int) -> str
     model_type = str(row.get("model_type") or "unknown")
     history_days = 0
     if not segment.empty and "date" in segment:
-        history_days = int(pd.to_datetime(segment["date"], errors="coerce").dropna().dt.normalize().nunique())
+        history_days = int(parse_dates_safely(segment["date"]).dropna().dt.normalize().nunique())
 
     reasons: list[str] = []
     if model_type == TRAINED_ESTIMATED_SPEND_MODEL_TYPE:

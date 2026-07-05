@@ -14,6 +14,8 @@ from typing import List, Optional
 import numpy as np
 import pandas as pd
 
+from .utils import parse_dates_safely
+
 
 def _round_money(value: float) -> float:
     if value is None or not np.isfinite(float(value)):
@@ -33,7 +35,7 @@ def estimate_causal_effects(frame: pd.DataFrame, events: Optional[List[dict]] = 
         return []
 
     working = frame.copy()
-    working["date"] = pd.to_datetime(working["date"], errors="coerce")
+    working["date"] = parse_dates_safely(working["date"])
     working = working.dropna(subset=["date", "channel"])
     if working.empty:
         return []
@@ -90,7 +92,7 @@ def _causal_events(events: Optional[List[dict]], daily: pd.DataFrame) -> list[di
 
 def _estimate_event_effect(daily: pd.DataFrame, event: dict, window: int = 14) -> Optional[dict]:
     channel = str(event.get("channel") or "")
-    event_date = pd.to_datetime(event.get("date"), errors="coerce")
+    event_date = parse_dates_safely(event.get("date"))
     if not channel or pd.isna(event_date):
         return None
 

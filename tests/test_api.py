@@ -22,6 +22,19 @@ def test_train_without_admin_token_returns_401(valid_campaign_row) -> None:
     assert "Training admin token is required" in response.text
 
 
+def test_train_rejects_wrong_length_admin_token_without_traceback(valid_campaign_row) -> None:
+    with patch.dict(os.environ, {"TRAINING_ADMIN_TOKEN": "secret-token"}, clear=False):
+        response = TestClient(app).post(
+            "/api/train",
+            json={"rows": [valid_campaign_row()], "modelPath": "pickle/model.pkl"},
+            headers={"X-Training-Admin-Token": "x"},
+        )
+
+    assert response.status_code == 401
+    assert "Traceback" not in response.text
+    assert "Training admin token is required" in response.text
+
+
 def test_train_rejects_path_traversal_before_writing(valid_campaign_row) -> None:
     with patch.dict(os.environ, {"TRAINING_ADMIN_TOKEN": "secret"}, clear=False):
         response = TestClient(app).post(

@@ -18,7 +18,7 @@ from .schemas import (
     WhatIfScenarioInput,
     WhatIfScenarioResult,
 )
-from .utils import pct_change, round_money
+from .utils import parse_dates_safely, pct_change, round_money
 
 
 def compute_driver_evidence(frame: pd.DataFrame) -> List[dict]:
@@ -33,7 +33,7 @@ def compute_driver_evidence(frame: pd.DataFrame) -> List[dict]:
         return []
 
     working = frame.copy()
-    working["date"] = pd.to_datetime(working["date"], errors="coerce")
+    working["date"] = parse_dates_safely(working["date"])
     working = working.dropna(subset=["date", "channel"])
     if working.empty:
         return []

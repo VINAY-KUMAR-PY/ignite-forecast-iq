@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 from .evaluator_contract import HORIZONS, clean_number, safe_float
+from .utils import parse_dates_safely
 
 FEATURE_COLUMNS = [
     "horizon_days",
@@ -222,7 +223,7 @@ def segment_feature_frame(
     if daily.empty:
         raise ValueError("cannot build trained-model features for an empty segment")
 
-    last_date = pd.to_datetime(daily["date"].iloc[-1], errors="coerce")
+    last_date = parse_dates_safely(daily["date"].iloc[-1])
     if pd.isna(last_date):
         last_date = pd.Timestamp.today().normalize()
     forecast_end = last_date + pd.Timedelta(days=int(horizon))

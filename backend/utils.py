@@ -6,6 +6,7 @@ import csv
 import json
 import math
 import os
+import warnings
 from pathlib import Path
 from typing import Any, Dict, Iterable, List
 
@@ -34,6 +35,26 @@ def pct_change(new: float, old: float) -> float:
     if old == 0:
         return 0.0
     return ((new - old) / old) * 100
+
+
+def parse_dates_safely(values: Any, *, utc: bool = False) -> pd.Series | pd.DatetimeIndex | pd.Timestamp:
+    """Parse untrusted date values without pandas mixed-format warnings.
+
+    Pandas can emit a noisy "Could not infer format" UserWarning for adversarial
+    or heterogeneous CSV date columns even when `errors="coerce"` handles the
+    data correctly. `format="mixed"` keeps current coercion semantics on modern
+    pandas, while the fallback preserves compatibility with older versions.
+    """
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message="Could not infer format.*",
+            category=UserWarning,
+        )
+        try:
+            return pd.to_datetime(values, errors="coerce", utc=utc, format="mixed")
+        except (TypeError, ValueError):
+            return pd.to_datetime(values, errors="coerce", utc=utc)
 
 
 def read_csv_folder(data_dir: str | Path) -> pd.DataFrame:

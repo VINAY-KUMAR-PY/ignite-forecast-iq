@@ -10,6 +10,7 @@ import pandas as pd
 
 from .schema_adapters import CANONICAL_COLUMNS, NUMERIC_COLUMNS, normalize_marketing_frame
 from .schemas import CampaignRow, ValidationIssue, ValidationResponse
+from .utils import parse_dates_safely
 
 REQUIRED_COLUMNS = CANONICAL_COLUMNS
 HOLIDAY_WEEKS = [
@@ -70,7 +71,7 @@ def validate_records(records: Iterable[dict]) -> Tuple[pd.DataFrame, ValidationR
     frame = raw[REQUIRED_COLUMNS].copy()
     valid_mask = pd.Series(True, index=frame.index)
 
-    parsed_dates = pd.to_datetime(frame["date"], errors="coerce")
+    parsed_dates = parse_dates_safely(frame["date"])
     bad_dates = parsed_dates.isna()
     for idx in frame.index[bad_dates]:
         issues.append(ValidationIssue(type="invalid_date", row=int(idx) + 2, message=f"Invalid date: {frame.at[idx, 'date']}"))
@@ -179,13 +180,13 @@ def add_holiday_features(frame: pd.DataFrame, region: str | None = None) -> pd.D
     """
     data = frame.copy()
     if "date_dt" in data:
-        dates = pd.to_datetime(data["date_dt"], errors="coerce")
+        dates = parse_dates_safely(data["date_dt"])
     else:
-        dates = pd.to_datetime(data["date"], errors="coerce")
+        dates = parse_dates_safely(data["date"])
 
     calendar_region = normalize_seasonality_region(region)
     holiday_starts = (
-        pd.to_datetime(pd.Series(HOLIDAY_WEEKS), errors="coerce").dropna()
+        parse_dates_safely(pd.Series(HOLIDAY_WEEKS)).dropna()
         if calendar_region == "US"
         else pd.Series(dtype="datetime64[ns]")
     )
@@ -196,7 +197,7 @@ def add_holiday_features(frame: pd.DataFrame, region: str | None = None) -> pd.D
         holiday_mask |= normalized_dates.between(start, end)
 
     black_fridays = (
-        pd.to_datetime(pd.Series(BLACK_FRIDAY_DATES), errors="coerce").dropna()
+        parse_dates_safely(pd.Series(BLACK_FRIDAY_DATES)).dropna()
         if calendar_region == "US"
         else pd.Series(dtype="datetime64[ns]")
     )
@@ -223,7 +224,7 @@ def feature_frame(daily: pd.DataFrame, target: str, region: str | None = None) -
     """Build supervised learning features for revenue or ROAS targets."""
     data = daily.copy().sort_values("date").reset_index(drop=True)
     lag_target = "revenue" if target.startswith("revenue_horizon_") else target
-    data["date_dt"] = pd.to_datetime(data["date"])
+    data["date_dt"] = parse_dates_safely(data["date"])
     day_index = np.arange(len(data), dtype=float)
     data["dow"] = data["date_dt"].dt.dayofweek
     data["month"] = data["date_dt"].dt.month

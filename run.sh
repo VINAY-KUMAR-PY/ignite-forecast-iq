@@ -23,13 +23,6 @@ if [[ $# -ge 4 ]]; then
   done
 fi
 
-if [[ -n "$BUDGET_JSON" ]]; then
-  if ! echo "$BUDGET_JSON" | python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null; then
-    echo "[ForecastIQ] WARNING: budget-json argument is not valid JSON; ignoring it." >&2
-    BUDGET_JSON=""
-  fi
-fi
-
 if [[ -z "$PYTHON_BIN" ]]; then
   if [[ -x ".venv/Scripts/python.exe" ]]; then
     PYTHON_CMD=(".venv/Scripts/python.exe")
@@ -44,6 +37,13 @@ if [[ -z "$PYTHON_BIN" ]]; then
   fi
 else
   PYTHON_CMD=("$PYTHON_BIN")
+fi
+
+if [[ -n "$BUDGET_JSON" ]]; then
+  if ! echo "$BUDGET_JSON" | "${PYTHON_CMD[@]}" -c "import sys,json; json.load(sys.stdin)" 2>/dev/null; then
+    echo "[ForecastIQ] WARNING: budget-json argument is not valid JSON; ignoring it." >&2
+    BUDGET_JSON=""
+  fi
 fi
 
 mkdir -p "$(dirname "$MODEL_PATH")" "$(dirname "$OUTPUT_PATH")"

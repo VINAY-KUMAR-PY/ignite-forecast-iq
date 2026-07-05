@@ -40,6 +40,10 @@ For automated evaluation, `pickle/model.pkl` is the canonical offline artifact: 
 
 On the committed sample data, ForecastIQ reports a 90-day Meta Ads ROAS range of **2.48x-3.57x** and flags Google Ads underperformance as low-confidence directional evidence: Google Ads revenue fell after the June 11 event with **p=0.185**, so it is a diagnostic signal rather than proven incrementality. A marketer can test a controlled reallocation by moving **$10,000** from Google Ads to Microsoft Ads; the memory-safe spend-response simulator projects 90-day revenue moving from **$1,428,350** to **$1,434,421**, or about **$6,071** incremental revenue, while total spend stays unchanged.
 
+## How AI Is Used (Read This First)
+
+The graded `run.sh` path never calls an LLM, following the hackathon submission guide's no-network-at-grading-time rule. Causal explanations in the graded output are real statistics: difference-in-differences estimates with p-values, confidence intervals, and power checks from `backend/causal_lite.py`. Those statistics are narrated with explanation templates originally authored by Gemini and stored in `backend/gemini_offline_cache.py`, then filled with the current run's evidence. The full product's `/api/insights` endpoint in `backend/gemini.py` calls live Gemini and asks it to independently rank competing causal hypotheses. Redacted live transcripts are committed in `docs/gemini_sample_transcripts/`.
+
 ## Evaluation Criteria Mapping
 
 | Criterion | Where to verify |

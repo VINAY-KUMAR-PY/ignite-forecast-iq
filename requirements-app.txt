@@ -7,5 +7,6 @@ google-genai==2.8.0
 python-dotenv==1.2.2
 httpx==0.28.1
 pytest==8.4.2
+pytest-cov==7.1.0
 slowapi==0.1.9
 shap==0.47.2; python_version < "3.14"

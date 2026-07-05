@@ -14,6 +14,8 @@ from typing import Any, Iterable
 import numpy as np
 import pandas as pd
 
+from .utils import parse_dates_safely
+
 
 CANONICAL_COLUMNS = [
     "date",
@@ -450,7 +452,7 @@ def _allocation_weights(frame: pd.DataFrame) -> pd.Series:
 
 
 def _normalized_date_key(values: pd.Series) -> pd.Series:
-    parsed = pd.to_datetime(values, errors="coerce")
+    parsed = parse_dates_safely(values)
     fallback = values.fillna("").astype(str).str.slice(0, 10)
     return parsed.dt.strftime("%Y-%m-%d").fillna(fallback)
 

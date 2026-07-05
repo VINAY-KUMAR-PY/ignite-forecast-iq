@@ -202,6 +202,15 @@ Determinism controls: NumPy seed `42`, stable sorted segment aggregation, fixed
 feature list from `backend/segment_utils.py::FEATURE_COLUMNS`, and fixed
 GradientBoostingRegressor random states per horizon/target.
 
+Those controls make backtest regeneration deterministic within one fixed
+Python/OS/BLAS environment. Re-running `python -m backend.backtest` on another
+supported Python version or operating system can shift headline MAE/MAPE by
+roughly one percentage point, and more on thin segment slices, because
+GradientBoostingRegressor reductions are subject to floating-point
+non-associativity rather than unpinned randomness. The committed
+`pickle/model.pkl` artifact used for grading is unaffected because the evaluator
+scores the already-trained artifact instead of retraining during `run.sh`.
+
 Artifact environment: Python 3.14.4, pandas 3.0.3, numpy 2.4.6,
 scikit-learn 1.9.0, scipy 1.17.1, joblib 1.5.3, packaging 24.1.
 

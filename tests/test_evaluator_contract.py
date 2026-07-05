@@ -4,6 +4,7 @@ import math
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -159,6 +160,49 @@ class EvaluatorContractTests(unittest.TestCase):
                 )
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 self.assert_predictions_csv(output, TRAINED_MODEL_TYPE)
+
+    def test_run_sh_budget_json_validation_uses_resolved_python_interpreter(self) -> None:
+        bash = os.environ.get("FORECASTIQ_TEST_BASH") or shutil.which("bash")
+        if not bash or (os.name == "nt" and not os.environ.get("FORECASTIQ_TEST_BASH")):
+            self.skipTest("bash-based run.sh contract test requires a POSIX shell")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            data_dir = tmp_path / "data"
+            data_dir.mkdir()
+            shutil.copy(Path("data/fixtures/ads_raw_export.csv"), data_dir / "ads_raw_export.csv")
+            output = tmp_path / "predictions.csv"
+
+            shim_dir = tmp_path / "bin"
+            shim_dir.mkdir()
+            fake_python3 = shim_dir / "python3"
+            fake_python3.write_text("#!/usr/bin/env bash\nexit 127\n", encoding="utf-8")
+            fake_python3.chmod(0o755)
+
+            env = os.environ.copy()
+            env["PYTHON"] = sys.executable
+            env["PATH"] = f"{shim_dir}{os.pathsep}{env.get('PATH', '')}"
+            result = subprocess.run(
+                [
+                    bash,
+                    "run.sh",
+                    str(data_dir),
+                    "./pickle/model.pkl",
+                    str(output),
+                    '{"Google Ads": 60000}',
+                ],
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=90,
+                env=env,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertNotIn("budget-json argument is not valid JSON", result.stderr)
+            self.assert_predictions_csv(output)
+            summary = (tmp_path / "causal_summary.txt").read_text(encoding="utf-8")
+            self.assertIn("Planned budget input received: Google Ads: $60,000.", summary)
 
     def test_backtest_generates_metrics(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

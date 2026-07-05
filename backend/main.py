@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import secrets
 from pathlib import Path
 from time import perf_counter
 
@@ -204,7 +205,8 @@ def _log_lightweight_api(operation: str, row_count: int, aggregate_count: int, s
 
 def _authorized_training_token(token: str | None) -> None:
     expected = (os.getenv("TRAINING_ADMIN_TOKEN") or "").strip()
-    if not expected or token != expected:
+    provided = (token or "").strip()
+    if not expected or not secrets.compare_digest(provided, expected):
         raise HTTPException(status_code=401, detail="Training admin token is required")
 
 

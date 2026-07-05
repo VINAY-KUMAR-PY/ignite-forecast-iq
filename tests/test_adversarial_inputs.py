@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import warnings
+import shutil
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 
@@ -100,3 +104,22 @@ def test_multi_source_duplicate_revenue_guard_prevents_blind_double_counting(tmp
     assert float(cleaned.frame["revenue"].sum()) <= 4200
     assert any(str(schema).startswith("reconciled") for schema in raw["__source_schema"].unique())
     _assert_schema_safe(rows)
+
+
+def test_hidden_fixture_date_parsing_does_not_emit_user_warnings(tmp_path) -> None:
+    fixtures = [
+        Path("tests/fixtures/hidden_single_channel_malformed.csv"),
+        Path("tests/fixtures/ga4_variant_hidden_export.csv"),
+    ]
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        for index, fixture in enumerate(fixtures):
+            data_dir = tmp_path / f"data_{index}"
+            data_dir.mkdir()
+            shutil.copy(fixture, data_dir / fixture.name)
+            raw = read_csv_folder(data_dir)
+            canonicalize_frame(raw)
+
+    user_warnings = [warning for warning in caught if issubclass(warning.category, UserWarning)]
+    assert user_warnings == []

@@ -55,10 +55,20 @@ export function SpendCurveChart({
       confidence_band: [lower, upper],
     };
   });
+  const minSpend = Math.min(...chartData.map((point) => point.spend));
+  const maxSpend = Math.max(...chartData.map((point) => point.spend));
+  const minRevenue = Math.min(...chartData.map((point) => point.lower_revenue ?? point.revenue));
+  const maxRevenue = Math.max(...chartData.map((point) => point.upper_revenue ?? point.revenue));
 
   return (
     <>
-      <div className="mt-4 h-56 min-w-0 max-w-full overflow-hidden">
+      <div
+        className="mt-4 h-56 min-w-0 max-w-full overflow-hidden"
+        role="img"
+        aria-label={`Spend response curve from ${fmtCurrency(minSpend)} to ${fmtCurrency(
+          maxSpend,
+        )}, with revenue range ${fmtCurrency(minRevenue)} to ${fmtCurrency(maxRevenue)}.`}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={chartData} margin={{ left: -12, right: 8, top: 8 }}>
             <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" />

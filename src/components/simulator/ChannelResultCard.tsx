@@ -112,6 +112,7 @@ export function SimulatorResultsPanel({
     share: totalProjectedRevenue > 0 ? item.projectedRevenue / totalProjectedRevenue : 0,
   }));
   const dailyTrend = buildDailyTrend(sims);
+  const topContribution = [...contributionData].sort((a, b) => b.value - a.value)[0];
 
   return (
     <div className="min-w-0 space-y-4 lg:col-span-3">
@@ -153,7 +154,15 @@ export function SimulatorResultsPanel({
             </div>
             <Brain className="h-4 w-4 text-muted-foreground" />
           </div>
-          <div className="min-w-0 max-w-full overflow-hidden">
+          <div
+            className="min-w-0 max-w-full overflow-hidden"
+            role="img"
+            aria-label={`Channel contribution chart for ${sims.length} channels. ${
+              topContribution
+                ? `${topContribution.name} contributes ${fmtPct(topContribution.share)} of projected revenue.`
+                : "No channel contribution is available."
+            }`}
+          >
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie
@@ -191,7 +200,11 @@ export function SimulatorResultsPanel({
 
         <Card className="bg-gradient-card border-border/60 min-w-0 p-5 lg:col-span-2">
           <h3 className="mb-3 text-sm font-semibold">Baseline vs projected</h3>
-          <div className="min-w-0 max-w-full overflow-hidden">
+          <div
+            className="min-w-0 max-w-full overflow-hidden"
+            role="img"
+            aria-label={`Baseline versus projected revenue chart for ${sims.length} channels over ${horizon} days.`}
+          >
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={chartData} margin={{ left: -10, right: 8, top: 8 }}>
                 <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" />
@@ -232,7 +245,15 @@ export function SimulatorResultsPanel({
           <p className="mb-3 text-xs text-muted-foreground">
             Daily projected revenue across all channels
           </p>
-          <div className="min-w-0 max-w-full overflow-hidden">
+          <div
+            className="min-w-0 max-w-full overflow-hidden"
+            role="img"
+            aria-label={`Forecast trajectory chart over ${horizon} days, with projected revenue ${fmtCurrency(
+              totalProjectedRevenue,
+            )} and confidence range ${fmtCurrency(totalLowerRevenue)} to ${fmtCurrency(
+              totalUpperRevenue,
+            )}.`}
+          >
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={dailyTrend} margin={{ left: -10, right: 8, top: 8 }}>
                 <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" />

@@ -512,7 +512,13 @@ function Dashboard() {
       </Card>
 
       <div className="mt-6 grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
-        <ChartCard title="Revenue trend" subtitle="Daily revenue over time">
+        <ChartCard
+          title="Revenue trend"
+          subtitle="Daily revenue over time"
+          ariaLabel={`Revenue trend chart covering ${stats.daily.length} days with total revenue ${fmtCurrency(
+            stats.totalRevenue,
+          )}.`}
+        >
           <ResponsiveContainer width="100%" height={260}>
             <AreaChart data={dailySample} margin={{ left: -10, right: 8, top: 8 }}>
               <defs>
@@ -546,7 +552,13 @@ function Dashboard() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Spend trend" subtitle="Daily media spend">
+        <ChartCard
+          title="Spend trend"
+          subtitle="Daily media spend"
+          ariaLabel={`Spend trend chart covering ${stats.daily.length} days with total spend ${fmtCurrency(
+            stats.totalSpend,
+          )}.`}
+        >
           <ResponsiveContainer width="100%" height={260}>
             <AreaChart data={dailySample} margin={{ left: -10, right: 8, top: 8 }}>
               <defs>
@@ -580,7 +592,13 @@ function Dashboard() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="ROAS trend" subtitle="Blended ROAS by day">
+        <ChartCard
+          title="ROAS trend"
+          subtitle="Blended ROAS by day"
+          ariaLabel={`ROAS trend chart with blended ROAS ${fmtRoas(stats.avgRoas)} across ${
+            stats.daily.length
+          } days.`}
+        >
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={dailySample} margin={{ left: -10, right: 8, top: 8 }}>
               <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" />
@@ -608,7 +626,11 @@ function Dashboard() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Channel performance" subtitle="Revenue vs spend by channel">
+        <ChartCard
+          title="Channel performance"
+          subtitle="Revenue vs spend by channel"
+          ariaLabel={`Channel performance chart comparing revenue and spend across ${stats.channels.length} channels.`}
+        >
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={stats.channels} margin={{ left: -10, right: 8, top: 8 }}>
               <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" />
@@ -752,10 +774,12 @@ function clampNumber(value: number, min: number, max: number) {
 function ChartCard({
   title,
   subtitle,
+  ariaLabel,
   children,
 }: {
   title: string;
   subtitle?: string;
+  ariaLabel: string;
   children: React.ReactNode;
 }) {
   return (
@@ -764,7 +788,9 @@ function ChartCard({
         <h3 className="text-sm font-semibold">{title}</h3>
         {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
       </div>
-      {children}
+      <div role="img" aria-label={ariaLabel}>
+        {children}
+      </div>
     </Card>
   );
 }

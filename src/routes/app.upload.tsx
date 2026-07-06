@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useRef, useState, type KeyboardEvent } from "react";
 import { AlertCircle, CheckCircle2, Download, FileUp, PlayCircle, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
@@ -45,6 +45,17 @@ export function UploadPage() {
       toast.success(`Imported ${finalResult.rows.length.toLocaleString()} rows`);
     } else {
       toast.error("No valid rows found in file");
+    }
+  }
+
+  function openFilePicker() {
+    inputRef.current?.click();
+  }
+
+  function handleDropzoneKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openFilePicker();
     }
   }
 
@@ -124,6 +135,10 @@ export function UploadPage() {
         className={`bg-gradient-card min-w-0 border-2 border-dashed p-6 text-center transition sm:p-10 ${
           dragging ? "border-primary bg-accent/30" : "border-border/60"
         }`}
+        role="button"
+        tabIndex={0}
+        aria-label="Upload CSV drop target. Press Enter or Space to choose a campaign data file."
+        onKeyDown={handleDropzoneKeyDown}
         onDragOver={(e) => {
           e.preventDefault();
           setDragging(true);
@@ -155,7 +170,7 @@ export function UploadPage() {
             if (f) handleFile(f);
           }}
         />
-        <Button variant="hero" className="mt-6" onClick={() => inputRef.current?.click()}>
+        <Button variant="hero" className="mt-6" onClick={openFilePicker}>
           Choose file
         </Button>
         <p className="mt-2 text-[13px] text-muted-foreground">

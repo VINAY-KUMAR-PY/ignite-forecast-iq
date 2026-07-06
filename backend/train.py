@@ -380,7 +380,7 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
             "spend_estimation": _spend_estimation_metadata(frame),
         },
         "confidence": {
-            "interval_method": "quantile_regression_augmented_residual",
+            "interval_method": "split_conformal_chronological",
             "confidence_z": 1.64,
             "horizon_confidence_z": horizon_confidence_z,
             "minimum_interval_pct": 0.12,

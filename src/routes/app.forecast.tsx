@@ -221,9 +221,9 @@ export function ForecastPage() {
       <Card className="bg-gradient-card border-border/60 mb-6 min-w-0 p-5">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="min-w-0">
-            <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Horizon
-            </label>
+            </div>
             <Select
               value={String(horizon)}
               onValueChange={(v) => setHorizon(Number(v) as 30 | 60 | 90)}
@@ -239,9 +239,9 @@ export function ForecastPage() {
             </Select>
           </div>
           <div className="min-w-0">
-            <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Level
-            </label>
+            </div>
             <Select
               value={level}
               onValueChange={(v) => {
@@ -261,9 +261,9 @@ export function ForecastPage() {
             </Select>
           </div>
           <div className="min-w-0">
-            <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Filter
-            </label>
+            </div>
             <Select
               value={value || options[0] || ""}
               onValueChange={setValue}
@@ -364,7 +364,13 @@ export function ForecastPage() {
               95% CI
             </span>
           </div>
-          <div className="min-w-0 max-w-full overflow-hidden">
+          <div
+            className="min-w-0 max-w-full overflow-hidden"
+            role="img"
+            aria-label={`Revenue forecast for ${horizon} days, expected ${fmtCurrency(
+              expectedRev,
+            )} with planning range ${fmtCurrency(lowerRev)} to ${fmtCurrency(upperRev)}.`}
+          >
             <ResponsiveContainer width="100%" height={340}>
               <ComposedChart data={revData} margin={{ left: -10, right: 8, top: 8 }}>
                 <defs>
@@ -456,7 +462,19 @@ export function ForecastPage() {
               95% CI
             </span>
           </div>
-          <div className="min-w-0 max-w-full overflow-hidden">
+          <div
+            className="min-w-0 max-w-full overflow-hidden"
+            role="img"
+            aria-label={
+              apiForecast?.summary.roasStatus === "not_computable"
+                ? `ROAS forecast for ${horizon} days is not computable because projected spend is unavailable.`
+                : `ROAS forecast for ${horizon} days, expected ${fmtRoas(
+                    summaryRoas,
+                  )} with planning range ${fmtRoas(
+                    apiForecast?.summary.lowerRoas ?? avgRoasLower,
+                  )} to ${fmtRoas(apiForecast?.summary.upperRoas ?? avgRoasUpper)}.`
+            }
+          >
             <ResponsiveContainer width="100%" height={280}>
               <ComposedChart data={roasData} margin={{ left: -10, right: 8, top: 8 }}>
                 <defs>

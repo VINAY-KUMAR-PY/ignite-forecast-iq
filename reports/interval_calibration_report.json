@@ -1,0 +1,1160 @@
+{
+  "generated_at": "2026-07-06T02:52:04.485623+00:00",
+  "method": "split_conformal_absolute_revenue_residual",
+  "target_coverage": 0.9,
+  "data_dir": "data",
+  "model_path": "pickle/model.pkl",
+  "final_holdout_days_reserved_for_backtest": 30,
+  "calibration_windows_per_horizon": 2,
+  "calibration_note": "Each horizon uses consecutive chronological windows immediately before the final holdout. The final holdout remains reserved for reports/backtest_summary.md coverage validation.",
+  "derived_constants": {
+    "default_horizon_interval_multiplier": {
+      "30": 1.0,
+      "60": 2.7792,
+      "90": 2.7792
+    },
+    "low_sample_horizon_interval_multiplier": {
+      "30": 1.25,
+      "60": 3.474,
+      "90": 3.474
+    },
+    "horizon_interval_floor_pct": {
+      "30": 0.0551,
+      "60": 0.2168,
+      "90": 0.2218
+    }
+  },
+  "horizon_calibration": [
+    {
+      "horizon_days": 30,
+      "calibration_windows": [
+        {
+          "window": 1,
+          "start": "2026-04-19",
+          "end": "2026-05-18",
+          "history_rows": 1920,
+          "calibration_rows": 240
+        },
+        {
+          "window": 2,
+          "start": "2026-03-20",
+          "end": "2026-04-18",
+          "history_rows": 1680,
+          "calibration_rows": 240
+        }
+      ],
+      "segments_scored": 36,
+      "target_coverage": 0.9,
+      "half_width_pct_quantile": 0.05514726381561286,
+      "half_width_quantile_level": 0.9444444444444444,
+      "residual_multiplier_quantile": 5.295957128713143,
+      "residual_multiplier_quantile_level": 0.9444444444444444,
+      "level_summary": {
+        "overall": {
+          "sample_count": 2,
+          "half_width_pct_quantile": 0.04261,
+          "quantile_level": 1.0,
+          "mean_absolute_residual_pct": 4.1455
+        },
+        "channel": {
+          "sample_count": 6,
+          "half_width_pct_quantile": 0.046498,
+          "quantile_level": 1.0,
+          "mean_absolute_residual_pct": 4.1132
+        },
+        "campaign_type": {
+          "sample_count": 12,
+          "half_width_pct_quantile": 0.055147,
+          "quantile_level": 1.0,
+          "mean_absolute_residual_pct": 4.0111
+        },
+        "campaign": {
+          "sample_count": 16,
+          "half_width_pct_quantile": 0.055714,
+          "quantile_level": 1.0,
+          "mean_absolute_residual_pct": 4.0252
+        }
+      },
+      "rows": [
+        {
+          "calibration_window": 1,
+          "level": "overall",
+          "segment": "all",
+          "model_type": "trained_model",
+          "actual_revenue": 481907.48,
+          "expected_revenue": 463239.39,
+          "absolute_residual_pct": 4.0299
+        },
+        {
+          "calibration_window": 1,
+          "level": "channel",
+          "segment": "Google Ads",
+          "model_type": "trained_model",
+          "actual_revenue": 271410.93,
+          "expected_revenue": 260240.02,
+          "absolute_residual_pct": 4.2925
+        },
+        {
+          "calibration_window": 1,
+          "level": "channel",
+          "segment": "Meta Ads",
+          "model_type": "trained_model",
+          "actual_revenue": 139584.66,
+          "expected_revenue": 134479.25,
+          "absolute_residual_pct": 3.7964
+        },
+        {
+          "calibration_window": 1,
+          "level": "channel",
+          "segment": "Microsoft Ads",
+          "model_type": "trained_model",
+          "actual_revenue": 70911.89,
+          "expected_revenue": 68231.63,
+          "absolute_residual_pct": 3.9282
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign_type",
+          "segment": "Advantage+",
+          "model_type": "trained_model",
+          "actual_revenue": 51991.35,
+          "expected_revenue": 50056.47,
+          "absolute_residual_pct": 3.8654
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign_type",
+          "segment": "Performance Max",
+          "model_type": "trained_model",
+          "actual_revenue": 95719.27,
+          "expected_revenue": 91206.19,
+          "absolute_residual_pct": 4.9482
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign_type",
+          "segment": "Prospecting",
+          "model_type": "trained_model",
+          "actual_revenue": 41889.86,
+          "expected_revenue": 40004.21,
+          "absolute_residual_pct": 4.7136
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign_type",
+          "segment": "Retargeting",
+          "model_type": "trained_model",
+          "actual_revenue": 45703.45,
+          "expected_revenue": 44812.32,
+          "absolute_residual_pct": 1.9886
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign_type",
+          "segment": "Search",
+          "model_type": "trained_model",
+          "actual_revenue": 126060.63,
+          "expected_revenue": 122395.95,
+          "absolute_residual_pct": 2.9941
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign_type",
+          "segment": "Shopping",
+          "model_type": "trained_model",
+          "actual_revenue": 120542.92,
+          "expected_revenue": 115051.1,
+          "absolute_residual_pct": 4.7734
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign",
+          "segment": "Advantage Shopping",
+          "model_type": "trained_model",
+          "actual_revenue": 51991.35,
+          "expected_revenue": 50056.47,
+          "absolute_residual_pct": 3.8654
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign",
+          "segment": "Bing Brand",
+          "model_type": "trained_model",
+          "actual_revenue": 36998.47,
+          "expected_revenue": 35721.56,
+          "absolute_residual_pct": 3.5746
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign",
+          "segment": "Bing Generic",
+          "model_type": "trained_model",
+          "actual_revenue": 33913.42,
+          "expected_revenue": 32574.11,
+          "absolute_residual_pct": 4.1116
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign",
+          "segment": "Brand Search",
+          "model_type": "trained_model",
+          "actual_revenue": 89062.16,
+          "expected_revenue": 86397.85,
+          "absolute_residual_pct": 3.0838
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign",
+          "segment": "Cart Retargeting",
+          "model_type": "trained_model",
+          "actual_revenue": 45703.45,
+          "expected_revenue": 44812.32,
+          "absolute_residual_pct": 1.9886
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign",
+          "segment": "Generic Search",
+          "model_type": "trained_model",
+          "actual_revenue": 86629.5,
+          "expected_revenue": 82554.78,
+          "absolute_residual_pct": 4.9358
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign",
+          "segment": "Lookalike Prospecting",
+          "model_type": "trained_model",
+          "actual_revenue": 41889.86,
+          "expected_revenue": 40004.21,
+          "absolute_residual_pct": 4.7136
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign",
+          "segment": "Shopping Best Sellers",
+          "model_type": "trained_model",
+          "actual_revenue": 95719.27,
+          "expected_revenue": 91206.19,
+          "absolute_residual_pct": 4.9482
+        },
+        {
+          "calibration_window": 2,
+          "level": "overall",
+          "segment": "all",
+          "model_type": "trained_model",
+          "actual_revenue": 465930.94,
+          "expected_revenue": 446888.94,
+          "absolute_residual_pct": 4.261
+        },
+        {
+          "calibration_window": 2,
+          "level": "channel",
+          "segment": "Google Ads",
+          "model_type": "trained_model",
+          "actual_revenue": 262185.49,
+          "expected_revenue": 251650.18,
+          "absolute_residual_pct": 4.1865
+        },
+        {
+          "calibration_window": 2,
+          "level": "channel",
+          "segment": "Meta Ads",
+          "model_type": "trained_model",
+          "actual_revenue": 135167.48,
+          "expected_revenue": 129161.72,
+          "absolute_residual_pct": 4.6498
+        },
+        {
+          "calibration_window": 2,
+          "level": "channel",
+          "segment": "Microsoft Ads",
+          "model_type": "trained_model",
+          "actual_revenue": 68577.97,
+          "expected_revenue": 66051.0,
+          "absolute_residual_pct": 3.8258
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign_type",
+          "segment": "Advantage+",
+          "model_type": "trained_model",
+          "actual_revenue": 49768.55,
+          "expected_revenue": 48033.54,
+          "absolute_residual_pct": 3.6121
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign_type",
+          "segment": "Performance Max",
+          "model_type": "trained_model",
+          "actual_revenue": 91549.57,
+          "expected_revenue": 89270.53,
+          "absolute_residual_pct": 2.553
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign_type",
+          "segment": "Prospecting",
+          "model_type": "trained_model",
+          "actual_revenue": 39414.23,
+          "expected_revenue": 38000.54,
+          "absolute_residual_pct": 3.7202
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign_type",
+          "segment": "Retargeting",
+          "model_type": "trained_model",
+          "actual_revenue": 45984.7,
+          "expected_revenue": 43581.31,
+          "absolute_residual_pct": 5.5147
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign_type",
+          "segment": "Search",
+          "model_type": "trained_model",
+          "actual_revenue": 123012.74,
+          "expected_revenue": 117438.69,
+          "absolute_residual_pct": 4.7463
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign_type",
+          "segment": "Shopping",
+          "model_type": "trained_model",
+          "actual_revenue": 116201.15,
+          "expected_revenue": 110981.26,
+          "absolute_residual_pct": 4.7034
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign",
+          "segment": "Advantage Shopping",
+          "model_type": "trained_model",
+          "actual_revenue": 49768.55,
+          "expected_revenue": 48033.54,
+          "absolute_residual_pct": 3.6121
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign",
+          "segment": "Bing Brand",
+          "model_type": "trained_model",
+          "actual_revenue": 35852.94,
+          "expected_revenue": 34165.01,
+          "absolute_residual_pct": 4.9405
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign",
+          "segment": "Bing Generic",
+          "model_type": "trained_model",
+          "actual_revenue": 32725.03,
+          "expected_revenue": 31809.58,
+          "absolute_residual_pct": 2.8779
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign",
+          "segment": "Brand Search",
+          "model_type": "trained_model",
+          "actual_revenue": 87159.8,
+          "expected_revenue": 83492.89,
+          "absolute_residual_pct": 4.3919
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign",
+          "segment": "Cart Retargeting",
+          "model_type": "trained_model",
+          "actual_revenue": 45984.7,
+          "expected_revenue": 43581.31,
+          "absolute_residual_pct": 5.5147
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign",
+          "segment": "Generic Search",
+          "model_type": "trained_model",
+          "actual_revenue": 83476.12,
+          "expected_revenue": 79070.79,
+          "absolute_residual_pct": 5.5714
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign",
+          "segment": "Lookalike Prospecting",
+          "model_type": "trained_model",
+          "actual_revenue": 39414.23,
+          "expected_revenue": 38000.54,
+          "absolute_residual_pct": 3.7202
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign",
+          "segment": "Shopping Best Sellers",
+          "model_type": "trained_model",
+          "actual_revenue": 91549.57,
+          "expected_revenue": 89270.53,
+          "absolute_residual_pct": 2.553
+        }
+      ]
+    },
+    {
+      "horizon_days": 60,
+      "calibration_windows": [
+        {
+          "window": 1,
+          "start": "2026-03-20",
+          "end": "2026-05-18",
+          "history_rows": 1680,
+          "calibration_rows": 480
+        },
+        {
+          "window": 2,
+          "start": "2026-01-19",
+          "end": "2026-03-19",
+          "history_rows": 1200,
+          "calibration_rows": 480
+        }
+      ],
+      "segments_scored": 36,
+      "target_coverage": 0.9,
+      "half_width_pct_quantile": 0.21675168376082785,
+      "half_width_quantile_level": 0.9444444444444444,
+      "residual_multiplier_quantile": 8.702639881553264,
+      "residual_multiplier_quantile_level": 0.9444444444444444,
+      "level_summary": {
+        "overall": {
+          "sample_count": 2,
+          "half_width_pct_quantile": 0.172898,
+          "quantile_level": 1.0,
+          "mean_absolute_residual_pct": 11.0809
+        },
+        "channel": {
+          "sample_count": 6,
+          "half_width_pct_quantile": 0.188858,
+          "quantile_level": 1.0,
+          "mean_absolute_residual_pct": 10.6902
+        },
+        "campaign_type": {
+          "sample_count": 12,
+          "half_width_pct_quantile": 0.216752,
+          "quantile_level": 1.0,
+          "mean_absolute_residual_pct": 11.0626
+        },
+        "campaign": {
+          "sample_count": 16,
+          "half_width_pct_quantile": 0.223065,
+          "quantile_level": 1.0,
+          "mean_absolute_residual_pct": 10.9332
+        }
+      },
+      "rows": [
+        {
+          "calibration_window": 1,
+          "level": "overall",
+          "segment": "all",
+          "model_type": "trained_model",
+          "actual_revenue": 947838.42,
+          "expected_revenue": 903804.15,
+          "absolute_residual_pct": 4.8721
+        },
+        {
+          "calibration_window": 1,
+          "level": "channel",
+          "segment": "Google Ads",
+          "model_type": "trained_model",
+          "actual_revenue": 533596.42,
+          "expected_revenue": 509892.23,
+          "absolute_residual_pct": 4.6489
+        },
+        {
+          "calibration_window": 1,
+          "level": "channel",
+          "segment": "Meta Ads",
+          "model_type": "trained_model",
+          "actual_revenue": 274752.14,
+          "expected_revenue": 260563.55,
+          "absolute_residual_pct": 5.4453
+        },
+        {
+          "calibration_window": 1,
+          "level": "channel",
+          "segment": "Microsoft Ads",
+          "model_type": "trained_model",
+          "actual_revenue": 139489.86,
+          "expected_revenue": 133399.84,
+          "absolute_residual_pct": 4.5652
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign_type",
+          "segment": "Advantage+",
+          "model_type": "trained_model",
+          "actual_revenue": 101759.9,
+          "expected_revenue": 97005.71,
+          "absolute_residual_pct": 4.9009
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign_type",
+          "segment": "Performance Max",
+          "model_type": "trained_model",
+          "actual_revenue": 187268.84,
+          "expected_revenue": 183399.24,
+          "absolute_residual_pct": 2.1099
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign_type",
+          "segment": "Prospecting",
+          "model_type": "trained_model",
+          "actual_revenue": 81304.09,
+          "expected_revenue": 77528.16,
+          "absolute_residual_pct": 4.8704
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign_type",
+          "segment": "Retargeting",
+          "model_type": "trained_model",
+          "actual_revenue": 91688.15,
+          "expected_revenue": 86061.07,
+          "absolute_residual_pct": 6.5385
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign_type",
+          "segment": "Search",
+          "model_type": "trained_model",
+          "actual_revenue": 249073.37,
+          "expected_revenue": 238082.84,
+          "absolute_residual_pct": 4.6163
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign_type",
+          "segment": "Shopping",
+          "model_type": "trained_model",
+          "actual_revenue": 236744.07,
+          "expected_revenue": 221846.44,
+          "absolute_residual_pct": 6.7153
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign",
+          "segment": "Advantage Shopping",
+          "model_type": "trained_model",
+          "actual_revenue": 101759.9,
+          "expected_revenue": 97005.71,
+          "absolute_residual_pct": 4.9009
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign",
+          "segment": "Bing Brand",
+          "model_type": "trained_model",
+          "actual_revenue": 72851.41,
+          "expected_revenue": 68294.16,
+          "absolute_residual_pct": 6.673
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign",
+          "segment": "Bing Generic",
+          "model_type": "trained_model",
+          "actual_revenue": 66638.45,
+          "expected_revenue": 65113.1,
+          "absolute_residual_pct": 2.3426
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign",
+          "segment": "Brand Search",
+          "model_type": "trained_model",
+          "actual_revenue": 176221.96,
+          "expected_revenue": 169897.34,
+          "absolute_residual_pct": 3.7226
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign",
+          "segment": "Cart Retargeting",
+          "model_type": "trained_model",
+          "actual_revenue": 91688.15,
+          "expected_revenue": 86061.07,
+          "absolute_residual_pct": 6.5385
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign",
+          "segment": "Generic Search",
+          "model_type": "trained_model",
+          "actual_revenue": 170105.62,
+          "expected_revenue": 156737.1,
+          "absolute_residual_pct": 8.5293
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign",
+          "segment": "Lookalike Prospecting",
+          "model_type": "trained_model",
+          "actual_revenue": 81304.09,
+          "expected_revenue": 77528.16,
+          "absolute_residual_pct": 4.8704
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign",
+          "segment": "Shopping Best Sellers",
+          "model_type": "trained_model",
+          "actual_revenue": 187268.84,
+          "expected_revenue": 183399.24,
+          "absolute_residual_pct": 2.1099
+        },
+        {
+          "calibration_window": 2,
+          "level": "overall",
+          "segment": "all",
+          "model_type": "trained_model",
+          "actual_revenue": 852362.51,
+          "expected_revenue": 726715.21,
+          "absolute_residual_pct": 17.2898
+        },
+        {
+          "calibration_window": 2,
+          "level": "channel",
+          "segment": "Google Ads",
+          "model_type": "trained_model",
+          "actual_revenue": 475651.89,
+          "expected_revenue": 400091.46,
+          "absolute_residual_pct": 18.8858
+        },
+        {
+          "calibration_window": 2,
+          "level": "channel",
+          "segment": "Meta Ads",
+          "model_type": "trained_model",
+          "actual_revenue": 251153.96,
+          "expected_revenue": 217765.99,
+          "absolute_residual_pct": 15.332
+        },
+        {
+          "calibration_window": 2,
+          "level": "channel",
+          "segment": "Microsoft Ads",
+          "model_type": "trained_model",
+          "actual_revenue": 125556.66,
+          "expected_revenue": 108929.59,
+          "absolute_residual_pct": 15.2641
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign_type",
+          "segment": "Advantage+",
+          "model_type": "trained_model",
+          "actual_revenue": 94053.4,
+          "expected_revenue": 84235.96,
+          "absolute_residual_pct": 11.6547
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign_type",
+          "segment": "Performance Max",
+          "model_type": "trained_model",
+          "actual_revenue": 169836.44,
+          "expected_revenue": 140359.89,
+          "absolute_residual_pct": 21.0007
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign_type",
+          "segment": "Prospecting",
+          "model_type": "trained_model",
+          "actual_revenue": 73748.95,
+          "expected_revenue": 60611.34,
+          "absolute_residual_pct": 21.6752
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign_type",
+          "segment": "Retargeting",
+          "model_type": "trained_model",
+          "actual_revenue": 83351.61,
+          "expected_revenue": 72967.67,
+          "absolute_residual_pct": 14.2309
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign_type",
+          "segment": "Search",
+          "model_type": "trained_model",
+          "actual_revenue": 222485.72,
+          "expected_revenue": 195461.78,
+          "absolute_residual_pct": 13.8257
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign_type",
+          "segment": "Shopping",
+          "model_type": "trained_model",
+          "actual_revenue": 208886.39,
+          "expected_revenue": 173187.87,
+          "absolute_residual_pct": 20.6126
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign",
+          "segment": "Advantage Shopping",
+          "model_type": "trained_model",
+          "actual_revenue": 94053.4,
+          "expected_revenue": 84235.96,
+          "absolute_residual_pct": 11.6547
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign",
+          "segment": "Bing Brand",
+          "model_type": "trained_model",
+          "actual_revenue": 65532.77,
+          "expected_revenue": 57438.7,
+          "absolute_residual_pct": 14.0917
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign",
+          "segment": "Bing Generic",
+          "model_type": "trained_model",
+          "actual_revenue": 60023.89,
+          "expected_revenue": 51491.19,
+          "absolute_residual_pct": 16.5712
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign",
+          "segment": "Brand Search",
+          "model_type": "trained_model",
+          "actual_revenue": 156952.95,
+          "expected_revenue": 138025.83,
+          "absolute_residual_pct": 13.7127
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign",
+          "segment": "Cart Retargeting",
+          "model_type": "trained_model",
+          "actual_revenue": 83351.61,
+          "expected_revenue": 72967.67,
+          "absolute_residual_pct": 14.2309
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign",
+          "segment": "Generic Search",
+          "model_type": "trained_model",
+          "actual_revenue": 148862.5,
+          "expected_revenue": 121712.71,
+          "absolute_residual_pct": 22.3065
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign",
+          "segment": "Lookalike Prospecting",
+          "model_type": "trained_model",
+          "actual_revenue": 73748.95,
+          "expected_revenue": 60611.34,
+          "absolute_residual_pct": 21.6752
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign",
+          "segment": "Shopping Best Sellers",
+          "model_type": "trained_model",
+          "actual_revenue": 169836.44,
+          "expected_revenue": 140359.89,
+          "absolute_residual_pct": 21.0007
+        }
+      ]
+    },
+    {
+      "horizon_days": 90,
+      "calibration_windows": [
+        {
+          "window": 1,
+          "start": "2026-02-18",
+          "end": "2026-05-18",
+          "history_rows": 1440,
+          "calibration_rows": 720
+        },
+        {
+          "window": 2,
+          "start": "2025-11-20",
+          "end": "2026-02-17",
+          "history_rows": 720,
+          "calibration_rows": 720
+        }
+      ],
+      "segments_scored": 36,
+      "target_coverage": 0.9,
+      "half_width_pct_quantile": 0.13886186192777158,
+      "half_width_quantile_level": 0.9444444444444444,
+      "residual_multiplier_quantile": 7.1935564127753295,
+      "residual_multiplier_quantile_level": 0.9444444444444444,
+      "level_summary": {
+        "overall": {
+          "sample_count": 2,
+          "half_width_pct_quantile": 0.118678,
+          "quantile_level": 1.0,
+          "mean_absolute_residual_pct": 8.8022
+        },
+        "channel": {
+          "sample_count": 6,
+          "half_width_pct_quantile": 0.127152,
+          "quantile_level": 1.0,
+          "mean_absolute_residual_pct": 8.418
+        },
+        "campaign_type": {
+          "sample_count": 12,
+          "half_width_pct_quantile": 0.138862,
+          "quantile_level": 1.0,
+          "mean_absolute_residual_pct": 8.3019
+        },
+        "campaign": {
+          "sample_count": 16,
+          "half_width_pct_quantile": 0.138862,
+          "quantile_level": 1.0,
+          "mean_absolute_residual_pct": 8.4252
+        }
+      },
+      "rows": [
+        {
+          "calibration_window": 1,
+          "level": "overall",
+          "segment": "all",
+          "model_type": "trained_model",
+          "actual_revenue": 1393864.85,
+          "expected_revenue": 1245992.81,
+          "absolute_residual_pct": 11.8678
+        },
+        {
+          "calibration_window": 1,
+          "level": "channel",
+          "segment": "Google Ads",
+          "model_type": "trained_model",
+          "actual_revenue": 784138.22,
+          "expected_revenue": 695681.14,
+          "absolute_residual_pct": 12.7152
+        },
+        {
+          "calibration_window": 1,
+          "level": "channel",
+          "segment": "Meta Ads",
+          "model_type": "trained_model",
+          "actual_revenue": 404277.68,
+          "expected_revenue": 367131.11,
+          "absolute_residual_pct": 10.1181
+        },
+        {
+          "calibration_window": 1,
+          "level": "channel",
+          "segment": "Microsoft Ads",
+          "model_type": "trained_model",
+          "actual_revenue": 205448.95,
+          "expected_revenue": 183296.05,
+          "absolute_residual_pct": 12.0859
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign_type",
+          "segment": "Advantage+",
+          "model_type": "trained_model",
+          "actual_revenue": 149826.96,
+          "expected_revenue": 139645.33,
+          "absolute_residual_pct": 7.2911
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign_type",
+          "segment": "Performance Max",
+          "model_type": "trained_model",
+          "actual_revenue": 277607.43,
+          "expected_revenue": 243758.65,
+          "absolute_residual_pct": 13.8862
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign_type",
+          "segment": "Prospecting",
+          "model_type": "trained_model",
+          "actual_revenue": 119685.37,
+          "expected_revenue": 108276.22,
+          "absolute_residual_pct": 10.5371
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign_type",
+          "segment": "Retargeting",
+          "model_type": "trained_model",
+          "actual_revenue": 134765.35,
+          "expected_revenue": 119384.66,
+          "absolute_residual_pct": 12.8833
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign_type",
+          "segment": "Search",
+          "model_type": "trained_model",
+          "actual_revenue": 365735.79,
+          "expected_revenue": 326369.47,
+          "absolute_residual_pct": 12.0619
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign_type",
+          "segment": "Shopping",
+          "model_type": "trained_model",
+          "actual_revenue": 346243.95,
+          "expected_revenue": 308871.49,
+          "absolute_residual_pct": 12.0997
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign",
+          "segment": "Advantage Shopping",
+          "model_type": "trained_model",
+          "actual_revenue": 149826.96,
+          "expected_revenue": 139645.33,
+          "absolute_residual_pct": 7.2911
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign",
+          "segment": "Bing Brand",
+          "model_type": "trained_model",
+          "actual_revenue": 106966.22,
+          "expected_revenue": 95701.3,
+          "absolute_residual_pct": 11.7709
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign",
+          "segment": "Bing Generic",
+          "model_type": "trained_model",
+          "actual_revenue": 98482.73,
+          "expected_revenue": 87602.1,
+          "absolute_residual_pct": 12.4205
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign",
+          "segment": "Brand Search",
+          "model_type": "trained_model",
+          "actual_revenue": 258769.57,
+          "expected_revenue": 230687.07,
+          "absolute_residual_pct": 12.1734
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign",
+          "segment": "Cart Retargeting",
+          "model_type": "trained_model",
+          "actual_revenue": 134765.35,
+          "expected_revenue": 119384.66,
+          "absolute_residual_pct": 12.8833
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign",
+          "segment": "Generic Search",
+          "model_type": "trained_model",
+          "actual_revenue": 247761.22,
+          "expected_revenue": 221270.13,
+          "absolute_residual_pct": 11.9723
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign",
+          "segment": "Lookalike Prospecting",
+          "model_type": "trained_model",
+          "actual_revenue": 119685.37,
+          "expected_revenue": 108276.22,
+          "absolute_residual_pct": 10.5371
+        },
+        {
+          "calibration_window": 1,
+          "level": "campaign",
+          "segment": "Shopping Best Sellers",
+          "model_type": "trained_model",
+          "actual_revenue": 277607.43,
+          "expected_revenue": 243758.65,
+          "absolute_residual_pct": 13.8862
+        },
+        {
+          "calibration_window": 2,
+          "level": "overall",
+          "segment": "all",
+          "model_type": "trained_model",
+          "actual_revenue": 1201911.69,
+          "expected_revenue": 1275057.71,
+          "absolute_residual_pct": 5.7367
+        },
+        {
+          "calibration_window": 2,
+          "level": "channel",
+          "segment": "Google Ads",
+          "model_type": "trained_model",
+          "actual_revenue": 669233.75,
+          "expected_revenue": 721032.3,
+          "absolute_residual_pct": 7.1839
+        },
+        {
+          "calibration_window": 2,
+          "level": "channel",
+          "segment": "Meta Ads",
+          "model_type": "trained_model",
+          "actual_revenue": 354969.56,
+          "expected_revenue": 366631.75,
+          "absolute_residual_pct": 3.1809
+        },
+        {
+          "calibration_window": 2,
+          "level": "channel",
+          "segment": "Microsoft Ads",
+          "model_type": "trained_model",
+          "actual_revenue": 177708.38,
+          "expected_revenue": 187503.23,
+          "absolute_residual_pct": 5.2238
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign_type",
+          "segment": "Advantage+",
+          "model_type": "trained_model",
+          "actual_revenue": 133108.48,
+          "expected_revenue": 136582.17,
+          "absolute_residual_pct": 2.5433
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign_type",
+          "segment": "Performance Max",
+          "model_type": "trained_model",
+          "actual_revenue": 234869.6,
+          "expected_revenue": 258973.11,
+          "absolute_residual_pct": 9.3073
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign_type",
+          "segment": "Prospecting",
+          "model_type": "trained_model",
+          "actual_revenue": 102189.72,
+          "expected_revenue": 109605.11,
+          "absolute_residual_pct": 6.7656
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign_type",
+          "segment": "Retargeting",
+          "model_type": "trained_model",
+          "actual_revenue": 119671.36,
+          "expected_revenue": 120510.84,
+          "absolute_residual_pct": 0.6966
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign_type",
+          "segment": "Search",
+          "model_type": "trained_model",
+          "actual_revenue": 317507.34,
+          "expected_revenue": 337626.4,
+          "absolute_residual_pct": 5.959
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign_type",
+          "segment": "Shopping",
+          "model_type": "trained_model",
+          "actual_revenue": 294565.19,
+          "expected_revenue": 312013.05,
+          "absolute_residual_pct": 5.592
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign",
+          "segment": "Advantage Shopping",
+          "model_type": "trained_model",
+          "actual_revenue": 133108.48,
+          "expected_revenue": 136582.17,
+          "absolute_residual_pct": 2.5433
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign",
+          "segment": "Bing Brand",
+          "model_type": "trained_model",
+          "actual_revenue": 93405.29,
+          "expected_revenue": 95737.39,
+          "absolute_residual_pct": 2.4359
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign",
+          "segment": "Bing Generic",
+          "model_type": "trained_model",
+          "actual_revenue": 84303.09,
+          "expected_revenue": 91781.7,
+          "absolute_residual_pct": 8.1483
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign",
+          "segment": "Brand Search",
+          "model_type": "trained_model",
+          "actual_revenue": 224102.05,
+          "expected_revenue": 242120.1,
+          "absolute_residual_pct": 7.4418
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign",
+          "segment": "Cart Retargeting",
+          "model_type": "trained_model",
+          "actual_revenue": 119671.36,
+          "expected_revenue": 120510.84,
+          "absolute_residual_pct": 0.6966
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign",
+          "segment": "Generic Search",
+          "model_type": "trained_model",
+          "actual_revenue": 210262.1,
+          "expected_revenue": 220239.41,
+          "absolute_residual_pct": 4.5302
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign",
+          "segment": "Lookalike Prospecting",
+          "model_type": "trained_model",
+          "actual_revenue": 102189.72,
+          "expected_revenue": 109605.11,
+          "absolute_residual_pct": 6.7656
+        },
+        {
+          "calibration_window": 2,
+          "level": "campaign",
+          "segment": "Shopping Best Sellers",
+          "model_type": "trained_model",
+          "actual_revenue": 234869.6,
+          "expected_revenue": 258973.11,
+          "absolute_residual_pct": 9.3073
+        }
+      ]
+    }
+  ]
+}

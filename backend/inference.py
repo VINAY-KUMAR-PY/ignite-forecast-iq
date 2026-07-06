@@ -333,7 +333,10 @@ def trained_forecast_segment(
         horizon_interval_multiplier.get(str(horizon)),
         math.sqrt(max(horizon, 1) / 30),
     )
-    minimum_interval_pct = safe_float(confidence.get("minimum_interval_pct"), 0.045)
+    # The committed artifact contains older interval metadata. The evaluator
+    # uses the source-controlled split-conformal horizon floor so interval
+    # calibration can be updated without retraining the point model.
+    minimum_interval_pct = horizon_floor_pct(horizon)
     recent_daily = aggregate_segment_daily(segment)["revenue"]
     recent_volatility = confidence_interval_width(
         recent_daily,
@@ -470,7 +473,10 @@ def _segment_interval_multiplier(
     return min(1.35, max(0.95, level_factor))
 
 def _monotonic_interval_multipliers(confidence: dict[str, Any]) -> dict[str, float]:
-    multipliers = confidence.get("horizon_interval_multiplier") or DEFAULT_HORIZON_INTERVAL_MULTIPLIER
+    if str(confidence.get("interval_method") or "") == "split_conformal_chronological":
+        multipliers = confidence.get("horizon_interval_multiplier") or DEFAULT_HORIZON_INTERVAL_MULTIPLIER
+    else:
+        multipliers = DEFAULT_HORIZON_INTERVAL_MULTIPLIER
     values = {
         str(horizon): safe_float(multipliers.get(str(horizon)), DEFAULT_HORIZON_INTERVAL_MULTIPLIER[str(horizon)])
         for horizon in HORIZONS

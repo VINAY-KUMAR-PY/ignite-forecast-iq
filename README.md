@@ -280,18 +280,19 @@ holdout data before real budget commitments.
 
 The offline evaluator model is trained on a residual correction over a deterministic baseline. This keeps the model useful while preserving safe fallback behavior for tiny, malformed, or hidden datasets.
 
-Confidence intervals use residual-relative quantile regressors, residual
-volatility guardrails, horizon-specific widening, and segment-level widening:
+Confidence intervals use a split-conformal revenue calibration wrapper,
+residual volatility guardrails, horizon-specific widening, and segment-level
+widening:
 
 | Horizon | Residual multiplier | Planning floor |
 |---|---:|---:|
-| 30 days | 0.65 | 24% |
-| 60 days | 0.82 | 28% |
-| 90 days | 1.02 | 34% |
+| 30 days | 1.00 | 5.51% |
+| 60 days | 2.7792 | 21.68% |
+| 90 days | 2.7792 | 22.18% |
 
-The resulting 48-68% overall planning bands are intentionally conservative for ecommerce media forecasts, especially over 60- and 90-day horizons where seasonality, promotion cadence, auction volatility, and channel mix shifts compound uncertainty. The latest calibration narrowed mean walk-forward revenue width to 53.2%, 62.07%, and 75.37% for 30/60/90 days while retaining 100.0% sample coverage; these intervals are calibrated against `reports/backtest_summary.md` rather than arbitrarily widened.
+The resulting bands are intentionally conservative for ecommerce media forecasts, especially over 60- and 90-day horizons where seasonality, promotion cadence, auction volatility, and channel mix shifts compound uncertainty. The latest split-conformal calibration uses two pre-final chronological calibration windows and retains 100.0% walk-forward sample coverage; mean trained-model revenue widths are 14.75%, 51.76%, and 57.08% for 30/60/90 days in `reports/backtest_summary.md`.
 
-The interval enforcement layer ensures uncertainty bands widen across horizons and that `interval_width_pct` matches the actual revenue bands. On the committed sample output, overall intervals are now 48%, 56%, and 68% for 30, 60, and 90 days, with confidence labels varying by horizon and segment quality.
+The interval enforcement layer ensures uncertainty bands widen across horizons and that `interval_width_pct` matches the actual revenue bands. On the committed sample output, overall intervals are now 11.08%, 43.36%, and 45.36% for 30, 60, and 90 days, with confidence labels varying by horizon and segment quality.
 
 ROAS intervals are calibrated independently from historical daily ROAS residuals, with a minimum ROAS floor for thin segments, so `lower_roas` and `upper_roas` are not just revenue confidence bounds divided by projected spend.
 

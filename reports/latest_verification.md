@@ -1,6 +1,6 @@
 # Latest Verification Report
 
-Generated: 2026-07-03
+Generated: 2026-07-06
 
 Scope: final hardening verification after model-path confidence surfacing,
 frontend dependency hygiene, model-validation endpoint wiring, and evaluator
@@ -11,8 +11,8 @@ contract test speedups.
 ```text
 python -m pytest tests/ -q --cov=backend --durations=10
 
-183 passed, 1 skipped, 7 warnings in 175.90s (0:02:55)
-Backend coverage: 92.04%
+186 passed, 2 skipped, 7 warnings in 202.99s (0:03:22)
+Backend coverage: 92.05%
 ```
 
 ```text
@@ -21,15 +21,15 @@ npm run check
 tsc --noEmit && eslint . && vite build --configLoader runner
 vite v7.3.5 building client environment for production...
 2787 modules transformed.
-built in 8.05s
+built in 6.22s
 ```
 
 ```text
-npm run test -- --run
+npm run test
 
-Test Files  1 passed (1)
-Tests       5 passed (5)
-Duration    3.22s
+Test Files  4 passed (4)
+Tests       14 passed (14)
+Duration    5.11s
 ```
 
 ```text
@@ -37,14 +37,14 @@ npm run build
 
 vite v7.3.5 building client environment for production...
 2787 modules transformed.
-built in 8.29s
+built in 31.58s
 ```
 
 ```text
 npm ci
 
-added 495 packages, and audited 496 packages in 34s
-No deprecation warnings were emitted.
+added 603 packages, and audited 604 packages in 4m
+1 low severity vulnerability was reported.
 ```
 
 ```text
@@ -56,14 +56,18 @@ npm run test:e2e
 ```text
 ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
 
+[ForecastIQ] Reading CSV data from ./data
 [ForecastIQ] Loaded 2400 rows from sample_campaigns.csv as ads schema
 [ForecastIQ] Validation complete: 2400/2400 usable rows
 [ForecastIQ] Loaded trained evaluator model artifact: trained_model
 [ForecastIQ] Trained-model forecast coverage: 54/54 rows (100.0%) used artifact-backed estimates; 0 row(s) used safe segment fallback.
 [ForecastIQ] Prediction mode: trained_model
 [ForecastIQ] Wrote 54 rows to ./output/predictions.csv
+[ForecastIQ] Causal summary written to output\causal_summary.txt
+[ForecastIQ] Explainability notes written to output\explainability_notes.txt
 [ForecastIQ] scikit-learn version: 1.9.0 (artifact built on 1.9.0)
 [ForecastIQ] Python version: 3.14.4
+Causal summary written to ./output/causal_summary.txt
 
 rows 54
 model_types ['trained_model']
@@ -172,8 +176,8 @@ python -m pytest tests/ -q --ignore=tests/e2e
 Passed in the earlier fresh-clone run before this hardening pass.
 ```
 
-Current working-copy backend suite with coverage is recorded above: 183 passed,
-1 skipped, 7 warnings in 175.90s, 92.04% backend coverage.
+Current working-copy backend suite with coverage is recorded above: 186 passed,
+2 skipped, 7 warnings in 202.99s, 92.05% backend coverage.
 
 ## Result
 

@@ -16,7 +16,7 @@ Full tables: [reports/backtest_summary.md](./reports/backtest_summary.md).
 Clone: `git clone https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq.git`
 Live demo: https://ignite-forecast-iq.vercel.app
 
-Backend coverage: **92.04% measured locally** with `pytest tests/ -q --cov=backend --durations=10`; the Evaluator CI `Run tests with coverage` step enforces **90.30%** with `--cov-fail-under=90.30`.
+Backend coverage: **92.05% measured locally** with `python -m pytest tests/ -q --cov=backend --durations=10`; the Evaluator CI `Run tests with coverage` step enforces **90.30%** with `--cov-fail-under=90.30`.
 The canonical Evaluator CI workflow writes backend coverage and frontend validation snapshots to the GitHub Actions job summary on every run.
 
 ForecastIQ is an AI-powered ecommerce forecasting and budget-decision platform built for NetElixir AIgnition 3.0. It turns GA4, Shopify, Google Ads, Meta Ads, and Microsoft/Bing Ads CSV exports into revenue forecasts, ROAS forecasts, confidence intervals, budget simulations, anomaly signals, and an executive action brief.
@@ -227,7 +227,7 @@ the seasonal baseline is equally reliable for long-horizon revenue, the
 artifact keeps that safer anchor while still using trained-model ROAS evidence
 where it improves the backtest.
 
-Latest local verification on July 4, 2026:
+Latest local verification on July 6, 2026:
 
 ```text
 python -m pip install -r requirements.txt
@@ -244,14 +244,15 @@ Requirement already satisfied: scikit-learn==1.9.0
 
 python -m pip install -r requirements-app.txt
 python -m pytest tests/ -q --cov=backend --durations=10
-183 passed, 1 skipped, 7 warnings with 92.04% backend coverage
+186 passed, 2 skipped, 7 warnings in 202.99s with 92.05% backend coverage
 
 npm ci
-added 495 packages, audited 496 packages, and emitted no deprecation warnings
+added 603 packages, audited 604 packages; 1 low severity vulnerability reported
 
-npm run check && npx vitest run --config vitest.config.ts
-check passed: TypeScript, ESLint, and Vite production build
-vitest passed: 1 file, 5 tests
+npm run test && npm run check && npm run build
+vitest passed: 4 files, 14 tests in 5.11s
+check passed: TypeScript, ESLint, and Vite production build in 6.22s
+build passed: Vite transformed 2,787 modules and built in 31.58s
 
 npm run test:e2e
 Playwright passed: 1 Chromium workflow covering Upload -> Dashboard -> Forecast -> Model Validation -> Simulator -> Insights

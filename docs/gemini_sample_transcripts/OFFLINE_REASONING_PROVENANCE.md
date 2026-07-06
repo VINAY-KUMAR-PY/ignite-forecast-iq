@@ -32,37 +32,43 @@ evaluator diagnostics only. Example from the current sample run:
 
 ```json
 {
-  "channel": "Meta Ads",
+  "baseline_roas": 2.9629,
   "campaign_type": "Advantage+",
-  "intervention_detected": true,
+  "channel": "Meta Ads",
+  "confidence": "low",
+  "delta_percent": 1.6,
   "effect_direction": "positive",
   "effect_size": 2237.68,
-  "confidence": "low",
-  "baseline_roas": 2.9629,
-  "observed_roas": 2.9754,
-  "delta_percent": 1.6,
-  "supporting_metrics": {
-    "method": "difference_in_differences",
-    "event_date": "2026-06-08",
-    "p_value": 0.1792,
-    "t_statistic": 1.343,
-    "effect_strength": 0.787,
-    "confidence_interval": [-1104.63, 5399.78],
-    "parallel_trend_passed": true,
-    "pre_window_days": 14,
-    "post_window_days": 10,
-    "anomaly_context": "top anomaly Google Ads roas on 2026-06-11 (warning, z=-2.5)"
-  },
-  "primary_driver": {
-    "role": "leading_roas",
-    "segment": "Microsoft Ads",
-    "metric": "5.44x ROAS"
-  },
+  "intervention_detected": false,
   "limitations": [
     "observational DiD, not randomized incrementality",
     "95% confidence interval crosses zero",
-    "p-value is not statistically strong"
-  ]
+    "p-value is not statistically strong",
+    "minimum sample or power check did not pass"
+  ],
+  "observed_roas": 2.9754,
+  "primary_driver": {
+    "metric": "5.44x ROAS",
+    "role": "leading_roas",
+    "segment": "Microsoft Ads"
+  },
+  "supporting_metrics": {
+    "anomaly_context": "top anomaly Google Ads roas on 2026-06-11 (warning, z=-2.5)",
+    "confidence_interval": [
+      -1104.63,
+      5399.78
+    ],
+    "effect_strength": 0.787,
+    "event_date": "2026-06-08",
+    "low_power_reason": "p-value 0.179 exceeds 0.15; 95% confidence interval crosses zero",
+    "method": "difference_in_differences",
+    "p_value": 0.1792,
+    "parallel_trend_passed": true,
+    "post_window_days": 10,
+    "power_check_passed": false,
+    "pre_window_days": 14,
+    "t_statistic": 1.343
+  }
 }
 ```
 
@@ -83,9 +89,9 @@ incrementality.
 With the evidence object above, the evaluator writes:
 
 ```text
-Meta Ads has a low confidence positive signal with estimated revenue effect
-$2,238. Observed ROAS is 2.98x versus baseline 2.96x, but the +1.6% delta is
-not strong enough to treat as proven incrementality.
+No dominant intervention is statistically strong, so Meta Ads is best treated
+as a run-rate planning case. Observed ROAS is 2.98x versus baseline 2.96x,
+delta +1.6%, with low confidence.
 ```
 
 ## Live LLM Hypothesis Ranking

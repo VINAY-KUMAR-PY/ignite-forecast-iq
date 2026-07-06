@@ -488,7 +488,7 @@ full MMM program.
 This section records objective verification evidence for reviewers. It replaces
 the older standalone evidence indexes.
 
-### Latest local verification (2026-07-04)
+### Latest local verification (2026-07-06)
 
 ```text
 Clean evaluator venv:
@@ -505,17 +505,17 @@ Offline evaluator:
 [ForecastIQ] Explainability notes written to output\explainability_notes.txt
 [ForecastIQ] scikit-learn version: 1.9.0 (artifact built on 1.9.0)
 PASS offline evaluator: 54 rows ['trained_model']
-PASS causal summary: 4834 bytes, including OFFLINE_DETERMINISTIC_FALLBACK and DISTILLED_LLM_DERIVED_OFFLINE_CACHE labels
+PASS causal summary: 8308 bytes, including OFFLINE_DETERMINISTIC_FALLBACK and DISTILLED_LLM_DERIVED_OFFLINE_CACHE labels
 PASS explainability notes: per segment/horizon recent trend, seasonality, ROAS stability, and confidence signals
 
 Backend tests:
-183 passed, 1 skipped, 7 warnings with 92.04% backend coverage from a full local backend run with `requirements-app.txt`
+186 passed, 2 skipped, 7 warnings in 202.99s with 92.05% backend coverage from a full local backend run with `requirements-app.txt`
 
 Frontend validation:
-npm ci: added 495 packages, audited 496 packages, and emitted no deprecation warnings; one low-severity advisory remains
-npm run check: tsc, eslint, and Vite build passed; Vite transformed 2,787 modules and built in 8.05s
-npx vitest run --config vitest.config.ts: Vitest passed 1 file and 5 tests in 3.22s
-npm run build: Vite transformed 2,787 modules and built in 8.29s
+npm ci: added 603 packages and audited 604 packages; one low-severity advisory remains
+npm run test: Vitest passed 4 files and 14 tests in 5.11s
+npm run check: tsc, eslint, and Vite build passed; Vite transformed 2,787 modules and built in 6.22s
+npm run build: Vite transformed 2,787 modules and built in 31.58s
 npm run test:e2e: Playwright passed 1 Chromium workflow in 24.1s
 
 Sklearn zero-fallback guard:

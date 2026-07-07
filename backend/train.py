@@ -262,18 +262,21 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
             except Exception:
                 holdout_beats_baseline = False
 
-        # The summary/reporting path logs the 30d revenue weight by default; the
-        # artifact still stores the full per-horizon map below.
-        if horizon in {60, 90}:
-            # Long-horizon revenue residuals are less stable on the sample and
-            # rolling-origin backtests; keep the trained artifact active while
-            # selecting the deterministic seasonal baseline anchor for revenue.
-            revenue_model_weight = 0.0
-        elif revenue_cv_r2 >= 0.15 and holdout_beats_baseline:
+        # Select trained residual influence only when the horizon-specific
+        # chronological holdout supports it. Long horizons are allowed to earn
+        # non-zero weight, but still anchor to the seasonal baseline when the
+        # trained residual correction does not beat it.
+        holdout_improvement_pct = (
+            (baseline_holdout_mae - revenue_holdout_mae) / baseline_holdout_mae
+            if baseline_holdout_mae and revenue_holdout_mae is not None and baseline_holdout_mae > 0
+            else 0.0
+        )
+        long_horizon_is_robust = horizon < 60 or (revenue_cv_r2 >= 0.97 and holdout_improvement_pct >= 0.15)
+        if long_horizon_is_robust and revenue_cv_r2 >= 0.15 and holdout_beats_baseline:
             revenue_model_weight = {30: 0.60, 60: 0.10, 90: 0.50}.get(horizon, 0.25)
-        elif revenue_cv_r2 >= 0.05 and holdout_beats_baseline:
+        elif long_horizon_is_robust and revenue_cv_r2 >= 0.05 and holdout_beats_baseline:
             revenue_model_weight = {30: 0.25, 60: 0.10, 90: 0.40}.get(horizon, 0.15)
-        elif holdout_beats_baseline:
+        elif long_horizon_is_robust and holdout_beats_baseline:
             revenue_model_weight = {30: 0.10, 60: 0.10, 90: 0.25}.get(horizon, 0.10)
         else:
             revenue_model_weight = 0.0

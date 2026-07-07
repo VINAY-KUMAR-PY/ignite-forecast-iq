@@ -58,8 +58,12 @@ TRANSCRIPT_PROVENANCE: tuple[dict[str, str], ...] = (
 
 SKELETON_TRANSCRIPT_SOURCES: dict[str, tuple[str, ...]] = {
     "incremental_growth": ("live_gemini_transcript_20260707T051959Z",),
+    "statistically_supported_lift": ("live_gemini_transcript_20260707T051959Z",),
     "efficiency_compression": ("live_gemini_transcript_20260704T142147Z",),
+    "statistically_supported_decline": ("live_gemini_transcript_20260704T142147Z",),
     "volatility_watch": ("live_gemini_transcript_20260707T051959Z",),
+    "anomaly_timing_watch": ("live_gemini_transcript_20260705T051036Z",),
+    "noisy_positive_signal": ("live_gemini_transcript_20260707T051959Z",),
     "budget_reallocation": ("live_gemini_transcript_20260705T051036Z",),
     "stable_run_rate": ("live_gemini_transcript_20260704T142147Z",),
 }
@@ -84,6 +88,24 @@ _SKELETONS: dict[str, dict[str, str]] = {
             "signal holds, and validate with a holdout because limitations remain: {limitations}."
         ),
     },
+    "statistically_supported_lift": {
+        "label": "statistically_supported_lift",
+        "summary_skeleton": (
+            "{channel} has the clearest positive causal hypothesis in this run. The estimated "
+            "revenue effect is ${effect_size:,.0f} with p={p_value:.3f}, CI {ci_text}, and "
+            "{confidence} confidence. Observed ROAS moved from {baseline_roas:.2f}x baseline "
+            "to {observed_roas:.2f}x, a {delta_percent:+.1f}% change, so the result reads as "
+            "a measured lift opportunity rather than a broad seasonal drift."
+        ),
+        "evidence_focus_skeleton": (
+            "ranked evidence: p={p_value:.3f}, strength={effect_strength:.2f}, "
+            "anomaly_context={anomaly_context}; primary driver: {primary_driver}"
+        ),
+        "recommended_action_skeleton": (
+            "Increase {channel} only through controlled budget steps, keep the same measurement "
+            "window, and preserve the test until the CI remains one-sided; limitations: {limitations}."
+        ),
+    },
     "efficiency_compression": {
         "label": "efficiency_compression",
         "summary_skeleton": (
@@ -102,6 +124,24 @@ _SKELETONS: dict[str, dict[str, str]] = {
             "are checked; limitations: {limitations}."
         ),
     },
+    "statistically_supported_decline": {
+        "label": "statistically_supported_decline",
+        "summary_skeleton": (
+            "{channel} has a statistically supported negative causal hypothesis. The estimated "
+            "revenue effect is ${effect_size:,.0f}, p={p_value:.3f}, CI {ci_text}, and observed "
+            "ROAS is {observed_roas:.2f}x versus {baseline_roas:.2f}x baseline. The "
+            "{delta_percent:+.1f}% movement points to an efficiency or demand-quality problem "
+            "in {campaign_type}, not a scaling signal."
+        ),
+        "evidence_focus_skeleton": (
+            "ranked evidence: p={p_value:.3f}, strength={effect_strength:.2f}, "
+            "anomaly_context={anomaly_context}; primary driver: {primary_driver}"
+        ),
+        "recommended_action_skeleton": (
+            "Pause expansion in {channel}, audit bids, landing pages, and conversion quality, "
+            "then re-open spend only after the negative effect disappears; limitations: {limitations}."
+        ),
+    },
     "volatility_watch": {
         "label": "volatility_watch",
         "summary_skeleton": (
@@ -117,6 +157,40 @@ _SKELETONS: dict[str, dict[str, str]] = {
         "recommended_action_skeleton": (
             "Use the forecast interval as a planning guardrail, inspect the anomaly window, and "
             "avoid major reallocation until these limitations are resolved: {limitations}."
+        ),
+    },
+    "anomaly_timing_watch": {
+        "label": "anomaly_timing_watch",
+        "summary_skeleton": (
+            "{channel} is best read through anomaly timing. The causal estimate is "
+            "${effect_size:,.0f} with {confidence} confidence, while {anomaly_context}. "
+            "Observed ROAS is {observed_roas:.2f}x versus {baseline_roas:.2f}x baseline, "
+            "so the narrative should focus on diagnosing the event window before reallocating."
+        ),
+        "evidence_focus_skeleton": (
+            "timing evidence: {anomaly_context}; p={p_value:.3f}; CI {ci_text}; "
+            "primary driver: {primary_driver}"
+        ),
+        "recommended_action_skeleton": (
+            "Check campaign changes, tracking, promo cadence, and inventory around the anomaly "
+            "date before acting on the forecast; limitations: {limitations}."
+        ),
+    },
+    "noisy_positive_signal": {
+        "label": "noisy_positive_signal",
+        "summary_skeleton": (
+            "{channel} has a positive but noisy signal: estimated effect ${effect_size:,.0f}, "
+            "ROAS {observed_roas:.2f}x versus {baseline_roas:.2f}x, and delta "
+            "{delta_percent:+.1f}%. Because p={p_value:.3f} and CI {ci_text}, the signal is "
+            "useful for prioritizing tests but not strong enough for an aggressive budget move."
+        ),
+        "evidence_focus_skeleton": (
+            "uncertainty evidence: strength={effect_strength:.2f}; {anomaly_context}; "
+            "primary driver: {primary_driver}; intervention_detected={intervention_detected}"
+        ),
+        "recommended_action_skeleton": (
+            "Run a small incremental test in {channel}, cap spend until the next data refresh, "
+            "and look for a cleaner one-sided interval; limitations: {limitations}."
         ),
     },
     "budget_reallocation": {
@@ -361,14 +435,20 @@ def build_reasoning_trace(evidence: dict[str, Any], label: str | None = None) ->
     limitations = evidence.get("limitations") if isinstance(evidence.get("limitations"), list) else []
     driver = evidence.get("primary_driver") if isinstance(evidence.get("primary_driver"), dict) else {}
 
+    anomaly_context = str(metrics.get("anomaly_context") or "")
+    has_material_anomaly = bool(anomaly_context and "no material anomaly" not in anomaly_context)
+
     if not intervention:
         rule = "no intervention detected -> stable_run_rate skeleton unless budget context overrides"
     elif confidence == "low" or lower <= 0 <= upper:
-        rule = "weak confidence or CI crosses zero -> volatility_watch skeleton"
+        if has_material_anomaly:
+            rule = "weak confidence with material anomaly timing -> anomaly_timing_watch or noisy_positive_signal skeleton"
+        else:
+            rule = "weak confidence or CI crosses zero -> volatility_watch skeleton"
     elif direction == "negative" or effect_size < 0:
-        rule = "negative estimated effect -> efficiency_compression skeleton"
+        rule = "negative estimated effect -> statistically_supported_decline or efficiency_compression skeleton"
     else:
-        rule = "positive statistically ranked signal -> incremental_growth skeleton"
+        rule = "positive statistically ranked signal -> statistically_supported_lift or incremental_growth skeleton"
 
     return [
         (
@@ -421,14 +501,27 @@ def _select_skeleton_label(evidence: dict[str, Any], planned_budgets: dict[str, 
     confidence = str(evidence.get("confidence") or "low").lower()
     direction = str(evidence.get("effect_direction") or "neutral").lower()
     effect_size = safe_float(evidence.get("effect_size"), 0.0)
+    delta_percent = safe_float(evidence.get("delta_percent"), 0.0)
     metrics = evidence.get("supporting_metrics") if isinstance(evidence.get("supporting_metrics"), dict) else {}
     lower, upper = (metrics.get("confidence_interval") or [0.0, 0.0])[:2]
+    p_value = safe_float(metrics.get("p_value"), 1.0)
+    strength = safe_float(metrics.get("effect_strength"), 0.0)
+    anomaly_context = str(metrics.get("anomaly_context") or "")
+    has_material_anomaly = bool(anomaly_context and "no material anomaly" not in anomaly_context)
     if not evidence.get("intervention_detected"):
         return "stable_run_rate"
     if confidence == "low" or safe_float(lower) <= 0 <= safe_float(upper):
+        if has_material_anomaly and direction == "positive" and effect_size > 0:
+            return "noisy_positive_signal"
+        if has_material_anomaly:
+            return "anomaly_timing_watch"
         return "volatility_watch"
     if direction == "negative" or effect_size < 0:
+        if p_value <= 0.10 and strength >= 0.20:
+            return "statistically_supported_decline"
         return "efficiency_compression"
+    if p_value <= 0.10 and (abs(delta_percent) >= 15 or strength >= 0.35):
+        return "statistically_supported_lift"
     return "incremental_growth"
 
 
@@ -499,6 +592,10 @@ def _format_values(evidence: dict[str, Any]) -> dict[str, Any]:
         "observed_roas": safe_float(evidence.get("observed_roas"), 0.0),
         "delta_percent": safe_float(evidence.get("delta_percent"), 0.0),
         "supporting_metrics": supporting,
+        "p_value": safe_float(metrics.get("p_value"), 1.0),
+        "effect_strength": safe_float(metrics.get("effect_strength"), 0.0),
+        "ci_text": _ci_text(metrics.get("confidence_interval")),
+        "anomaly_context": str(metrics.get("anomaly_context") or "no material anomaly was detected"),
         "primary_driver": primary_driver.strip(),
         "limitations": "; ".join(str(item) for item in limitations) if limitations else "none identified",
     }

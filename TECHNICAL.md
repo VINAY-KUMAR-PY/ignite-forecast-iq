@@ -82,12 +82,15 @@ Alternatives considered:
 ### Long-Horizon Revenue Blend Decision
 
 The 30 day revenue model uses trained residual correction because paired
-rolling-origin evidence favors the trained signal. At 60 and 90 days, the
-trained residual correction statistically ties the seasonal baseline on the
-committed sample and can overfit small market windows. ForecastIQ therefore
-anchors 60/90 day revenue to the deterministic seasonal baseline inside the
-loaded `trained_model` artifact instead of forcing residual correction where the
-evidence does not justify it.
+rolling-origin evidence favors the trained signal. For this hardening pass,
+ForecastIQ retrained the artifact with longer-horizon features including
+56-day spend/revenue/ROAS windows, 56-day trend terms, channel-mix drift, and a
+quarter-end indicator. Those features made a genuine attempt to improve 60/90
+day generalization, but the pooled paired-bootstrap evidence still does not
+show a statistically clear long-horizon revenue win over the deterministic
+seasonal baseline. ForecastIQ therefore anchors 60/90 day revenue to the
+baseline inside the loaded `trained_model` artifact instead of forcing residual
+correction where the evidence does not justify it.
 
 The longer-horizon ablation table below is generated from
 [reports/long_horizon_revenue_ablation.md](./reports/long_horizon_revenue_ablation.md),
@@ -96,8 +99,8 @@ which in turn reads the latest `reports/backtest_report.json` produced by
 
 | Horizon | Trained MAE | Baseline MAE | Trained RMSE | Baseline RMSE | Trained MAPE | Baseline MAPE | Statistical test | 95% CI | p-value | Verdict |
 |---:|---:|---:|---:|---:|---:|---:|---|---:|---:|---|
-| 60d | 19199.67 | 19199.67 | 27461.10 | 27461.10 | 10.12% | 10.12% | paired bootstrap absolute-error delta | 0.0000 to 0.0000 | 1.000 | statistical tie |
-| 90d | 22141.94 | 22141.94 | 31514.10 | 31514.10 | 7.89% | 7.89% | paired bootstrap absolute-error delta | 0.0000 to 0.0000 | 1.000 | statistical tie |
+| 60d | 19661.80 | 19199.67 | 31621.62 | 30397.05 | 10.45% | 10.11% | paired bootstrap absolute-error delta | -336.3842 to 1310.7193 | 0.254 | statistical tie |
+| 90d | 22141.94 | 22141.94 | 34041.40 | 34041.40 | 7.89% | 7.89% | paired bootstrap absolute-error delta | 0.0000 to 0.0000 | 1.000 | statistical tie |
 
 This is a deliberate model-selection gate, not a hidden failure. The generated
 CSV rows now expose the horizon-level basis directly: 30 day residual-correction
@@ -118,9 +121,9 @@ Latest committed headline values:
 
 | Horizon | Revenue MAPE | Overall ROAS MAPE | Revenue interval coverage |
 |---:|---:|---:|---:|
-| 30d | 3.60% | 0.49% | 93.06% |
-| 60d | 10.11% | 1.05% | 100.0% |
-| 90d | 7.89% | 0.91% | 100.0% |
+| 30d | 3.59% | 0.55% | 93.06% |
+| 60d | 10.45% | 1.05% | 100.0% |
+| 90d | 7.89% | 0.68% | 100.0% |
 
 Coverage is intentionally conservative because ecommerce revenue is noisy over
 longer horizons due to seasonality, promotion cadence, channel volatility, and
@@ -227,6 +230,10 @@ To keep AI reasoning visible inside that no-network boundary, ForecastIQ uses
 distilled reasoning patterns derived from real Gemini transcripts committed in
 `docs/gemini_sample_transcripts/`, then fills them with live computed anomaly,
 DiD, p-value, confidence interval, segment, and budget evidence.
+The offline cache selects among distinct lift, decline, anomaly-timing,
+noisy-signal, budget-reallocation, and stable run-rate skeletons based on the
+computed evidence object, so the narrative structure changes with the data
+rather than using one canned paragraph.
 
 The optional live app path is separate:
 

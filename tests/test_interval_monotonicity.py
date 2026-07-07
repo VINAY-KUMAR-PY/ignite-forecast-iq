@@ -103,6 +103,44 @@ def test_sample_forecast_confidence_is_not_constant():
         assert confidence_values & {"medium", "high"}
 
 
+def test_forecast_confidence_tracks_final_interval_width():
+    """A wider final interval must never receive a better confidence label."""
+    rank = {"low": 0, "medium": 1, "high": 2, "not_computable": -1}
+    with tempfile.TemporaryDirectory() as tmp:
+        output = Path(tmp) / "predictions.csv"
+        result = subprocess.run(
+            [
+                sys.executable, "-m", "backend.predict",
+                "--data-dir", "./data",
+                "--model", "./pickle/model.pkl",
+                "--output", str(output),
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=120,
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+
+        df = pd.read_csv(output)
+        violations = []
+        for (level, segment), group in df.groupby(["level", "segment"]):
+            rows = group.sort_values("interval_width_pct").to_dict("records")
+            for narrower, wider in zip(rows, rows[1:]):
+                narrower_width = float(narrower["interval_width_pct"])
+                wider_width = float(wider["interval_width_pct"])
+                if wider_width <= narrower_width:
+                    continue
+                narrower_rank = rank[str(narrower["forecast_confidence"])]
+                wider_rank = rank[str(wider["forecast_confidence"])]
+                if wider_rank > narrower_rank:
+                    violations.append(
+                        f"{level}/{segment}: {wider_width:.2f}% {wider['forecast_confidence']} "
+                        f"> {narrower_width:.2f}% {narrower['forecast_confidence']}"
+                    )
+        assert not violations, "Confidence inversions found:\n" + "\n".join(violations)
+
+
 def test_roas_intervals_are_not_fixed_revenue_transforms():
     """ROAS bands should use independent ROAS residual uncertainty, not revenue ratios."""
     with tempfile.TemporaryDirectory() as tmp:

@@ -13,7 +13,9 @@ tests, and local frontend demo.
 
 `run.sh` is tested end-to-end in CI against empty, malformed, single-source,
 and multi-source held-out-style inputs; see
-[`tests/test_run_sh_contract.py`](./tests/test_run_sh_contract.py).
+[`tests/test_run_sh_contract.py`](./tests/test_run_sh_contract.py). The
+root `Dockerfile` mirrors the same evaluator-only path and is smoke-tested in
+Evaluator CI.
 
 ## Repository
 
@@ -57,13 +59,13 @@ stays unchanged.
 
 Latest walk-forward revenue interval coverage is **93.06% / 100.0% / 100.0%**
 for 30/60/90-day trained intervals. Revenue MAPE is
-**3.60% / 10.11% / 7.89%** for 30/60/90 days; overall-level ROAS MAPE is
-**0.49% / 1.05% / 0.91%**. Full tables:
+**3.59% / 10.45% / 7.89%** for 30/60/90 days; overall-level ROAS MAPE is
+**0.55% / 1.05% / 0.68%**. Full tables:
 [reports/backtest_summary.md](./reports/backtest_summary.md).
 
 Backend coverage is **92.05% measured locally** with
 `python -m pytest tests/ -q --cov=backend --durations=10`; Evaluator CI
-enforces **90.30%** with `--cov-fail-under=90.30`.
+enforces **92.05%** with `--cov-fail-under=92.05`.
 
 ## See Live AI Reasoning In 30 Seconds
 

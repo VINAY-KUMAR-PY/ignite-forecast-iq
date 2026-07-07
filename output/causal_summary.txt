@@ -71,7 +71,7 @@ Total spend: $1,027,759 | Total revenue: $4,170,596 | Blended ROAS: 4.06x
 Performance is stable (spend and revenue trends within +/-5% over recent 28 days).
 Leading channel by ROAS: Microsoft Ads at 5.44x - likely driven by stronger conversion quality or lower CPC in this channel.
 Leading channel by revenue: Google Ads; highest-risk channel by ROAS: Meta Ads at 3.00x.
-30-day forecast: expected revenue $458,938 at 4.05x ROAS.
+30-day forecast: expected revenue $465,868 at 4.05x ROAS.
 Anomaly signals ranked by forecast relevance:
   - 2026-06-11 | Google Ads | roas: actual=4.12, expected=4.65, z=-2.5 (warning)
   - 2026-06-08 | Meta Ads | roas: actual=3.31, expected=2.94, z=2.5 (warning)

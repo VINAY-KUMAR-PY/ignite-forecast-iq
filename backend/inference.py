@@ -30,7 +30,6 @@ from .evaluator_intervals import (
 from .evaluator_io import fallback_model_config, is_trained_model_artifact
 from .segment_utils import (
     FEATURE_COLUMNS,
-    THIN_CAMPAIGN_CONFIDENCE,
     aggregate_segment_daily,
     planned_projected_spend,
     safe_ratio,
@@ -454,6 +453,37 @@ def _trained_confidence_label(
         return "medium"
     return "low"
 
+
+def forecast_confidence_from_interval_width(
+    width_pct: float,
+    expected_revenue: float,
+    expected_roas: float | None = None,
+    lower_roas: float | None = None,
+    upper_roas: float | None = None,
+) -> str:
+    """Translate the final revenue interval width into a planning confidence label.
+
+    Computable rows are intentionally width-only so the CSV label always
+    matches the final lower/upper bounds after monotonic widening and
+    calibration repairs. Rows with no spend/ROAS basis remain explicitly
+    not_computable instead of being downgraded to a misleading low label.
+    """
+    if (
+        expected_roas is not None
+        and safe_float(expected_roas) <= 0
+        and safe_float(lower_roas) <= 0
+        and safe_float(upper_roas) <= 0
+    ):
+        return ROAS_NOT_COMPUTABLE_CONFIDENCE
+    if safe_float(expected_revenue) <= 0:
+        return ROAS_NOT_COMPUTABLE_CONFIDENCE
+    width = max(0.0, safe_float(width_pct))
+    if width <= 30.0:
+        return "high"
+    if width <= 60.0:
+        return "medium"
+    return "low"
+
 def _segment_interval_multiplier(
     level: str,
     history_days: int,
@@ -643,11 +673,7 @@ def sanitize_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         if upper_roas < expected_roas:
             upper_roas = expected_roas
         width_pct = clean_number(((upper - lower) / expected) * 100 if expected > 0 else 0.0)
-        confidence = str(row.get("forecast_confidence") or "")
-        if confidence in {"high", "medium", "low", THIN_CAMPAIGN_CONFIDENCE, ROAS_NOT_COMPUTABLE_CONFIDENCE}:
-            pass
-        else:
-            confidence = "high" if width_pct < 30 else "medium" if width_pct <= 60 else "low"
+        confidence = forecast_confidence_from_interval_width(width_pct, expected, expected_roas, lower_roas, upper_roas)
         clean_rows.append(
             {
                 "level": str(row.get("level") or "overall"),
@@ -692,6 +718,9 @@ def _enforce_monotonic_interval_width_pct(rows: list[dict[str, Any]]) -> list[di
             expected = clean_number(row.get("expected_revenue"))
             lower = clean_number(row.get("lower_revenue"))
             upper = clean_number(row.get("upper_revenue"))
+            expected_roas = clean_number(row.get("expected_roas"))
+            lower_roas = clean_number(row.get("lower_roas"))
+            upper_roas = clean_number(row.get("upper_roas"))
 
             if expected > 0:
                 current_pct = ((upper - lower) / expected) * 100.0
@@ -716,12 +745,23 @@ def _enforce_monotonic_interval_width_pct(rows: list[dict[str, Any]]) -> list[di
 
                 min_width_pct = max(min_width_pct, actual_pct)
                 row["interval_width_pct"] = clean_number(round(actual_pct, 2))
+                row["forecast_confidence"] = forecast_confidence_from_interval_width(
+                    row["interval_width_pct"],
+                    expected,
+                    expected_roas,
+                    lower_roas,
+                    upper_roas,
+                )
             else:
                 min_width_pct = max(min_width_pct, clean_number(row.get("interval_width_pct")))
+                row["forecast_confidence"] = forecast_confidence_from_interval_width(
+                    row.get("interval_width_pct"),
+                    expected,
+                    expected_roas,
+                    lower_roas,
+                    upper_roas,
+                )
 
-            expected_roas = clean_number(row.get("expected_roas"))
-            lower_roas = clean_number(row.get("lower_roas"))
-            upper_roas = clean_number(row.get("upper_roas"))
             if expected_roas > 0 and upper_roas > lower_roas:
                 roas_pct = ((upper_roas - lower_roas) / expected_roas) * 100.0
                 if roas_pct < min_width_pct * 0.5:

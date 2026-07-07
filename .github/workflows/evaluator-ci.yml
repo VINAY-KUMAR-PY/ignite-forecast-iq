@@ -77,6 +77,20 @@ jobs:
           print("Minimal grading path OK:", len(frame), "rows", sorted(modes))
           PY
 
+  docker-evaluator-smoke:
+    name: Docker evaluator smoke test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build evaluator image
+        run: docker build -t forecastiq-evaluator .
+
+      - name: Run offline evaluator inside image
+        run: docker run --rm forecastiq-evaluator
+
   evaluator:
     name: Offline evaluator / Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
@@ -506,7 +520,7 @@ jobs:
       - name: Run tests with coverage
         run: |
           pip install pytest-cov
-          pytest tests/ --durations=10 --junitxml=pytest-results.xml --cov=backend --cov-report=term-missing --cov-report=json --cov-fail-under=90.30
+          pytest tests/ --durations=10 --junitxml=pytest-results.xml --cov=backend --cov-report=term-missing --cov-report=json --cov-fail-under=92.05
           python - <<'PY'
           import json
           import os
@@ -549,7 +563,7 @@ jobs:
               handle.write("## Backend coverage\n\n")
               handle.write(f"- Backend tests: **{passed} passed**, **{skipped} skipped**, **{failures_count} failed**, **{errors} errors**\n")
               handle.write(f"- Overall backend coverage: **{total:.2f}%**\n")
-              handle.write("- Required gate: **90.30%** via `--cov-fail-under=90.30`\n")
+              handle.write("- Required gate: **92.05%** via `--cov-fail-under=92.05`\n")
               handle.write("- Required high-risk module gate: **75%** each\n")
               for module, pct in module_rows:
                   handle.write(f"  - `{module}`: **{pct:.2f}%**\n")

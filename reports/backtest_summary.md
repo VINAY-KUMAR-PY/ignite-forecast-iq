@@ -1,6 +1,6 @@
 # ForecastIQ Backtest Summary
 
-Generated: 2026-07-07T09:02:34.308442+00:00
+Generated: 2026-07-07T14:17:53.229175+00:00
 
 ## Holdout Design
 
@@ -38,32 +38,32 @@ Generated: 2026-07-07T09:02:34.308442+00:00
 
 | Model | MAE | RMSE | MAPE | Interval coverage | Mean interval width | Mean interval width % |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Trained model | 2380.41 | 3299.15 | 2.64% | 100.0% | 21954.5378 | 30.01% |
+| Trained model | 2974.46 | 4329.54 | 2.97% | 100.0% | 21991.9828 | 29.87% |
 | Safe baseline | 2185.89 | 2763.76 | 2.78% | 88.89% | 11813.1867 | 11.02% |
 
 ### ROAS
 
 | Model | MAE | RMSE | MAPE | Interval coverage | Mean interval width | Mean interval width % |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Trained model | 0.04 | 0.06 | 1.08% | 100.0% | 0.4678 | 11.4% |
+| Trained model | 0.05 | 0.06 | 1.2% | 100.0% | 0.4706 | 11.46% |
 | Safe baseline | 0.05 | 0.07 | 1.44% | 100.0% | 0.5911 | 14.47% |
 
 ## Trained vs Baseline
 
-- MAE improvement vs safe baseline: -194.52
-- RMSE improvement vs safe baseline: -535.39
-- MAPE improvement vs safe baseline: 0.14 percentage points
-- ROAS MAE improvement vs safe baseline: 0.01
+- MAE improvement vs safe baseline: -788.57
+- RMSE improvement vs safe baseline: -1565.78
+- MAPE improvement vs safe baseline: -0.19 percentage points
+- ROAS MAE improvement vs safe baseline: 0.0
 - ROAS RMSE improvement vs safe baseline: 0.01
 
 ### Judge Interpretation
 
 | Target | Trained MAE | Safe baseline MAE | MAE difference % | Winner |
 | --- | ---: | ---: | ---: | --- |
-| Revenue | 2380.41 | 2185.89 | 8.9% | Safe baseline |
-| ROAS | 0.04 | 0.05 | -20.0% | Trained model |
+| Revenue | 2974.46 | 2185.89 | 36.08% | Safe baseline |
+| ROAS | 0.05 | 0.05 | 0.0% | Tie |
 
-Plain-English interpretation: Revenue: The safe baseline has lower revenue MAE than the trained model by 8.90% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 20.00% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability.
+Plain-English interpretation: Revenue: The safe baseline has lower revenue MAE than the trained model by 36.08% on this slice. ROAS: The trained model and safe baseline are tied on roas MAE for this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability.
 
 The table above is a single final 30-day holdout point comparison. The paired
 bootstrap table below pools the rolling-origin fold/segment rows and resamples
@@ -82,12 +82,12 @@ than overstating a point-estimate win.
 
 | Horizon days | Target | Paired rows | Mean absolute-error delta | 95% bootstrap CI | p-value | Statistical verdict |
 | ---: | --- | ---: | ---: | ---: | ---: | --- |
-| 30 | REVENUE | 72 | -687.7908 | -1169.6445 to -262.821 | 0.002 | Trained model |
-| 30 | ROAS | 72 | -0.0145 | -0.0226 to -0.0067 | 0.0 | Trained model |
-| 60 | REVENUE | 72 | 0.0 | 0.0 to 0.0 | 1.0 | Statistical tie |
-| 60 | ROAS | 72 | -0.0143 | -0.0235 to -0.0063 | 0.0 | Trained model |
+| 30 | REVENUE | 72 | -686.7183 | -1361.3309 to -132.1022 | 0.016 | Trained model |
+| 30 | ROAS | 72 | -0.0135 | -0.0221 to -0.0058 | 0.001 | Trained model |
+| 60 | REVENUE | 72 | 462.1264 | -336.3842 to 1310.7193 | 0.254 | Statistical tie |
+| 60 | ROAS | 72 | -0.0148 | -0.0238 to -0.0067 | 0.0 | Trained model |
 | 90 | REVENUE | 36 | 0.0 | 0.0 to 0.0 | 1.0 | Statistical tie |
-| 90 | ROAS | 36 | -0.0005 | -0.0274 to 0.025 | 0.95 | Statistical tie |
+| 90 | ROAS | 36 | -0.0166 | -0.0394 to 0.0042 | 0.124 | Statistical tie |
 
 ## Revenue Configuration Review
 
@@ -106,11 +106,11 @@ documents why the current configuration remains the honest supported choice.
 | Revenue model weight | MAE | RMSE | MAPE | Interval coverage |
 | ---: | ---: | ---: | ---: | ---: |
 | 0.00 | 2185.89 | 2763.76 | 2.78% | 100.0% |
-| 0.10 | 2218.31 | 2835.27 | 2.76% | 100.0% |
-| 0.25 | 2266.94 | 2957.17 | 2.72% | 100.0% |
-| 0.40 | 2315.57 | 3094.75 | 2.69% | 100.0% |
-| 0.50 | 2347.99 | 3194.19 | 2.67% | 100.0% |
-| 0.60 | 2380.41 | 3299.15 | 2.64% | 100.0% |
+| 0.10 | 2317.32 | 2995.37 | 2.81% | 100.0% |
+| 0.25 | 2514.46 | 3370.6 | 2.86% | 100.0% |
+| 0.40 | 2711.6 | 3770.3 | 2.91% | 100.0% |
+| 0.50 | 2843.03 | 4046.8 | 2.94% | 100.0% |
+| 0.60 | 2974.46 | 4329.54 | 2.97% | 100.0% |
 
 Recommendation: Candidate revenue_model_weight=0.00 scored best on holdout RMSE. Review before updating the packaged artifact.
 
@@ -120,12 +120,12 @@ Recommendation: Candidate revenue_model_weight=0.00 scored best on holdout RMSE.
 | ---: | ---: | ---: | ---: | ---: |
 | 0.00 | 0.05 | 0.07 | 1.44% | 100.0% |
 | 0.10 | 0.05 | 0.06 | 1.39% | 100.0% |
-| 0.25 | 0.05 | 0.06 | 1.26% | 100.0% |
-| 0.40 | 0.05 | 0.06 | 1.19% | 100.0% |
-| 0.50 | 0.04 | 0.06 | 1.09% | 100.0% |
-| 0.60 | 0.04 | 0.06 | 1.08% | 100.0% |
+| 0.25 | 0.05 | 0.06 | 1.27% | 100.0% |
+| 0.40 | 0.05 | 0.06 | 1.24% | 100.0% |
+| 0.50 | 0.05 | 0.06 | 1.17% | 100.0% |
+| 0.60 | 0.05 | 0.06 | 1.2% | 100.0% |
 
-Recommendation: Keep roas_model_weight=0.60; it has the best ROAS RMSE/MAE balance.
+Recommendation: Candidate roas_model_weight=0.50 scored best on ROAS RMSE. Review before updating the packaged artifact.
 
 ## Walk-Forward Per-Horizon Performance
 
@@ -136,9 +136,9 @@ would use when no trained residual correction is trusted.
 
 | Horizon days | Folds | Segments | Trained revenue MAE | Trained revenue RMSE | Trained revenue MAPE | Trained revenue coverage | Trained revenue width % | Trained ROAS MAE | Trained ROAS RMSE | Trained ROAS coverage | Trained ROAS width | Baseline MAE | Baseline RMSE | Baseline width % | Revenue MAE winner |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| 30 | 4 | 72 | 3621.04 | 6376.85 | 3.6% | 93.06% | 30.61% | 0.04 | 0.05 | 100.0% | 0.4665 | 4308.83 | 6937.04 | 11.02% | Trained model |
-| 60 | 4 | 72 | 19199.67 | 30397.05 | 10.11% | 100.0% | 49.66% | 0.06 | 0.07 | 100.0% | 0.8454 | 19199.67 | 30397.05 | 43.36% | Tie |
-| 90 | 2 | 36 | 22141.94 | 34041.4 | 7.89% | 100.0% | 57.08% | 0.08 | 0.11 | 100.0% | 1.1108 | 22141.94 | 34041.4 | 44.36% | Tie |
+| 30 | 4 | 72 | 3622.11 | 6507.42 | 3.59% | 93.06% | 30.49% | 0.04 | 0.05 | 100.0% | 0.4671 | 4308.83 | 6937.04 | 11.02% | Trained model |
+| 60 | 4 | 72 | 19661.8 | 31621.62 | 10.45% | 100.0% | 49.61% | 0.06 | 0.07 | 100.0% | 0.8461 | 19199.67 | 30397.05 | 43.36% | Safe baseline |
+| 90 | 2 | 36 | 22141.94 | 34041.4 | 7.89% | 100.0% | 57.04% | 0.07 | 0.08 | 100.0% | 1.1094 | 22141.94 | 34041.4 | 44.36% | Tie |
 
 One-line verdicts against the seasonal-average baseline:
 
@@ -153,18 +153,18 @@ the trained residual correction adds value and where the seasonal-average baseli
 
 | Horizon days | Segment level | Segments scored | Trained revenue RMSE | Trained revenue MAPE | Seasonal baseline revenue RMSE | Seasonal baseline revenue MAPE | Revenue verdict | Trained ROAS RMSE | Trained ROAS MAPE | Seasonal baseline ROAS RMSE | Seasonal baseline ROAS MAPE | ROAS verdict |
 | ---: | --- | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: | ---: | ---: | --- |
-| 30 | overall | 4 | 19486.15 | 3.38% | 21341.83 | 4.01% | Trained model | 0.02 | 0.49% | 0.03 | 0.6% | Tie |
-| 30 | channel | 12 | 7833.76 | 3.41% | 8449.22 | 3.87% | Trained model | 0.04 | 0.99% | 0.05 | 0.91% | Tie |
-| 30 | campaign_type | 24 | 3915.13 | 3.59% | 4280.4 | 4.42% | Trained model | 0.06 | 1.36% | 0.07 | 1.78% | Trained model |
-| 30 | campaign | 32 | 3085.72 | 3.7% | 3290.76 | 4.38% | Trained model | 0.05 | 1.17% | 0.07 | 1.7% | Trained model |
-| 60 | overall | 4 | 95761.26 | 10.36% | 95761.26 | 10.36% | Tie | 0.05 | 1.05% | 0.06 | 1.3% | Trained model |
-| 60 | channel | 12 | 36964.63 | 10.17% | 36964.63 | 10.17% | Tie | 0.07 | 1.4% | 0.08 | 1.57% | Trained model |
-| 60 | campaign_type | 24 | 17976.63 | 9.97% | 17976.63 | 9.97% | Tie | 0.07 | 1.57% | 0.08 | 1.8% | Trained model |
-| 60 | campaign | 32 | 13338.51 | 10.17% | 13338.51 | 10.17% | Tie | 0.08 | 1.48% | 0.09 | 1.89% | Trained model |
-| 90 | overall | 2 | 107467.14 | 7.89% | 107467.14 | 7.89% | Tie | 0.04 | 0.91% | 0.06 | 1.3% | Trained model |
-| 90 | channel | 6 | 40939.45 | 7.82% | 40939.45 | 7.82% | Tie | 0.07 | 1.53% | 0.05 | 1.09% | Safe baseline |
-| 90 | campaign_type | 12 | 20219.77 | 7.91% | 20219.77 | 7.91% | Tie | 0.09 | 2.05% | 0.1 | 2.32% | Trained model |
-| 90 | campaign | 16 | 15117.71 | 7.9% | 15117.71 | 7.9% | Tie | 0.14 | 2.37% | 0.11 | 2.35% | Tie |
+| 30 | overall | 4 | 19987.13 | 3.37% | 21341.83 | 4.01% | Trained model | 0.02 | 0.55% | 0.03 | 0.6% | Tie |
+| 30 | channel | 12 | 7994.46 | 3.25% | 8449.22 | 3.87% | Trained model | 0.04 | 0.97% | 0.05 | 0.91% | Tie |
+| 30 | campaign_type | 24 | 3959.66 | 3.69% | 4280.4 | 4.42% | Trained model | 0.06 | 1.35% | 0.07 | 1.78% | Trained model |
+| 30 | campaign | 32 | 3101.3 | 3.67% | 3290.76 | 4.38% | Trained model | 0.06 | 1.23% | 0.07 | 1.7% | Trained model |
+| 60 | overall | 4 | 99662.56 | 10.48% | 95761.26 | 10.36% | Safe baseline | 0.05 | 1.05% | 0.06 | 1.3% | Trained model |
+| 60 | channel | 12 | 38470.8 | 10.29% | 36964.63 | 10.17% | Safe baseline | 0.07 | 1.4% | 0.08 | 1.57% | Trained model |
+| 60 | campaign_type | 24 | 18668.14 | 10.38% | 17976.63 | 9.97% | Safe baseline | 0.07 | 1.55% | 0.08 | 1.8% | Trained model |
+| 60 | campaign | 32 | 13852.12 | 10.56% | 13338.51 | 10.17% | Safe baseline | 0.08 | 1.47% | 0.09 | 1.89% | Trained model |
+| 90 | overall | 2 | 107467.14 | 7.89% | 107467.14 | 7.89% | Tie | 0.03 | 0.68% | 0.06 | 1.3% | Trained model |
+| 90 | channel | 6 | 40939.45 | 7.82% | 40939.45 | 7.82% | Tie | 0.06 | 1.44% | 0.05 | 1.09% | Safe baseline |
+| 90 | campaign_type | 12 | 20219.77 | 7.91% | 20219.77 | 7.91% | Tie | 0.08 | 1.9% | 0.1 | 2.32% | Trained model |
+| 90 | campaign | 16 | 15117.71 | 7.9% | 15117.71 | 7.9% | Tie | 0.1 | 1.9% | 0.11 | 2.35% | Trained model |
 
 ## Rolling-Origin Average Metrics
 
@@ -174,9 +174,9 @@ the single final-30-day holdout above.
 
 | Horizon days | Folds averaged | Avg trained MAE | Avg trained RMSE | Avg trained coverage | Avg trained width % | Avg trained ROAS MAE | Avg baseline MAE | Avg baseline RMSE | Avg baseline coverage | Avg baseline width % |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 30 | 4 | 3621.04 | 5231.8825 | 93.055% | 30.6125% | 0.0425 | 4308.8325 | 6132.0425 | 70.8325% | 11.02% |
-| 60 | 4 | 19199.6675 | 27461.105 | 100.0% | 49.66% | 0.0575 | 19199.6675 | 27461.105 | 100.0% | 43.36% |
-| 90 | 2 | 22141.945 | 31514.105 | 100.0% | 57.08% | 0.08 | 22141.945 | 31514.105 | 100.0% | 44.36% |
+| 30 | 4 | 3622.1125 | 5276.08 | 93.055% | 30.4875% | 0.045 | 4308.8325 | 6132.0425 | 70.8325% | 11.02% |
+| 60 | 4 | 19661.795 | 27912.61 | 100.0% | 49.6125% | 0.0575 | 19199.6675 | 27461.105 | 100.0% | 43.36% |
+| 90 | 2 | 22141.945 | 31514.105 | 100.0% | 57.04% | 0.065 | 22141.945 | 31514.105 | 100.0% | 44.36% |
 
 ## Interval Coverage by Horizon and Segment Level
 
@@ -187,17 +187,17 @@ is only good at account level or remains stable at thinner segment grains.
 | Horizon days | Segment level | Segments scored | Trained revenue coverage | Trained revenue width % | Trained ROAS coverage | Baseline revenue coverage | Baseline revenue width % |
 | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | 30 | overall | 4 | 75.0% | 11.02% | 100.0% | 75.0% | 11.02% |
-| 30 | channel | 12 | 91.67% | 16.93% | 100.0% | 75.0% | 11.02% |
-| 30 | campaign_type | 24 | 91.67% | 29.43% | 100.0% | 70.83% | 11.02% |
-| 30 | campaign | 32 | 96.88% | 39.09% | 100.0% | 68.75% | 11.02% |
+| 30 | channel | 12 | 91.67% | 16.87% | 100.0% | 75.0% | 11.02% |
+| 30 | campaign_type | 24 | 91.67% | 29.31% | 100.0% | 70.83% | 11.02% |
+| 30 | campaign | 32 | 96.88% | 38.91% | 100.0% | 68.75% | 11.02% |
 | 60 | overall | 4 | 100.0% | 43.36% | 100.0% | 100.0% | 43.36% |
 | 60 | channel | 12 | 100.0% | 44.99% | 100.0% | 100.0% | 43.36% |
-| 60 | campaign_type | 24 | 100.0% | 48.23% | 100.0% | 100.0% | 43.36% |
-| 60 | campaign | 32 | 100.0% | 53.28% | 100.0% | 100.0% | 43.36% |
+| 60 | campaign_type | 24 | 100.0% | 48.15% | 100.0% | 100.0% | 43.36% |
+| 60 | campaign | 32 | 100.0% | 53.23% | 100.0% | 100.0% | 43.36% |
 | 90 | overall | 2 | 100.0% | 44.36% | 100.0% | 100.0% | 44.36% |
 | 90 | channel | 6 | 100.0% | 46.58% | 100.0% | 100.0% | 44.36% |
-| 90 | campaign_type | 12 | 100.0% | 55.03% | 100.0% | 100.0% | 44.36% |
-| 90 | campaign | 16 | 100.0% | 64.15% | 100.0% | 100.0% | 44.36% |
+| 90 | campaign_type | 12 | 100.0% | 54.99% | 100.0% | 100.0% | 44.36% |
+| 90 | campaign | 16 | 100.0% | 64.08% | 100.0% | 100.0% | 44.36% |
 
 Note on 30-day ROAS interval coverage: ROAS confidence intervals now use a direct residual-volatility
 estimate from historical daily ROAS for each segment, with a minimum ROAS floor when history is thin.
@@ -215,8 +215,8 @@ decision-ready while preserving non-negative lower bounds and evaluator-safe out
 
 | Horizon days | Previous coverage | Current coverage | Trained revenue MAE | Baseline revenue MAE |
 | ---: | ---: | ---: | ---: | ---: |
-| 30 | 100.0% | 93.06% | 3621.04 | 4308.83 |
-| 60 | 100.0% | 100.0% | 19199.67 | 19199.67 |
+| 30 | 100.0% | 93.06% | 3622.11 | 4308.83 |
+| 60 | 100.0% | 100.0% | 19661.8 | 19199.67 |
 | 90 | 100.0% | 100.0% | 22141.94 | 22141.94 |
 
 ## Confidence Interval Methodology

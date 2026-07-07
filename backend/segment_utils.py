@@ -15,15 +15,18 @@ FEATURE_COLUMNS = [
     "history_days",
     "recent_spend_7",
     "recent_spend_28",
+    "recent_spend_56",
     "projected_spend_horizon",
     "planned_spend_delta_7_28",
     "planned_spend_delta_28_horizon",
     "recent_revenue_7",
     "recent_revenue_14",
     "recent_revenue_28",
+    "recent_revenue_56",
     "recent_roas_7",
     "recent_roas_14",
     "recent_roas_28",
+    "recent_roas_56",
     "rps_7",
     "rps_14",
     "rps_28",
@@ -40,6 +43,9 @@ FEATURE_COLUMNS = [
     "spend_trend_28",
     "revenue_trend_28",
     "roas_trend_28",
+    "spend_trend_56",
+    "revenue_trend_56",
+    "roas_trend_56",
     "dow_end",
     "month_end",
     "sin_7",
@@ -50,6 +56,7 @@ FEATURE_COLUMNS = [
     "cos_365",
     "sin_year_end",
     "cos_year_end",
+    "quarter_end",
     "dow_channel_interaction",
     "dow_campaign_type_interaction",
     "rev_std_14",
@@ -232,9 +239,11 @@ def segment_feature_frame(
 
     spend_7 = window_sum(daily, "spend", 7)
     spend_28 = window_sum(daily, "spend", 28)
+    spend_56 = window_sum(daily, "spend", 56)
     revenue_7 = window_sum(daily, "revenue", 7)
     revenue_14 = window_sum(daily, "revenue", 14)
     revenue_28 = window_sum(daily, "revenue", 28)
+    revenue_56 = window_sum(daily, "revenue", 56)
     clicks_28 = window_sum(daily, "clicks", 28)
     impressions_28 = window_sum(daily, "impressions", 28)
     conversions_28 = window_sum(daily, "conversions", 28)
@@ -274,15 +283,18 @@ def segment_feature_frame(
         "history_days": float(len(daily)),
         "recent_spend_7": spend_7,
         "recent_spend_28": spend_28,
+        "recent_spend_56": spend_56,
         "projected_spend_horizon": projected_spend,
         "planned_spend_delta_7_28": safe_ratio(daily_spend_7 - daily_spend_28, daily_spend_28),
         "planned_spend_delta_28_horizon": safe_ratio(projected_spend - daily_spend_28 * horizon, daily_spend_28 * horizon),
         "recent_revenue_7": revenue_7,
         "recent_revenue_14": revenue_14,
         "recent_revenue_28": revenue_28,
+        "recent_revenue_56": revenue_56,
         "recent_roas_7": safe_ratio(revenue_7, spend_7),
         "recent_roas_14": safe_ratio(revenue_14, window_sum(daily, "spend", 14)),
         "recent_roas_28": safe_ratio(revenue_28, spend_28),
+        "recent_roas_56": safe_ratio(revenue_56, spend_56),
         "rps_7": rps_7,
         "rps_14": rps_14,
         "rps_28": rps_28,
@@ -299,6 +311,9 @@ def segment_feature_frame(
         "spend_trend_28": window_trend(daily, "spend"),
         "revenue_trend_28": window_trend(daily, "revenue"),
         "roas_trend_28": window_trend(daily, "roas"),
+        "spend_trend_56": window_trend(daily, "spend", 56),
+        "revenue_trend_56": window_trend(daily, "revenue", 56),
+        "roas_trend_56": window_trend(daily, "roas", 56),
         "dow_end": float(forecast_end.dayofweek),
         "month_end": float(forecast_end.month),
         "sin_7": sin_7,
@@ -309,6 +324,7 @@ def segment_feature_frame(
         "cos_365": float(np.cos(2 * np.pi * day_index / 365)),
         "sin_year_end": float(np.sin(2 * np.pi * forecast_end.dayofyear / 365.25)),
         "cos_year_end": float(np.cos(2 * np.pi * forecast_end.dayofyear / 365.25)),
+        "quarter_end": float((forecast_end.month - 1) // 3 + 1),
         "dow_channel_interaction": float(forecast_end.dayofweek) * channel_code,
         "dow_campaign_type_interaction": float(forecast_end.dayofweek) * campaign_type_code,
         "rev_std_14": safe_float(daily["revenue"].tail(14).std(ddof=1)) if len(daily) >= 4 else 0.0,

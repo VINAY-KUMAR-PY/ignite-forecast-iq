@@ -562,7 +562,148 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertIn("Microsoft Ads", first["evidence_focus"])
         self.assertIn("Google Ads", first["summary"])
         self.assertIn("$12,000", first["summary"])
-        self.assertEqual(uncertain["label"], "volatility_watch")
+        self.assertEqual(uncertain["label"], "noisy_positive_signal")
+
+    def test_distilled_reasoning_uses_varied_skeletons_for_sample_segments(self) -> None:
+        raw = pd.read_csv("data/sample_campaigns.csv")
+        channels = raw["channel"].dropna().astype(str).unique().tolist()
+        campaign_types = raw["campaign_type"].dropna().astype(str).unique().tolist()
+        self.assertGreaterEqual(len(channels), 3)
+        self.assertGreaterEqual(len(campaign_types), 2)
+
+        scenarios = [
+            {
+                "anomalies": [],
+                "estimates": [],
+                "budgets": None,
+                "metrics": {
+                    channels[0]: {
+                        "campaign_type": campaign_types[0],
+                        "baseline_revenue": 10000,
+                        "baseline_roas": 4.0,
+                        "observed_roas": 4.1,
+                    }
+                },
+            },
+            {
+                "anomalies": [],
+                "estimates": [
+                    {
+                        "channel": channels[0],
+                        "incrementalRevenue": 3200,
+                        "lowerRevenue": 1100,
+                        "upperRevenue": 5300,
+                        "confidence": "medium",
+                        "effectDirection": "positive",
+                        "pValue": 0.04,
+                        "effectStrength": 0.7,
+                        "parallelTrendPassed": True,
+                    }
+                ],
+                "budgets": None,
+                "metrics": {
+                    channels[0]: {
+                        "campaign_type": campaign_types[0],
+                        "baseline_revenue": 10000,
+                        "baseline_roas": 4.0,
+                        "observed_roas": 5.0,
+                    }
+                },
+            },
+            {
+                "anomalies": [],
+                "estimates": [
+                    {
+                        "channel": channels[1],
+                        "incrementalRevenue": -2800,
+                        "lowerRevenue": -5200,
+                        "upperRevenue": -900,
+                        "confidence": "high",
+                        "effectDirection": "negative",
+                        "pValue": 0.03,
+                        "effectStrength": 0.6,
+                        "parallelTrendPassed": True,
+                    }
+                ],
+                "budgets": None,
+                "metrics": {
+                    channels[1]: {
+                        "campaign_type": campaign_types[-1],
+                        "baseline_revenue": 9000,
+                        "baseline_roas": 4.3,
+                        "observed_roas": 3.4,
+                    }
+                },
+            },
+            {
+                "anomalies": [{"channel": channels[2], "date": "2026-06-01", "metric": "revenue", "severity": "high"}],
+                "estimates": [
+                    {
+                        "channel": channels[2],
+                        "incrementalRevenue": 1800,
+                        "lowerRevenue": -700,
+                        "upperRevenue": 4300,
+                        "confidence": "low",
+                        "effectDirection": "positive",
+                        "pValue": 0.22,
+                        "effectStrength": 0.3,
+                        "parallelTrendPassed": False,
+                    }
+                ],
+                "budgets": None,
+                "metrics": {
+                    channels[2]: {
+                        "campaign_type": campaign_types[0],
+                        "baseline_revenue": 8000,
+                        "baseline_roas": 3.9,
+                        "observed_roas": 4.2,
+                    }
+                },
+            },
+            {
+                "anomalies": [{"channel": channels[1], "date": "2026-06-08", "metric": "roas", "severity": "medium"}],
+                "estimates": [
+                    {
+                        "channel": channels[1],
+                        "incrementalRevenue": -300,
+                        "lowerRevenue": -1400,
+                        "upperRevenue": 900,
+                        "confidence": "low",
+                        "effectDirection": "negative",
+                        "pValue": 0.41,
+                        "effectStrength": 0.1,
+                        "parallelTrendPassed": False,
+                    }
+                ],
+                "budgets": None,
+                "metrics": {
+                    channels[1]: {
+                        "campaign_type": campaign_types[-1],
+                        "baseline_revenue": 7000,
+                        "baseline_roas": 4.0,
+                        "observed_roas": 3.9,
+                    }
+                },
+            },
+            {
+                "anomalies": [],
+                "estimates": [],
+                "budgets": {channels[0]: 12000},
+                "metrics": {},
+            },
+        ]
+
+        labels = {
+            select_distilled_reasoning(
+                scenario["anomalies"],
+                scenario["estimates"],
+                planned_budgets=scenario["budgets"],
+                channel_metrics=scenario["metrics"],
+            )["label"]
+            for scenario in scenarios
+        }
+
+        self.assertGreaterEqual(len(labels), 4, labels)
 
     def test_reasoning_provenance_hashes_match_committed_transcripts(self) -> None:
         records = validate_transcript_provenance()
@@ -666,9 +807,11 @@ class OfflinePredictionTests(unittest.TestCase):
             "stable_run_rate",
         )
 
-        self.assertEqual(negative["label"], "efficiency_compression")
+        self.assertEqual(negative["label"], "statistically_supported_decline")
         self.assertIn("top anomaly Meta Ads revenue", negative["evidence_object"]["supporting_metrics"]["anomaly_context"])
-        self.assertTrue(any("selected_skeleton=efficiency_compression" in step for step in negative["reasoning_trace"]))
+        self.assertTrue(
+            any("selected_skeleton=statistically_supported_decline" in step for step in negative["reasoning_trace"])
+        )
         self.assertIn("CI=unavailable", unavailable_ci["evidence_focus"])
 
     def test_structured_causal_evidence_object_uses_runtime_statistics(self) -> None:
@@ -989,7 +1132,7 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertEqual(float(sanitized[90]["lower_revenue"]), 85.0)
         self.assertEqual(float(sanitized[90]["upper_revenue"]), 115.0)
 
-    def test_thin_campaign_confidence_note_is_preserved(self) -> None:
+    def test_thin_campaign_confidence_is_recomputed_from_final_width(self) -> None:
         row = {
             "level": "campaign",
             "segment": "Thin Campaign",
@@ -1006,7 +1149,8 @@ class OfflinePredictionTests(unittest.TestCase):
 
         sanitized = sanitize_rows([row])[0]
 
-        self.assertEqual(sanitized["forecast_confidence"], THIN_CAMPAIGN_CONFIDENCE)
+        self.assertEqual(float(sanitized["interval_width_pct"]), 40.0)
+        self.assertEqual(sanitized["forecast_confidence"], "medium")
 
     def test_non_monotonic_artifact_interval_multipliers_use_current_defaults(self) -> None:
         multipliers = _monotonic_interval_multipliers(

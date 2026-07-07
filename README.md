@@ -81,6 +81,9 @@ reallocation, and channel underperformance. It saves redacted transcripts to
 [`live_gemini_transcript_20260705T051036Z.json`](./docs/gemini_sample_transcripts/live_gemini_transcript_20260705T051036Z.json).
 More transcript guidance is in
 [docs/gemini_sample_transcripts/README.md](./docs/gemini_sample_transcripts/README.md).
+A manual/nightly workflow,
+[`gemini-transcript-refresh.yml`](./.github/workflows/gemini-transcript-refresh.yml),
+can regenerate one fresh redacted transcript when `GEMINI_API_KEY` is configured.
 
 ## Evaluation Criteria Mapping
 
@@ -88,7 +91,7 @@ More transcript guidance is in
 |---|---|
 | Technical Soundness | `./run.sh`, `reports/backtest_summary.md`, `reports/interval_calibration_report.json`, `tests/test_offline_predict.py`, `tests/test_interval_monotonicity.py` |
 | Practical Relevance | `backend/decision_support.py`, `scripts/validate_budget_elasticity.py`, `reports/budget_elasticity_summary.md`, simulator UI |
-| AI Integration | `output/causal_summary.txt`, `backend/gemini_offline_cache.py`, `scripts/demo_live_ai_reasoning.py`, `docs/gemini_sample_transcripts/` |
+| AI Integration | `output/causal_summary.txt`, `backend/gemini_offline_cache.py`, `scripts/demo_live_ai_reasoning.py`, `.github/workflows/gemini-transcript-refresh.yml`, `docs/gemini_sample_transcripts/` |
 | Product Thinking | One-click demo flow, Upload -> Dashboard -> Forecast -> Simulator -> Insights, `DEMO_GUIDE.md` |
 | Engineering Quality | Evaluator CI, frontend tests, Playwright flow, coverage gate, pinned evaluator dependencies |
 | Independent reproduction | `npm run verify` regenerates interval calibration, rolling-origin backtest reports, coverage summary, and `reports/verification_summary.json` |

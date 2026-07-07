@@ -1,0 +1,69 @@
+name: Gemini Transcript Refresh
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  refresh-live-transcript:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GEMINI_MODEL: gemini-2.5-flash
+      GEMINI_TEMPERATURE: "0.2"
+      GEMINI_TIMEOUT_SECONDS: "60"
+      GEMINI_MAX_ATTEMPTS: "3"
+      GEMINI_RETRY_BACKOFF_SECONDS: "2"
+      GEMINI_MAX_OUTPUT_TOKENS: "3072"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Mask Gemini secret
+        run: |
+          if [ -n "$GEMINI_API_KEY" ]; then
+            echo "::add-mask::$GEMINI_API_KEY"
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install app dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-app.txt
+
+      - name: Capture fresh redacted Gemini transcript
+        run: |
+          if [ -z "$GEMINI_API_KEY" ]; then
+            echo "GEMINI_API_KEY is not configured; transcript refresh skipped."
+            exit 0
+          fi
+          python scripts/verify_gemini_live.py --require-live --output-dir docs/gemini_sample_transcripts
+
+      - name: Commit transcript evidence
+        if: ${{ env.GEMINI_API_KEY != '' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          shopt -s nullglob
+          transcripts=(docs/gemini_sample_transcripts/live_gemini_transcript_*.json)
+          if [ ${#transcripts[@]} -eq 0 ]; then
+            echo "No transcript evidence files found. Provider may have been unavailable."
+            exit 0
+          fi
+          git add "${transcripts[@]}"
+          if git diff --cached --quiet; then
+            echo "No new transcript evidence to commit."
+          else
+            git commit -m "docs: refresh live Gemini transcript evidence"
+            git push
+          fi

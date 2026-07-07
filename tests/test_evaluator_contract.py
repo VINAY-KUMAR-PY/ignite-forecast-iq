@@ -17,6 +17,8 @@ from backend.predict import (
     SAFE_BASELINE_MODEL_TYPE,
     TRAINED_ESTIMATED_SPEND_MODEL_TYPE,
     TRAINED_MODEL_TYPE,
+    canonicalize_frame,
+    read_csv_folder,
     run_prediction_pipeline,
 )
 
@@ -78,6 +80,51 @@ class EvaluatorContractTests(unittest.TestCase):
             output = Path(tmp) / "predictions.csv"
             run_prediction_pipeline(data_dir, "./pickle/model.pkl", output)
             self.assert_predictions_csv(output)
+
+    def test_ga4_raw_export_produces_valid_trained_or_degraded_output(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            data_dir = Path(tmp) / "data"
+            data_dir.mkdir()
+            shutil.copy(Path("data/fixtures/ga4_raw_export.csv"), data_dir / "ga4_raw_export.csv")
+            output = Path(tmp) / "predictions.csv"
+
+            run_prediction_pipeline(data_dir, "./pickle/model.pkl", output)
+            frame = self.assert_predictions_csv(output)
+            documented_modes = {TRAINED_MODEL_TYPE, TRAINED_ESTIMATED_SPEND_MODEL_TYPE, SAFE_BASELINE_MODEL_TYPE}
+            self.assertTrue(set(frame["model_type"].astype(str)) <= documented_modes)
+
+    def test_shopify_raw_orders_produces_valid_trained_or_degraded_output(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            data_dir = Path(tmp) / "data"
+            data_dir.mkdir()
+            shutil.copy(Path("data/fixtures/shopify_raw_orders.csv"), data_dir / "shopify_raw_orders.csv")
+            output = Path(tmp) / "predictions.csv"
+
+            run_prediction_pipeline(data_dir, "./pickle/model.pkl", output)
+            frame = self.assert_predictions_csv(output)
+            documented_modes = {TRAINED_MODEL_TYPE, TRAINED_ESTIMATED_SPEND_MODEL_TYPE, SAFE_BASELINE_MODEL_TYPE}
+            self.assertTrue(set(frame["model_type"].astype(str)) <= documented_modes)
+
+    def test_ga4_and_shopify_combined_fixture_does_not_double_count_revenue(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            data_dir = Path(tmp) / "data"
+            data_dir.mkdir()
+            ga4_path = Path("data/fixtures/ga4_raw_export.csv")
+            shopify_path = Path("data/fixtures/shopify_raw_orders.csv")
+            shutil.copy(ga4_path, data_dir / ga4_path.name)
+            shutil.copy(shopify_path, data_dir / shopify_path.name)
+            output = Path(tmp) / "predictions.csv"
+
+            cleaned = canonicalize_frame(read_csv_folder(data_dir))
+            shopify_revenue = pd.read_csv(shopify_path)["total_price"].sum()
+            raw_ga4_revenue = pd.read_csv(ga4_path)["purchaseRevenue"].sum()
+            self.assertEqual(raw_ga4_revenue, shopify_revenue)
+            self.assertAlmostEqual(float(cleaned.frame["revenue"].sum()), float(shopify_revenue), places=2)
+
+            run_prediction_pipeline(data_dir, "./pickle/model.pkl", output)
+            frame = self.assert_predictions_csv(output)
+            documented_modes = {TRAINED_MODEL_TYPE, TRAINED_ESTIMATED_SPEND_MODEL_TYPE, SAFE_BASELINE_MODEL_TYPE}
+            self.assertTrue(set(frame["model_type"].astype(str)) <= documented_modes)
 
     def test_small_held_out_ads_export_uses_degraded_trained_path(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

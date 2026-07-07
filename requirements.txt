@@ -1,8 +1,16 @@
-# This is the complete and sufficient dependency set for ./run.sh — no other requirements file is needed for grading.
-# scikit-learn pinned so the committed joblib artifact loads predictably.
-# This file is intentionally minimal: it is only for the offline `run.sh`
-# evaluator path and excludes FastAPI, XGBoost, Gemini, Playwright, and
-# frontend tooling. Use requirements-app.txt for the full product demo/tests.
+# Graded evaluator dependency contract
+# ------------------------------------
+# Per Hackathon Submission Guide Section 6, this is the ONLY requirements file
+# installed by the automated grading pipeline before it runs:
+# ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
+#
+# requirements-app.txt is strictly additive and optional for local development,
+# backend API tests, Gemini demos, frontend builds, and Playwright checks. It is
+# never required by run.sh, backend.predict, or the offline evaluator path.
+#
+# This file is intentionally minimal and excludes FastAPI, XGBoost, Gemini,
+# Playwright, and frontend tooling. scikit-learn is pinned so the committed
+# joblib artifact loads predictably.
 # Python: 3.11-3.14 (trained artifact); CI runs 3.11, 3.12, 3.13, 3.14.
 # Build environment: Python 3.14.4, scikit-learn 1.9.0
 pandas==3.0.3

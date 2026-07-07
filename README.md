@@ -9,6 +9,12 @@ tests, and local frontend demo.
 
 [![Evaluator CI](https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq/actions/workflows/evaluator-ci.yml/badge.svg)](https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq/actions/workflows/evaluator-ci.yml)
 
+## Grading Contract Verification
+
+`run.sh` is tested end-to-end in CI against empty, malformed, single-source,
+and multi-source held-out-style inputs; see
+[`tests/test_run_sh_contract.py`](./tests/test_run_sh_contract.py).
+
 ## Repository
 
 Clone: `git clone https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq.git`

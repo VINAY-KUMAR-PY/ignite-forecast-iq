@@ -398,6 +398,9 @@ jobs:
       - name: Install application dependencies
         run: python -m pip install -r requirements-app.txt
 
+      - name: Full run.sh contract test
+        run: python -m pytest tests/test_run_sh_contract.py -q
+
       - name: Compile and test backend
         run: |
           python -m compileall backend scripts tests -q

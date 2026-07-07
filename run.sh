@@ -4,6 +4,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
+# DATA_DIR, MODEL_PATH, and OUTPUT_PATH are strictly positional per the
+# submission guide. BUDGET_JSON and --enable-live-ai are optional extensions
+# and must never be required for:
+# ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
 DATA_DIR="${1:-./data}"
 MODEL_PATH="${2:-./pickle/model.pkl}"
 OUTPUT_PATH="${3:-./output/predictions.csv}"
@@ -48,28 +52,16 @@ fi
 
 mkdir -p "$(dirname "$MODEL_PATH")" "$(dirname "$OUTPUT_PATH")"
 
+# 1. Verify the minimal evaluator dependencies installed from requirements.txt.
 set +e
-"${PYTHON_CMD[@]}" - <<'PY'
-import importlib.util
-import sys
-
-required = ["pandas", "numpy", "joblib"]
-missing = [name for name in required if importlib.util.find_spec(name) is None]
-if missing:
-    print(
-        "Missing Python dependencies: "
-        + ", ".join(missing)
-        + ". Install them with: pip install -r requirements.txt",
-        file=sys.stderr,
-    )
-    sys.exit(1)
-PY
+"${PYTHON_CMD[@]}" scripts/_check_deps.py
 DEP_CHECK_EXIT=$?
 set -e
 if [ $DEP_CHECK_EXIT -ne 0 ]; then
   exit $DEP_CHECK_EXIT
 fi
 
+# 2. Run the offline evaluator prediction entry point.
 PREDICT_EXIT=0
 PREDICT_ARGS=(
   -m backend.predict
@@ -88,34 +80,8 @@ if [ $PREDICT_EXIT -ne 0 ]; then
   exit $PREDICT_EXIT
 fi
 
-"${PYTHON_CMD[@]}" - "$OUTPUT_PATH" <<'PY'
-import csv
-import sys
-from pathlib import Path
-
-output = Path(sys.argv[1])
-if not output.exists():
-    sys.exit(0)
-
-try:
-    with output.open(newline="", encoding="utf-8") as handle:
-        modes = {
-            str(row.get("model_type") or "").strip()
-            for row in csv.DictReader(handle)
-            if row.get("model_type")
-        }
-except Exception:
-    sys.exit(0)
-
-if "safe_baseline_fallback" in modes:
-    print("", file=sys.stderr)
-    print("=================================================================", file=sys.stderr)
-    print("FORECASTIQ WARNING: SAFE BASELINE FALLBACK WAS USED", file=sys.stderr)
-    print("The trained model did not complete for this evaluator run.", file=sys.stderr)
-    print("Review scikit-learn compatibility, model loading, and input schema logs.", file=sys.stderr)
-    print("=================================================================", file=sys.stderr)
-    print("", file=sys.stderr)
-PY
+# 3. Warn loudly if the safe fallback mode was required.
+"${PYTHON_CMD[@]}" scripts/_check_output_modes.py "$OUTPUT_PATH"
 
 SUMMARY_PATH="$(dirname "$OUTPUT_PATH")/causal_summary.txt"
 # Co-location contract: causal_summary.txt should live beside predictions.csv.

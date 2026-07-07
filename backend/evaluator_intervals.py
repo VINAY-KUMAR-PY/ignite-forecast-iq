@@ -10,6 +10,7 @@ plain literals so the offline evaluator remains deterministic and network-free.
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
 import numpy as np
@@ -21,6 +22,52 @@ DEFAULT_HORIZON_CONFIDENCE_Z = {"30": 0.95, "60": 1.00, "90": 1.10}
 DEFAULT_HORIZON_INTERVAL_MULTIPLIER = {"30": 1.0, "60": 2.7792, "90": 2.7792}
 LOW_SAMPLE_HORIZON_INTERVAL_MULTIPLIER = {"30": 1.25, "60": 3.474, "90": 3.474}
 HORIZON_INTERVAL_FLOOR_PCT = {30: 0.0551, 60: 0.2168, 90: 0.2218}
+
+INTERVAL_METHOD_ENV = "FORECASTIQ_INTERVAL_METHOD"
+DEFAULT_INTERVAL_METHOD = "residual_conformal"
+CV_QUANTILE_INTERVAL_METHOD = "cv_quantile_conformal"
+
+# Optional research profile. The default evaluator method above remains
+# unchanged; this profile lets calibration reports compare a cross-validated
+# quantile/conformal alternative without changing the graded CSV output.
+CV_QUANTILE_HORIZON_INTERVAL_MULTIPLIER = {"30": 1.0, "60": 2.35, "90": 2.55}
+CV_QUANTILE_LOW_SAMPLE_HORIZON_INTERVAL_MULTIPLIER = {"30": 1.2, "60": 2.82, "90": 3.06}
+CV_QUANTILE_HORIZON_INTERVAL_FLOOR_PCT = {30: 0.06, 60: 0.18, 90: 0.205}
+
+
+def normalize_interval_method(method: str | None = None) -> str:
+    """Return a supported interval profile name.
+
+    The environment flag is intentionally opt-in so evaluator output stays
+    stable unless a reviewer explicitly asks for a comparison run.
+    """
+    selected = (method or os.getenv(INTERVAL_METHOD_ENV) or DEFAULT_INTERVAL_METHOD).strip().lower()
+    if selected in {"default", "residual", "residual_conformal", "split_conformal_chronological"}:
+        return DEFAULT_INTERVAL_METHOD
+    if selected in {"cv_quantile", "quantile", CV_QUANTILE_INTERVAL_METHOD}:
+        return CV_QUANTILE_INTERVAL_METHOD
+    return DEFAULT_INTERVAL_METHOD
+
+
+def interval_multiplier_map(config: dict[str, Any] | None = None, low_sample: bool = False) -> dict[str, float]:
+    """Return horizon multipliers for the selected interval profile."""
+    interval_method = normalize_interval_method()
+    if interval_method == CV_QUANTILE_INTERVAL_METHOD:
+        return (
+            CV_QUANTILE_LOW_SAMPLE_HORIZON_INTERVAL_MULTIPLIER
+            if low_sample
+            else CV_QUANTILE_HORIZON_INTERVAL_MULTIPLIER
+        ).copy()
+
+    config = config or {}
+    if str(config.get("interval_method") or "") == "split_conformal_chronological":
+        configured = config.get("horizon_interval_multiplier") or {}
+        source = LOW_SAMPLE_HORIZON_INTERVAL_MULTIPLIER if low_sample else DEFAULT_HORIZON_INTERVAL_MULTIPLIER
+        return {
+            str(horizon): safe_float(configured.get(str(horizon)), source[str(horizon)])
+            for horizon in (30, 60, 90)
+        }
+    return (LOW_SAMPLE_HORIZON_INTERVAL_MULTIPLIER if low_sample else DEFAULT_HORIZON_INTERVAL_MULTIPLIER).copy()
 
 
 def horizon_confidence_z(config: dict[str, Any], horizon: int, default: float = 1.64) -> float:
@@ -52,4 +99,6 @@ def calibrated_z_from_residuals(residuals: np.ndarray, fallback: float) -> float
 
 
 def horizon_floor_pct(horizon: int) -> float:
+    if normalize_interval_method() == CV_QUANTILE_INTERVAL_METHOD:
+        return CV_QUANTILE_HORIZON_INTERVAL_FLOOR_PCT.get(int(horizon), 0.06)
     return HORIZON_INTERVAL_FLOOR_PCT.get(int(horizon), 0.06)

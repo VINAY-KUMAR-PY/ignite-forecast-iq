@@ -26,7 +26,7 @@ if str(ROOT) not in sys.path:
 
 from backend.backtest import _slice_segment
 from backend.evaluator_contract import HORIZONS, safe_float
-from backend.evaluator_intervals import horizon_confidence_z
+from backend.evaluator_intervals import CV_QUANTILE_HORIZON_INTERVAL_FLOOR_PCT, horizon_confidence_z
 from backend.evaluator_io import canonicalize_frame, fallback_model_config, read_csv_folder, safe_load_model
 from backend.inference import _segment_interval_multiplier, forecast_segment, trained_forecast_segment
 from backend.segment_utils import aggregate_segment_daily, segment_specs
@@ -197,6 +197,49 @@ def _derive_constants(horizon_reports: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def _interval_method_comparison(
+    horizon_reports: list[dict[str, Any]],
+    constants: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Compare default residual/conformal widths against the optional profile."""
+    comparison: list[dict[str, Any]] = []
+    profiles = {
+        "residual_conformal_default": {
+            "description": "Default evaluator interval profile used by run.sh.",
+            "floors": constants["horizon_interval_floor_pct"],
+            "selected_by_default": True,
+        },
+        "cv_quantile_conformal_option": {
+            "description": "Opt-in profile selected with FORECASTIQ_INTERVAL_METHOD=cv_quantile_conformal.",
+            "floors": CV_QUANTILE_HORIZON_INTERVAL_FLOOR_PCT,
+            "selected_by_default": False,
+        },
+    }
+    for item in sorted(horizon_reports, key=lambda row: int(row["horizon_days"])):
+        horizon = int(item["horizon_days"])
+        residual_scores = [
+            safe_float(row.get("absolute_residual_pct")) / 100.0
+            for row in item.get("rows", [])
+            if math.isfinite(safe_float(row.get("absolute_residual_pct")))
+        ]
+        for method, profile in profiles.items():
+            floor = safe_float(profile["floors"].get(horizon), 0.0)
+            covered = sum(1 for score in residual_scores if score <= floor)
+            coverage_pct = (covered / len(residual_scores) * 100.0) if residual_scores else 0.0
+            comparison.append(
+                {
+                    "method": method,
+                    "horizon_days": horizon,
+                    "coverage_pct": round(coverage_pct, 2),
+                    "mean_interval_width_pct": round(floor * 200.0, 2),
+                    "segments_scored": len(residual_scores),
+                    "selected_by_default": bool(profile["selected_by_default"]),
+                    "description": profile["description"],
+                }
+            )
+    return comparison
+
+
 def _format_string_map(values: dict[str, float]) -> str:
     ordered = {str(horizon): values[str(horizon)] for horizon in HORIZONS}
     return "{" + ", ".join(f'"{key}": {value}' for key, value in ordered.items()) + "}"
@@ -267,6 +310,7 @@ def run_calibration(
             "The final holdout remains reserved for reports/backtest_summary.md coverage validation."
         ),
         "derived_constants": constants,
+        "interval_method_comparison": _interval_method_comparison(horizon_reports, constants),
         "horizon_calibration": horizon_reports,
     }
     REPORT_FILE.parent.mkdir(parents=True, exist_ok=True)

@@ -25,6 +25,7 @@ from .evaluator_intervals import (
     calibrated_z_from_residuals,
     horizon_confidence_z,
     horizon_floor_pct,
+    interval_multiplier_map,
 )
 from .evaluator_io import fallback_model_config, is_trained_model_artifact
 from .segment_utils import (
@@ -473,10 +474,7 @@ def _segment_interval_multiplier(
     return min(1.35, max(0.95, level_factor))
 
 def _monotonic_interval_multipliers(confidence: dict[str, Any]) -> dict[str, float]:
-    if str(confidence.get("interval_method") or "") == "split_conformal_chronological":
-        multipliers = confidence.get("horizon_interval_multiplier") or DEFAULT_HORIZON_INTERVAL_MULTIPLIER
-    else:
-        multipliers = DEFAULT_HORIZON_INTERVAL_MULTIPLIER
+    multipliers = interval_multiplier_map(confidence)
     values = {
         str(horizon): safe_float(multipliers.get(str(horizon)), DEFAULT_HORIZON_INTERVAL_MULTIPLIER[str(horizon)])
         for horizon in HORIZONS

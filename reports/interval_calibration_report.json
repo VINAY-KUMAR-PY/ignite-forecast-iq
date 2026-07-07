@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-07T03:14:09.539580+00:00",
+  "generated_at": "2026-07-07T05:55:48.339639+00:00",
   "method": "split_conformal_absolute_revenue_residual",
   "target_coverage": 0.9,
   "data_dir": "data",
@@ -24,6 +24,62 @@
       "90": 0.2218
     }
   },
+  "interval_method_comparison": [
+    {
+      "method": "residual_conformal_default",
+      "horizon_days": 30,
+      "coverage_pct": 91.67,
+      "mean_interval_width_pct": 11.02,
+      "segments_scored": 36,
+      "selected_by_default": true,
+      "description": "Default evaluator interval profile used by run.sh."
+    },
+    {
+      "method": "cv_quantile_conformal_option",
+      "horizon_days": 30,
+      "coverage_pct": 100.0,
+      "mean_interval_width_pct": 12.0,
+      "segments_scored": 36,
+      "selected_by_default": false,
+      "description": "Opt-in profile selected with FORECASTIQ_INTERVAL_METHOD=cv_quantile_conformal."
+    },
+    {
+      "method": "residual_conformal_default",
+      "horizon_days": 60,
+      "coverage_pct": 97.22,
+      "mean_interval_width_pct": 43.36,
+      "segments_scored": 36,
+      "selected_by_default": true,
+      "description": "Default evaluator interval profile used by run.sh."
+    },
+    {
+      "method": "cv_quantile_conformal_option",
+      "horizon_days": 60,
+      "coverage_pct": 80.56,
+      "mean_interval_width_pct": 36.0,
+      "segments_scored": 36,
+      "selected_by_default": false,
+      "description": "Opt-in profile selected with FORECASTIQ_INTERVAL_METHOD=cv_quantile_conformal."
+    },
+    {
+      "method": "residual_conformal_default",
+      "horizon_days": 90,
+      "coverage_pct": 100.0,
+      "mean_interval_width_pct": 44.36,
+      "segments_scored": 36,
+      "selected_by_default": true,
+      "description": "Default evaluator interval profile used by run.sh."
+    },
+    {
+      "method": "cv_quantile_conformal_option",
+      "horizon_days": 90,
+      "coverage_pct": 100.0,
+      "mean_interval_width_pct": 41.0,
+      "segments_scored": 36,
+      "selected_by_default": false,
+      "description": "Opt-in profile selected with FORECASTIQ_INTERVAL_METHOD=cv_quantile_conformal."
+    }
+  ],
   "horizon_calibration": [
     {
       "horizon_days": 30,

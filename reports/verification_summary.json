@@ -1,0 +1,73 @@
+{
+  "generated_at": "2026-07-07T03:20:07.797495+00:00",
+  "commands": [
+    {
+      "name": "interval calibration",
+      "command": [
+        "python",
+        "scripts/calibrate_intervals.py"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "rolling-origin backtest",
+      "command": [
+        "python",
+        "-m",
+        "backend.backtest"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "backend coverage",
+      "command": [
+        "python",
+        "-m",
+        "pytest",
+        "tests/",
+        "-q",
+        "--cov=backend",
+        "--durations=10"
+      ],
+      "returncode": 0
+    }
+  ],
+  "coverage": {
+    "statements": 4363,
+    "missing": 347,
+    "coverage_pct": 92.05,
+    "passed": 186,
+    "skipped": 2,
+    "warnings": 7,
+    "duration_seconds": 189.26,
+    "modules": {
+      "backend/__init__.py": 100.0,
+      "backend/anomaly.py": 94.81,
+      "backend/causal_lite.py": 86.99,
+      "backend/data_preprocessing.py": 89.83,
+      "backend/decision_support.py": 94.07,
+      "backend/evaluator_contract.py": 100.0,
+      "backend/evaluator_intervals.py": 89.29,
+      "backend/evaluator_io.py": 90.1,
+      "backend/forecasting.py": 83.68,
+      "backend/gemini.py": 92.39,
+      "backend/gemini_offline_cache.py": 100.0,
+      "backend/inference.py": 92.82,
+      "backend/lightweight_api.py": 93.92,
+      "backend/main.py": 89.58,
+      "backend/predict.py": 98.08,
+      "backend/schema_adapters.py": 94.07,
+      "backend/schemas.py": 98.26,
+      "backend/segment_utils.py": 93.8,
+      "backend/train.py": 91.98,
+      "backend/utils.py": 100.0
+    }
+  },
+  "artifacts": [
+    "reports/interval_calibration_report.json",
+    "reports/backtest_report.json",
+    "reports/backtest_summary.md",
+    "reports/coverage_summary.md"
+  ],
+  "status": "pass"
+}

@@ -1,6 +1,25 @@
 ---
 # ForecastIQ — Technical Reference
 
+## Table of Contents
+
+- [Methodology](#methodology)
+- [Model Selection](#model-selection)
+- [Backtest Accuracy & Interval Calibration](#backtest-accuracy--interval-calibration)
+- [Seasonality Handling](#seasonality-handling)
+- [Feature Engineering - All 48 Features](#feature-engineering--all-48-features)
+- [SHAP Availability](#shap-availability)
+- [Data Preprocessing](#data-preprocessing)
+- [Interval Calibration Methodology](#interval-calibration-methodology)
+- [Evaluator Contract Compliance](#evaluator-contract-compliance)
+- [Known Degradation Paths](#known-degradation-paths)
+- [Assumptions & Limitations](#assumptions--limitations)
+- [Test & Backtest Evidence](#test--backtest-evidence)
+- [AI Reasoning Architecture](#ai-reasoning-architecture)
+- [AI Integration Strategy](#ai-integration-strategy)
+- [Architecture Overview](#architecture-overview)
+- [Operational Security](#operational-security)
+
 ## Methodology
 
 ForecastIQ trains supervised regressors on validated campaign rows aggregated
@@ -487,6 +506,15 @@ full MMM program.
 
 This section records objective verification evidence for reviewers. It replaces
 the older standalone evidence indexes.
+
+### One-command evidence regeneration
+
+Run `npm run verify` after installing `requirements-app.txt` and npm packages
+to regenerate `reports/interval_calibration_report.json`,
+`reports/backtest_report.json`, `reports/backtest_summary.md`,
+`reports/coverage_summary.md`, and `reports/verification_summary.json`. The
+script runs the same interval-calibration, rolling-origin backtest, and backend
+coverage commands cited in the reports, then prints a pass/fail summary.
 
 ### Latest local verification (2026-07-06)
 

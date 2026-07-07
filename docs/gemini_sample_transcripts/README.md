@@ -17,6 +17,25 @@ When `GEMINI_API_KEY` is available, capture a redacted transcript with:
 python scripts/verify_gemini_live.py --require-live --output-dir docs/gemini_sample_transcripts
 ```
 
+For a judge-friendly three-scenario reasoning demo, run:
+
+```bash
+npm run demo:ai
+```
+
+That command calls Gemini for anomaly explanation, budget reallocation, and
+channel-underperformance prompts, then writes redacted
+`live_ai_reasoning_<scenario>_<timestamp>.json` transcripts in this folder.
+It is optional and separate from the no-network `run.sh` evaluator path.
+
+Featured committed live Gemini reasoning transcripts:
+
+| Scenario evidence | Transcript |
+|---|---|
+| Anomaly and causal-hypothesis ranking | `live_gemini_transcript_20260705T051036Z.json` |
+| Budget-allocation reasoning with `llmHypothesisRanking` | `live_gemini_transcript_20260704T143746Z.json` |
+| Channel-performance and underperformance explanation | `live_gemini_transcript_20260704T142147Z.json` |
+
 The `gemini-live-smoke` GitHub Actions workflow runs the same verifier with the
 repository secret and commits `live_gemini_transcript_*.json` files when the
 live response validates successfully. Each live transcript includes:

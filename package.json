@@ -13,6 +13,8 @@
     "test": "npm run generate:model-validation && vitest run --config vitest.config.ts",
     "test:e2e": "playwright test",
     "demo:e2e": "playwright test tests/e2e/demo.spec.ts",
+    "verify": "python scripts/verify_all.py",
+    "demo:ai": "python scripts/demo_live_ai_reasoning.py",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",

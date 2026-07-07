@@ -89,6 +89,16 @@ anchors 60/90 day revenue to the deterministic seasonal baseline inside the
 loaded `trained_model` artifact instead of forcing residual correction where the
 evidence does not justify it.
 
+The longer-horizon ablation table below is generated from
+[reports/long_horizon_revenue_ablation.md](./reports/long_horizon_revenue_ablation.md),
+which in turn reads the latest `reports/backtest_report.json` produced by
+`python -m backend.backtest`.
+
+| Horizon | Trained MAE | Baseline MAE | Trained RMSE | Baseline RMSE | Trained MAPE | Baseline MAPE | Statistical test | 95% CI | p-value | Verdict |
+|---:|---:|---:|---:|---:|---:|---:|---|---:|---:|---|
+| 60d | 17906.95 | 17906.95 | 25640.24 | 25640.24 | 9.54% | 9.54% | paired bootstrap absolute-error delta | 0.0000 to 0.0000 | 1.000 | statistical tie |
+| 90d | 22141.94 | 22141.94 | 31514.10 | 31514.10 | 7.89% | 7.89% | paired bootstrap absolute-error delta | 0.0000 to 0.0000 | 1.000 | statistical tie |
+
 This is a deliberate model-selection gate, not a hidden failure. The generated
 CSV still reports `model_type=trained_model` when the artifact loads and makes
 the horizon-level selection. `safe_baseline_fallback` is reserved for runtime

@@ -96,14 +96,15 @@ which in turn reads the latest `reports/backtest_report.json` produced by
 
 | Horizon | Trained MAE | Baseline MAE | Trained RMSE | Baseline RMSE | Trained MAPE | Baseline MAPE | Statistical test | 95% CI | p-value | Verdict |
 |---:|---:|---:|---:|---:|---:|---:|---|---:|---:|---|
-| 60d | 17906.95 | 17906.95 | 25640.24 | 25640.24 | 9.54% | 9.54% | paired bootstrap absolute-error delta | 0.0000 to 0.0000 | 1.000 | statistical tie |
+| 60d | 19199.67 | 19199.67 | 27461.10 | 27461.10 | 10.12% | 10.12% | paired bootstrap absolute-error delta | 0.0000 to 0.0000 | 1.000 | statistical tie |
 | 90d | 22141.94 | 22141.94 | 31514.10 | 31514.10 | 7.89% | 7.89% | paired bootstrap absolute-error delta | 0.0000 to 0.0000 | 1.000 | statistical tie |
 
 This is a deliberate model-selection gate, not a hidden failure. The generated
-CSV still reports `model_type=trained_model` when the artifact loads and makes
-the horizon-level selection. `safe_baseline_fallback` is reserved for runtime
-degradation cases such as missing/corrupt model files, empty input, malformed
-schemas, or unsupported runtime versions.
+CSV rows now expose the horizon-level basis directly: 30 day residual-correction
+rows report `trained_model`, while 60/90 day revenue rows report
+`trained_model_baseline_anchored`. `safe_baseline_fallback` is reserved for
+runtime degradation cases such as missing/corrupt model files, empty input,
+malformed schemas, or unsupported runtime versions.
 
 ## Backtest Accuracy & Interval Calibration
 
@@ -117,8 +118,8 @@ Latest committed headline values:
 
 | Horizon | Revenue MAPE | Overall ROAS MAPE | Revenue interval coverage |
 |---:|---:|---:|---:|
-| 30d | 2.23% | 0.36% | 100.0% |
-| 60d | 9.54% | 0.63% | 100.0% |
+| 30d | 3.60% | 0.49% | 93.06% |
+| 60d | 10.11% | 1.05% | 100.0% |
 | 90d | 7.89% | 0.91% | 100.0% |
 
 Coverage is intentionally conservative because ecommerce revenue is noisy over
@@ -189,7 +190,8 @@ supporting_observations`
 
 | `model_type` | Trigger | Expected behavior |
 |---|---|---|
-| `trained_model` | Model loads, schema is supported, sample data is sufficient | Uses committed artifact plus horizon-level model selection. |
+| `trained_model` | Model loads, schema is supported, sample data is sufficient, and the trained residual component is active for the row | Uses committed artifact plus horizon-level model selection. |
+| `trained_model_baseline_anchored` | Model loads, schema is supported, and a long-horizon revenue row is intentionally anchored to the seasonal baseline because rolling-origin evidence shows a statistical tie | Transparent trained-artifact variant; not a crash fallback. |
 | `trained_model_estimated_spend` | Revenue is available but spend is missing or GA4-only | Estimates spend from channel averages, labels the assumption in output notes. |
 | `safe_baseline_fallback` | Empty/malformed input, corrupt/missing model, unsupported runtime/schema, tiny unusable data | Writes deterministic non-empty forecasts and causal summary instead of crashing. |
 | `seasonal_baseline_selected` | Internal research/reporting label | Used in comparisons to explain horizon-level baseline anchoring; default CSV schema remains stable. |

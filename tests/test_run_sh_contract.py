@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from backend.predict import OUTPUT_COLUMNS
+from backend.predict import OUTPUT_COLUMNS, TRAINED_MODEL_TYPE, TRAINED_MODEL_VARIANTS
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -78,7 +78,9 @@ def test_run_sh_committed_data_folder_contract(tmp_path: Path) -> None:
     output = tmp_path / "predictions.csv"
     result = _run_contract_case(ROOT / "data", output)
     frame = _assert_schema_valid(output)
-    assert set(frame["model_type"].astype(str)) == {"trained_model"}
+    modes = set(frame["model_type"].astype(str))
+    assert modes <= set(TRAINED_MODEL_VARIANTS)
+    assert TRAINED_MODEL_TYPE in modes
     assert "Prediction mode: trained_model" in result.stdout
 
 

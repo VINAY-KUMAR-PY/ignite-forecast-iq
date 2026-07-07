@@ -18,8 +18,10 @@ from .evaluator_contract import (
     HORIZONS,
     OUTPUT_COLUMNS,
     SAFE_BASELINE_MODEL_TYPE,
+    TRAINED_BASELINE_ANCHORED_MODEL_TYPE,
     TRAINED_ESTIMATED_SPEND_MODEL_TYPE,
     TRAINED_MODEL_TYPE,
+    TRAINED_MODEL_VARIANTS,
     log,
 )
 from .evaluator_io import (
@@ -76,8 +78,10 @@ __all__ = [
     "OUTPUT_COLUMNS",
     "SAFE_BASELINE_MODEL_TYPE",
     "THIN_CAMPAIGN_CONFIDENCE",
+    "TRAINED_BASELINE_ANCHORED_MODEL_TYPE",
     "TRAINED_ESTIMATED_SPEND_MODEL_TYPE",
     "TRAINED_MODEL_TYPE",
+    "TRAINED_MODEL_VARIANTS",
     "_enforce_monotonic_interval_width_pct",
     "_monotonic_interval_multipliers",
     "aggregate_segment_daily",

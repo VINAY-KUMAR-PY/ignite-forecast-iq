@@ -17,6 +17,7 @@ from backend.predict import (
     SAFE_BASELINE_MODEL_TYPE,
     TRAINED_ESTIMATED_SPEND_MODEL_TYPE,
     TRAINED_MODEL_TYPE,
+    TRAINED_MODEL_VARIANTS,
     canonicalize_frame,
     read_csv_folder,
     run_prediction_pipeline,
@@ -64,7 +65,10 @@ class EvaluatorContractTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             output = Path(tmp) / "predictions.csv"
             run_prediction_pipeline("./data", "./pickle/model.pkl", output)
-            self.assert_predictions_csv(output, TRAINED_MODEL_TYPE)
+            frame = self.assert_predictions_csv(output)
+            modes = set(frame["model_type"].astype(str))
+            self.assertTrue(modes <= set(TRAINED_MODEL_VARIANTS))
+            self.assertIn(TRAINED_MODEL_TYPE, modes)
 
     def test_missing_model_cli_falls_back_with_exact_schema(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -90,7 +94,7 @@ class EvaluatorContractTests(unittest.TestCase):
 
             run_prediction_pipeline(data_dir, "./pickle/model.pkl", output)
             frame = self.assert_predictions_csv(output)
-            documented_modes = {TRAINED_MODEL_TYPE, TRAINED_ESTIMATED_SPEND_MODEL_TYPE, SAFE_BASELINE_MODEL_TYPE}
+            documented_modes = {*TRAINED_MODEL_VARIANTS, SAFE_BASELINE_MODEL_TYPE}
             self.assertTrue(set(frame["model_type"].astype(str)) <= documented_modes)
 
     def test_shopify_raw_orders_produces_valid_trained_or_degraded_output(self) -> None:
@@ -102,7 +106,7 @@ class EvaluatorContractTests(unittest.TestCase):
 
             run_prediction_pipeline(data_dir, "./pickle/model.pkl", output)
             frame = self.assert_predictions_csv(output)
-            documented_modes = {TRAINED_MODEL_TYPE, TRAINED_ESTIMATED_SPEND_MODEL_TYPE, SAFE_BASELINE_MODEL_TYPE}
+            documented_modes = {*TRAINED_MODEL_VARIANTS, SAFE_BASELINE_MODEL_TYPE}
             self.assertTrue(set(frame["model_type"].astype(str)) <= documented_modes)
 
     def test_ga4_and_shopify_combined_fixture_does_not_double_count_revenue(self) -> None:
@@ -123,7 +127,7 @@ class EvaluatorContractTests(unittest.TestCase):
 
             run_prediction_pipeline(data_dir, "./pickle/model.pkl", output)
             frame = self.assert_predictions_csv(output)
-            documented_modes = {TRAINED_MODEL_TYPE, TRAINED_ESTIMATED_SPEND_MODEL_TYPE, SAFE_BASELINE_MODEL_TYPE}
+            documented_modes = {*TRAINED_MODEL_VARIANTS, SAFE_BASELINE_MODEL_TYPE}
             self.assertTrue(set(frame["model_type"].astype(str)) <= documented_modes)
 
     def test_small_held_out_ads_export_uses_degraded_trained_path(self) -> None:
@@ -159,7 +163,7 @@ class EvaluatorContractTests(unittest.TestCase):
             frame = self.assert_predictions_csv(output)
             modes = set(frame["model_type"].astype(str))
             self.assertNotIn(SAFE_BASELINE_MODEL_TYPE, modes)
-            self.assertTrue(modes <= {TRAINED_MODEL_TYPE, TRAINED_ESTIMATED_SPEND_MODEL_TYPE})
+            self.assertTrue(modes <= set(TRAINED_MODEL_VARIANTS))
 
     def test_causal_summary_file_exists(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -206,7 +210,10 @@ class EvaluatorContractTests(unittest.TestCase):
                     timeout=90,
                 )
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-                self.assert_predictions_csv(output, TRAINED_MODEL_TYPE)
+                frame = self.assert_predictions_csv(output)
+                modes = set(frame["model_type"].astype(str))
+                self.assertTrue(modes <= set(TRAINED_MODEL_VARIANTS))
+                self.assertIn(TRAINED_MODEL_TYPE, modes)
 
     def test_run_sh_budget_json_validation_uses_resolved_python_interpreter(self) -> None:
         bash = os.environ.get("FORECASTIQ_TEST_BASH") or shutil.which("bash")

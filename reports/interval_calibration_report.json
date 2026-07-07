@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-07T05:55:48.339639+00:00",
+  "generated_at": "2026-07-07T08:59:59.086392+00:00",
   "method": "split_conformal_absolute_revenue_residual",
   "target_coverage": 0.9,
   "data_dir": "data",
@@ -9,12 +9,12 @@
   "calibration_note": "Each horizon uses consecutive chronological windows immediately before the final holdout. The final holdout remains reserved for reports/backtest_summary.md coverage validation.",
   "derived_constants": {
     "default_horizon_interval_multiplier": {
-      "30": 1.0,
+      "30": 2.5,
       "60": 2.7792,
       "90": 2.7792
     },
     "low_sample_horizon_interval_multiplier": {
-      "30": 1.25,
+      "30": 3.125,
       "60": 3.474,
       "90": 3.474
     },
@@ -37,8 +37,8 @@
     {
       "method": "cv_quantile_conformal_option",
       "horizon_days": 30,
-      "coverage_pct": 100.0,
-      "mean_interval_width_pct": 12.0,
+      "coverage_pct": 91.67,
+      "mean_interval_width_pct": 11.02,
       "segments_scored": 36,
       "selected_by_default": false,
       "description": "Opt-in profile selected with FORECASTIQ_INTERVAL_METHOD=cv_quantile_conformal."
@@ -55,8 +55,8 @@
     {
       "method": "cv_quantile_conformal_option",
       "horizon_days": 60,
-      "coverage_pct": 80.56,
-      "mean_interval_width_pct": 36.0,
+      "coverage_pct": 97.22,
+      "mean_interval_width_pct": 43.36,
       "segments_scored": 36,
       "selected_by_default": false,
       "description": "Opt-in profile selected with FORECASTIQ_INTERVAL_METHOD=cv_quantile_conformal."
@@ -74,7 +74,7 @@
       "method": "cv_quantile_conformal_option",
       "horizon_days": 90,
       "coverage_pct": 100.0,
-      "mean_interval_width_pct": 41.0,
+      "mean_interval_width_pct": 44.36,
       "segments_scored": 36,
       "selected_by_default": false,
       "description": "Opt-in profile selected with FORECASTIQ_INTERVAL_METHOD=cv_quantile_conformal."

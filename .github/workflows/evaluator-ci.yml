@@ -70,8 +70,9 @@ jobs:
                   raise SystemExit(f"{column} contains infinite or non-finite values")
 
           modes = set(frame["model_type"].astype(str))
-          if modes != {"trained_model"}:
-              raise SystemExit(f"Committed sample must use trained_model, got {sorted(modes)}")
+          trained_modes = {"trained_model", "trained_model_baseline_anchored", "trained_model_estimated_spend"}
+          if not modes <= trained_modes or "trained_model" not in modes:
+              raise SystemExit(f"Committed sample must use trained_model variants only, got {sorted(modes)}")
 
           print("Minimal grading path OK:", len(frame), "rows", sorted(modes))
           PY
@@ -226,8 +227,9 @@ jobs:
               print(f"Interval widening OK: {w30}% -> {w60}% -> {w90}%")
 
           modes = set(frame["model_type"].astype(str))
-          if modes != {"trained_model"}:
-              raise SystemExit(f"Supported evaluator runtime must use trained_model only, got: {sorted(modes)}")
+          trained_modes = {"trained_model", "trained_model_baseline_anchored", "trained_model_estimated_spend"}
+          if not modes <= trained_modes or "trained_model" not in modes:
+              raise SystemExit(f"Supported evaluator runtime must use trained_model variants only, got: {sorted(modes)}")
           print(f"Validated {len(frame)} rows on Python {sys.version.split()[0]} using {sorted(modes)}")
           PY
 
@@ -339,8 +341,9 @@ jobs:
           import pandas as pd
           frame = pd.read_csv("output/predictions.csv")
           modes = set(frame["model_type"].astype(str))
-          if modes != {"trained_model"}:
-              raise SystemExit(f"Expected only trained_model from committed pickle, got {sorted(modes)}")
+          trained_modes = {"trained_model", "trained_model_baseline_anchored", "trained_model_estimated_spend"}
+          if not modes <= trained_modes or "trained_model" not in modes:
+              raise SystemExit(f"Expected trained_model variants from committed pickle, got {sorted(modes)}")
           if len(frame) != 54:
               raise SystemExit(f"Expected 54 rows from committed sample data, got {len(frame)}")
           print("Pickle compatibility OK:", len(frame), "rows", sorted(modes))
@@ -383,12 +386,13 @@ jobs:
           output = Path("output/predictions.csv")
           frame = pd.read_csv(output)
           modes = set(frame["model_type"].astype(str))
-          if modes != {"trained_model"}:
-              raise SystemExit(f"Expected trained_model under sklearn {sklearn.__version__}, got {sorted(modes)}")
+          trained_modes = {"trained_model", "trained_model_baseline_anchored", "trained_model_estimated_spend"}
+          if not modes <= trained_modes or "trained_model" not in modes:
+              raise SystemExit(f"Expected trained_model variants under sklearn {sklearn.__version__}, got {sorted(modes)}")
           if len(frame) != 54:
               raise SystemExit(f"Expected 54 committed-sample rows, got {len(frame)}")
           print(
-              f"sklearn {sklearn.__version__} produced trained_model output with no fallback warning "
+              f"sklearn {sklearn.__version__} produced trained_model variant output with no fallback warning "
               f"on Python {sys.version.split()[0]}"
           )
           PY
@@ -439,8 +443,9 @@ jobs:
           log_text = Path("output/sklearn_drift.log").read_text(encoding="utf-8")
           frame = pd.read_csv("output/predictions.csv")
           modes = set(frame["model_type"].astype(str))
-          if modes == {"trained_model"}:
-              print("Alternate sklearn runtime produced trained_model output.")
+          trained_modes = {"trained_model", "trained_model_baseline_anchored", "trained_model_estimated_spend"}
+          if modes <= trained_modes and "trained_model" in modes:
+              print("Alternate sklearn runtime produced trained_model variant output.")
           elif modes == {"safe_baseline_fallback"} and (
               "FORECASTIQ WARNING: SAFE BASELINE FALLBACK WAS USED" in log_text
               or "differs from artifact build version" in log_text
@@ -449,6 +454,28 @@ jobs:
           else:
               raise SystemExit(f"Unexpected silent model mode under alternate sklearn: {sorted(modes)}")
           PY
+
+  mocked-live-ai-path:
+    name: Mocked optional live-AI path
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install application dependencies
+        run: python -m pip install -r requirements-app.txt
+
+      - name: Exercise explicit live-AI path with mocked Gemini transport
+        env:
+          GEMINI_API_KEY: fake-ci-key
+        run: |
+          python -m pytest tests/test_offline_predict.py -q -k "live_ai_mode_uses_mocked_gemini_path_with_explicit_flag_and_key"
 
   app-tests:
     name: Backend application and trained artifact
@@ -534,8 +561,10 @@ jobs:
           python - <<'PY'
           import pandas as pd
           frame = pd.read_csv("output/predictions.csv")
-          if "trained_model" not in set(frame["model_type"].astype(str)):
-              raise SystemExit("The committed artifact did not produce trained_model output")
+          modes = set(frame["model_type"].astype(str))
+          trained_modes = {"trained_model", "trained_model_baseline_anchored", "trained_model_estimated_spend"}
+          if not modes <= trained_modes or "trained_model" not in modes:
+              raise SystemExit(f"The committed artifact did not produce trained_model variants: {sorted(modes)}")
           print("Committed trained artifact verified.")
           PY
 
@@ -677,8 +706,10 @@ jobs:
                   raise SystemExit(f"{column} contains non-finite values")
               if (values < 0).any():
                   raise SystemExit(f"{column} contains negative values")
-          if set(frame["model_type"].astype(str)) != {"trained_model"}:
-              raise SystemExit("Held-out evaluator protocol must use trained_model on supported CI runtime")
+          modes = set(frame["model_type"].astype(str))
+          trained_modes = {"trained_model", "trained_model_baseline_anchored", "trained_model_estimated_spend"}
+          if not modes <= trained_modes or "trained_model" not in modes:
+              raise SystemExit("Held-out evaluator protocol must use trained_model variants on supported CI runtime")
           print("Hackathon evaluator protocol passed:", len(frame), "rows")
           PY
 

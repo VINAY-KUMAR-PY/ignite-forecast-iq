@@ -9,6 +9,8 @@ LLM-style reasoning without a network dependency during grading.
 
 from __future__ import annotations
 
+import hashlib
+from pathlib import Path
 from typing import Any
 
 from .evaluator_contract import safe_float
@@ -28,6 +30,39 @@ causal evidence object. Produce a concise causal hypothesis that cites the
 channel, campaign type, direction, effect size, confidence, ROAS movement,
 supporting metrics, and limitations. Do not invent facts outside the evidence.
 """
+
+
+TRANSCRIPT_PROVENANCE: tuple[dict[str, str], ...] = (
+    {
+        "id": "live_gemini_transcript_20260707T051959Z",
+        "file": "live_gemini_transcript_20260707T051959Z.json",
+        "captured_at_utc": "20260707T051959Z",
+        "model": "gemini-2.5-flash",
+        "sha256": "f48955d6d920e68d03aa3eceefb774d98b62bd1f9ab16a396f5b5810dd448412",
+    },
+    {
+        "id": "live_gemini_transcript_20260705T051036Z",
+        "file": "live_gemini_transcript_20260705T051036Z.json",
+        "captured_at_utc": "20260705T051036Z",
+        "model": "gemini-2.5-flash",
+        "sha256": "408c4af4153a68fb6666e48c31a4c96340aa8e0f1fb2b4ada9bd821f473da077",
+    },
+    {
+        "id": "live_gemini_transcript_20260704T142147Z",
+        "file": "live_gemini_transcript_20260704T142147Z.json",
+        "captured_at_utc": "20260704T142147Z",
+        "model": "gemini-2.5-flash",
+        "sha256": "d214f0ba171e32d6406860f36090dbb3f1cd5237515ea2c9d65d43b7d951ca0a",
+    },
+)
+
+SKELETON_TRANSCRIPT_SOURCES: dict[str, tuple[str, ...]] = {
+    "incremental_growth": ("live_gemini_transcript_20260707T051959Z",),
+    "efficiency_compression": ("live_gemini_transcript_20260704T142147Z",),
+    "volatility_watch": ("live_gemini_transcript_20260707T051959Z",),
+    "budget_reallocation": ("live_gemini_transcript_20260705T051036Z",),
+    "stable_run_rate": ("live_gemini_transcript_20260704T142147Z",),
+}
 
 
 _SKELETONS: dict[str, dict[str, str]] = {
@@ -246,8 +281,60 @@ def compose_distilled_explanation(evidence: dict[str, Any], label: str | None = 
         "recommended_action": skeleton["recommended_action_skeleton"].format_map(values),
         "evidence_object": evidence,
         "reasoning_trace": reasoning_trace,
+        "reasoning_provenance": provenance_for_skeleton(selected_label),
         "prompt_template": LLM_REASONING_PROMPT_TEMPLATE.strip(),
     }
+
+
+def transcript_directory() -> Path:
+    return Path(__file__).resolve().parents[1] / "docs" / "gemini_sample_transcripts"
+
+
+def provenance_for_skeleton(label: str) -> list[dict[str, str]]:
+    source_ids = set(SKELETON_TRANSCRIPT_SOURCES.get(label, ()))
+    return [dict(item) for item in TRANSCRIPT_PROVENANCE if item["id"] in source_ids]
+
+
+def validate_transcript_provenance(transcript_dir: Path | None = None) -> list[dict[str, str]]:
+    """Verify committed transcript hashes still match distilled provenance."""
+    root = transcript_dir or transcript_directory()
+    checked: list[dict[str, str]] = []
+    for item in TRANSCRIPT_PROVENANCE:
+        path = root / item["file"]
+        if not path.exists():
+            raise FileNotFoundError(f"Missing Gemini transcript provenance file: {path}")
+        actual = hashlib.sha256(path.read_bytes()).hexdigest()
+        if actual != item["sha256"]:
+            raise ValueError(
+                f"Gemini transcript provenance drift for {item['file']}: expected {item['sha256']}, got {actual}"
+            )
+        checked.append({**item, "actual_sha256": actual})
+    return checked
+
+
+def format_reasoning_provenance(distilled: dict[str, Any]) -> str:
+    records = distilled.get("reasoning_provenance") if isinstance(distilled, dict) else None
+    if not isinstance(records, list) or not records:
+        records = [dict(item) for item in TRANSCRIPT_PROVENANCE]
+    lines = [
+        "--- REASONING PROVENANCE ---",
+        "source_type: distilled_live_gemini_transcript",
+        "network_used_at_runtime: false",
+        f"selected_skeleton: {distilled.get('label', 'unknown') if isinstance(distilled, dict) else 'unknown'}",
+        "transcripts:",
+    ]
+    for item in records:
+        lines.extend(
+            [
+                f"  - id: {item.get('id', 'unknown')}",
+                f"    file: docs/gemini_sample_transcripts/{item.get('file', 'unknown')}",
+                f"    captured_at_utc: {item.get('captured_at_utc', 'unknown')}",
+                f"    model: {item.get('model', 'unknown')}",
+                f"    sha256: {item.get('sha256', 'unknown')}",
+            ]
+        )
+    lines.append("--- END REASONING PROVENANCE ---")
+    return "\n".join(lines)
 
 
 def build_reasoning_trace(evidence: dict[str, Any], label: str | None = None) -> list[str]:
@@ -435,3 +522,8 @@ def _describe_anomalies(anomalies: list[Any]) -> str:
     if z_score:
         return f"top anomaly {channel} {metric} on {date} ({severity}, z={z_score:.1f})"
     return f"top anomaly {channel} {metric} on {date} ({severity})"
+
+
+if __name__ == "__main__":
+    checked_records = validate_transcript_provenance()
+    print(f"Validated {len(checked_records)} Gemini transcript provenance record(s).")

@@ -13,6 +13,7 @@ from .evaluator_contract import (
     MIN_TRAINED_MODEL_ROWS,
     ROAS_NOT_COMPUTABLE_CONFIDENCE,
     SAFE_BASELINE_MODEL_TYPE,
+    TRAINED_BASELINE_ANCHORED_MODEL_TYPE,
     TRAINED_ESTIMATED_SPEND_MODEL_TYPE,
     TRAINED_MODEL_TYPE,
     clean_number,
@@ -510,6 +511,9 @@ def build_trained_predictions(
                     parent_channel_segment,
                 )
                 model_type = trained_model_type
+                revenue_weight = _horizon_model_weight(model, "revenue_model_weight", horizon, 0.25)
+                if trained_model_type == TRAINED_MODEL_TYPE and revenue_weight <= 1e-9:
+                    model_type = TRAINED_BASELINE_ANCHORED_MODEL_TYPE
                 trained_count += 1
             except Exception as exc:
                 segment_fallback_count += 1

@@ -37,7 +37,11 @@ from .evaluator_contract import (
     safe_float,
 )
 from .evaluator_intervals import DEFAULT_HORIZON_CONFIDENCE_Z
-from .gemini_offline_cache import DISTILLED_LLM_REASONING_HEADER, select_distilled_reasoning
+from .gemini_offline_cache import (
+    DISTILLED_LLM_REASONING_HEADER,
+    format_reasoning_provenance,
+    select_distilled_reasoning,
+)
 from .segment_utils import FEATURE_COLUMNS, aggregate_segment_daily, safe_ratio, window_trend
 from .utils import parse_dates_safely
 
@@ -349,6 +353,7 @@ def generate_offline_causal_summary(
             f"{DISTILLED_LLM_REASONING_HEADER}\n"
             "=== ForecastIQ Causal Summary (offline, deterministic) ===\n"
             f"Distilled Gemini explanation skeleton: {distilled['label']}\n"
+            f"{format_reasoning_provenance(distilled)}\n"
             "Structured causal evidence object:\n"
             f"{json.dumps(distilled['evidence_object'], indent=2, sort_keys=True)}\n"
             "REASONING_TRACE\n"
@@ -681,6 +686,7 @@ def generate_offline_causal_summary(
         DISTILLED_LLM_REASONING_HEADER,
         "=== ForecastIQ Causal Summary (offline, deterministic) ===",
         f"Distilled Gemini explanation skeleton: {distilled['label']}",
+        format_reasoning_provenance(distilled),
         "Structured causal evidence object:",
         json.dumps(distilled["evidence_object"], indent=2, sort_keys=True),
         "REASONING_TRACE",

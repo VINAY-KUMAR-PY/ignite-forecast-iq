@@ -12,6 +12,7 @@ import pandas as pd
 from backend.predict import (
     OUTPUT_COLUMNS,
     TRAINED_MODEL_TYPE,
+    TRAINED_MODEL_VARIANTS,
     build_predictions,
     canonicalize_frame,
     read_csv_folder,
@@ -85,7 +86,9 @@ class IntegrationPipelineTests(unittest.TestCase):
                 self.assertEqual(list(frame.columns), OUTPUT_COLUMNS)
                 self.assertFalse(frame.isna().any().any())
                 self.assertEqual(set(frame["horizon_days"].astype(int)), {30, 60, 90})
-                self.assertEqual(set(frame["model_type"].astype(str)), {TRAINED_MODEL_TYPE})
+                modes = set(frame["model_type"].astype(str))
+                self.assertTrue(modes <= set(TRAINED_MODEL_VARIANTS))
+                self.assertIn(TRAINED_MODEL_TYPE, modes)
                 for column in [
                     "expected_revenue",
                     "lower_revenue",

@@ -55,9 +55,10 @@ stays unchanged.
 
 ## Forecast Accuracy At A Glance
 
-Latest walk-forward revenue interval coverage is **100.0%** for 30/60/90-day
-trained intervals. Revenue MAPE is **2.23% / 9.54% / 7.89%** for 30/60/90
-days; overall-level ROAS MAPE is **0.36% / 0.63% / 0.91%**. Full tables:
+Latest walk-forward revenue interval coverage is **93.06% / 100.0% / 100.0%**
+for 30/60/90-day trained intervals. Revenue MAPE is
+**3.60% / 10.11% / 7.89%** for 30/60/90 days; overall-level ROAS MAPE is
+**0.49% / 1.05% / 0.91%**. Full tables:
 [reports/backtest_summary.md](./reports/backtest_summary.md).
 
 Backend coverage is **92.05% measured locally** with
@@ -91,7 +92,7 @@ can regenerate one fresh redacted transcript when `GEMINI_API_KEY` is configured
 |---|---|
 | Technical Soundness | `./run.sh`, `reports/backtest_summary.md`, `reports/interval_calibration_report.json`, `tests/test_offline_predict.py`, `tests/test_interval_monotonicity.py` |
 | Practical Relevance | `backend/decision_support.py`, `scripts/validate_budget_elasticity.py`, `reports/budget_elasticity_summary.md`, simulator UI |
-| AI Integration | `output/causal_summary.txt`, `backend/gemini_offline_cache.py`, `scripts/demo_live_ai_reasoning.py`, `.github/workflows/gemini-transcript-refresh.yml`, `docs/gemini_sample_transcripts/` |
+| AI Integration | `output/causal_summary.txt` (`REASONING PROVENANCE` block), `backend/gemini_offline_cache.py`, mocked live-AI CI job in `.github/workflows/evaluator-ci.yml`, `scripts/demo_live_ai_reasoning.py`, `docs/gemini_sample_transcripts/` |
 | Product Thinking | One-click demo flow, Upload -> Dashboard -> Forecast -> Simulator -> Insights, `DEMO_GUIDE.md` |
 | Engineering Quality | Evaluator CI, frontend tests, Playwright flow, coverage gate, pinned evaluator dependencies |
 | Independent reproduction | `npm run verify` regenerates interval calibration, rolling-origin backtest reports, coverage summary, and `reports/verification_summary.json` |
@@ -149,7 +150,9 @@ forecast_confidence
 ```
 
 The committed sample output has 54 rows, horizons `{30, 60, 90}`, no NaN, no
-infinite values, and `model_type=trained_model` on supported Python runtimes.
+infinite values, `trained_model` rows at 30 days, and transparent
+`trained_model_baseline_anchored` rows where 60/90-day revenue is deliberately
+anchored to the seasonal baseline inside the loaded artifact.
 
 ## Deployment
 

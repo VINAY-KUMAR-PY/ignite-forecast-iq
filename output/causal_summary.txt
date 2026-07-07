@@ -2,6 +2,17 @@ AI mode: OFFLINE_DETERMINISTIC_FALLBACK (no live LLM call was made in this run; 
 AI interpretation mode: DISTILLED_LLM_DERIVED_OFFLINE_CACHE (distilled LLM-derived interpretation, selected offline, no live API call per no-network evaluator rule).
 === ForecastIQ Causal Summary (offline, deterministic) ===
 Distilled Gemini explanation skeleton: stable_run_rate
+--- REASONING PROVENANCE ---
+source_type: distilled_live_gemini_transcript
+network_used_at_runtime: false
+selected_skeleton: stable_run_rate
+transcripts:
+  - id: live_gemini_transcript_20260704T142147Z
+    file: docs/gemini_sample_transcripts/live_gemini_transcript_20260704T142147Z.json
+    captured_at_utc: 20260704T142147Z
+    model: gemini-2.5-flash
+    sha256: d214f0ba171e32d6406860f36090dbb3f1cd5237515ea2c9d65d43b7d951ca0a
+--- END REASONING PROVENANCE ---
 Structured causal evidence object:
 {
   "baseline_roas": 2.9629,

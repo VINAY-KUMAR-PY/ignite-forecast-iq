@@ -562,7 +562,7 @@ def _compare_roas_blend_weights(
     }
 
 
-def _walk_forward_horizon(frame: pd.DataFrame, horizon: int, rolling_windows: int = 3) -> dict[str, Any]:
+def _walk_forward_horizon(frame: pd.DataFrame, horizon: int, rolling_windows: int = 4) -> dict[str, Any]:
     max_date = frame["date_dt"].max()
     folds: list[dict[str, Any]] = []
     rows: list[dict[str, Any]] = []
@@ -683,7 +683,7 @@ def _average_fold_metrics(folds: list[dict[str, Any]]) -> dict[str, Any]:
 def run_backtest(
     data_dir: str | Path = "data",
     holdout_days: int = 30,
-    rolling_windows: int = 3,
+    rolling_windows: int = 4,
     blend_weights: tuple[float, ...] = BLEND_WEIGHT_CANDIDATES,
     roas_blend_weights: tuple[float, ...] = BLEND_WEIGHT_CANDIDATES,
 ) -> dict[str, Any]:
@@ -756,7 +756,7 @@ def run_backtest(
 def _backtest_cache_key(
     data_dir: str | Path,
     holdout_days: int,
-    rolling_windows: int = 3,
+    rolling_windows: int = 4,
     blend_weights: tuple[float, ...] = BLEND_WEIGHT_CANDIDATES,
     roas_blend_weights: tuple[float, ...] = BLEND_WEIGHT_CANDIDATES,
 ) -> tuple[Any, ...]:
@@ -991,7 +991,7 @@ Generated: {report["generated_at"]}
 
 - Primary training period: all valid sample rows before the final {report["holdout_days"]} days
 - Primary test period: final {report["holdout_days"]} days
-- Rolling-origin design: up to three non-overlapping holdout windows per horizon
+- Rolling-origin design: up to four non-overlapping holdout windows per horizon
 - Train rows: {report["train_rows"]}
 - Test rows: {report["test_rows"]}
 - Segments evaluated: {report["segments_evaluated"]}

@@ -12,7 +12,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from backend.predict import OUTPUT_COLUMNS, TRAINED_MODEL_TYPE
+from backend.predict import OUTPUT_COLUMNS, TRAINED_MODEL_TYPE, TRAINED_MODEL_VARIANTS
 from scripts.generate_synthetic_marketing_csv import write_fixture
 
 
@@ -48,6 +48,8 @@ def test_run_sh_handles_approximately_50000_rows_under_time_budget() -> None:
         assert not frame.isna().any().any()
         numeric = frame.select_dtypes(include="number")
         assert numeric.apply(lambda column: column.map(math.isfinite).all()).all()
-        assert "trained_model" in set(frame["model_type"].astype(str)) or sys.version_info < (3, 11)
+        modes = set(frame["model_type"].astype(str))
+        assert TRAINED_MODEL_TYPE in modes or sys.version_info < (3, 11)
+        assert modes <= set(TRAINED_MODEL_VARIANTS) or sys.version_info < (3, 11)
         assert (output.parent / "causal_summary.txt").exists()
-        assert TRAINED_MODEL_TYPE in set(frame["model_type"].astype(str))
+        assert TRAINED_MODEL_TYPE in modes

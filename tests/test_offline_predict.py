@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import json
 import os
 import subprocess
 import sys
@@ -20,6 +21,7 @@ from backend.predict import (
     SAFE_BASELINE_MODEL_TYPE,
     TRAINED_ESTIMATED_SPEND_MODEL_TYPE,
     TRAINED_MODEL_TYPE,
+    TRAINED_MODEL_VARIANTS,
     THIN_CAMPAIGN_CONFIDENCE,
     _monotonic_interval_multipliers,
     aggregate_segment_daily,
@@ -48,7 +50,9 @@ from backend.gemini_offline_cache import (
     build_reasoning_trace,
     build_structured_causal_evidence,
     compose_distilled_explanation,
+    format_reasoning_provenance,
     select_distilled_reasoning,
+    validate_transcript_provenance,
 )
 from backend.utils import read_csv_folder as read_training_csv_folder
 
@@ -421,14 +425,16 @@ class OfflinePredictionTests(unittest.TestCase):
         rows = build_predictions(cleaned.frame, model)
 
         self.assert_valid_prediction_rows(rows)
-        self.assertEqual({row["model_type"] for row in rows}, {TRAINED_MODEL_TYPE})
+        modes = {row["model_type"] for row in rows}
+        self.assertTrue(modes <= set(TRAINED_MODEL_VARIANTS))
+        self.assertIn(TRAINED_MODEL_TYPE, modes)
 
     def test_committed_sample_uses_trained_estimates_for_every_forecast_row(self) -> None:
         raw = read_csv_folder("data")
         cleaned = canonicalize_frame(raw)
         rows = build_predictions(cleaned.frame, safe_load_model("pickle/model.pkl"))
 
-        trained_rows = sum(1 for row in rows if row["model_type"] == TRAINED_MODEL_TYPE)
+        trained_rows = sum(1 for row in rows if row["model_type"] in TRAINED_MODEL_VARIANTS)
         trained_ratio = trained_rows / len(rows)
 
         self.assertEqual(len(rows), 54)
@@ -474,6 +480,10 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertIn("no live LLM call was made in this run", summary.splitlines()[0])
         self.assertIn("DISTILLED_LLM_DERIVED_OFFLINE_CACHE", summary)
         self.assertIn("Distilled Gemini explanation skeleton:", summary)
+        self.assertIn("--- REASONING PROVENANCE ---", summary)
+        self.assertIn("source_type: distilled_live_gemini_transcript", summary)
+        self.assertIn("network_used_at_runtime: false", summary)
+        self.assertIn("sha256:", summary)
         self.assertIn("Structured causal evidence object:", summary)
         self.assertIn("REASONING_TRACE", summary)
         self.assertIn("INPUT_EVIDENCE", summary)
@@ -553,6 +563,35 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertIn("Google Ads", first["summary"])
         self.assertIn("$12,000", first["summary"])
         self.assertEqual(uncertain["label"], "volatility_watch")
+
+    def test_reasoning_provenance_hashes_match_committed_transcripts(self) -> None:
+        records = validate_transcript_provenance()
+        self.assertGreaterEqual(len(records), 3)
+        for record in records:
+            self.assertEqual(record["actual_sha256"], record["sha256"])
+
+    def test_reasoning_provenance_block_is_machine_readable(self) -> None:
+        distilled = compose_distilled_explanation(
+            {
+                "channel": "Google Ads",
+                "campaign_type": "Search",
+                "intervention_detected": True,
+                "effect_direction": "positive",
+                "effect_size": 1200,
+                "confidence": "medium",
+                "baseline_roas": 4.1,
+                "observed_roas": 4.6,
+                "delta_percent": 7.5,
+                "supporting_metrics": {"confidence_interval": [100, 2400], "p_value": 0.08},
+                "primary_driver": {"role": "leading_roas", "segment": "Google Ads", "metric": "4.6x ROAS"},
+                "limitations": ["observational"],
+            },
+            "incremental_growth",
+        )
+        provenance = format_reasoning_provenance(distilled)
+        self.assertIn("source_type: distilled_live_gemini_transcript", provenance)
+        self.assertIn("network_used_at_runtime: false", provenance)
+        self.assertIn("live_gemini_transcript_", provenance)
 
     def test_reasoning_trace_is_data_dependent_and_non_empty(self) -> None:
         evidence = build_structured_causal_evidence(
@@ -757,6 +796,41 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertIn("confidence=", summary)
         self.assertIn("validation=", summary)
 
+    def test_live_ai_mode_uses_mocked_gemini_path_with_explicit_flag_and_key(self) -> None:
+        raw = pd.read_csv("data/sample_campaigns.csv").head(120)
+        cleaned = canonicalize_frame(raw)
+        rows = build_predictions(cleaned.frame, fallback_model_config("mocked live path"))
+        payload = _fallback_insights(
+            {
+                "channels": [{"name": "Google Ads", "roas": 4.8, "sharePct": 50, "revenue": 10000, "spend": 2000}],
+                "avgRoas": 4.0,
+                "forecast30dRevenue": 12000,
+                "causalEstimates": [
+                    {
+                        "date": "2026-06-01",
+                        "channel": "Google Ads",
+                        "incrementalRevenue": 5000,
+                        "lowerRevenue": 1000,
+                        "upperRevenue": 9000,
+                        "pValue": 0.04,
+                        "effectStrength": 1.5,
+                        "confidence": "high",
+                        "parallelTrendPassed": True,
+                    }
+                ],
+            }
+        ).model_dump(mode="json")
+        payload["executiveSummary"] = "Mocked Gemini live reasoning path executed."
+
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "fake-ci-key", "GEMINI_MAX_ATTEMPTS": "1"}, clear=False):
+            with patch("backend.gemini._generate_content", new=AsyncMock(return_value=json.dumps(payload))) as mocked:
+                summary = generate_causal_summary(cleaned.frame, rows, enable_live_ai=True)
+
+        mocked.assert_awaited_once()
+        self.assertIn("LIVE_GEMINI_OPTIONAL_ENRICHMENT", summary)
+        self.assertIn("Mocked Gemini live reasoning path executed.", summary)
+        self.assertIn("LLM_HYPOTHESIS_RANKING", summary)
+
     def test_causal_summary_mirrors_ranked_causal_hypothesis_structure(self) -> None:
         raw = pd.read_csv("data/sample_campaigns.csv")
         cleaned = canonicalize_frame(raw)
@@ -939,7 +1013,7 @@ class OfflinePredictionTests(unittest.TestCase):
             {"horizon_interval_multiplier": {"30": 0.60, "60": 1.45, "90": 1.10}}
         )
 
-        self.assertEqual(multipliers, {"30": 1.0, "60": 2.7792, "90": 2.7792})
+        self.assertEqual(multipliers, {"30": 2.5, "60": 2.7792, "90": 2.7792})
         self.assertLessEqual(multipliers["30"], multipliers["60"])
         self.assertLessEqual(multipliers["60"], multipliers["90"])
 

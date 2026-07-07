@@ -11,7 +11,7 @@ from pathlib import Path
 import pandas as pd
 
 from backend.data_preprocessing import validate_records
-from backend.predict import build_predictions, canonicalize_frame, read_csv_folder, safe_load_model
+from backend.predict import TRAINED_MODEL_TYPE, TRAINED_MODEL_VARIANTS, build_predictions, canonicalize_frame, read_csv_folder, safe_load_model
 from backend.schema_adapters import SOURCE_SCHEMA_COLUMN, normalize_marketing_frame
 
 
@@ -487,7 +487,9 @@ class SchemaAdapterTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             predictions = pd.read_csv(output)
             self.assertFalse(predictions.empty)
-            self.assertEqual(set(predictions["model_type"].astype(str)), {"trained_model"})
+            modes = set(predictions["model_type"].astype(str))
+            self.assertTrue(modes <= set(TRAINED_MODEL_VARIANTS))
+            self.assertIn(TRAINED_MODEL_TYPE, modes)
             self.assertNotIn("safe_baseline_fallback", set(predictions["model_type"].astype(str)))
 
     def test_aig_official_like_ga4_shopify_ads_fixture_normalizes(self) -> None:

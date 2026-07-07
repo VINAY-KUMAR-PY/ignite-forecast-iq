@@ -7,7 +7,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from .evaluator_contract import HORIZONS, clean_number, safe_float
+from .evaluator_contract import safe_float
 from .utils import parse_dates_safely
 
 FEATURE_COLUMNS = [

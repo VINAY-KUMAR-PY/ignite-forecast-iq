@@ -14,7 +14,6 @@ import pandas as pd
 
 from .schema_adapters import (
     CANONICAL_COLUMNS,
-    COLUMN_ALIASES,
     SOURCE_FILE_COLUMN,
     SOURCE_SCHEMA_COLUMN,
     alias_index,

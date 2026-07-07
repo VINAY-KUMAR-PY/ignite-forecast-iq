@@ -20,6 +20,12 @@ from .schemas import (
 )
 from .utils import parse_dates_safely, pct_change, round_money
 
+__all__ = [
+    "build_decision_support",
+    "compute_driver_evidence",
+    "estimate_causal_effects",
+]
+
 
 def compute_driver_evidence(frame: pd.DataFrame) -> List[dict]:
     """Measure channel spend-delta associations for insight grounding.

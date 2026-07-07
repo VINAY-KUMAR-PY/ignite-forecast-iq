@@ -8,7 +8,7 @@ import math
 import os
 import warnings
 from pathlib import Path
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable
 
 import pandas as pd
 

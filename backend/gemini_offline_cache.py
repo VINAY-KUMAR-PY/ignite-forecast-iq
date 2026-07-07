@@ -38,21 +38,21 @@ TRANSCRIPT_PROVENANCE: tuple[dict[str, str], ...] = (
         "file": "live_gemini_transcript_20260707T051959Z.json",
         "captured_at_utc": "20260707T051959Z",
         "model": "gemini-2.5-flash",
-        "sha256": "f48955d6d920e68d03aa3eceefb774d98b62bd1f9ab16a396f5b5810dd448412",
+        "sha256": "109ad76778223d3dbe957f53b4d9b9054d06226dc5e55b0417f3dcce7b91bc10",
     },
     {
         "id": "live_gemini_transcript_20260705T051036Z",
         "file": "live_gemini_transcript_20260705T051036Z.json",
         "captured_at_utc": "20260705T051036Z",
         "model": "gemini-2.5-flash",
-        "sha256": "408c4af4153a68fb6666e48c31a4c96340aa8e0f1fb2b4ada9bd821f473da077",
+        "sha256": "8f6956e0409000e4ce1aacd629ac15fb1274ce7f88b27d53a2ade2bd3e880dee",
     },
     {
         "id": "live_gemini_transcript_20260704T142147Z",
         "file": "live_gemini_transcript_20260704T142147Z.json",
         "captured_at_utc": "20260704T142147Z",
         "model": "gemini-2.5-flash",
-        "sha256": "d214f0ba171e32d6406860f36090dbb3f1cd5237515ea2c9d65d43b7d951ca0a",
+        "sha256": "c52f0cdc7593aa0d5b10a1333d221d38a324bd0093cca0f1a04b41d56bb8f1f0",
     },
 )
 
@@ -303,7 +303,9 @@ def validate_transcript_provenance(transcript_dir: Path | None = None) -> list[d
         path = root / item["file"]
         if not path.exists():
             raise FileNotFoundError(f"Missing Gemini transcript provenance file: {path}")
-        actual = hashlib.sha256(path.read_bytes()).hexdigest()
+        # Registry hashes are computed over LF-normalized transcript bytes so
+        # Windows and Linux checkouts validate the same committed content.
+        actual = hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
         if actual != item["sha256"]:
             raise ValueError(
                 f"Gemini transcript provenance drift for {item['file']}: expected {item['sha256']}, got {actual}"

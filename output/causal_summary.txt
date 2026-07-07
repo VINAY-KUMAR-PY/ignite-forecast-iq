@@ -11,7 +11,7 @@ transcripts:
     file: docs/gemini_sample_transcripts/live_gemini_transcript_20260704T142147Z.json
     captured_at_utc: 20260704T142147Z
     model: gemini-2.5-flash
-    sha256: d214f0ba171e32d6406860f36090dbb3f1cd5237515ea2c9d65d43b7d951ca0a
+    sha256: c52f0cdc7593aa0d5b10a1333d221d38a324bd0093cca0f1a04b41d56bb8f1f0
 --- END REASONING PROVENANCE ---
 Structured causal evidence object:
 {

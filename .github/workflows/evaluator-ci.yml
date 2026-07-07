@@ -8,6 +8,74 @@ env:
   PYTHONPATH: .
 
 jobs:
+  minimal-grading-path:
+    name: Minimal grading path / requirements.txt only
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install minimal evaluator dependencies only
+        run: python -m pip install -r requirements.txt
+
+      - name: Run exact committed-sample grading command
+        run: |
+          chmod +x run.sh
+          ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
+
+      - name: Validate committed-sample grading output
+        run: |
+          python - <<'PY'
+          import math
+          from pathlib import Path
+
+          import pandas as pd
+
+          expected_columns = [
+              "level",
+              "segment",
+              "horizon_days",
+              "expected_revenue",
+              "lower_revenue",
+              "upper_revenue",
+              "expected_roas",
+              "lower_roas",
+              "upper_roas",
+              "model_type",
+              "interval_width_pct",
+              "forecast_confidence",
+          ]
+          output = Path("output/predictions.csv")
+          if not output.exists():
+              raise SystemExit("output/predictions.csv was not created")
+
+          frame = pd.read_csv(output)
+          if frame.empty:
+              raise SystemExit("predictions.csv is empty")
+          if list(frame.columns) != expected_columns:
+              raise SystemExit(f"Unexpected schema: {list(frame.columns)}")
+          if frame.isna().any().any():
+              raise SystemExit("predictions.csv contains NaN values")
+
+          numeric_columns = expected_columns[2:9] + ["interval_width_pct"]
+          for column in numeric_columns:
+              values = pd.to_numeric(frame[column], errors="raise")
+              if not values.map(math.isfinite).all():
+                  raise SystemExit(f"{column} contains infinite or non-finite values")
+
+          modes = set(frame["model_type"].astype(str))
+          if modes != {"trained_model"}:
+              raise SystemExit(f"Committed sample must use trained_model, got {sorted(modes)}")
+
+          print("Minimal grading path OK:", len(frame), "rows", sorted(modes))
+          PY
+
   evaluator:
     name: Offline evaluator / Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest

@@ -84,9 +84,10 @@ Alternatives considered:
 The 30 day revenue model uses trained residual correction because paired
 rolling-origin evidence favors the trained signal. For this hardening pass,
 ForecastIQ retrained the artifact with longer-horizon features including
-56-day spend/revenue/ROAS windows, 56-day trend terms, channel-mix drift, and a
-quarter-end indicator. Those features made a genuine attempt to improve 60/90
-day generalization, but the pooled paired-bootstrap evidence still does not
+14/28/56-day revenue and ROAS momentum, share drift, hierarchy aggregates,
+conversion-rate stability, longer-window volatility, and seasonality
+interactions. Those features made a genuine attempt to improve 60/90 day
+generalization, but the pooled paired-bootstrap evidence still does not
 show a statistically clear long-horizon revenue win over the deterministic
 seasonal baseline. ForecastIQ therefore anchors 60/90 day revenue to the
 baseline inside the loaded `trained_model` artifact instead of forcing residual
@@ -99,7 +100,7 @@ which in turn reads the latest `reports/backtest_report.json` produced by
 
 | Horizon | Trained MAE | Baseline MAE | Trained RMSE | Baseline RMSE | Trained MAPE | Baseline MAPE | Statistical test | 95% CI | p-value | Verdict |
 |---:|---:|---:|---:|---:|---:|---:|---|---:|---:|---|
-| 60d | 19661.80 | 19199.67 | 31621.62 | 30397.05 | 10.45% | 10.11% | paired bootstrap absolute-error delta | -336.3842 to 1310.7193 | 0.254 | statistical tie |
+| 60d | 19401.63 | 19199.67 | 31323.71 | 30397.05 | 10.34% | 10.11% | paired bootstrap absolute-error delta | -604.4584 to 987.7232 | 0.602 | statistical tie |
 | 90d | 22141.94 | 22141.94 | 34041.40 | 34041.40 | 7.89% | 7.89% | paired bootstrap absolute-error delta | 0.0000 to 0.0000 | 1.000 | statistical tie |
 
 This is a deliberate model-selection gate, not a hidden failure. The generated
@@ -121,9 +122,9 @@ Latest committed headline values:
 
 | Horizon | Revenue MAPE | Overall ROAS MAPE | Revenue interval coverage |
 |---:|---:|---:|---:|
-| 30d | 3.59% | 0.55% | 93.06% |
-| 60d | 10.45% | 1.05% | 100.0% |
-| 90d | 7.89% | 0.68% | 100.0% |
+| 30d | 3.54% | 0.55% | 93.06% |
+| 60d | 10.34% | 1.12% | 100.0% |
+| 90d | 7.89% | 1.05% | 100.0% |
 
 Coverage is intentionally conservative because ecommerce revenue is noisy over
 longer horizons due to seasonality, promotion cadence, channel volatility, and

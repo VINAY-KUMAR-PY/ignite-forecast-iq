@@ -107,10 +107,18 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
             for cut in range(min_history_days, len(daily) - horizon + 1, step):
                 history_dates = set(daily.iloc[:cut]["date"].astype(str))
                 history = segment[segment["date"].astype(str).isin(history_dates)].copy()
+                reference_history = frame[frame["date"].astype(str).isin(history_dates)].copy()
                 future = daily.iloc[cut : cut + horizon]
                 if history.empty or future.empty:
                     continue
-                features = segment_feature_frame(history, horizon, level, segment_name, maps)
+                features = segment_feature_frame(
+                    history,
+                    horizon,
+                    level,
+                    segment_name,
+                    maps,
+                    reference_frame=reference_history,
+                )
                 future_revenue = safe_float(future["revenue"].sum())
                 future_spend = safe_float(future["spend"].sum())
                 baseline_prediction = forecast_segment(

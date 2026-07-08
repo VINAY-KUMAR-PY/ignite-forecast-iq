@@ -64,6 +64,7 @@ SKELETON_TRANSCRIPT_SOURCES: dict[str, tuple[str, ...]] = {
     "volatility_watch": ("live_gemini_transcript_20260707T051959Z",),
     "anomaly_timing_watch": ("live_gemini_transcript_20260705T051036Z",),
     "noisy_positive_signal": ("live_gemini_transcript_20260707T051959Z",),
+    "underpowered_sample_watch": ("live_gemini_transcript_20260704T142147Z",),
     "budget_reallocation": ("live_gemini_transcript_20260705T051036Z",),
     "stable_run_rate": ("live_gemini_transcript_20260704T142147Z",),
 }
@@ -191,6 +192,24 @@ _SKELETONS: dict[str, dict[str, str]] = {
         "recommended_action_skeleton": (
             "Run a small incremental test in {channel}, cap spend until the next data refresh, "
             "and look for a cleaner one-sided interval; limitations: {limitations}."
+        ),
+    },
+    "underpowered_sample_watch": {
+        "label": "underpowered_sample_watch",
+        "summary_skeleton": (
+            "{channel} does not have enough statistical power for a causal claim. The observed "
+            "effect is ${effect_size:,.0f} with p={p_value:.3f}, CI {ci_text}, and "
+            "{confidence} confidence; ROAS moved from {baseline_roas:.2f}x to "
+            "{observed_roas:.2f}x. This should be read as a measurement-readiness warning, "
+            "not a proven {effect_direction} effect."
+        ),
+        "evidence_focus_skeleton": (
+            "power evidence: {low_power_reason}; p={p_value:.3f}; strength={effect_strength:.2f}; "
+            "primary driver: {primary_driver}"
+        ),
+        "recommended_action_skeleton": (
+            "Extend the observation window for {channel}, avoid large reallocations, and rerun "
+            "the DiD check once the sample clears the power threshold; limitations: {limitations}."
         ),
     },
     "budget_reallocation": {
@@ -437,8 +456,11 @@ def build_reasoning_trace(evidence: dict[str, Any], label: str | None = None) ->
 
     anomaly_context = str(metrics.get("anomaly_context") or "")
     has_material_anomaly = bool(anomaly_context and "no material anomaly" not in anomaly_context)
+    power_check_passed = bool(metrics.get("power_check_passed", True))
 
-    if not intervention:
+    if not power_check_passed:
+        rule = "power check failed -> underpowered_sample_watch skeleton"
+    elif not intervention:
         rule = "no intervention detected -> stable_run_rate skeleton unless budget context overrides"
     elif confidence == "low" or lower <= 0 <= upper:
         if has_material_anomaly:
@@ -508,6 +530,10 @@ def _select_skeleton_label(evidence: dict[str, Any], planned_budgets: dict[str, 
     strength = safe_float(metrics.get("effect_strength"), 0.0)
     anomaly_context = str(metrics.get("anomaly_context") or "")
     has_material_anomaly = bool(anomaly_context and "no material anomaly" not in anomaly_context)
+    power_check_passed = bool(metrics.get("power_check_passed", True))
+    low_power_reason = str(metrics.get("low_power_reason") or "")
+    if not power_check_passed or low_power_reason:
+        return "underpowered_sample_watch"
     if not evidence.get("intervention_detected"):
         return "stable_run_rate"
     if confidence == "low" or safe_float(lower) <= 0 <= safe_float(upper):
@@ -596,6 +622,7 @@ def _format_values(evidence: dict[str, Any]) -> dict[str, Any]:
         "effect_strength": safe_float(metrics.get("effect_strength"), 0.0),
         "ci_text": _ci_text(metrics.get("confidence_interval")),
         "anomaly_context": str(metrics.get("anomaly_context") or "no material anomaly was detected"),
+        "low_power_reason": str(metrics.get("low_power_reason") or "sample size or power threshold not met"),
         "primary_driver": primary_driver.strip(),
         "limitations": "; ".join(str(item) for item in limitations) if limitations else "none identified",
     }

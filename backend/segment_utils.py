@@ -46,6 +46,14 @@ FEATURE_COLUMNS = [
     "spend_trend_56",
     "revenue_trend_56",
     "roas_trend_56",
+    "revenue_momentum_14_56",
+    "revenue_momentum_28_56",
+    "roas_momentum_14_56",
+    "roas_momentum_28_56",
+    "conversion_rate_14",
+    "conversion_rate_56",
+    "conversion_rate_stability_14_56",
+    "ctr_stability_14_56",
     "dow_end",
     "month_end",
     "sin_7",
@@ -59,8 +67,20 @@ FEATURE_COLUMNS = [
     "quarter_end",
     "dow_channel_interaction",
     "dow_campaign_type_interaction",
+    "month_channel_interaction",
+    "month_campaign_type_interaction",
+    "sin_year_x_channel_code",
     "rev_std_14",
     "rev_std_28",
+    "rev_std_56",
+    "roas_std_56",
+    "spend_share_28",
+    "spend_share_drift_28_56",
+    "channel_roas_56",
+    "campaign_type_roas_56",
+    "segment_vs_channel_roas_56",
+    "segment_vs_campaign_type_roas_56",
+    "campaign_spend_share_of_channel_28",
     "spend_x_sin7",
     "level_code",
     "channel_code",
@@ -171,6 +191,9 @@ def window_sum(daily: pd.DataFrame, column: str, window: int) -> float:
         return 0.0
     return safe_float(daily[column].tail(window).sum())
 
+def window_rate(daily: pd.DataFrame, numerator: str, denominator: str, window: int) -> float:
+    return safe_ratio(window_sum(daily, numerator, window), window_sum(daily, denominator, window))
+
 def window_trend(daily: pd.DataFrame, column: str, window: int = 28) -> float:
     if len(daily) < 4 or column not in daily:
         return 0.0
@@ -222,6 +245,7 @@ def segment_feature_frame(
     segment_name: str,
     maps: dict[str, dict[str, int]],
     planned_budgets: dict[str, float] | None = None,
+    reference_frame: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     from .evaluator_io import fallback_model_config
     from .inference import forecast_segment
@@ -229,6 +253,8 @@ def segment_feature_frame(
     daily = aggregate_segment_daily(segment)
     if daily.empty:
         raise ValueError("cannot build trained-model features for an empty segment")
+    reference = reference_frame if reference_frame is not None and not reference_frame.empty else segment
+    reference_daily = aggregate_segment_daily(reference)
 
     last_date = parse_dates_safely(daily["date"].iloc[-1])
     if pd.isna(last_date):
@@ -244,9 +270,16 @@ def segment_feature_frame(
     revenue_14 = window_sum(daily, "revenue", 14)
     revenue_28 = window_sum(daily, "revenue", 28)
     revenue_56 = window_sum(daily, "revenue", 56)
+    spend_14 = window_sum(daily, "spend", 14)
     clicks_28 = window_sum(daily, "clicks", 28)
     impressions_28 = window_sum(daily, "impressions", 28)
     conversions_28 = window_sum(daily, "conversions", 28)
+    clicks_14 = window_sum(daily, "clicks", 14)
+    clicks_56 = window_sum(daily, "clicks", 56)
+    impressions_14 = window_sum(daily, "impressions", 14)
+    impressions_56 = window_sum(daily, "impressions", 56)
+    conversions_14 = window_sum(daily, "conversions", 14)
+    conversions_56 = window_sum(daily, "conversions", 56)
     daily_spend_7 = spend_7 / min(7, max(1, len(daily)))
     daily_spend_28 = spend_28 / min(28, max(1, len(daily)))
     projected_spend = planned_projected_spend(
@@ -266,6 +299,31 @@ def segment_feature_frame(
     )
     channel_code = float(category_code(channel_value, maps.get("channel", {})))
     campaign_type_code = float(category_code(campaign_type_value, maps.get("campaign_type", {})))
+    channel_frame = (
+        reference[reference["channel"].astype(str) == channel_value].copy()
+        if "channel" in reference and channel_value
+        else segment
+    )
+    campaign_type_frame = (
+        reference[reference["campaign_type"].astype(str) == campaign_type_value].copy()
+        if "campaign_type" in reference and campaign_type_value
+        else segment
+    )
+    channel_daily = aggregate_segment_daily(channel_frame)
+    campaign_type_daily = aggregate_segment_daily(campaign_type_frame)
+    reference_spend_28 = window_sum(reference_daily, "spend", 28)
+    reference_spend_56 = window_sum(reference_daily, "spend", 56)
+    channel_spend_28 = window_sum(channel_daily, "spend", 28)
+    channel_roas_56 = window_rate(channel_daily, "revenue", "spend", 56)
+    campaign_type_roas_56 = window_rate(campaign_type_daily, "revenue", "spend", 56)
+    spend_share_28 = safe_ratio(spend_28, reference_spend_28)
+    spend_share_56 = safe_ratio(spend_56, reference_spend_56)
+    conversion_rate_14 = safe_ratio(conversions_14, clicks_14)
+    conversion_rate_28 = safe_ratio(conversions_28, clicks_28)
+    conversion_rate_56 = safe_ratio(conversions_56, clicks_56)
+    ctr_14 = safe_ratio(clicks_14, impressions_14)
+    ctr_28 = safe_ratio(clicks_28, impressions_28)
+    ctr_56 = safe_ratio(clicks_56, impressions_56)
     baseline = forecast_segment(
         segment,
         horizon,
@@ -304,8 +362,8 @@ def segment_feature_frame(
         "recent_clicks_28": clicks_28,
         "recent_impressions_28": impressions_28,
         "recent_conversions_28": conversions_28,
-        "ctr_28": safe_ratio(clicks_28, impressions_28),
-        "conversion_rate_28": safe_ratio(conversions_28, clicks_28),
+        "ctr_28": ctr_28,
+        "conversion_rate_28": conversion_rate_28,
         "cpc_28": safe_ratio(spend_28, clicks_28),
         "revenue_per_conversion_28": safe_ratio(revenue_28, conversions_28),
         "spend_trend_28": window_trend(daily, "spend"),
@@ -314,6 +372,14 @@ def segment_feature_frame(
         "spend_trend_56": window_trend(daily, "spend", 56),
         "revenue_trend_56": window_trend(daily, "revenue", 56),
         "roas_trend_56": window_trend(daily, "roas", 56),
+        "revenue_momentum_14_56": safe_ratio(revenue_14 / min(14, max(1, len(daily))) - revenue_56 / min(56, max(1, len(daily))), revenue_56 / min(56, max(1, len(daily)))),
+        "revenue_momentum_28_56": safe_ratio(revenue_28 / min(28, max(1, len(daily))) - revenue_56 / min(56, max(1, len(daily))), revenue_56 / min(56, max(1, len(daily)))),
+        "roas_momentum_14_56": safe_ratio(safe_ratio(revenue_14, spend_14) - safe_ratio(revenue_56, spend_56), safe_ratio(revenue_56, spend_56)),
+        "roas_momentum_28_56": safe_ratio(safe_ratio(revenue_28, spend_28) - safe_ratio(revenue_56, spend_56), safe_ratio(revenue_56, spend_56)),
+        "conversion_rate_14": conversion_rate_14,
+        "conversion_rate_56": conversion_rate_56,
+        "conversion_rate_stability_14_56": 1.0 - min(1.0, abs(conversion_rate_14 - conversion_rate_56) / max(abs(conversion_rate_56), 0.001)),
+        "ctr_stability_14_56": 1.0 - min(1.0, abs(ctr_14 - ctr_56) / max(abs(ctr_56), 0.001)),
         "dow_end": float(forecast_end.dayofweek),
         "month_end": float(forecast_end.month),
         "sin_7": sin_7,
@@ -327,8 +393,20 @@ def segment_feature_frame(
         "quarter_end": float((forecast_end.month - 1) // 3 + 1),
         "dow_channel_interaction": float(forecast_end.dayofweek) * channel_code,
         "dow_campaign_type_interaction": float(forecast_end.dayofweek) * campaign_type_code,
+        "month_channel_interaction": float(forecast_end.month) * channel_code,
+        "month_campaign_type_interaction": float(forecast_end.month) * campaign_type_code,
+        "sin_year_x_channel_code": float(np.sin(2 * np.pi * forecast_end.dayofyear / 365.25)) * channel_code,
         "rev_std_14": safe_float(daily["revenue"].tail(14).std(ddof=1)) if len(daily) >= 4 else 0.0,
         "rev_std_28": safe_float(daily["revenue"].tail(28).std(ddof=1)) if len(daily) >= 7 else 0.0,
+        "rev_std_56": safe_float(daily["revenue"].tail(56).std(ddof=1)) if len(daily) >= 14 else 0.0,
+        "roas_std_56": safe_float(daily["roas"].tail(56).std(ddof=1)) if len(daily) >= 14 else 0.0,
+        "spend_share_28": spend_share_28,
+        "spend_share_drift_28_56": spend_share_28 - spend_share_56,
+        "channel_roas_56": channel_roas_56,
+        "campaign_type_roas_56": campaign_type_roas_56,
+        "segment_vs_channel_roas_56": safe_ratio(safe_ratio(revenue_56, spend_56) - channel_roas_56, channel_roas_56),
+        "segment_vs_campaign_type_roas_56": safe_ratio(safe_ratio(revenue_56, spend_56) - campaign_type_roas_56, campaign_type_roas_56),
+        "campaign_spend_share_of_channel_28": safe_ratio(spend_28, channel_spend_28),
         "spend_x_sin7": safe_float(spend_28 / min(28, max(1, len(daily)))) * sin_7,
         "level_code": float(LEVEL_CODES.get(level, 0)),
         "channel_code": channel_code,

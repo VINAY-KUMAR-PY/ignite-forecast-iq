@@ -203,9 +203,10 @@ def _revenue_configuration_review(
                 "current_primary_holdout_weight": blend_recommendation.get("current_revenue_model_weight"),
                 "selection_metric": blend_recommendation.get("selection_metric"),
             },
-            "decision": "review_only_no_new_code_path",
+            "decision": "review_after_long_horizon_feature_expansion",
             "interpretation": (
-                "This is a review of the existing diagnostic blend sweep, not a newly shipped ensemble path. "
+                "This reviews the diagnostic blend sweep after adding long-horizon momentum, hierarchy, "
+                "share-drift, stability, volatility, and seasonality-interaction features. "
                 "The single final holdout prefers a lower uniform revenue blend, but this is only one market window. "
                 "ForecastIQ keeps the current horizon gate because the pooled paired-bootstrap evidence favors "
                 "the trained 30-day signal and shows parity, not regression, at longer revenue horizons."
@@ -223,7 +224,7 @@ def _revenue_configuration_review(
             },
             "decision": "keep_current_horizon_gate",
             "interpretation": (
-                f"This reviews the round-2 bootstrap verdicts rather than a new feature experiment. "
+                "This reviews the paired-bootstrap verdicts after the long-horizon feature expansion. "
                 f"Revenue bootstrap verdicts were {bootstrap_summary}. This supports keeping trained influence at "
                 "30 days and baseline anchoring at 60/90 days rather than forcing residual correction where the "
                 "statistical evidence is a tie."
@@ -1071,10 +1072,10 @@ than overstating a point-estimate win.
 
 ## Revenue Configuration Review
 
-ForecastIQ reviewed the already-computed blend sweep and round-2 paired-bootstrap
-evidence before deciding whether to change the revenue gate. No new engineered
-feature or ensemble prediction path was shipped in this pass; the section below
-documents why the current configuration remains the honest supported choice.
+ForecastIQ reviewed the blend sweep and paired-bootstrap evidence after adding
+long-horizon momentum, hierarchy, share-drift, stability, volatility, and
+seasonality-interaction features. The section below documents why the current
+gate remains the honest supported choice.
 
 | Review item | Decision | Interpretation |
 | --- | --- | --- |

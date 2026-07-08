@@ -59,12 +59,12 @@ stays unchanged.
 
 Latest walk-forward revenue interval coverage is **93.06% / 100.0% / 100.0%**
 for 30/60/90-day trained intervals. Revenue MAPE is
-**3.59% / 10.45% / 7.89%** for 30/60/90 days; overall-level ROAS MAPE is
-**0.55% / 1.05% / 0.68%**. Full tables:
+**3.54% / 10.34% / 7.89%** for 30/60/90 days; overall-level ROAS MAPE is
+**0.55% / 1.12% / 1.05%**. Full tables:
 [reports/backtest_summary.md](./reports/backtest_summary.md).
 
-Backend coverage is **92.05% measured locally** with
-`python -m pytest tests/ -q --cov=backend --durations=10`; Evaluator CI
+Backend coverage is **92.14% measured locally** with
+`python -m pytest tests -q --cov=backend --cov-report=term-missing`; Evaluator CI
 enforces **92.05%** with `--cov-fail-under=92.05`.
 
 ## See Live AI Reasoning In 30 Seconds
@@ -152,9 +152,10 @@ forecast_confidence
 ```
 
 The committed sample output has 54 rows, horizons `{30, 60, 90}`, no NaN, no
-infinite values, `trained_model` rows at 30 days, and transparent
-`trained_model_baseline_anchored` rows where 60/90-day revenue is deliberately
-anchored to the seasonal baseline inside the loaded artifact.
+infinite values, **18 `trained_model` rows**, **36
+`trained_model_baseline_anchored` rows**, and **0 confidence inversions**.
+The anchored rows show where 60/90-day revenue is deliberately anchored to the
+seasonal baseline inside the loaded artifact.
 
 ## Deployment
 

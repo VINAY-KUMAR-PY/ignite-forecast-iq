@@ -260,6 +260,7 @@ def trained_forecast_segment(
     model: dict[str, Any],
     planned_budgets: dict[str, float] | None = None,
     parent_channel_segment: pd.DataFrame | None = None,
+    reference_frame: pd.DataFrame | None = None,
 ) -> dict[str, float]:
     if segment.empty:
         raise ValueError("segment is empty for trained-model prediction")
@@ -268,7 +269,15 @@ def trained_forecast_segment(
     thin_segment = len(segment) < min_prediction_rows
 
     maps = model.get("preprocessing", {}).get("category_maps") or {}
-    features = segment_feature_frame(segment, horizon, level, segment_name, maps, planned_budgets)
+    features = segment_feature_frame(
+        segment,
+        horizon,
+        level,
+        segment_name,
+        maps,
+        planned_budgets,
+        reference_frame=reference_frame,
+    )
     if list(features.columns) != FEATURE_COLUMNS:
         raise ValueError("trained-model feature schema mismatch")
 
@@ -539,6 +548,7 @@ def build_trained_predictions(
                     model,
                     planned_budgets,
                     parent_channel_segment,
+                    frame,
                 )
                 model_type = trained_model_type
                 revenue_weight = _horizon_model_weight(model, "revenue_model_weight", horizon, 0.25)

@@ -691,6 +691,32 @@ class OfflinePredictionTests(unittest.TestCase):
                 "budgets": {channels[0]: 12000},
                 "metrics": {},
             },
+            {
+                "anomalies": [],
+                "estimates": [
+                    {
+                        "channel": channels[2],
+                        "incrementalRevenue": 900,
+                        "lowerRevenue": -100,
+                        "upperRevenue": 1800,
+                        "confidence": "low",
+                        "effectDirection": "positive",
+                        "pValue": 0.18,
+                        "effectStrength": 0.15,
+                        "powerCheckPassed": False,
+                        "lowPowerReason": "only 4 pre-window and 3 post-window observations",
+                    }
+                ],
+                "budgets": None,
+                "metrics": {
+                    channels[2]: {
+                        "campaign_type": campaign_types[0],
+                        "baseline_revenue": 6000,
+                        "baseline_roas": 3.8,
+                        "observed_roas": 4.0,
+                    }
+                },
+            },
         ]
 
         labels = {
@@ -704,6 +730,7 @@ class OfflinePredictionTests(unittest.TestCase):
         }
 
         self.assertGreaterEqual(len(labels), 4, labels)
+        self.assertIn("underpowered_sample_watch", labels)
 
     def test_reasoning_provenance_hashes_match_committed_transcripts(self) -> None:
         records = validate_transcript_provenance()

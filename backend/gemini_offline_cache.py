@@ -10,6 +10,7 @@ LLM-style reasoning without a network dependency during grading.
 from __future__ import annotations
 
 import hashlib
+import json
 from pathlib import Path
 from typing import Any
 
@@ -297,6 +298,10 @@ def build_structured_causal_evidence(
             "low_power_reason": str(strongest.get("lowPowerReason") or ""),
             "pre_window_days": int(safe_float(strongest.get("preWindowDays"), 0)),
             "post_window_days": int(safe_float(strongest.get("postWindowDays"), 0)),
+            "sample_size": int(
+                safe_float(strongest.get("preWindowDays"), 0)
+                + safe_float(strongest.get("postWindowDays"), 0)
+            ),
             "anomaly_context": anomaly_text,
         }
         limitations = _limitations(strongest, anomaly_text)
@@ -320,6 +325,7 @@ def build_structured_causal_evidence(
             "confidence_interval": [0.0, 0.0],
             "parallel_trend_passed": False,
             "anomaly_context": anomaly_text,
+            "sample_size": 0,
         }
         limitations = ["no stable difference-in-differences estimate was available"]
 
@@ -367,11 +373,14 @@ def compose_distilled_explanation(evidence: dict[str, Any], label: str | None = 
     skeleton = _SKELETONS.get(selected_label, _SKELETONS["stable_run_rate"])
     values = _format_values(evidence)
     reasoning_trace = build_reasoning_trace(evidence, selected_label)
+    runtime_sentence = _runtime_evidence_sentence(values)
     return {
         "label": skeleton["label"],
         "summary": skeleton["summary_skeleton"].format_map(values),
         "evidence_focus": skeleton["evidence_focus_skeleton"].format_map(values),
         "recommended_action": skeleton["recommended_action_skeleton"].format_map(values),
+        "runtime_evidence": runtime_sentence,
+        "evidence_fingerprint": evidence_fingerprint(evidence),
         "evidence_object": evidence,
         "reasoning_trace": reasoning_trace,
         "reasoning_provenance": provenance_for_skeleton(selected_label),
@@ -381,6 +390,12 @@ def compose_distilled_explanation(evidence: dict[str, Any], label: str | None = 
 
 def transcript_directory() -> Path:
     return Path(__file__).resolve().parents[1] / "docs" / "gemini_sample_transcripts"
+
+
+def evidence_fingerprint(evidence: dict[str, Any]) -> str:
+    """Stable short hash of the runtime causal evidence object."""
+    payload = json.dumps(evidence, sort_keys=True, separators=(",", ":"), default=str)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
 
 
 def provenance_for_skeleton(label: str) -> list[dict[str, str]]:
@@ -503,6 +518,16 @@ def build_reasoning_trace(evidence: dict[str, Any], label: str | None = None) ->
             upper=upper,
             parallel=str(bool(metrics.get("parallel_trend_passed"))).lower(),
         ),
+        (
+            "RUNTIME_NUMERIC_BINDING: p={p:.3f}; CI=${lower:,.0f} to ${upper:,.0f}; "
+            "sample_size={sample_size}; evidence_fingerprint={fingerprint}"
+        ).format(
+            p=p_value,
+            lower=lower,
+            upper=upper,
+            sample_size=int(safe_float(metrics.get("sample_size"), 0)),
+            fingerprint=evidence_fingerprint(evidence),
+        ),
         f"RULE_APPLICATION: {rule}; selected_skeleton={selected_label}",
         (
             "DRIVER_AND_LIMITATIONS: primary_driver={role} {segment} ({metric}); "
@@ -621,11 +646,22 @@ def _format_values(evidence: dict[str, Any]) -> dict[str, Any]:
         "p_value": safe_float(metrics.get("p_value"), 1.0),
         "effect_strength": safe_float(metrics.get("effect_strength"), 0.0),
         "ci_text": _ci_text(metrics.get("confidence_interval")),
+        "sample_size": int(safe_float(metrics.get("sample_size"), 0)),
+        "evidence_fingerprint": evidence_fingerprint(evidence),
         "anomaly_context": str(metrics.get("anomaly_context") or "no material anomaly was detected"),
         "low_power_reason": str(metrics.get("low_power_reason") or "sample size or power threshold not met"),
         "primary_driver": primary_driver.strip(),
         "limitations": "; ".join(str(item) for item in limitations) if limitations else "none identified",
     }
+
+
+def _runtime_evidence_sentence(values: dict[str, Any]) -> str:
+    return (
+        "Runtime evidence binding: channel={channel}; campaign_type={campaign_type}; "
+        "delta={delta_percent:+.1f}%; effect=${effect_size:,.0f}; p={p_value:.3f}; "
+        "CI {ci_text}; sample_size={sample_size}; confidence={confidence}; "
+        "fingerprint={evidence_fingerprint}."
+    ).format_map(values)
 
 
 def _ci_text(value: Any) -> str:

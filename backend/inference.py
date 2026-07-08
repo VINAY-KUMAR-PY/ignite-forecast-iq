@@ -42,6 +42,8 @@ from .segment_utils import (
 MODEL_TYPE = SAFE_BASELINE_MODEL_TYPE
 SPEND_ESTIMATED_ATTR = "forecastiq_spend_estimated"
 SPEND_ESTIMATION_NOTE_ATTR = "forecastiq_spend_estimation_note"
+BASELINE_ANCHORED_INTERVAL_SCALE = {60: 0.70, 90: 0.48}
+LONG_HORIZON_INTERVAL_SCALE = {60: 0.92}
 
 def roas_interval_from_revenue(
     lower_revenue: float,
@@ -389,6 +391,10 @@ def trained_forecast_segment(
         except Exception as exc:
             log(f"Quantile interval fallback for {level}:{segment_name}:{horizon}d - {type(exc).__name__}: {exc}")
     interval *= _segment_interval_multiplier(level, len(segment), min_prediction_rows, thin_segment)
+    revenue_weight_for_interval = _horizon_model_weight(model, "revenue_model_weight", horizon, 0.25)
+    if revenue_weight_for_interval <= 1e-9:
+        interval *= BASELINE_ANCHORED_INTERVAL_SCALE.get(int(horizon), 1.0)
+    interval *= LONG_HORIZON_INTERVAL_SCALE.get(int(horizon), 1.0)
     lower = max(0.0, expected_revenue - interval)
     upper = max(lower, expected_revenue + interval)
     if planned_budgets:

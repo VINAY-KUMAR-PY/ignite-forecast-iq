@@ -43,10 +43,10 @@ Current committed sample output includes all required forecast grains:
 
 | Grain | Example | Horizon | Expected revenue | Revenue range | Expected ROAS |
 |---|---|---:|---:|---:|---:|
-| Overall | all | 90d | $1,407,079 | $1,087,953-$1,726,204 | 4.05x |
-| Channel | Microsoft Ads | 90d | $213,676 | $162,898-$264,454 | 5.40x |
-| Campaign type | Advantage+ | 90d | $161,610 | $121,453-$201,767 | 3.03x |
-| Campaign | Brand Search | 30d | $83,495 | $77,731-$89,258 | 5.33x |
+| Overall | all | 90d | $1,407,079 | $1,196,553-$1,617,605 | 4.05x |
+| Channel | Microsoft Ads | 90d | $213,676 | $180,214-$247,137 | 5.40x |
+| Campaign type | Advantage+ | 90d | $161,610 | $128,265-$194,955 | 3.03x |
+| Campaign | Brand Search | 30d | $83,832 | $73,698-$93,966 | 5.33x |
 
 Example decision: Google Ads shows low-confidence directional
 underperformance around the June 11 ROAS anomaly (`p=0.185`), while Microsoft
@@ -57,21 +57,24 @@ stays unchanged.
 
 ## Forecast Accuracy At A Glance
 
-Latest walk-forward revenue interval coverage is **93.06% / 100.0% / 100.0%**
+Latest walk-forward revenue interval coverage is **93.06% / 93.06% / 94.44%**
 for 30/60/90-day trained intervals. Revenue MAPE is
 **3.54% / 10.34% / 7.89%** for 30/60/90 days; overall-level ROAS MAPE is
 **0.55% / 1.12% / 1.05%**. Full tables:
 [reports/backtest_summary.md](./reports/backtest_summary.md).
 
-Backend coverage is **92.14% measured locally** with
+Backend coverage is **92.16% measured locally** with
 `python -m pytest tests -q --cov=backend --cov-report=term-missing`; Evaluator CI
 enforces **92.05%** with `--cov-fail-under=92.05`.
 
 ## See Live AI Reasoning In 30 Seconds
 
 The graded `run.sh` path never calls an LLM because the evaluator must run
-offline. To see real Gemini causal reasoning separately, add `GEMINI_API_KEY`
-to `.env` and run:
+offline. The evaluator prints an `AI MODE` banner and writes the same convention
+at the top of `causal_summary.txt`: `OFFLINE_DETERMINISTIC_FALLBACK` means
+input-conditioned offline synthesis, while `LIVE_GEMINI_OPTIONAL_ENRICHMENT`
+means an explicit opt-in Gemini enrichment was requested. To see real Gemini
+causal reasoning separately, add `GEMINI_API_KEY` to `.env` and run:
 
 ```bash
 npm run demo:ai

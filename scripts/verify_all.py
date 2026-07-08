@@ -123,9 +123,9 @@ def _write_coverage_summary(coverage: dict[str, object]) -> None:
             "",
             "CI enforcement: `.github/workflows/evaluator-ci.yml` runs "
             "`pytest tests/ --durations=10 --cov=backend --cov-report=term-missing "
-            "--cov-report=json --cov-fail-under=90.30`, so the build fails if "
-            "aggregate backend coverage drops below 90.30%. It also fails if any "
-            "high-risk module listed above drops below 75%.",
+            "--cov-report=json --cov-fail-under=92.05`, so the build fails if "
+            "aggregate backend coverage drops below the stable 92.05% gate. It "
+            "also fails if any high-risk module listed above drops below 75%.",
             "",
         ]
     )

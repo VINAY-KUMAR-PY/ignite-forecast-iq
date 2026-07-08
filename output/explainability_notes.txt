@@ -6,48 +6,48 @@ Signals: recent revenue trend, spend trend, ROAS stability, seasonality marker, 
   - Confidence rationale: high because 300 historical days support the segment; the revenue interval is comparatively tighter at 11.3%.
   - Recent 28-day revenue trend: -2.7% versus the prior half-window.
   - Seasonality marker: 30d forecast ends in month 7 on weekday 4, using model month/day-of-week features. ROAS stability: recent average 4.04x with 3.1% coefficient of variation.
-- overall | all | 60d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 43.4%.
+- overall | all | 60d | model_type=trained_model_baseline_anchored | confidence=high
+  - Confidence rationale: high because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 27.9%.
   - Recent 28-day revenue trend: -2.7% versus the prior half-window.
   - Seasonality marker: 60d forecast ends in month 8 on weekday 6, using model month/day-of-week features. ROAS stability: recent average 4.04x with 3.1% coefficient of variation.
-- overall | all | 90d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 45.4%.
+- overall | all | 90d | model_type=trained_model_baseline_anchored | confidence=high
+  - Confidence rationale: high because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 29.9%.
   - Recent 28-day revenue trend: -2.7% versus the prior half-window.
   - Seasonality marker: 90d forecast ends in month 9 on weekday 1, using model month/day-of-week features. ROAS stability: recent average 4.04x with 3.1% coefficient of variation.
 - channel | Google Ads | 30d | model_type=trained_model | confidence=high
-  - Confidence rationale: high because 300 historical days support the segment; the revenue interval is comparatively tighter at 11.6%.
+  - Confidence rationale: high because 300 historical days support the segment; the revenue interval is comparatively tighter at 11.7%.
   - Recent 28-day revenue trend: -3.8% versus the prior half-window.
   - Seasonality marker: 30d forecast ends in month 7 on weekday 4, using model month/day-of-week features. ROAS stability: recent average 4.57x with 4.4% coefficient of variation.
-- channel | Google Ads | 60d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 45.5%.
+- channel | Google Ads | 60d | model_type=trained_model_baseline_anchored | confidence=high
+  - Confidence rationale: high because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 29.3%.
   - Recent 28-day revenue trend: -3.8% versus the prior half-window.
   - Seasonality marker: 60d forecast ends in month 8 on weekday 6, using model month/day-of-week features. ROAS stability: recent average 4.57x with 4.4% coefficient of variation.
 - channel | Google Ads | 90d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 47.5%.
+  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 31.3%.
   - Recent 28-day revenue trend: -3.8% versus the prior half-window.
   - Seasonality marker: 90d forecast ends in month 9 on weekday 1, using model month/day-of-week features. ROAS stability: recent average 4.57x with 4.4% coefficient of variation.
 - channel | Meta Ads | 30d | model_type=trained_model | confidence=high
   - Confidence rationale: high because 300 historical days support the segment; the revenue interval is comparatively tighter at 13.6%.
   - Recent 28-day revenue trend: -1.3% versus the prior half-window.
   - Seasonality marker: 30d forecast ends in month 7 on weekday 4, using model month/day-of-week features. ROAS stability: recent average 2.98x with 5.7% coefficient of variation.
-- channel | Meta Ads | 60d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 45.5%.
+- channel | Meta Ads | 60d | model_type=trained_model_baseline_anchored | confidence=high
+  - Confidence rationale: high because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 29.3%.
   - Recent 28-day revenue trend: -1.3% versus the prior half-window.
   - Seasonality marker: 60d forecast ends in month 8 on weekday 6, using model month/day-of-week features. ROAS stability: recent average 2.98x with 5.7% coefficient of variation.
 - channel | Meta Ads | 90d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 47.5%.
+  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 31.3%.
   - Recent 28-day revenue trend: -1.3% versus the prior half-window.
   - Seasonality marker: 90d forecast ends in month 9 on weekday 1, using model month/day-of-week features. ROAS stability: recent average 2.98x with 5.7% coefficient of variation.
 - channel | Microsoft Ads | 30d | model_type=trained_model | confidence=high
   - Confidence rationale: high because 300 historical days support the segment; the revenue interval is comparatively tighter at 26.5%.
   - Recent 28-day revenue trend: -1.6% versus the prior half-window.
   - Seasonality marker: 30d forecast ends in month 7 on weekday 4, using model month/day-of-week features. ROAS stability: recent average 5.49x with 4.7% coefficient of variation.
-- channel | Microsoft Ads | 60d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 45.5%.
+- channel | Microsoft Ads | 60d | model_type=trained_model_baseline_anchored | confidence=high
+  - Confidence rationale: high because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 29.3%.
   - Recent 28-day revenue trend: -1.6% versus the prior half-window.
   - Seasonality marker: 60d forecast ends in month 8 on weekday 6, using model month/day-of-week features. ROAS stability: recent average 5.49x with 4.7% coefficient of variation.
 - channel | Microsoft Ads | 90d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 47.5%.
+  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 31.3%.
   - Recent 28-day revenue trend: -1.6% versus the prior half-window.
   - Seasonality marker: 90d forecast ends in month 9 on weekday 1, using model month/day-of-week features. ROAS stability: recent average 5.49x with 4.7% coefficient of variation.
 - campaign_type | Advantage+ | 30d | model_type=trained_model | confidence=medium
@@ -55,11 +55,11 @@ Signals: recent revenue trend, spend trend, ROAS stability, seasonality marker, 
   - Recent 28-day revenue trend: +0.5% versus the prior half-window.
   - Seasonality marker: 30d forecast ends in month 7 on weekday 4, using model month/day-of-week features. ROAS stability: recent average 2.98x with 7.9% coefficient of variation.
 - campaign_type | Advantage+ | 60d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 47.7%.
+  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 39.3%.
   - Recent 28-day revenue trend: +0.5% versus the prior half-window.
   - Seasonality marker: 60d forecast ends in month 8 on weekday 6, using model month/day-of-week features. ROAS stability: recent average 2.98x with 7.9% coefficient of variation.
 - campaign_type | Advantage+ | 90d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 49.7%.
+  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 41.3%.
   - Recent 28-day revenue trend: +0.5% versus the prior half-window.
   - Seasonality marker: 90d forecast ends in month 9 on weekday 1, using model month/day-of-week features. ROAS stability: recent average 2.98x with 7.9% coefficient of variation.
 - campaign_type | Performance Max | 30d | model_type=trained_model | confidence=high
@@ -67,23 +67,23 @@ Signals: recent revenue trend, spend trend, ROAS stability, seasonality marker, 
   - Recent 28-day revenue trend: -3.4% versus the prior half-window.
   - Seasonality marker: 30d forecast ends in month 7 on weekday 4, using model month/day-of-week features. ROAS stability: recent average 4.26x with 7.3% coefficient of variation.
 - campaign_type | Performance Max | 60d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 47.7%.
+  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 30.7%.
   - Recent 28-day revenue trend: -3.4% versus the prior half-window.
   - Seasonality marker: 60d forecast ends in month 8 on weekday 6, using model month/day-of-week features. ROAS stability: recent average 4.26x with 7.3% coefficient of variation.
 - campaign_type | Performance Max | 90d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 49.7%.
+  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 32.7%.
   - Recent 28-day revenue trend: -3.4% versus the prior half-window.
   - Seasonality marker: 90d forecast ends in month 9 on weekday 1, using model month/day-of-week features. ROAS stability: recent average 4.26x with 7.3% coefficient of variation.
 - campaign_type | Prospecting | 30d | model_type=trained_model | confidence=medium
   - Confidence rationale: medium because 300 historical days support the segment; the revenue interval is comparatively tighter at 51.2%.
   - Recent 28-day revenue trend: -6.2% versus the prior half-window.
   - Seasonality marker: 30d forecast ends in month 7 on weekday 4, using model month/day-of-week features. ROAS stability: recent average 2.93x with 7.9% coefficient of variation.
-- campaign_type | Prospecting | 60d | model_type=trained_model_baseline_anchored | confidence=low
-  - Confidence rationale: low because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 63.5%.
+- campaign_type | Prospecting | 60d | model_type=trained_model_baseline_anchored | confidence=medium
+  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 53.2%.
   - Recent 28-day revenue trend: -6.2% versus the prior half-window.
   - Seasonality marker: 60d forecast ends in month 8 on weekday 6, using model month/day-of-week features. ROAS stability: recent average 2.93x with 7.9% coefficient of variation.
-- campaign_type | Prospecting | 90d | model_type=trained_model_baseline_anchored | confidence=low
-  - Confidence rationale: low because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 65.5%.
+- campaign_type | Prospecting | 90d | model_type=trained_model_baseline_anchored | confidence=medium
+  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 55.2%.
   - Recent 28-day revenue trend: -6.2% versus the prior half-window.
   - Seasonality marker: 90d forecast ends in month 9 on weekday 1, using model month/day-of-week features. ROAS stability: recent average 2.93x with 7.9% coefficient of variation.
 - campaign_type | Retargeting | 30d | model_type=trained_model | confidence=medium
@@ -91,11 +91,11 @@ Signals: recent revenue trend, spend trend, ROAS stability, seasonality marker, 
   - Recent 28-day revenue trend: +0.7% versus the prior half-window.
   - Seasonality marker: 30d forecast ends in month 7 on weekday 4, using model month/day-of-week features. ROAS stability: recent average 3.03x with 8.4% coefficient of variation.
 - campaign_type | Retargeting | 60d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 51.1%.
+  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 44.6%.
   - Recent 28-day revenue trend: +0.7% versus the prior half-window.
   - Seasonality marker: 60d forecast ends in month 8 on weekday 6, using model month/day-of-week features. ROAS stability: recent average 3.03x with 8.4% coefficient of variation.
 - campaign_type | Retargeting | 90d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 53.1%.
+  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 46.6%.
   - Recent 28-day revenue trend: +0.7% versus the prior half-window.
   - Seasonality marker: 90d forecast ends in month 9 on weekday 1, using model month/day-of-week features. ROAS stability: recent average 3.03x with 8.4% coefficient of variation.
 - campaign_type | Search | 30d | model_type=trained_model | confidence=high
@@ -103,11 +103,11 @@ Signals: recent revenue trend, spend trend, ROAS stability, seasonality marker, 
   - Recent 28-day revenue trend: -4.5% versus the prior half-window.
   - Seasonality marker: 30d forecast ends in month 7 on weekday 4, using model month/day-of-week features. ROAS stability: recent average 5.52x with 5.3% coefficient of variation.
 - campaign_type | Search | 60d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 47.7%.
+  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 30.7%.
   - Recent 28-day revenue trend: -4.5% versus the prior half-window.
   - Seasonality marker: 60d forecast ends in month 8 on weekday 6, using model month/day-of-week features. ROAS stability: recent average 5.52x with 5.3% coefficient of variation.
 - campaign_type | Search | 90d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 49.7%.
+  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 32.7%.
   - Recent 28-day revenue trend: -4.5% versus the prior half-window.
   - Seasonality marker: 90d forecast ends in month 9 on weekday 1, using model month/day-of-week features. ROAS stability: recent average 5.52x with 5.3% coefficient of variation.
 - campaign_type | Shopping | 30d | model_type=trained_model | confidence=high
@@ -115,11 +115,11 @@ Signals: recent revenue trend, spend trend, ROAS stability, seasonality marker, 
   - Recent 28-day revenue trend: -2.0% versus the prior half-window.
   - Seasonality marker: 30d forecast ends in month 7 on weekday 4, using model month/day-of-week features. ROAS stability: recent average 4.47x with 6.8% coefficient of variation.
 - campaign_type | Shopping | 60d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 47.7%.
+  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 30.7%.
   - Recent 28-day revenue trend: -2.0% versus the prior half-window.
   - Seasonality marker: 60d forecast ends in month 8 on weekday 6, using model month/day-of-week features. ROAS stability: recent average 4.47x with 6.8% coefficient of variation.
 - campaign_type | Shopping | 90d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 49.7%.
+  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 32.7%.
   - Recent 28-day revenue trend: -2.0% versus the prior half-window.
   - Seasonality marker: 90d forecast ends in month 9 on weekday 1, using model month/day-of-week features. ROAS stability: recent average 4.47x with 6.8% coefficient of variation.
 - campaign | Advantage Shopping | 30d | model_type=trained_model | confidence=medium
@@ -127,23 +127,23 @@ Signals: recent revenue trend, spend trend, ROAS stability, seasonality marker, 
   - Recent 28-day revenue trend: +0.5% versus the prior half-window.
   - Seasonality marker: 30d forecast ends in month 7 on weekday 4, using model month/day-of-week features. ROAS stability: recent average 2.98x with 7.9% coefficient of variation.
 - campaign | Advantage Shopping | 60d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 49.9%.
+  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 41.0%.
   - Recent 28-day revenue trend: +0.5% versus the prior half-window.
   - Seasonality marker: 60d forecast ends in month 8 on weekday 6, using model month/day-of-week features. ROAS stability: recent average 2.98x with 7.9% coefficient of variation.
 - campaign | Advantage Shopping | 90d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 51.9%.
+  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 43.0%.
   - Recent 28-day revenue trend: +0.5% versus the prior half-window.
   - Seasonality marker: 90d forecast ends in month 9 on weekday 1, using model month/day-of-week features. ROAS stability: recent average 2.98x with 7.9% coefficient of variation.
 - campaign | Bing Brand | 30d | model_type=trained_model | confidence=medium
   - Confidence rationale: medium because 300 historical days support the segment; the revenue interval is comparatively tighter at 56.7%.
   - Recent 28-day revenue trend: +1.2% versus the prior half-window.
   - Seasonality marker: 30d forecast ends in month 7 on weekday 4, using model month/day-of-week features. ROAS stability: recent average 6.00x with 6.2% coefficient of variation.
-- campaign | Bing Brand | 60d | model_type=trained_model_baseline_anchored | confidence=low
-  - Confidence rationale: low because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 68.0%.
+- campaign | Bing Brand | 60d | model_type=trained_model_baseline_anchored | confidence=medium
+  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 58.7%.
   - Recent 28-day revenue trend: +1.2% versus the prior half-window.
   - Seasonality marker: 60d forecast ends in month 8 on weekday 6, using model month/day-of-week features. ROAS stability: recent average 6.00x with 6.2% coefficient of variation.
 - campaign | Bing Brand | 90d | model_type=trained_model_baseline_anchored | confidence=low
-  - Confidence rationale: low because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 70.0%.
+  - Confidence rationale: low because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 60.7%.
   - Recent 28-day revenue trend: +1.2% versus the prior half-window.
   - Seasonality marker: 90d forecast ends in month 9 on weekday 1, using model month/day-of-week features. ROAS stability: recent average 6.00x with 6.2% coefficient of variation.
 - campaign | Bing Generic | 30d | model_type=trained_model | confidence=low
@@ -151,11 +151,11 @@ Signals: recent revenue trend, spend trend, ROAS stability, seasonality marker, 
   - Recent 28-day revenue trend: -4.5% versus the prior half-window.
   - Seasonality marker: 30d forecast ends in month 7 on weekday 4, using model month/day-of-week features. ROAS stability: recent average 5.03x with 7.3% coefficient of variation.
 - campaign | Bing Generic | 60d | model_type=trained_model_baseline_anchored | confidence=low
-  - Confidence rationale: low because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is moderate at 73.2%.
+  - Confidence rationale: low because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 62.2%.
   - Recent 28-day revenue trend: -4.5% versus the prior half-window.
   - Seasonality marker: 60d forecast ends in month 8 on weekday 6, using model month/day-of-week features. ROAS stability: recent average 5.03x with 7.3% coefficient of variation.
 - campaign | Bing Generic | 90d | model_type=trained_model_baseline_anchored | confidence=low
-  - Confidence rationale: low because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is moderate at 75.2%.
+  - Confidence rationale: low because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 64.2%.
   - Recent 28-day revenue trend: -4.5% versus the prior half-window.
   - Seasonality marker: 90d forecast ends in month 9 on weekday 1, using model month/day-of-week features. ROAS stability: recent average 5.03x with 7.3% coefficient of variation.
 - campaign | Brand Search | 30d | model_type=trained_model | confidence=high
@@ -163,11 +163,11 @@ Signals: recent revenue trend, spend trend, ROAS stability, seasonality marker, 
   - Recent 28-day revenue trend: -6.8% versus the prior half-window.
   - Seasonality marker: 30d forecast ends in month 7 on weekday 4, using model month/day-of-week features. ROAS stability: recent average 5.34x with 8.1% coefficient of variation.
 - campaign | Brand Search | 60d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 49.9%.
+  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 32.1%.
   - Recent 28-day revenue trend: -6.8% versus the prior half-window.
   - Seasonality marker: 60d forecast ends in month 8 on weekday 6, using model month/day-of-week features. ROAS stability: recent average 5.34x with 8.1% coefficient of variation.
 - campaign | Brand Search | 90d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 51.9%.
+  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 34.1%.
   - Recent 28-day revenue trend: -6.8% versus the prior half-window.
   - Seasonality marker: 90d forecast ends in month 9 on weekday 1, using model month/day-of-week features. ROAS stability: recent average 5.34x with 8.1% coefficient of variation.
 - campaign | Cart Retargeting | 30d | model_type=trained_model | confidence=medium
@@ -175,11 +175,11 @@ Signals: recent revenue trend, spend trend, ROAS stability, seasonality marker, 
   - Recent 28-day revenue trend: +0.7% versus the prior half-window.
   - Seasonality marker: 30d forecast ends in month 7 on weekday 4, using model month/day-of-week features. ROAS stability: recent average 3.03x with 8.4% coefficient of variation.
 - campaign | Cart Retargeting | 60d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 53.4%.
+  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 46.6%.
   - Recent 28-day revenue trend: +0.7% versus the prior half-window.
   - Seasonality marker: 60d forecast ends in month 8 on weekday 6, using model month/day-of-week features. ROAS stability: recent average 3.03x with 8.4% coefficient of variation.
 - campaign | Cart Retargeting | 90d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 55.4%.
+  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 48.6%.
   - Recent 28-day revenue trend: +0.7% versus the prior half-window.
   - Seasonality marker: 90d forecast ends in month 9 on weekday 1, using model month/day-of-week features. ROAS stability: recent average 3.03x with 8.4% coefficient of variation.
 - campaign | Generic Search | 30d | model_type=trained_model | confidence=high
@@ -187,23 +187,23 @@ Signals: recent revenue trend, spend trend, ROAS stability, seasonality marker, 
   - Recent 28-day revenue trend: -0.9% versus the prior half-window.
   - Seasonality marker: 30d forecast ends in month 7 on weekday 4, using model month/day-of-week features. ROAS stability: recent average 4.27x with 9.1% coefficient of variation.
 - campaign | Generic Search | 60d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 49.9%.
+  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 32.1%.
   - Recent 28-day revenue trend: -0.9% versus the prior half-window.
   - Seasonality marker: 60d forecast ends in month 8 on weekday 6, using model month/day-of-week features. ROAS stability: recent average 4.27x with 9.1% coefficient of variation.
 - campaign | Generic Search | 90d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 51.9%.
+  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 34.1%.
   - Recent 28-day revenue trend: -0.9% versus the prior half-window.
   - Seasonality marker: 90d forecast ends in month 9 on weekday 1, using model month/day-of-week features. ROAS stability: recent average 4.27x with 9.1% coefficient of variation.
 - campaign | Lookalike Prospecting | 30d | model_type=trained_model | confidence=medium
   - Confidence rationale: medium because 300 historical days support the segment; the revenue interval is comparatively tighter at 53.5%.
   - Recent 28-day revenue trend: -6.2% versus the prior half-window.
   - Seasonality marker: 30d forecast ends in month 7 on weekday 4, using model month/day-of-week features. ROAS stability: recent average 2.93x with 7.9% coefficient of variation.
-- campaign | Lookalike Prospecting | 60d | model_type=trained_model_baseline_anchored | confidence=low
-  - Confidence rationale: low because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 66.3%.
+- campaign | Lookalike Prospecting | 60d | model_type=trained_model_baseline_anchored | confidence=medium
+  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 55.5%.
   - Recent 28-day revenue trend: -6.2% versus the prior half-window.
   - Seasonality marker: 60d forecast ends in month 8 on weekday 6, using model month/day-of-week features. ROAS stability: recent average 2.93x with 7.9% coefficient of variation.
-- campaign | Lookalike Prospecting | 90d | model_type=trained_model_baseline_anchored | confidence=low
-  - Confidence rationale: low because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 68.3%.
+- campaign | Lookalike Prospecting | 90d | model_type=trained_model_baseline_anchored | confidence=medium
+  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 57.5%.
   - Recent 28-day revenue trend: -6.2% versus the prior half-window.
   - Seasonality marker: 90d forecast ends in month 9 on weekday 1, using model month/day-of-week features. ROAS stability: recent average 2.93x with 7.9% coefficient of variation.
 - campaign | Shopping Best Sellers | 30d | model_type=trained_model | confidence=high
@@ -211,10 +211,10 @@ Signals: recent revenue trend, spend trend, ROAS stability, seasonality marker, 
   - Recent 28-day revenue trend: -3.4% versus the prior half-window.
   - Seasonality marker: 30d forecast ends in month 7 on weekday 4, using model month/day-of-week features. ROAS stability: recent average 4.26x with 7.3% coefficient of variation.
 - campaign | Shopping Best Sellers | 60d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 49.9%.
+  - Confidence rationale: medium because 300 historical days support the segment; the 60-day horizon carries more uncertainty than the 30-day plan; the revenue interval is comparatively tighter at 32.1%.
   - Recent 28-day revenue trend: -3.4% versus the prior half-window.
   - Seasonality marker: 60d forecast ends in month 8 on weekday 6, using model month/day-of-week features. ROAS stability: recent average 4.26x with 7.3% coefficient of variation.
 - campaign | Shopping Best Sellers | 90d | model_type=trained_model_baseline_anchored | confidence=medium
-  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 51.9%.
+  - Confidence rationale: medium because 300 historical days support the segment; the 90-day horizon compounds seasonality and residual volatility; the revenue interval is comparatively tighter at 34.1%.
   - Recent 28-day revenue trend: -3.4% versus the prior half-window.
   - Seasonality marker: 90d forecast ends in month 9 on weekday 1, using model month/day-of-week features. ROAS stability: recent average 4.26x with 7.3% coefficient of variation.

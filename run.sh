@@ -62,6 +62,13 @@ if [ $DEP_CHECK_EXIT -ne 0 ]; then
 fi
 
 # 2. Run the offline evaluator prediction entry point.
+if [[ "$ENABLE_LIVE_AI" == "1" ]]; then
+  echo "=== ForecastIQ AI MODE: LIVE_GEMINI_OPTIONAL_ENRICHMENT REQUESTED ==="
+  echo "[ForecastIQ] Live AI is optional and will fall back safely if GEMINI_API_KEY/network access is unavailable."
+else
+  echo "=== ForecastIQ AI MODE: OFFLINE_DETERMINISTIC_FALLBACK ==="
+  echo "[ForecastIQ] No live LLM call will be made; causal_summary.txt uses input-conditioned distilled reasoning."
+fi
 PREDICT_EXIT=0
 PREDICT_ARGS=(
   -m backend.predict

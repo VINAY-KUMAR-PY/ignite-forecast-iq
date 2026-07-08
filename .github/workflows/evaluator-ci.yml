@@ -77,6 +77,36 @@ jobs:
           print("Minimal grading path OK:", len(frame), "rows", sorted(modes))
           PY
 
+      - name: Golden numeric forecast regression check
+        run: |
+          python - <<'PY'
+          import pandas as pd
+
+          actual = pd.read_csv("output/predictions.csv").sort_values(["level", "segment", "horizon_days"]).reset_index(drop=True)
+          golden = pd.read_csv("tests/fixtures/golden_predictions_sample.csv").sort_values(["level", "segment", "horizon_days"]).reset_index(drop=True)
+          keys = ["level", "segment", "horizon_days"]
+          if not actual[keys].equals(golden[keys]):
+              raise SystemExit("Golden regression keys changed")
+          if actual["model_type"].tolist() != golden["model_type"].tolist():
+              raise SystemExit("Golden regression model_type values changed")
+          if actual["forecast_confidence"].tolist() != golden["forecast_confidence"].tolist():
+              raise SystemExit("Golden regression confidence labels changed")
+          numeric_columns = [
+              "expected_revenue",
+              "lower_revenue",
+              "upper_revenue",
+              "expected_roas",
+              "lower_roas",
+              "upper_roas",
+              "interval_width_pct",
+          ]
+          for column in numeric_columns:
+              max_delta = (actual[column].astype(float) - golden[column].astype(float)).abs().max()
+              if float(max_delta) > 0.05:
+                  raise SystemExit(f"Golden regression drift in {column}: {max_delta}")
+          print("Golden numeric forecast regression OK:", len(actual), "rows")
+          PY
+
   docker-evaluator-smoke:
     name: Docker evaluator smoke test
     runs-on: ubuntu-latest

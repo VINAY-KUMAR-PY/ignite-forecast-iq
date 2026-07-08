@@ -354,6 +354,8 @@ def generate_offline_causal_summary(
             "=== ForecastIQ Causal Summary (offline, deterministic) ===\n"
             f"Distilled Gemini explanation skeleton: {distilled['label']}\n"
             f"{format_reasoning_provenance(distilled)}\n"
+            f"Input-conditioned synthesis fingerprint: {distilled['evidence_fingerprint']}\n"
+            f"{distilled['runtime_evidence']}\n"
             "Structured causal evidence object:\n"
             f"{json.dumps(distilled['evidence_object'], indent=2, sort_keys=True)}\n"
             "REASONING_TRACE\n"
@@ -687,6 +689,8 @@ def generate_offline_causal_summary(
         "=== ForecastIQ Causal Summary (offline, deterministic) ===",
         f"Distilled Gemini explanation skeleton: {distilled['label']}",
         format_reasoning_provenance(distilled),
+        f"Input-conditioned synthesis fingerprint: {distilled['evidence_fingerprint']}",
+        distilled["runtime_evidence"],
         "Structured causal evidence object:",
         json.dumps(distilled["evidence_object"], indent=2, sort_keys=True),
         "REASONING_TRACE",

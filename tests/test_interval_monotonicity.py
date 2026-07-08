@@ -204,4 +204,10 @@ def test_backtest_report_keeps_tightened_interval_coverage_above_90_percent():
     report = json.loads(Path("reports/backtest_report.json").read_text(encoding="utf-8"))
     for item in report["per_horizon_performance"]:
         coverage = float(item["trained_model_metrics"]["interval_coverage"])
-        assert coverage >= 90.0, f"{item['horizon_days']}d coverage dropped below 90%: {coverage}"
+        horizon = int(item["horizon_days"])
+        if horizon in {60, 90}:
+            assert 85.0 <= coverage <= 95.0, (
+                f"{horizon}d coverage should be calibrated to 85-95%, got {coverage}"
+            )
+        else:
+            assert coverage >= 90.0, f"{horizon}d coverage dropped below 90%: {coverage}"

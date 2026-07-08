@@ -84,6 +84,35 @@ def test_run_sh_committed_data_folder_contract(tmp_path: Path) -> None:
     assert "Prediction mode: trained_model" in result.stdout
 
 
+def test_run_sh_committed_data_matches_golden_numeric_output(tmp_path: Path) -> None:
+    output = tmp_path / "predictions.csv"
+    _run_contract_case(ROOT / "data", output)
+
+    actual = pd.read_csv(output).sort_values(["level", "segment", "horizon_days"]).reset_index(drop=True)
+    golden = (
+        pd.read_csv(ROOT / "tests" / "fixtures" / "golden_predictions_sample.csv")
+        .sort_values(["level", "segment", "horizon_days"])
+        .reset_index(drop=True)
+    )
+
+    assert actual[["level", "segment", "horizon_days"]].equals(golden[["level", "segment", "horizon_days"]])
+    assert actual["model_type"].tolist() == golden["model_type"].tolist()
+    assert actual["forecast_confidence"].tolist() == golden["forecast_confidence"].tolist()
+
+    numeric_columns = [
+        "expected_revenue",
+        "lower_revenue",
+        "upper_revenue",
+        "expected_roas",
+        "lower_roas",
+        "upper_roas",
+        "interval_width_pct",
+    ]
+    for column in numeric_columns:
+        deltas = (actual[column].astype(float) - golden[column].astype(float)).abs()
+        assert float(deltas.max()) <= 0.05, f"{column} drifted by {float(deltas.max())}"
+
+
 def test_run_sh_empty_csv_contract(tmp_path: Path) -> None:
     data_dir = tmp_path / "data"
     data_dir.mkdir()

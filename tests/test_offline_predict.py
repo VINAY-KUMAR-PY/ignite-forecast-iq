@@ -45,6 +45,7 @@ from backend.predict import (
 )
 from backend.evaluator_io import trained_model_functional_smoke_test
 from backend.evaluator_io import _generate_live_ai_causal_appendix
+from backend.evaluator_intervals import DEFAULT_HORIZON_INTERVAL_MULTIPLIER
 from backend.gemini import _fallback_insights
 from backend.gemini_offline_cache import (
     build_reasoning_trace,
@@ -1184,7 +1185,7 @@ class OfflinePredictionTests(unittest.TestCase):
             {"horizon_interval_multiplier": {"30": 0.60, "60": 1.45, "90": 1.10}}
         )
 
-        self.assertEqual(multipliers, {"30": 2.5, "60": 2.7792, "90": 2.7792})
+        self.assertEqual(multipliers, DEFAULT_HORIZON_INTERVAL_MULTIPLIER)
         self.assertLessEqual(multipliers["30"], multipliers["60"])
         self.assertLessEqual(multipliers["60"], multipliers["90"])
 

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-07T09:05:55.463338+00:00",
+  "generated_at": "2026-07-08T06:22:54.236120+00:00",
   "commands": [
     {
       "name": "interval calibration",
@@ -33,13 +33,13 @@
     }
   ],
   "coverage": {
-    "statements": 4424,
-    "missing": 350,
-    "coverage_pct": 92.09,
-    "passed": 199,
+    "statements": 4502,
+    "missing": 353,
+    "coverage_pct": 92.16,
+    "passed": 208,
     "skipped": 2,
     "warnings": 7,
-    "duration_seconds": 198.39,
+    "duration_seconds": 230.4,
     "modules": {
       "backend/__init__.py": 100.0,
       "backend/anomaly.py": 94.81,
@@ -51,15 +51,15 @@
       "backend/evaluator_io.py": 90.29,
       "backend/forecasting.py": 83.68,
       "backend/gemini.py": 92.39,
-      "backend/gemini_offline_cache.py": 98.22,
-      "backend/inference.py": 92.84,
+      "backend/gemini_offline_cache.py": 97.0,
+      "backend/inference.py": 92.87,
       "backend/lightweight_api.py": 93.92,
       "backend/main.py": 89.58,
       "backend/predict.py": 98.11,
       "backend/schema_adapters.py": 94.07,
       "backend/schemas.py": 98.26,
-      "backend/segment_utils.py": 93.8,
-      "backend/train.py": 91.98,
+      "backend/segment_utils.py": 95.6,
+      "backend/train.py": 92.02,
       "backend/utils.py": 100.0
     }
   },

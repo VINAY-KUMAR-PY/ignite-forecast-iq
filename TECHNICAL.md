@@ -123,8 +123,8 @@ Latest committed headline values:
 | Horizon | Revenue MAPE | Overall ROAS MAPE | Revenue interval coverage |
 |---:|---:|---:|---:|
 | 30d | 3.54% | 0.55% | 93.06% |
-| 60d | 10.34% | 1.12% | 100.0% |
-| 90d | 7.89% | 1.05% | 100.0% |
+| 60d | 10.34% | 1.12% | 93.06% |
+| 90d | 7.89% | 1.05% | 94.44% |
 
 Coverage is intentionally conservative because ecommerce revenue is noisy over
 longer horizons due to seasonality, promotion cadence, channel volatility, and

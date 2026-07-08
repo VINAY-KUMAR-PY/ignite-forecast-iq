@@ -13,6 +13,8 @@ transcripts:
     model: gemini-2.5-flash
     sha256: c52f0cdc7593aa0d5b10a1333d221d38a324bd0093cca0f1a04b41d56bb8f1f0
 --- END REASONING PROVENANCE ---
+Input-conditioned synthesis fingerprint: e4e363b6a1d639d3
+Runtime evidence binding: channel=Meta Ads; campaign_type=Advantage+; delta=+1.6%; effect=$2,238; p=0.179; CI $-1,105 to $5,400; sample_size=24; confidence=low; fingerprint=e4e363b6a1d639d3.
 Structured causal evidence object:
 {
   "baseline_roas": 2.9629,
@@ -50,15 +52,17 @@ Structured causal evidence object:
     "post_window_days": 10,
     "power_check_passed": false,
     "pre_window_days": 14,
+    "sample_size": 24,
     "t_statistic": 1.343
   }
 }
 REASONING_TRACE
   1. INPUT_EVIDENCE: channel=Meta Ads; campaign_type=Advantage+; intervention_detected=false; direction=positive; effect_size=$2,238; confidence=low; baseline_roas=2.96x; observed_roas=2.98x; delta=+1.6%
   2. STATISTICAL_CHECK: method=difference_in_differences; p=0.179; t=1.34; strength=0.79; CI=$-1,105 to $5,400; parallel_trend_passed=true
-  3. RULE_APPLICATION: power check failed -> underpowered_sample_watch skeleton; selected_skeleton=underpowered_sample_watch
-  4. DRIVER_AND_LIMITATIONS: primary_driver=leading_roas Microsoft Ads (5.44x ROAS); limitations=observational DiD, not randomized incrementality; 95% confidence interval crosses zero; p-value is not statistically strong; minimum sample or power check did not pass
-  5. FINAL_COMPOSITION: filled the selected distilled Gemini-authored skeleton with the runtime evidence above.
+  3. RUNTIME_NUMERIC_BINDING: p=0.179; CI=$-1,105 to $5,400; sample_size=24; evidence_fingerprint=e4e363b6a1d639d3
+  4. RULE_APPLICATION: power check failed -> underpowered_sample_watch skeleton; selected_skeleton=underpowered_sample_watch
+  5. DRIVER_AND_LIMITATIONS: primary_driver=leading_roas Microsoft Ads (5.44x ROAS); limitations=observational DiD, not randomized incrementality; 95% confidence interval crosses zero; p-value is not statistically strong; minimum sample or power check did not pass
+  6. FINAL_COMPOSITION: filled the selected distilled Gemini-authored skeleton with the runtime evidence above.
 Generated explanation:
 Meta Ads does not have enough statistical power for a causal claim. The observed effect is $2,238 with p=0.179, CI $-1,105 to $5,400, and low confidence; ROAS moved from 2.96x to 2.98x. This should be read as a measurement-readiness warning, not a proven positive effect.
 Evidence focus: power evidence: p-value 0.179 exceeds 0.15; 95% confidence interval crosses zero; p=0.179; strength=0.79; primary driver: leading_roas Microsoft Ads (5.44x ROAS)

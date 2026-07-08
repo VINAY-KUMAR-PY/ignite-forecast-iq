@@ -90,6 +90,10 @@ More transcript guidance is in
 A manual/nightly workflow,
 [`gemini-transcript-refresh.yml`](./.github/workflows/gemini-transcript-refresh.yml),
 can regenerate one fresh redacted transcript when `GEMINI_API_KEY` is configured.
+That workflow is optional maintenance only: missing Gemini secrets or provider
+unavailability should skip transcript refresh without affecting evaluator CI,
+because the graded path is offline-safe and never requires Gemini or network
+access.
 
 ## Evaluation Criteria Mapping
 

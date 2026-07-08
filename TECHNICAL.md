@@ -244,6 +244,11 @@ The optional live app path is separate:
 | Live app/API | `backend/gemini.py`, `backend/main.py` | Calls Gemini when `GEMINI_API_KEY` is configured, otherwise falls back cleanly. |
 | Live demo script | `scripts/demo_live_ai_reasoning.py`, `scripts/verify_gemini_live.py` | Captures redacted transcripts and validates structured insight schema. |
 
+The `Gemini Transcript Refresh` workflow is optional maintenance for refreshing
+cached reasoning evidence. If `GEMINI_API_KEY` is absent, or the live provider is
+temporarily unavailable, the workflow records a clear skip message; evaluator CI
+and `run.sh` remain offline-safe and do not depend on Gemini or network access.
+
 The live Gemini prompt receives structured DiD effects, p-values, confidence
 intervals, anomaly z-scores, channel/campaign evidence, and budget context. It
 returns executive insights plus `llmHypothesisRanking`, where competing causes

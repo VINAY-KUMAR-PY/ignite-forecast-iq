@@ -350,9 +350,13 @@ jobs:
           from pathlib import Path
 
           text = Path("output/causal_summary.txt").read_text(encoding="utf-8")
-          if "Optional Live Gemini Enrichment" not in text:
-              raise SystemExit("live-AI flag did not exercise optional enrichment path")
-          if "deterministic offline causal summary above remains the authoritative evaluator output" not in text:
+          if "=== Live Gemini Enrichment ===" not in text:
+              raise SystemExit("live-AI flag did not exercise the enrichment/fallback path")
+          if "Live LLM invoked: false" not in text:
+              raise SystemExit("fake Gemini key should fail safely without a live model response")
+          if "LIVE_GEMINI_REQUEST_REDACTED" not in text or "LIVE_GEMINI_RESPONSE_REDACTED" not in text:
+              raise SystemExit("live-AI fallback did not record redacted request/response evidence")
+          if "=== ForecastIQ Causal Summary (offline, deterministic) ===" not in text:
               raise SystemExit("live-AI fallback did not preserve deterministic evaluator summary")
           print("Optional live-AI flag fallback path OK")
           PY

@@ -483,6 +483,28 @@ def synthesize_runtime_interpretation(evidence: dict[str, Any]) -> list[str]:
     ci_crosses_zero = bool(signals.get("ci_crosses_zero", lower <= 0 <= upper))
     sample_size = int(safe_float(signals.get("sample_size", metrics.get("sample_size", 0)), 0))
     confidence_basis = str(signals.get("confidence_basis") or "computed from DiD evidence and anomaly context")
+    effect_magnitude = abs(effect_size)
+
+    if not bool(evidence.get("intervention_detected")):
+        branch = "stable_no_intervention"
+    elif not power_passed or sample_size < 14:
+        branch = "underpowered_measurement"
+    elif ci_crosses_zero and direction == "positive" and effect_magnitude >= 5000:
+        branch = "material_positive_but_uncertain"
+    elif ci_crosses_zero and direction == "negative" and effect_magnitude >= 5000:
+        branch = "material_negative_but_uncertain"
+    elif direction == "negative" and p_value <= 0.05 and delta_percent <= -10:
+        branch = "statistically_supported_efficiency_risk"
+    elif direction == "negative":
+        branch = "directional_decline_watch"
+    elif direction == "positive" and p_value <= 0.05 and delta_percent >= 15:
+        branch = "statistically_supported_growth"
+    elif direction == "positive" and delta_percent >= 20:
+        branch = "large_lift_needs_confirmation"
+    elif direction == "positive":
+        branch = "incremental_test_candidate"
+    else:
+        branch = "neutral_run_rate"
 
     if not bool(evidence.get("intervention_detected")):
         decision = "No statistically defensible intervention is present, so the forecast should be read as run-rate planning evidence."
@@ -517,6 +539,7 @@ def synthesize_runtime_interpretation(evidence: dict[str, Any]) -> list[str]:
             f"Statistical interpretation: confidence={confidence}; power_check_passed={str(power_passed).lower()}; "
             f"ci_crosses_zero={str(ci_crosses_zero).lower()}; sample_size={sample_size}; basis={confidence_basis}."
         ),
+        f"Evidence-conditioned branch: {branch}.",
         f"Business action rule: {decision}",
     ]
 

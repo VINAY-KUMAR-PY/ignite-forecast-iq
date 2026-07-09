@@ -252,6 +252,8 @@ The offline cache selects among distinct lift, decline, anomaly-timing,
 noisy-signal, budget-reallocation, and stable run-rate skeletons based on the
 computed evidence object, so the narrative structure changes with the data
 rather than using one canned paragraph.
+It also emits an evidence-conditioned branch label inside `PER_RUN_SYNTHESIS`
+so reviewers can see which numeric rule path was used for the current run.
 
 Live LLM mode is separate and optional: `npm run demo:ai` and the FastAPI
 insights endpoints call Gemini only when `GEMINI_API_KEY` is configured. That

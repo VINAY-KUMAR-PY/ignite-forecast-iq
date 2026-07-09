@@ -13,6 +13,7 @@ from unittest.mock import patch
 import joblib
 import numpy as np
 import pandas as pd
+import pytest
 
 import backend.predict as predict_module
 from backend.predict import (
@@ -1022,7 +1023,8 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertIn("LIVE_GEMINI_RESPONSE_REDACTED", summary)
         self.assertIn("Rank 1: budget shift", summary)
 
-    def test_live_ai_mode_uses_mocked_gemini_path_with_key(self) -> None:
+    @pytest.mark.live_ai_mocked
+    def test_live_ai_mode_uses_mocked_gemini_path_with_explicit_flag_and_key(self) -> None:
         raw = pd.read_csv("data/sample_campaigns.csv").head(120)
         cleaned = canonicalize_frame(raw)
         rows = build_predictions(cleaned.frame, fallback_model_config("mocked live path"))
@@ -1038,7 +1040,7 @@ class OfflinePredictionTests(unittest.TestCase):
 
         with patch.dict(os.environ, {"GEMINI_API_KEY": "fake-ci-key", "GEMINI_MAX_ATTEMPTS": "1"}, clear=False):
             with patch("backend.evaluator_io._call_gemini_generate_content", return_value=(raw_response, "Mocked Gemini live reasoning path executed. Rank 1: creative fatigue.")) as mocked:
-                summary = generate_causal_summary(cleaned.frame, rows, enable_live_ai=False)
+                summary = generate_causal_summary(cleaned.frame, rows, enable_live_ai=True)
 
         mocked.assert_called_once()
         self.assertIn("LIVE_GEMINI_AUTOMATIC_ENRICHMENT", summary)

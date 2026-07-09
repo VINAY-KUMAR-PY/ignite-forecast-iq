@@ -519,7 +519,8 @@ jobs:
         env:
           GEMINI_API_KEY: fake-ci-key
         run: |
-          python -m pytest tests/test_offline_predict.py -q -k "live_ai_mode_uses_mocked_gemini_path_with_explicit_flag_and_key"
+          # Mocked smoke test only: no real Gemini secret, network call, or provider dependency.
+          python -m pytest tests/test_offline_predict.py -q -m live_ai_mocked
 
   app-tests:
     name: Backend application and trained artifact

@@ -1,6 +1,6 @@
 # Backend Coverage Summary
 
-Generated: 2026-07-08 local validation run.
+Generated: 2026-07-09 local validation run.
 
 Command run:
 
@@ -8,14 +8,14 @@ Command run:
 python -m pytest tests/ -q --cov=backend --durations=10
 ```
 
-Result: **208 passed, 2 skipped, 7 warnings** in 230.4s.
+Result: **216 passed, 2 skipped, 7 warnings** in 431.91s.
 
-Overall backend coverage: **92.16%** (4149/4502 lines).
+Overall backend coverage: **92.26%** (4208/4561 lines).
 
 | Module | Coverage |
 |---|---:|
 | `backend/decision_support.py` | 94.09% |
-| `backend/evaluator_io.py` | 90.29% |
+| `backend/evaluator_io.py` | 90.19% |
 | `backend/gemini.py` | 92.39% |
 | `backend/inference.py` | 92.87% |
 | `backend/segment_utils.py` | 95.60% |

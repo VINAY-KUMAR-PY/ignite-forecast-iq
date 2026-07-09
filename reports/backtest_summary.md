@@ -1,6 +1,6 @@
 # ForecastIQ Backtest Summary
 
-Generated: 2026-07-08T06:19:01.031246+00:00
+Generated: 2026-07-09T07:12:10.139711+00:00
 
 ## Holdout Design
 

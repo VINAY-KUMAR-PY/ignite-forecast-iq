@@ -63,7 +63,7 @@ for 30/60/90-day trained intervals. Revenue MAPE is
 **0.55% / 1.12% / 1.05%**. Full tables:
 [reports/backtest_summary.md](./reports/backtest_summary.md).
 
-Backend coverage is **92.16% measured locally** with
+Backend coverage is **92.26% measured locally** with
 `python -m pytest tests -q --cov=backend --cov-report=term-missing`; Evaluator CI
 enforces **92.05%** with `--cov-fail-under=92.05`.
 

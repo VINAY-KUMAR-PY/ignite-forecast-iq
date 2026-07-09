@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-08T06:22:54.236120+00:00",
+  "generated_at": "2026-07-09T07:19:27.192355+00:00",
   "commands": [
     {
       "name": "interval calibration",
@@ -33,25 +33,25 @@
     }
   ],
   "coverage": {
-    "statements": 4502,
+    "statements": 4561,
     "missing": 353,
-    "coverage_pct": 92.16,
-    "passed": 208,
+    "coverage_pct": 92.26,
+    "passed": 216,
     "skipped": 2,
     "warnings": 7,
-    "duration_seconds": 230.4,
+    "duration_seconds": 431.91,
     "modules": {
       "backend/__init__.py": 100.0,
       "backend/anomaly.py": 94.81,
-      "backend/causal_lite.py": 86.99,
+      "backend/causal_lite.py": 87.07,
       "backend/data_preprocessing.py": 89.83,
       "backend/decision_support.py": 94.09,
       "backend/evaluator_contract.py": 100.0,
       "backend/evaluator_intervals.py": 92.59,
-      "backend/evaluator_io.py": 90.29,
+      "backend/evaluator_io.py": 90.19,
       "backend/forecasting.py": 83.68,
       "backend/gemini.py": 92.39,
-      "backend/gemini_offline_cache.py": 97.0,
+      "backend/gemini_offline_cache.py": 98.02,
       "backend/inference.py": 92.87,
       "backend/lightweight_api.py": 93.92,
       "backend/main.py": 89.58,

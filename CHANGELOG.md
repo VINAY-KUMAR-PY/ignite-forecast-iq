@@ -12,8 +12,8 @@
   a statistical tie.
 - Expanded deterministic offline AI reasoning with an underpowered-sample
   narrative path and tests covering varied skeleton selection.
-- Refreshed validation evidence: `206 passed, 2 skipped`, backend coverage
-  `92.14%`, and committed sample output remains `18 trained_model` /
+- Refreshed validation evidence: `216 passed, 2 skipped`, backend coverage
+  `92.26%`, and committed sample output remains `18 trained_model` /
   `36 trained_model_baseline_anchored` rows with zero confidence inversions.
 
 ## 2026-07-07

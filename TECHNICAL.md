@@ -82,16 +82,18 @@ Alternatives considered:
 ### Long-Horizon Revenue Blend Decision
 
 The 30 day revenue model uses trained residual correction because paired
-rolling-origin evidence favors the trained signal. For this hardening pass,
-ForecastIQ retrained the artifact with longer-horizon features including
-14/28/56-day revenue and ROAS momentum, share drift, hierarchy aggregates,
-conversion-rate stability, longer-window volatility, and seasonality
-interactions. Those features made a genuine attempt to improve 60/90 day
-generalization, but the pooled paired-bootstrap evidence still does not
-show a statistically clear long-horizon revenue win over the deterministic
-seasonal baseline. ForecastIQ therefore anchors 60/90 day revenue to the
-baseline inside the loaded `trained_model` artifact instead of forcing residual
-correction where the evidence does not justify it.
+rolling-origin evidence favors the trained signal. The committed evaluator
+artifact keeps 60/90 day revenue anchored to the deterministic seasonal
+baseline because the pooled paired-bootstrap evidence still does not show a
+statistically clear long-horizon revenue win for residual correction. During
+this hardening pass, the training code was extended with additional candidate
+signals such as blended ROAS trend, channel and campaign-type mix drift,
+campaign-type seasonality index, and a spend-elasticity proxy. A retraining
+attempt with those signals did not clear the p < 0.05 adoption gate, so the
+scored artifact was not replaced with a weaker model. ForecastIQ therefore
+keeps 60/90 day revenue baseline anchored inside the loaded `trained_model`
+artifact instead of forcing residual correction where the evidence does not
+justify it.
 
 The longer-horizon ablation table below is generated from
 [reports/long_horizon_revenue_ablation.md](./reports/long_horizon_revenue_ablation.md),

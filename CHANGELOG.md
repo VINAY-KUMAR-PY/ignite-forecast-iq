@@ -2,12 +2,14 @@
 
 ## 2026-07-08
 
-- Added long-horizon feature engineering for 14/28/56-day momentum, hierarchy,
-  share drift, conversion stability, volatility, and seasonality interactions.
-- Retrained the committed evaluator artifact and reran rolling-origin backtests;
-  30-day trained revenue remains statistically favored, while 60/90-day revenue
-  remains transparently baseline anchored because the paired bootstrap verdict is
-  still a statistical tie.
+- Added candidate long-horizon training features for blended ROAS trend,
+  channel/campaign-type mix drift, campaign-type seasonality, and spend
+  elasticity; the retraining attempt did not pass the p < 0.05 adoption gate, so
+  the known-good committed evaluator artifact remains in place.
+- Reran rolling-origin backtests; 30-day trained revenue remains statistically
+  favored in the committed artifact, while 60/90-day revenue remains
+  transparently baseline anchored because the paired bootstrap verdict is still
+  a statistical tie.
 - Expanded deterministic offline AI reasoning with an underpowered-sample
   narrative path and tests covering varied skeleton selection.
 - Refreshed validation evidence: `206 passed, 2 skipped`, backend coverage

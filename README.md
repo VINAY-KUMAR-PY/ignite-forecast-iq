@@ -63,18 +63,19 @@ for 30/60/90-day trained intervals. Revenue MAPE is
 **0.55% / 1.12% / 1.05%**. Full tables:
 [reports/backtest_summary.md](./reports/backtest_summary.md).
 
-Backend coverage is **92.26% measured locally** with
+Backend coverage is **93.69% measured locally** with
 `python -m pytest tests -q --cov=backend --cov-report=term-missing`; Evaluator CI
 enforces **92.05%** with `--cov-fail-under=92.05`.
 
 ## See Live AI Reasoning In 30 Seconds
 
-The graded `run.sh` path never calls an LLM because the evaluator must run
-offline. The evaluator prints an `AI MODE` banner and writes the same convention
-at the top of `causal_summary.txt`: `OFFLINE_DETERMINISTIC_FALLBACK` means
-input-conditioned offline synthesis, while `LIVE_GEMINI_OPTIONAL_ENRICHMENT`
-means an explicit opt-in Gemini enrichment was requested. To see real Gemini
-causal reasoning separately, add `GEMINI_API_KEY` to `.env` and run:
+The graded `run.sh` path is offline-safe by default. The evaluator prints an
+`AI MODE` banner and writes the same convention at the top of
+`causal_summary.txt`: `OFFLINE_DETERMINISTIC_FALLBACK` means input-conditioned
+offline synthesis, while `LIVE_GEMINI_AUTOMATIC_ENRICHMENT` means
+`GEMINI_API_KEY` was present and one bounded Gemini call was attempted with a
+redacted request/response transcript. To see real Gemini causal reasoning in
+the separate demo script, add `GEMINI_API_KEY` to `.env` and run:
 
 ```bash
 npm run demo:ai
@@ -101,7 +102,7 @@ access.
 |---|---|
 | Technical Soundness | `./run.sh`, `reports/backtest_summary.md`, `reports/interval_calibration_report.json`, `tests/test_offline_predict.py`, `tests/test_interval_monotonicity.py` |
 | Practical Relevance | `backend/decision_support.py`, `scripts/validate_budget_elasticity.py`, `reports/budget_elasticity_summary.md`, simulator UI |
-| AI Integration | Graded path: offline synthesis computed per-run from causal evidence in `output/causal_summary.txt`; demo path: live Gemini calls through `npm run demo:ai`, `scripts/demo_live_ai_reasoning.py`, and `docs/gemini_sample_transcripts/`. |
+| AI Integration | Graded path: per-run offline synthesis plus automatic one-call Gemini enrichment when `GEMINI_API_KEY` is present, with redacted request/response evidence in `output/causal_summary.txt`; demo path: live Gemini calls through `npm run demo:ai`, `scripts/demo_live_ai_reasoning.py`, and `docs/gemini_sample_transcripts/`. |
 | Product Thinking | One-click demo flow, Upload -> Dashboard -> Forecast -> Simulator -> Insights, `DEMO_GUIDE.md` |
 | Engineering Quality | Evaluator CI, frontend tests, Playwright flow, coverage gate, pinned evaluator dependencies |
 | Independent reproduction | `npm run verify` regenerates interval calibration, rolling-origin backtest reports, coverage summary, and `reports/verification_summary.json` |

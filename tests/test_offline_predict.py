@@ -8,7 +8,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import joblib
 import numpy as np
@@ -46,7 +46,6 @@ from backend.predict import (
 from backend.evaluator_io import trained_model_functional_smoke_test
 from backend.evaluator_io import _generate_live_ai_causal_appendix
 from backend.evaluator_intervals import DEFAULT_HORIZON_INTERVAL_MULTIPLIER
-from backend.gemini import _fallback_insights
 from backend.gemini_offline_cache import (
     build_reasoning_trace,
     build_structured_causal_evidence,
@@ -286,7 +285,7 @@ class OfflinePredictionTests(unittest.TestCase):
             summary = output.parent / "causal_summary.txt"
             self.assertEqual(list(written.columns), OUTPUT_COLUMNS)
             self.assertFalse(written.empty)
-            self.assertIn("Optional Live Gemini Enrichment", summary.read_text(encoding="utf-8"))
+            self.assertIn("Live Gemini Enrichment", summary.read_text(encoding="utf-8"))
             self.assertIn("GEMINI_API_KEY was not configured", summary.read_text(encoding="utf-8"))
 
     def test_ga4_headers_only_normalize_and_predict(self) -> None:
@@ -932,24 +931,34 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertEqual(evidence["supporting_metrics"]["p_value"], 0.04)
         self.assertEqual(evidence["primary_driver"]["segment"], "Google Ads")
 
-    def test_causal_summary_stays_offline_when_gemini_env_is_configured(self) -> None:
+    def test_causal_summary_auto_attempts_live_ai_when_gemini_env_is_configured(self) -> None:
         raw = pd.read_csv("data/sample_campaigns.csv").head(120)
         cleaned = canonicalize_frame(raw)
         rows = build_predictions(cleaned.frame, fallback_model_config("offline boundary test"))
 
         with patch.dict(os.environ, {"GEMINI_API_KEY": "configured"}, clear=False):
-            with patch("backend.evaluator_io._generate_live_ai_causal_appendix") as live_appendix:
+            with patch(
+                "backend.evaluator_io._generate_live_ai_causal_appendix",
+                return_value=(
+                    "AI mode: LIVE_GEMINI_AUTOMATIC_ENRICHMENT\n"
+                    "=== Live Gemini Enrichment ===\n"
+                    "Live LLM invoked: true\n"
+                    "LIVE_GEMINI_REQUEST_REDACTED\n{}\n"
+                    "LIVE_GEMINI_RESPONSE_REDACTED\n{}\n"
+                    "Gemini causal narrative:\nMocked live reasoning"
+                ),
+            ) as live_appendix:
                 summary = generate_causal_summary(cleaned.frame, rows, enable_live_ai=False)
 
         self.assertIn("AI Strategic Recommendation", summary)
         self.assertIn("Offline deterministic recommendation", summary)
-        self.assertIn("intentionally performs no LLM or network calls", summary)
+        self.assertIn("with the key present, it appends one bounded live Gemini transcript", summary)
         self.assertIn("LLM_HYPOTHESIS_RANKING", summary)
-        self.assertIn("not executed in the default offline evaluator path", summary)
-        self.assertNotIn("AI Strategic Recommendation (Gemini)", summary)
-        live_appendix.assert_not_called()
+        self.assertIn("LIVE_GEMINI_AUTOMATIC_ENRICHMENT", summary)
+        self.assertIn("LIVE_GEMINI_REQUEST_REDACTED", summary)
+        live_appendix.assert_called_once()
 
-    def test_live_ai_summary_requires_explicit_flag_and_key(self) -> None:
+    def test_live_ai_summary_still_supports_explicit_flag_and_key(self) -> None:
         raw = pd.read_csv("data/sample_campaigns.csv").head(120)
         cleaned = canonicalize_frame(raw)
         rows = build_predictions(cleaned.frame, fallback_model_config("live ai boundary test"))
@@ -958,8 +967,8 @@ class OfflinePredictionTests(unittest.TestCase):
             with patch(
                 "backend.evaluator_io._generate_live_ai_causal_appendix",
                 return_value=(
-                    "AI mode: LIVE_GEMINI_OPTIONAL_ENRICHMENT\n"
-                    "=== Optional Live Gemini Enrichment ===\n"
+                    "AI mode: LIVE_GEMINI_AUTOMATIC_ENRICHMENT\n"
+                    "=== Live Gemini Enrichment ===\n"
                     "Executive summary: mocked\n"
                     "LLM_HYPOTHESIS_RANKING\n"
                     "  - rank 1: budget shift | confidence=high (0.84)"
@@ -969,7 +978,7 @@ class OfflinePredictionTests(unittest.TestCase):
 
         live_appendix.assert_called_once()
         self.assertIn("OFFLINE_DETERMINISTIC_FALLBACK", summary)
-        self.assertIn("LIVE_GEMINI_OPTIONAL_ENRICHMENT", summary)
+        self.assertIn("LIVE_GEMINI_AUTOMATIC_ENRICHMENT", summary)
 
     def test_live_ai_summary_falls_back_without_key(self) -> None:
         raw = pd.read_csv("data/sample_campaigns.csv").head(60)
@@ -988,69 +997,51 @@ class OfflinePredictionTests(unittest.TestCase):
         raw = pd.read_csv("data/sample_campaigns.csv").head(120)
         cleaned = canonicalize_frame(raw)
         rows = build_predictions(cleaned.frame, fallback_model_config("live appendix ranking test"))
-        insights = _fallback_insights(
-            {
-                "channels": [{"name": "Google Ads", "roas": 4.8, "sharePct": 50, "revenue": 10000, "spend": 2000}],
-                "avgRoas": 4.0,
-                "forecast30dRevenue": 12000,
-                "causalEstimates": [
-                    {
-                        "date": "2026-06-01",
-                        "channel": "Google Ads",
-                        "incrementalRevenue": 5000,
-                        "lowerRevenue": 1000,
-                        "upperRevenue": 9000,
-                        "pValue": 0.04,
-                        "effectStrength": 1.5,
-                        "confidence": "high",
-                        "parallelTrendPassed": True,
+        raw_response = {
+            "candidates": [
+                {
+                    "content": {
+                        "parts": [
+                            {
+                                "text": (
+                                    "Rank 1: budget shift, confidence high. Evidence: p=0.04 and "
+                                    "incremental revenue $5,000. Recommended validation: holdout test."
+                                )
+                            }
+                        ]
                     }
-                ],
-            }
-        )
+                }
+            ]
+        }
 
-        with patch(
-            "backend.gemini.generate_gemini_insights_with_source",
-            new=AsyncMock(return_value=(insights, "gemini")),
-        ):
+        with patch("backend.evaluator_io._call_gemini_generate_content", return_value=(raw_response, raw_response["candidates"][0]["content"]["parts"][0]["text"])):
             summary = _generate_live_ai_causal_appendix(cleaned.frame, rows)
 
         self.assertIn("LLM_HYPOTHESIS_RANKING", summary)
-        self.assertIn("confidence=", summary)
-        self.assertIn("validation=", summary)
+        self.assertIn("LIVE_GEMINI_REQUEST_REDACTED", summary)
+        self.assertIn("LIVE_GEMINI_RESPONSE_REDACTED", summary)
+        self.assertIn("Rank 1: budget shift", summary)
 
-    def test_live_ai_mode_uses_mocked_gemini_path_with_explicit_flag_and_key(self) -> None:
+    def test_live_ai_mode_uses_mocked_gemini_path_with_key(self) -> None:
         raw = pd.read_csv("data/sample_campaigns.csv").head(120)
         cleaned = canonicalize_frame(raw)
         rows = build_predictions(cleaned.frame, fallback_model_config("mocked live path"))
-        payload = _fallback_insights(
-            {
-                "channels": [{"name": "Google Ads", "roas": 4.8, "sharePct": 50, "revenue": 10000, "spend": 2000}],
-                "avgRoas": 4.0,
-                "forecast30dRevenue": 12000,
-                "causalEstimates": [
-                    {
-                        "date": "2026-06-01",
-                        "channel": "Google Ads",
-                        "incrementalRevenue": 5000,
-                        "lowerRevenue": 1000,
-                        "upperRevenue": 9000,
-                        "pValue": 0.04,
-                        "effectStrength": 1.5,
-                        "confidence": "high",
-                        "parallelTrendPassed": True,
+        raw_response = {
+            "candidates": [
+                {
+                    "content": {
+                        "parts": [{"text": "Mocked Gemini live reasoning path executed. Rank 1: creative fatigue."}]
                     }
-                ],
-            }
-        ).model_dump(mode="json")
-        payload["executiveSummary"] = "Mocked Gemini live reasoning path executed."
+                }
+            ]
+        }
 
         with patch.dict(os.environ, {"GEMINI_API_KEY": "fake-ci-key", "GEMINI_MAX_ATTEMPTS": "1"}, clear=False):
-            with patch("backend.gemini._generate_content", new=AsyncMock(return_value=json.dumps(payload))) as mocked:
-                summary = generate_causal_summary(cleaned.frame, rows, enable_live_ai=True)
+            with patch("backend.evaluator_io._call_gemini_generate_content", return_value=(raw_response, "Mocked Gemini live reasoning path executed. Rank 1: creative fatigue.")) as mocked:
+                summary = generate_causal_summary(cleaned.frame, rows, enable_live_ai=False)
 
-        mocked.assert_awaited_once()
-        self.assertIn("LIVE_GEMINI_OPTIONAL_ENRICHMENT", summary)
+        mocked.assert_called_once()
+        self.assertIn("LIVE_GEMINI_AUTOMATIC_ENRICHMENT", summary)
         self.assertIn("Mocked Gemini live reasoning path executed.", summary)
         self.assertIn("LLM_HYPOTHESIS_RANKING", summary)
 

@@ -94,6 +94,11 @@ scored artifact was not replaced with a weaker model. ForecastIQ therefore
 keeps 60/90 day revenue baseline anchored inside the loaded `trained_model`
 artifact instead of forcing residual correction where the evidence does not
 justify it.
+This pass also reviewed a conservative hierarchical reconciliation candidate
+that blends residual-correction output back toward the seasonal baseline before
+segment roll-up. The committed `reports/backtest_report.json` does not show a
+statistically significant 60/90 day residual win, so the candidate remains
+documented evidence rather than a shipped output change.
 
 The longer-horizon ablation table below is generated from
 [reports/long_horizon_revenue_ablation.md](./reports/long_horizon_revenue_ablation.md),
@@ -255,17 +260,18 @@ rather than using one canned paragraph.
 It also emits an evidence-conditioned branch label inside `PER_RUN_SYNTHESIS`
 so reviewers can see which numeric rule path was used for the current run.
 
-Live LLM mode is separate and optional: `npm run demo:ai` and the FastAPI
-insights endpoints call Gemini only when `GEMINI_API_KEY` is configured. That
-path can independently rank causal hypotheses from the same structured DiD and
-anomaly evidence, but it is never required for evaluator scoring and is never
-called by default `run.sh`.
+Live LLM mode is bounded and optional-by-environment: `run.sh` auto-detects
+`GEMINI_API_KEY` and, when present, makes one timeout-guarded Gemini call from
+the graded path. `npm run demo:ai` and the FastAPI insights endpoints use the
+same principle for richer demos. If the key or network is unavailable,
+ForecastIQ keeps the deterministic offline summary and exits successfully.
 
 The optional live app path is separate:
 
 | Path | Files | Behavior |
 |---|---|---|
 | Offline evaluator | `backend/gemini_offline_cache.py`, `backend/evaluator_io.py` | Deterministic distilled reasoning, no network. |
+| Graded live enrichment | `run.sh`, `backend/evaluator_io.py` | One standard-library Gemini REST call when `GEMINI_API_KEY` is configured; bounded timeout and redacted request/response transcript. |
 | Live app/API | `backend/gemini.py`, `backend/main.py` | Calls Gemini when `GEMINI_API_KEY` is configured, otherwise falls back cleanly. |
 | Live demo script | `scripts/demo_live_ai_reasoning.py`, `scripts/verify_gemini_live.py` | Captures redacted transcripts and validates structured insight schema. |
 
@@ -280,23 +286,45 @@ returns executive insights plus `llmHypothesisRanking`, where competing causes
 such as seasonality, budget shift, creative fatigue, and platform algorithm
 change are ranked with evidence and recommended validation.
 
+### Live AI Integration in the Graded Path
+
+When `GEMINI_API_KEY` is present, `./run.sh` calls `backend.predict`, which asks
+`backend/evaluator_io.py` to make one Gemini `generateContent` request using
+only the Python standard library. The request is capped by
+`GEMINI_TIMEOUT_SECONDS` and includes the current run's forecast rows, DiD
+effects, p-values, confidence intervals, anomaly evidence, and budget context.
+`causal_summary.txt` then records `LIVE_GEMINI_REQUEST_REDACTED` and
+`LIVE_GEMINI_RESPONSE_REDACTED` so a reviewer can audit the literal prompt and
+model response without seeing secrets.
+
+If the key is absent, the network is blocked, Gemini times out, or the response
+is malformed, the same file records the safe failure and keeps the deterministic
+offline `PER_RUN_SYNTHESIS`/`REASONING_TRACE`. This preserves the no-manual-fix
+evaluator contract while making true live LLM reasoning visible in the graded
+artifact whenever a judge supplies a key.
+
 ## Architecture Overview
 
 ```mermaid
 flowchart LR
   CSV["CSV folder"] --> Adapter["Schema adapters + validation"]
-  Adapter --> Evaluator["run.sh / backend.predict"]
-  Evaluator --> Model["pickle/model.pkl"]
-  Model --> Predictions["output/predictions.csv"]
-  Adapter --> Causal["anomaly + causal_lite"]
-  Causal --> Summary["output/causal_summary.txt"]
+  Adapter --> Features["Feature engineering + segment hierarchy"]
+  Features --> Evaluator["run.sh / backend.predict"]
+  Evaluator --> Model["pickle/model.pkl trained artifact"]
+  Evaluator --> Baseline["safe seasonal baseline"]
+  Model --> Intervals["interval calibration + monotonic widening"]
+  Baseline --> Intervals
+  Intervals --> Predictions["output/predictions.csv"]
+  Features --> Causal["anomaly.py + causal_lite.py"]
+  Causal --> OfflineAI["offline evidence synthesis"]
+  Causal --> LiveAI["optional Gemini call when GEMINI_API_KEY exists"]
+  OfflineAI --> Summary["output/causal_summary.txt"]
+  LiveAI --> Summary
 
-  Adapter --> API["FastAPI"]
-  API --> Forecast["Forecast endpoints"]
-  API --> Simulator["Budget simulator"]
-  API --> Gemini["Gemini or deterministic fallback"]
-  Forecast --> UI["React dashboard"]
-  Simulator --> UI
+  Adapter --> API["FastAPI backend"]
+  API --> XGB["live XGBoost/product inference"]
+  API --> Gemini["Gemini insights fallback-safe"]
+  XGB --> UI["React dashboard/forecast/simulator"]
   Gemini --> UI
 ```
 

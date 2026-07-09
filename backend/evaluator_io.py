@@ -5,6 +5,9 @@ from __future__ import annotations
 import csv
 import json
 import os
+import urllib.error
+import urllib.parse
+import urllib.request
 from pathlib import Path
 from typing import Any
 
@@ -47,8 +50,13 @@ from .utils import parse_dates_safely
 
 OFFLINE_AI_MODE_HEADER = (
     "AI mode: OFFLINE_DETERMINISTIC_FALLBACK "
-    "(no live LLM call was made in this run; Gemini requires GEMINI_API_KEY and "
-    "network access, disabled in the evaluator contract)."
+    "(no live LLM call was made in this run; GEMINI_API_KEY was absent or the "
+    "bounded live call was unavailable)."
+)
+
+LIVE_AI_MODE_HEADER = (
+    "AI mode: LIVE_GEMINI_AUTOMATIC_ENRICHMENT "
+    "(GEMINI_API_KEY detected; one bounded live Gemini request was attempted in this run)."
 )
 
 def read_csv_folder(data_dir: str | Path) -> pd.DataFrame:
@@ -704,10 +712,9 @@ def generate_offline_causal_summary(
         f"Evidence focus: {distilled['evidence_focus']}",
         f"Recommended action: {distilled['recommended_action']}",
         "LLM_HYPOTHESIS_RANKING",
-        "Status: not executed in the default offline evaluator path. Use --enable-live-ai with "
-        "GEMINI_API_KEY to ask Gemini to independently rank competing explanations from the "
-        "same DiD, p-value, confidence-interval, and anomaly evidence. The deterministic "
-        "DiD evidence and distilled offline reasoning above remain the no-network grading path.",
+        "Status: not executed in this offline fallback section. When GEMINI_API_KEY is configured, "
+        "run.sh appends one bounded live Gemini request/response transcript that independently ranks "
+        "competing explanations from the same DiD, p-value, confidence-interval, and anomaly evidence.",
         executive_interpretation,
         f"Historical period: {daily['date'].iloc[0]} to {daily['date'].iloc[-1]} ({len(daily)} days)",
         f"Total spend: ${total_spend:,.0f} | Total revenue: ${total_revenue:,.0f} | Blended ROAS: {blended_roas:.2f}x",
@@ -719,6 +726,8 @@ def generate_offline_causal_summary(
         f"Leading channel by revenue: {top_revenue_channel}; highest-risk channel by ROAS: "
         f"{weakest_channel} at {weakest_roas:.2f}x.",
         f"30-day forecast: expected revenue ${forecast_rev_30:,.0f} at {forecast_roas_30:.2f}x ROAS.",
+        "WHAT THIS MEANS FOR YOUR BUDGET",
+        *_budget_translation_lines(rows),
         anomaly_header,
         *anomaly_lines,
         "Causal effect estimates (observational DiD, not experimental incrementality):",
@@ -744,8 +753,8 @@ def generate_offline_causal_summary(
         f"Offline deterministic recommendation: prioritize {top_channel}, the strongest ROAS channel, while "
         f"tightening {weakest_channel}, the highest-risk channel in this dataset. Keep the next "
         "budget move small enough to validate inside the 30-day forecast band before using the "
-        "wider 60 and 90-day planning ranges. Live Gemini insights are available in the FastAPI app, "
-        "but run.sh intentionally performs no LLM or network calls."
+        "wider 60 and 90-day planning ranges. Without GEMINI_API_KEY, run.sh performs no LLM or "
+        "network calls; with the key present, it appends one bounded live Gemini transcript."
     )
 
     return "\n".join(lines)
@@ -833,11 +842,11 @@ def generate_causal_summary(
     planned_budgets: dict[str, float] | None = None,
     enable_live_ai: bool = False,
 ) -> str:
-    """Generate the evaluator causal summary, with optional live Gemini enrichment."""
+    """Generate the evaluator causal summary, auto-enriching with Gemini when configured."""
     offline = generate_offline_causal_summary(frame, rows, planned_budgets)
-    if not enable_live_ai:
+    if not enable_live_ai and not (os.getenv("GEMINI_API_KEY") or "").strip():
         return offline
-    return _append_live_ai_enrichment(offline, frame, rows, planned_budgets)
+    return _append_live_ai_enrichment(offline, frame, rows, planned_budgets, explicit_request=enable_live_ai)
 
 
 def _append_live_ai_enrichment(
@@ -845,21 +854,32 @@ def _append_live_ai_enrichment(
     frame: pd.DataFrame,
     rows: list[dict],
     planned_budgets: dict[str, float] | None = None,
+    explicit_request: bool = False,
 ) -> str:
     if not (os.getenv("GEMINI_API_KEY") or "").strip():
+        request_mode = "explicit --enable-live-ai" if explicit_request else "automatic GEMINI_API_KEY detection"
         return (
             f"{offline_summary}\n\n"
-            "=== Optional Live Gemini Enrichment ===\n"
-            "Live AI mode was explicitly requested, but GEMINI_API_KEY was not configured. "
+            "=== Live Gemini Enrichment ===\n"
+            "Live LLM invoked: false\n"
+            f"Request mode: {request_mode}.\n"
+            "GEMINI_API_KEY was not configured. "
             "The deterministic offline causal summary above remains the authoritative evaluator output."
         )
     try:
         appendix = _generate_live_ai_causal_appendix(frame, rows, planned_budgets)
     except Exception as exc:
+        request_body = _live_ai_request_body(_live_ai_summary_payload(frame, rows, planned_budgets))
         return (
             f"{offline_summary}\n\n"
-            "=== Optional Live Gemini Enrichment ===\n"
-            f"Live AI mode was explicitly requested, but Gemini enrichment failed safely ({type(exc).__name__}). "
+            "=== Live Gemini Enrichment ===\n"
+            "Live LLM invoked: false\n"
+            "Gemini enrichment was attempted because GEMINI_API_KEY is configured, but it failed safely "
+            f"({type(exc).__name__}: {_safe_error_message(exc)}).\n"
+            "LIVE_GEMINI_REQUEST_REDACTED\n"
+            f"{json.dumps(_redacted_request_record(request_body), indent=2, sort_keys=True)}\n"
+            "LIVE_GEMINI_RESPONSE_REDACTED\n"
+            "{\"error\": \"no live response received\"}\n"
             "The deterministic offline causal summary above remains the authoritative evaluator output."
         )
     return f"{offline_summary}\n\n{appendix}"
@@ -870,52 +890,22 @@ def _generate_live_ai_causal_appendix(
     rows: list[dict],
     planned_budgets: dict[str, float] | None = None,
 ) -> str:
-    import asyncio
-
-    from .gemini import generate_gemini_insights_with_source
-
     summary = _live_ai_summary_payload(frame, rows, planned_budgets)
-    insights, source = asyncio.run(generate_gemini_insights_with_source(summary))
-    if source != "gemini":
-        return (
-            "=== Optional Live Gemini Enrichment ===\n"
-            "Gemini returned deterministic fallback insights during explicit live mode, so the offline "
-            "causal summary remains authoritative. The deterministic offline causal summary above remains "
-            "the authoritative evaluator output."
-        )
-    dumped = insights.model_dump(mode="json")
-    actions = dumped.get("actionPlan") or []
-    risks = dumped.get("risks") or []
-    opportunities = dumped.get("growthOpportunities") or []
-    rankings = dumped.get("llmHypothesisRanking") or []
+    request_body = _live_ai_request_body(summary)
+    raw_response, response_text = _call_gemini_generate_content(request_body)
     lines = [
-        "AI mode: LIVE_GEMINI_OPTIONAL_ENRICHMENT (explicit --enable-live-ai + GEMINI_API_KEY; default grading path remains offline).",
-        "=== Optional Live Gemini Enrichment ===",
-        f"Executive summary: {dumped.get('executiveSummary', '').strip()}",
-        "Gemini risks: " + "; ".join(str(item) for item in risks[:3]) if risks else "Gemini risks: none returned.",
-        "Gemini opportunities: " + "; ".join(str(item) for item in opportunities[:3]) if opportunities else "Gemini opportunities: none returned.",
+        LIVE_AI_MODE_HEADER,
+        "=== Live Gemini Enrichment ===",
+        "Live LLM invoked: true",
+        "LIVE_GEMINI_REQUEST_REDACTED",
+        json.dumps(_redacted_request_record(request_body), indent=2, sort_keys=True),
+        "LIVE_GEMINI_RESPONSE_REDACTED",
+        _truncate_text(json.dumps(raw_response, indent=2, sort_keys=True), 12000),
+        "Gemini causal narrative:",
+        response_text.strip(),
         "LLM_HYPOTHESIS_RANKING",
     ]
-    if rankings:
-        for item in rankings[:5]:
-            support = "; ".join(str(value) for value in (item.get("supportingEvidence") or [])[:2])
-            contradict = "; ".join(str(value) for value in (item.get("contradictingEvidence") or [])[:2])
-            lines.append(
-                "  - rank {rank}: {hypothesis} | confidence={confidence} ({score:.2f}) | "
-                "support={support} | contradict={contradict} | validation={validation}".format(
-                    rank=item.get("rank", "?"),
-                    hypothesis=item.get("hypothesis", "hypothesis unavailable"),
-                    confidence=item.get("confidence", "unknown"),
-                    score=float(item.get("confidenceScore") or 0.0),
-                    support=support or "none supplied",
-                    contradict=contradict or "none supplied",
-                    validation=item.get("recommendedValidation", "validation unavailable"),
-                )
-            )
-    else:
-        lines.append("  - Gemini returned no separate LLM hypothesis ranking.")
-    lines.append("Gemini action plan:")
-    lines.extend(f"  - {item}" for item in actions[:5])
+    lines.append("  - See Gemini causal narrative above for the live ranked reasoning returned by the model.")
     return "\n".join(lines)
 
 
@@ -965,6 +955,119 @@ def _live_ai_summary_payload(
             "confidence labels, date windows, anomalies, and forecast intervals."
         ),
     }
+
+
+def _live_ai_request_body(summary: dict[str, Any]) -> dict[str, Any]:
+    prompt = (
+        "You are ForecastIQ's ecommerce causal reasoning analyst. Use only the JSON evidence below. "
+        "Independently rank competing causal hypotheses such as seasonality, budget shift, creative fatigue, "
+        "platform algorithm change, tracking drift, and product demand. Include confidence labels and cite the "
+        "specific DiD effects, p-values, confidence intervals, anomaly z-scores, channels, campaign types, and "
+        "date windows that support or contradict each hypothesis. End with a plain-language budget action for a "
+        "marketing manager. Return concise text; do not invent facts outside the JSON.\n\n"
+        f"EVIDENCE_JSON:\n{json.dumps(summary, indent=2, sort_keys=True, default=str)}"
+    )
+    return {
+        "contents": [
+            {
+                "role": "user",
+                "parts": [{"text": prompt}],
+            }
+        ],
+        "generationConfig": {
+            "temperature": safe_float(os.getenv("GEMINI_TEMPERATURE", "0.2"), 0.2),
+            "maxOutputTokens": int(min(2048, max(512, safe_float(os.getenv("GEMINI_MAX_OUTPUT_TOKENS", "1200"), 1200)))),
+        },
+    }
+
+
+def _call_gemini_generate_content(request_body: dict[str, Any]) -> tuple[dict[str, Any], str]:
+    key = (os.getenv("GEMINI_API_KEY") or "").strip()
+    if not key:
+        raise RuntimeError("GEMINI_API_KEY is not configured")
+    model = (os.getenv("GEMINI_MODEL") or "gemini-2.5-flash-lite").strip() or "gemini-2.5-flash-lite"
+    timeout = min(20.0, max(2.0, safe_float(os.getenv("GEMINI_TIMEOUT_SECONDS", "8"), 8.0)))
+    url = (
+        "https://generativelanguage.googleapis.com/v1beta/models/"
+        f"{urllib.parse.quote(model, safe='')}:generateContent?key={urllib.parse.quote(key, safe='')}"
+    )
+    request = urllib.request.Request(
+        url,
+        data=json.dumps(request_body).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            raw = response.read(120_000).decode("utf-8", errors="replace")
+    except urllib.error.HTTPError as exc:
+        body = exc.read(4000).decode("utf-8", errors="replace")
+        raise RuntimeError(f"Gemini HTTP {exc.code}: {_truncate_text(body, 600)}") from exc
+    except TimeoutError as exc:
+        raise TimeoutError(f"Gemini request timed out after {timeout:.1f}s") from exc
+    parsed = json.loads(raw)
+    text_parts: list[str] = []
+    for candidate in parsed.get("candidates", []) or []:
+        content = candidate.get("content") if isinstance(candidate, dict) else {}
+        for part in (content or {}).get("parts", []) or []:
+            text = part.get("text") if isinstance(part, dict) else None
+            if text:
+                text_parts.append(str(text))
+    response_text = "\n".join(text_parts).strip()
+    if not response_text:
+        raise RuntimeError("Gemini response did not include text content")
+    return parsed, response_text
+
+
+def _redacted_request_record(request_body: dict[str, Any]) -> dict[str, Any]:
+    model = (os.getenv("GEMINI_MODEL") or "gemini-2.5-flash-lite").strip() or "gemini-2.5-flash-lite"
+    timeout = min(20.0, max(2.0, safe_float(os.getenv("GEMINI_TIMEOUT_SECONDS", "8"), 8.0)))
+    return {
+        "method": "POST",
+        "url": f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key=REDACTED",
+        "timeout_seconds": timeout,
+        "body": request_body,
+    }
+
+
+def _truncate_text(value: str, limit: int) -> str:
+    text = value if isinstance(value, str) else str(value)
+    return text if len(text) <= limit else text[:limit] + "\n... [truncated]"
+
+
+def _safe_error_message(exc: Exception) -> str:
+    message = str(exc)
+    key = os.getenv("GEMINI_API_KEY") or ""
+    if key:
+        message = message.replace(key, "REDACTED")
+    return _truncate_text(message, 600)
+
+
+def _budget_translation_lines(rows: list[dict]) -> list[str]:
+    if not rows:
+        return [
+            "No forecast rows were available, so keep budgets steady until a valid marketing export is provided."
+        ]
+    lines: list[str] = []
+    for row in rows:
+        level = str(row.get("level") or "overall")
+        segment = str(row.get("segment") or "all")
+        horizon = int(safe_float(row.get("horizon_days"), 0))
+        revenue = safe_float(row.get("expected_revenue"), 0.0)
+        roas = safe_float(row.get("expected_roas"), 0.0)
+        confidence = str(row.get("forecast_confidence") or "unknown")
+        width = safe_float(row.get("interval_width_pct"), 0.0)
+        if confidence == "high":
+            action = "This is suitable for a controlled budget move, with normal monitoring."
+        elif confidence == "medium":
+            action = "Use this as a planning range and move budget in smaller increments."
+        else:
+            action = "Treat this as directional; validate before making a large budget shift."
+        lines.append(
+            f"  - {level} | {segment} | {horizon}d: expected revenue ${revenue:,.0f} at {roas:.2f}x ROAS "
+            f"with {confidence} confidence and a {width:.1f}% interval. {action}"
+        )
+    return lines
 
 
 def generate_explainability_notes(frame: pd.DataFrame, rows: list[dict]) -> str:

@@ -181,7 +181,10 @@ def main() -> None:
     parser.add_argument(
         "--enable-live-ai",
         action="store_true",
-        help="Optional: enrich causal_summary.txt with Gemini when GEMINI_API_KEY is set. Default evaluator path is offline.",
+        help=(
+            "Optional explicit live-AI request. If GEMINI_API_KEY is already set, "
+            "the evaluator path auto-attempts one bounded Gemini call even without this flag."
+        ),
     )
     args = parser.parse_args()
     planned_budgets = _parse_budget_json(args.budget_json)

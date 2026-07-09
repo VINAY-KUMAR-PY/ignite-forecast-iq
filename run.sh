@@ -5,8 +5,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # DATA_DIR, MODEL_PATH, and OUTPUT_PATH are strictly positional per the
-# submission guide. BUDGET_JSON and --enable-live-ai are optional extensions
-# and must never be required for:
+# submission guide. BUDGET_JSON and --enable-live-ai are optional extensions;
+# GEMINI_API_KEY, when present, triggers one bounded live AI call automatically.
+# None of these extensions may be required for:
 # ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
 DATA_DIR="${1:-./data}"
 MODEL_PATH="${2:-./pickle/model.pkl}"
@@ -61,10 +62,13 @@ if [ $DEP_CHECK_EXIT -ne 0 ]; then
   exit $DEP_CHECK_EXIT
 fi
 
-# 2. Run the offline evaluator prediction entry point.
-if [[ "$ENABLE_LIVE_AI" == "1" ]]; then
+# 2. Run the evaluator prediction entry point.
+if [[ -n "${GEMINI_API_KEY:-}" ]]; then
+  echo "=== ForecastIQ AI MODE: LIVE_GEMINI_AUTOMATIC_ENRICHMENT AVAILABLE ==="
+  echo "[ForecastIQ] GEMINI_API_KEY detected; one bounded live call will be attempted and will fall back safely."
+elif [[ "$ENABLE_LIVE_AI" == "1" ]]; then
   echo "=== ForecastIQ AI MODE: LIVE_GEMINI_OPTIONAL_ENRICHMENT REQUESTED ==="
-  echo "[ForecastIQ] Live AI is optional and will fall back safely if GEMINI_API_KEY/network access is unavailable."
+  echo "[ForecastIQ] Live AI was requested, but GEMINI_API_KEY is absent; deterministic fallback will be used."
 else
   echo "=== ForecastIQ AI MODE: OFFLINE_DETERMINISTIC_FALLBACK ==="
   echo "[ForecastIQ] No live LLM call will be made; causal_summary.txt uses input-conditioned distilled reasoning."

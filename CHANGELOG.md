@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-07-09
+
+- Added automatic, bounded Gemini enrichment in the graded evaluator path when
+  `GEMINI_API_KEY` is configured, while preserving deterministic offline
+  fallback when the key or network is unavailable.
+- Added redacted Gemini request/response evidence and plain-language
+  "What This Means For Your Budget" guidance to `causal_summary.txt`.
+- Added a Mermaid architecture overview covering CSV ingestion, schema
+  adapters, feature engineering, trained/baseline forecasting, interval
+  calibration, causal/LLM summaries, and the live FastAPI/React path.
+- Raised targeted coverage evidence to `backend/forecasting.py` 91.12%,
+  `backend/evaluator_io.py` 95.47%, and total backend coverage 93.69%
+  (`237 passed, 2 skipped`).
+
 ## 2026-07-08
 
 - Added candidate long-horizon training features for blended ROAS trend,

@@ -213,6 +213,18 @@ supporting_observations`
   nonzero target revenue to avoid nonsensical simulator output.
 - The evaluator prioritizes reproducibility over live cloud services.
 
+### Known Limitations
+
+- The graded evaluator path uses synthesized, offline LLM-style reasoning rather
+  than a live Gemini call. This is intentional: the submission guide requires
+  the `run.sh` artifact to work without network access, so live AI is exposed
+  only through the optional app/demo path.
+- Severely degraded inputs with no usable marketing signal, invalid dates,
+  negative spend/revenue, or all-zero revenue/spend fall back to
+  `safe_baseline_fallback`. That baseline has lower expected accuracy than the
+  trained artifact, but it preserves schema-valid forecasts and prevents hidden
+  evaluator crashes.
+
 ## AI Reasoning Architecture
 
 Offline evaluator reasoning is structured as:
@@ -221,20 +233,29 @@ Offline evaluator reasoning is structured as:
 statistics from anomaly.py and causal_lite.py
   -> structured causal evidence object
   -> distilled Gemini-derived reasoning skeleton
-  -> deterministic offline explanation with REASONING_TRACE
+  -> deterministic per-run synthesis with REASONING_TRACE
   -> output/causal_summary.txt
 ```
 
 The offline evaluator never calls Gemini. This is a compliance decision: the
 submission guide expects the graded `run.sh` path to run without network access.
-To keep AI reasoning visible inside that no-network boundary, ForecastIQ uses
-distilled reasoning patterns derived from real Gemini transcripts committed in
-`docs/gemini_sample_transcripts/`, then fills them with live computed anomaly,
-DiD, p-value, confidence interval, segment, and budget evidence.
+Offline synthesis mode therefore uses `backend/causal_lite.py` and
+`backend/anomaly.py` to compute the current run's delta %, effect size, p-value,
+confidence interval, channel, campaign type, and limitations, then
+`backend/gemini_offline_cache.py` recomposes a fresh business interpretation
+from those numbers. The Gemini-derived skeletons provide style/provenance, but
+the `PER_RUN_SYNTHESIS` and `REASONING_TRACE` sections are computed from the
+actual run data.
 The offline cache selects among distinct lift, decline, anomaly-timing,
 noisy-signal, budget-reallocation, and stable run-rate skeletons based on the
 computed evidence object, so the narrative structure changes with the data
 rather than using one canned paragraph.
+
+Live LLM mode is separate and optional: `npm run demo:ai` and the FastAPI
+insights endpoints call Gemini only when `GEMINI_API_KEY` is configured. That
+path can independently rank causal hypotheses from the same structured DiD and
+anomaly evidence, but it is never required for evaluator scoring and is never
+called by default `run.sh`.
 
 The optional live app path is separate:
 

@@ -183,6 +183,19 @@ def _estimate_event_effect(daily: pd.DataFrame, event: dict, window: int = 14) -
         if power_check_passed
         else "low"
     )
+    reasoning_signals = {
+        "direction": "positive" if incremental_revenue >= 0 else "negative",
+        "p_value": round(float(min(max(p_value, 0.0), 1.0)), 4),
+        "ci_crosses_zero": bool(ci_crosses_zero),
+        "power_check_passed": bool(power_check_passed),
+        "sample_size": int(len(affected_pre) + post_days),
+        "effect_strength": round(float(effect_strength), 3),
+        "confidence_basis": (
+            "one-sided statistically supported DiD signal"
+            if power_check_passed
+            else "; ".join(low_power_reasons) or "insufficient statistical power"
+        ),
+    }
 
     return {
         "date": event_date.strftime("%Y-%m-%d"),
@@ -209,6 +222,7 @@ def _estimate_event_effect(daily: pd.DataFrame, event: dict, window: int = 14) -
         "effectStrength": round(float(effect_strength), 3),
         "effectDirection": "positive" if incremental_revenue >= 0 else "negative",
         "confidence": confidence,
+        "reasoningSignals": reasoning_signals,
         "interpretation": (
             f"Estimated incremental effect for {channel}: ${incremental_revenue:,.0f} "
             f"(95% CI ${lower_revenue:,.0f} to ${upper_revenue:,.0f}); "

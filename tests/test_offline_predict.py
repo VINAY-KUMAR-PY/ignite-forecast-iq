@@ -53,6 +53,7 @@ from backend.gemini_offline_cache import (
     compose_distilled_explanation,
     format_reasoning_provenance,
     select_distilled_reasoning,
+    synthesize_runtime_interpretation,
     validate_transcript_provenance,
 )
 from backend.utils import read_csv_folder as read_training_csv_folder
@@ -787,6 +788,57 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertIn("Meta Ads", trace[0])
         self.assertTrue(any("selected_skeleton=efficiency_compression" in step for step in trace))
         self.assertTrue(any("FINAL_COMPOSITION" in step for step in trace))
+
+    def test_runtime_synthesis_uses_current_run_numbers(self) -> None:
+        evidence = build_structured_causal_evidence(
+            [{"channel": "Google Ads", "date": "2026-03-15", "metric": "revenue"}],
+            [
+                {
+                    "channel": "Google Ads",
+                    "date": "2026-03-15",
+                    "incrementalRevenue": 8123.45,
+                    "lowerRevenue": 2300.0,
+                    "upperRevenue": 11900.0,
+                    "confidence": "medium",
+                    "effectDirection": "positive",
+                    "pValue": 0.041,
+                    "tStatistic": 2.04,
+                    "effectStrength": 1.4,
+                    "parallelTrendPassed": True,
+                    "powerCheckPassed": True,
+                    "preWindowDays": 14,
+                    "postWindowDays": 14,
+                    "reasoningSignals": {
+                        "direction": "positive",
+                        "p_value": 0.041,
+                        "ci_crosses_zero": False,
+                        "power_check_passed": True,
+                        "sample_size": 28,
+                        "effect_strength": 1.4,
+                        "confidence_basis": "one-sided statistically supported DiD signal",
+                    },
+                }
+            ],
+            channel_metrics={
+                "Google Ads": {
+                    "campaign_type": "Search",
+                    "baseline_revenue": 42000,
+                    "baseline_roas": 4.1,
+                    "observed_roas": 4.8,
+                }
+            },
+        )
+        distilled = compose_distilled_explanation(evidence, "statistically_supported_lift")
+        synthesis = synthesize_runtime_interpretation(evidence)
+        summary = generate_offline_causal_summary(pd.DataFrame(), [])
+
+        self.assertGreaterEqual(len(synthesis), 3)
+        self.assertIn("Google Ads / Search", synthesis[0])
+        self.assertIn("$8,123", synthesis[0])
+        self.assertIn("p=0.041", synthesis[0])
+        self.assertIn("power_check_passed=true", synthesis[1])
+        self.assertEqual(distilled["runtime_synthesis"], synthesis)
+        self.assertIn("PER_RUN_SYNTHESIS", summary)
 
     def test_reasoning_trace_covers_negative_unavailable_ci_and_anomaly_objects(self) -> None:
         class AnomalyLike:

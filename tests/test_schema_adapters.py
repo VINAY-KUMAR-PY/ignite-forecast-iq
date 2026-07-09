@@ -456,6 +456,29 @@ class SchemaAdapterTests(unittest.TestCase):
         self.assertFalse(frame.empty)
         self.assertEqual(frame.iloc[0]["channel"], "Google Ads")
 
+    def test_hidden_style_camel_case_aliases_normalize_without_spend(self) -> None:
+        raw = pd.DataFrame(
+            {
+                "eventDate": ["2026-05-01", "2026-05-02"],
+                "platformLabel": ["google", "facebook"],
+                "sessionMedium": ["cpc", "paid_social"],
+                "campaign": ["Hidden Search", "Hidden Prospecting"],
+                "purchaseRevenue": [980.0, 540.0],
+                "conversions": [12, 7],
+                "sessions": [310, 220],
+            }
+        )
+
+        adapted = normalize_marketing_frame(raw)
+        cleaned = canonicalize_frame(raw)
+
+        self.assertEqual(adapted.schema_type, "ga4")
+        self.assertEqual(cleaned.valid_rows, 2)
+        self.assertEqual(set(cleaned.frame["channel"]), {"Google Ads", "Meta Ads"})
+        self.assertEqual(set(cleaned.frame["campaign_type"]), {"cpc", "paid_social"})
+        self.assertGreater(float(cleaned.frame["revenue"].sum()), 0.0)
+        self.assertEqual(float(cleaned.frame["spend"].sum()), 0.0)
+
     def test_ga4_variant_fixture_uses_trained_model_in_run_sh_equivalent_path(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             data_dir = Path(tmp) / "data"

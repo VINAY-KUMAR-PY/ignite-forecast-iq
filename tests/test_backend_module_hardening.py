@@ -16,7 +16,9 @@ from backend.evaluator_contract import (
     ARTIFACT_VERSION,
     HORIZONS,
     SAFE_BASELINE_MODEL_TYPE,
+    TRAINED_ESTIMATED_SPEND_MODEL_TYPE,
     TRAINED_MODEL_TYPE,
+    TRAINED_MODEL_VARIANTS,
 )
 from backend.evaluator_io import canonicalize_frame, read_csv_folder, safe_load_model
 from backend.gemini import _fallback_insights, _validate_insights_payload, generate_gemini_insights_with_source
@@ -243,3 +245,40 @@ def test_safe_load_model_returns_baseline_for_unreadable_joblib(tmp_path) -> Non
     loaded = safe_load_model(corrupt)
 
     assert loaded["model_type"] == SAFE_BASELINE_MODEL_TYPE
+
+
+def test_recoverable_hidden_style_revenue_only_rows_use_estimated_spend_mode() -> None:
+    dates = pd.date_range("2026-05-01", periods=40, freq="D").strftime("%Y-%m-%d")
+    raw = pd.DataFrame(
+        {
+            "eventDate": dates,
+            "platformLabel": ["google"] * len(dates),
+            "sessionMedium": ["cpc"] * len(dates),
+            "campaign": ["Hidden Search"] * len(dates),
+            "purchaseRevenue": [900 + (idx % 9) * 17 for idx in range(len(dates))],
+            "conversions": [8 + idx % 3 for idx in range(len(dates))],
+            "sessions": [260 + idx for idx in range(len(dates))],
+        }
+    )
+
+    cleaned = canonicalize_frame(raw)
+    rows = build_predictions(cleaned.frame, safe_load_model("pickle/model.pkl"))
+    modes = {row["model_type"] for row in rows}
+
+    assert cleaned.valid_rows == len(dates)
+    assert cleaned.frame.attrs.get("forecastiq_spend_estimated")
+    assert modes <= set(TRAINED_MODEL_VARIANTS)
+    assert TRAINED_ESTIMATED_SPEND_MODEL_TYPE in modes
+    assert SAFE_BASELINE_MODEL_TYPE not in modes
+
+
+def test_unrecoverable_hidden_fixtures_use_safe_baseline_honestly() -> None:
+    model = safe_load_model("pickle/model.pkl")
+    for fixture_name in ["hidden_missing_columns.csv", "hidden_single_channel_malformed.csv"]:
+        raw = pd.read_csv(Path("tests/fixtures") / fixture_name)
+        cleaned = canonicalize_frame(raw)
+        rows = build_predictions(cleaned.frame, model)
+
+        assert rows, fixture_name
+        assert {row["model_type"] for row in rows} == {SAFE_BASELINE_MODEL_TYPE}
+        assert all(np.isfinite(float(row["expected_revenue"])) for row in rows)

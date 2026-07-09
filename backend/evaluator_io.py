@@ -358,6 +358,8 @@ def generate_offline_causal_summary(
             f"{distilled['runtime_evidence']}\n"
             "Structured causal evidence object:\n"
             f"{json.dumps(distilled['evidence_object'], indent=2, sort_keys=True)}\n"
+            "PER_RUN_SYNTHESIS\n"
+            f"{_format_runtime_synthesis(distilled)}\n"
             "REASONING_TRACE\n"
             f"{_format_reasoning_trace(distilled)}\n"
             f"Generated explanation: {distilled['summary']}\n"
@@ -693,6 +695,8 @@ def generate_offline_causal_summary(
         distilled["runtime_evidence"],
         "Structured causal evidence object:",
         json.dumps(distilled["evidence_object"], indent=2, sort_keys=True),
+        "PER_RUN_SYNTHESIS",
+        _format_runtime_synthesis(distilled),
         "REASONING_TRACE",
         _format_reasoning_trace(distilled),
         "Generated explanation:",
@@ -753,6 +757,14 @@ def _format_reasoning_trace(distilled: dict[str, Any]) -> str:
     if not isinstance(trace, list) or not trace:
         return "  1. No intermediate reasoning steps were available for this fallback explanation."
     return "\n".join(f"  {index}. {step}" for index, step in enumerate(trace, start=1))
+
+
+def _format_runtime_synthesis(distilled: dict[str, Any]) -> str:
+    """Format per-run rule-based synthesis generated from current evidence."""
+    synthesis = distilled.get("runtime_synthesis") if isinstance(distilled, dict) else None
+    if not isinstance(synthesis, list) or not synthesis:
+        return "  1. No per-run synthesis was available for this fallback explanation."
+    return "\n".join(f"  {index}. {step}" for index, step in enumerate(synthesis, start=1))
 
 
 def _causal_channel_metrics(frame: pd.DataFrame) -> dict[str, dict[str, Any]]:

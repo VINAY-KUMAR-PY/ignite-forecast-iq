@@ -101,7 +101,7 @@ access.
 |---|---|
 | Technical Soundness | `./run.sh`, `reports/backtest_summary.md`, `reports/interval_calibration_report.json`, `tests/test_offline_predict.py`, `tests/test_interval_monotonicity.py` |
 | Practical Relevance | `backend/decision_support.py`, `scripts/validate_budget_elasticity.py`, `reports/budget_elasticity_summary.md`, simulator UI |
-| AI Integration | `output/causal_summary.txt` (`REASONING PROVENANCE` block), `backend/gemini_offline_cache.py`, mocked live-AI CI job in `.github/workflows/evaluator-ci.yml`, `scripts/demo_live_ai_reasoning.py`, `docs/gemini_sample_transcripts/` |
+| AI Integration | Graded path: offline synthesis computed per-run from causal evidence in `output/causal_summary.txt`; demo path: live Gemini calls through `npm run demo:ai`, `scripts/demo_live_ai_reasoning.py`, and `docs/gemini_sample_transcripts/`. |
 | Product Thinking | One-click demo flow, Upload -> Dashboard -> Forecast -> Simulator -> Insights, `DEMO_GUIDE.md` |
 | Engineering Quality | Evaluator CI, frontend tests, Playwright flow, coverage gate, pinned evaluator dependencies |
 | Independent reproduction | `npm run verify` regenerates interval calibration, rolling-origin backtest reports, coverage summary, and `reports/verification_summary.json` |

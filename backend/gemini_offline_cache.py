@@ -20,8 +20,8 @@ from .segment_utils import safe_ratio
 
 DISTILLED_LLM_REASONING_HEADER = (
     "AI interpretation mode: DISTILLED_LLM_DERIVED_OFFLINE_CACHE "
-    "(distilled LLM-derived interpretation, selected offline, no live API call "
-    "per no-network evaluator rule)."
+    "(distilled LLM-derived interpretation, synthesized per-run offline from "
+    "current causal evidence, no live API call per no-network evaluator rule)."
 )
 
 
@@ -303,6 +303,7 @@ def build_structured_causal_evidence(
                 + safe_float(strongest.get("postWindowDays"), 0)
             ),
             "anomaly_context": anomaly_text,
+            "reasoning_signals": strongest.get("reasoningSignals") or {},
         }
         limitations = _limitations(strongest, anomaly_text)
     else:
@@ -326,6 +327,15 @@ def build_structured_causal_evidence(
             "parallel_trend_passed": False,
             "anomaly_context": anomaly_text,
             "sample_size": 0,
+            "reasoning_signals": {
+                "direction": "neutral",
+                "p_value": 1.0,
+                "ci_crosses_zero": True,
+                "power_check_passed": False,
+                "sample_size": 0,
+                "effect_strength": 0.0,
+                "confidence_basis": "no stable difference-in-differences estimate was available",
+            },
         }
         limitations = ["no stable difference-in-differences estimate was available"]
 
@@ -374,12 +384,14 @@ def compose_distilled_explanation(evidence: dict[str, Any], label: str | None = 
     values = _format_values(evidence)
     reasoning_trace = build_reasoning_trace(evidence, selected_label)
     runtime_sentence = _runtime_evidence_sentence(values)
+    runtime_synthesis = synthesize_runtime_interpretation(evidence)
     return {
         "label": skeleton["label"],
         "summary": skeleton["summary_skeleton"].format_map(values),
         "evidence_focus": skeleton["evidence_focus_skeleton"].format_map(values),
         "recommended_action": skeleton["recommended_action_skeleton"].format_map(values),
         "runtime_evidence": runtime_sentence,
+        "runtime_synthesis": runtime_synthesis,
         "evidence_fingerprint": evidence_fingerprint(evidence),
         "evidence_object": evidence,
         "reasoning_trace": reasoning_trace,
@@ -445,6 +457,68 @@ def format_reasoning_provenance(distilled: dict[str, Any]) -> str:
         )
     lines.append("--- END REASONING PROVENANCE ---")
     return "\n".join(lines)
+
+
+def synthesize_runtime_interpretation(evidence: dict[str, Any]) -> list[str]:
+    """Generate per-run offline causal interpretation from computed statistics.
+
+    This layer is intentionally rule-based and network-free. The paragraph
+    structure is not chosen from a transcript cache; it is recomposed from the
+    current run's delta, effect size, p-value, confidence interval, power check,
+    channel, and campaign-type evidence.
+    """
+    metrics = evidence.get("supporting_metrics") if isinstance(evidence.get("supporting_metrics"), dict) else {}
+    signals = metrics.get("reasoning_signals") if isinstance(metrics.get("reasoning_signals"), dict) else {}
+    interval = metrics.get("confidence_interval") if isinstance(metrics.get("confidence_interval"), list) else []
+    lower = safe_float(interval[0], 0.0) if len(interval) >= 1 else 0.0
+    upper = safe_float(interval[1], 0.0) if len(interval) >= 2 else 0.0
+    p_value = safe_float(metrics.get("p_value", signals.get("p_value", 1.0)), 1.0)
+    effect_size = safe_float(evidence.get("effect_size"), 0.0)
+    delta_percent = safe_float(evidence.get("delta_percent"), 0.0)
+    confidence = str(evidence.get("confidence") or "low").lower()
+    channel = str(evidence.get("channel") or "portfolio")
+    campaign_type = str(evidence.get("campaign_type") or "portfolio")
+    direction = str(evidence.get("effect_direction") or signals.get("direction") or "neutral").lower()
+    power_passed = bool(signals.get("power_check_passed", metrics.get("power_check_passed", False)))
+    ci_crosses_zero = bool(signals.get("ci_crosses_zero", lower <= 0 <= upper))
+    sample_size = int(safe_float(signals.get("sample_size", metrics.get("sample_size", 0)), 0))
+    confidence_basis = str(signals.get("confidence_basis") or "computed from DiD evidence and anomaly context")
+
+    if not bool(evidence.get("intervention_detected")):
+        decision = "No statistically defensible intervention is present, so the forecast should be read as run-rate planning evidence."
+    elif power_passed and not ci_crosses_zero and p_value <= 0.05:
+        decision = "The DiD signal is statistically strong enough to prioritize a controlled budget test."
+    elif power_passed and not ci_crosses_zero:
+        decision = "The DiD signal is directional and usable for a cautious controlled experiment."
+    elif ci_crosses_zero:
+        decision = "The confidence interval crosses zero, so the effect should stay diagnostic rather than budget-committal."
+    else:
+        decision = "The evidence is underpowered, so the safest action is measurement and validation before reallocation."
+
+    if direction == "negative" or effect_size < 0:
+        business_read = (
+            f"{channel} / {campaign_type} is a risk candidate: computed effect ${effect_size:,.0f}, "
+            f"delta {delta_percent:+.1f}%, p={p_value:.3f}, CI ${lower:,.0f} to ${upper:,.0f}."
+        )
+    elif direction == "positive" and effect_size > 0:
+        business_read = (
+            f"{channel} / {campaign_type} is an opportunity candidate: computed effect ${effect_size:,.0f}, "
+            f"delta {delta_percent:+.1f}%, p={p_value:.3f}, CI ${lower:,.0f} to ${upper:,.0f}."
+        )
+    else:
+        business_read = (
+            f"{channel} / {campaign_type} has neutral causal evidence: delta {delta_percent:+.1f}%, "
+            f"p={p_value:.3f}, sample size {sample_size}, confidence {confidence}."
+        )
+
+    return [
+        business_read,
+        (
+            f"Statistical interpretation: confidence={confidence}; power_check_passed={str(power_passed).lower()}; "
+            f"ci_crosses_zero={str(ci_crosses_zero).lower()}; sample_size={sample_size}; basis={confidence_basis}."
+        ),
+        f"Business action rule: {decision}",
+    ]
 
 
 def build_reasoning_trace(evidence: dict[str, Any], label: str | None = None) -> list[str]:

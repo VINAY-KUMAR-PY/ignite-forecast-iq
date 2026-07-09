@@ -55,6 +55,32 @@ Ads to Microsoft Ads; the simulator projects 90-day revenue moving from
 $1,428,350 to $1,434,421, about $6,071 incremental revenue, while total spend
 stays unchanged.
 
+## System Architecture
+
+```mermaid
+flowchart LR
+  CSV["Marketing CSVs"] --> Adapter["Schema Adapter Layer"]
+  Adapter --> Features["Feature Engineering"]
+  Features --> Forecast["Forecasting Engine"]
+  Forecast --> Intervals["Interval Calibration"]
+  Intervals --> Predictions["predictions.csv"]
+  Features --> Decision["Decision Support"]
+  Features --> Causal["Causal Signal Layer"]
+  Causal --> OfflineAI["Offline AI Evidence Synthesis"]
+  OfflineAI --> Summary["causal_summary.txt"]
+  Forecast --> API["FastAPI Product Backend"]
+  Decision --> API
+  Causal --> API
+  API --> React["React Dashboard"]
+```
+
+Core Flow:
+
+1. `run.sh` loads CSV files from `data/` and normalizes them through schema adapters.
+2. Feature engineering creates channel, campaign-type, campaign, and time-series signals.
+3. The forecasting engine writes calibrated 30/60/90-day forecasts to `predictions.csv`.
+4. Causal signals and offline AI evidence synthesis write `causal_summary.txt` for business interpretation.
+
 ## Forecast Accuracy At A Glance
 
 Latest walk-forward revenue interval coverage is **93.06% / 93.06% / 94.44%**

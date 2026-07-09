@@ -106,24 +106,25 @@ access.
 | Engineering Quality | Evaluator CI, frontend tests, Playwright flow, coverage gate, pinned evaluator dependencies |
 | Independent reproduction | `npm run verify` regenerates interval calibration, rolling-origin backtest reports, coverage summary, and `reports/verification_summary.json` |
 
-## Core Commands
+## Verify In 60 Seconds
 
 ```bash
-# Reproduce evaluator output
 pip install -r requirements.txt
 ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
 
-# Regenerate model/backtest/coverage evidence
 pip install -r requirements-app.txt
 npm install
 npm run verify
 
-# Full app checks
 python -m pytest
 npm run test
 npm run check
 npm run build
 ```
+
+For hidden-data confidence, `tests/test_run_sh_contract.py` also runs `run.sh`
+against empty, malformed, multi-source, unusual-filename, larger-row-count, and
+unseen-channel fixtures.
 
 ## One-Click Demo
 

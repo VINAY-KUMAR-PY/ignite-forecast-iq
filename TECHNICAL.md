@@ -323,6 +323,7 @@ Evidence files:
 | Latest local verification | `reports/latest_verification.md` |
 | Budget elasticity validation | `reports/budget_elasticity_summary.md` |
 | Gemini transcripts | `docs/gemini_sample_transcripts/` |
+| Hidden-data run.sh robustness | `tests/test_run_sh_contract.py`, `tests/fixtures/heldout_*.csv` |
 
 CI enforces the evaluator contract, backend coverage gate, frontend type/lint
 checks, Vitest, Playwright demo flow, run.sh contract tests, and schema

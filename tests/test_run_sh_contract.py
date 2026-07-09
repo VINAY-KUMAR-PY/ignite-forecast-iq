@@ -54,6 +54,18 @@ def _assert_schema_valid(output: Path) -> pd.DataFrame:
     return frame
 
 
+def _assert_monotonic_intervals(frame: pd.DataFrame) -> None:
+    failures: list[tuple[str, str, list[float]]] = []
+    for (level, segment), group in frame.groupby(["level", "segment"]):
+        ordered = group.sort_values("horizon_days")
+        if set(ordered["horizon_days"].astype(int)) != {30, 60, 90}:
+            continue
+        widths = ordered["interval_width_pct"].astype(float).tolist()
+        if not (widths[0] <= widths[1] <= widths[2]):
+            failures.append((str(level), str(segment), widths))
+    assert not failures, f"Non-monotonic interval widths: {failures[:5]}"
+
+
 def _run_contract_case(data_dir: Path, output: Path) -> subprocess.CompletedProcess[str]:
     result = subprocess.run(
         [
@@ -142,3 +154,39 @@ def test_run_sh_multi_source_fixture_contract(tmp_path: Path) -> None:
     output = tmp_path / "predictions.csv"
     _run_contract_case(data_dir, output)
     _assert_schema_valid(output)
+
+
+def test_run_sh_schema_compliant_unusual_filename_contract(tmp_path: Path) -> None:
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    shutil.copy(
+        ROOT / "tests" / "fixtures" / "heldout_schema_compliant_unusual_filename.csv",
+        data_dir / "july_agency_pull__final_v3.csv",
+    )
+    output = tmp_path / "predictions.csv"
+    _run_contract_case(data_dir, output)
+    frame = _assert_schema_valid(output)
+    _assert_monotonic_intervals(frame)
+
+
+def test_run_sh_large_heldout_row_count_contract(tmp_path: Path) -> None:
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    shutil.copy(ROOT / "tests" / "fixtures" / "heldout_large_5x_sample.csv", data_dir / "large_hidden_export.csv")
+    output = tmp_path / "predictions.csv"
+    _run_contract_case(data_dir, output)
+    frame = _assert_schema_valid(output)
+    _assert_monotonic_intervals(frame)
+
+
+def test_run_sh_unseen_channel_and_campaign_type_contract(tmp_path: Path) -> None:
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    shutil.copy(
+        ROOT / "tests" / "fixtures" / "heldout_unseen_channels_campaign_types.csv",
+        data_dir / "new_platforms.csv",
+    )
+    output = tmp_path / "predictions.csv"
+    _run_contract_case(data_dir, output)
+    frame = _assert_schema_valid(output)
+    _assert_monotonic_intervals(frame)

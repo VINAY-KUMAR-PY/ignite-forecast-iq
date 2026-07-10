@@ -259,9 +259,14 @@ def test_run_sh_edge_cases_exit_without_traceback():
             writer(data_dir)
             result = _run_submission_command(repo_root, data_dir, output)
             combined = result.stdout + result.stderr
-            assert result.returncode == 0, combined
             assert "Traceback" not in combined
-            _assert_valid_predictions(output)
+            if name == "empty":
+                assert result.returncode != 0
+                assert "ERROR: no CSV files found in data directory" in combined
+                assert not output.exists()
+            else:
+                assert result.returncode == 0, combined
+                _assert_valid_predictions(output)
 
 
 def test_roas_not_computable_on_zero_spend():

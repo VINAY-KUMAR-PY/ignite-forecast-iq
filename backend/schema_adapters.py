@@ -464,7 +464,7 @@ def _allocation_weights(frame: pd.DataFrame) -> pd.Series:
 
 
 def _normalized_date_key(values: pd.Series) -> pd.Series:
-    parsed = parse_dates_safely(values)
+    parsed = parse_dates_safely(values, utc=True)
     fallback = values.fillna("").astype(str).str.slice(0, 10)
     return parsed.dt.strftime("%Y-%m-%d").fillna(fallback)
 

@@ -164,7 +164,8 @@ def run_prediction_pipeline(
     log(f"Wrote {len(rows)} rows to {output_path}")
     log(f"Causal summary written to {summary_path}")
     log(f"Explainability notes written to {explainability_path}")
-    log(f"scikit-learn version: {sklearn.__version__} (artifact built on 1.9.0)")
+    log("Offline AI reasoning trace: deterministic multi-scenario evidence chains written to causal_summary.txt")
+    log(f"scikit-learn version: {sklearn.__version__} (artifact built on 1.7.2)")
     return rows
 
 

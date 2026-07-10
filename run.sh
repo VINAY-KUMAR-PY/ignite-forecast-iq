@@ -53,6 +53,21 @@ fi
 
 mkdir -p "$(dirname "$MODEL_PATH")" "$(dirname "$OUTPUT_PATH")"
 
+if [[ ! -d "$DATA_DIR" ]]; then
+  echo "[ForecastIQ] ERROR: data directory does not exist: $DATA_DIR" >&2
+  echo "[ForecastIQ] Fail-loud contract: provide at least one CSV file so the evaluator does not silently produce a bad output." >&2
+  exit 2
+fi
+
+shopt -s nullglob
+CSV_FILES=("$DATA_DIR"/*.csv)
+shopt -u nullglob
+if [[ ${#CSV_FILES[@]} -eq 0 ]]; then
+  echo "[ForecastIQ] ERROR: no CSV files found in data directory: $DATA_DIR" >&2
+  echo "[ForecastIQ] Fail-loud contract: provide at least one CSV file so the evaluator does not silently produce a bad output." >&2
+  exit 2
+fi
+
 # 1. Verify the minimal evaluator dependencies installed from requirements.txt.
 set +e
 "${PYTHON_CMD[@]}" scripts/_check_deps.py

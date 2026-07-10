@@ -280,6 +280,18 @@ rather than using one canned paragraph.
 It also emits an evidence-conditioned branch label inside `PER_RUN_SYNTHESIS`
 so reviewers can see which numeric rule path was used for the current run.
 
+This offline-deterministic design exists specifically for the submission
+guide's Section 6 rule that the automated grading pipeline installs only
+`requirements.txt` and runs `./run.sh ./data ./pickle/model.pkl
+./output/predictions.csv` with no runtime network dependency. The graded path
+therefore uses committed sklearn/joblib artifacts plus deterministic
+LLM-derived templates and writes the visible `AI Reasoning Trace` section
+without opening a socket. `npm run demo:ai` proves the same evidence pipeline
+can call live Gemini when a key is present: it builds the same structured
+scenario payload, sends it through `scripts/demo_live_ai_reasoning.py`, and
+saves redacted Gemini transcripts, while the no-key grader path remains fully
+offline.
+
 Live LLM mode is bounded and optional-by-environment: `run.sh` auto-detects
 `GEMINI_API_KEY` and, when present, makes one timeout-guarded Gemini call from
 the graded path. `npm run demo:ai` and the FastAPI insights endpoints use the

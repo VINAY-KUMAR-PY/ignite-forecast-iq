@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import filecmp
 import math
 import os
 import shutil
@@ -154,6 +155,51 @@ def test_run_sh_empty_csv_contract(tmp_path: Path) -> None:
     frame = _assert_schema_valid(output)
     assert set(frame["model_type"].astype(str)) == {"safe_baseline_fallback"}
     assert "SAFE BASELINE FALLBACK WAS USED" in result.stderr
+
+
+def test_run_sh_empty_data_directory_fails_loudly(tmp_path: Path) -> None:
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    output = tmp_path / "predictions.csv"
+    result = subprocess.run(
+        [
+            _find_bash(),
+            "run.sh",
+            str(data_dir),
+            "./pickle/model.pkl",
+            str(output),
+        ],
+        cwd=ROOT,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        timeout=60,
+    )
+
+    assert result.returncode != 0
+    assert "ERROR: no CSV files found in data directory" in result.stderr
+    assert "Fail-loud contract" in result.stderr
+    assert not output.exists()
+
+
+def test_run_sh_outputs_are_byte_identical_across_repeated_runs(tmp_path: Path) -> None:
+    first_output = tmp_path / "first" / "predictions.csv"
+    second_output = tmp_path / "second" / "predictions.csv"
+
+    _run_contract_case(ROOT / "data", first_output)
+    _run_contract_case(ROOT / "data", second_output)
+
+    assert filecmp.cmp(first_output, second_output, shallow=False)
+    assert filecmp.cmp(
+        first_output.parent / "causal_summary.txt",
+        second_output.parent / "causal_summary.txt",
+        shallow=False,
+    )
+    assert filecmp.cmp(
+        first_output.parent / "explainability_notes.txt",
+        second_output.parent / "explainability_notes.txt",
+        shallow=False,
+    )
 
 
 def test_run_sh_malformed_garbage_csv_contract(tmp_path: Path) -> None:

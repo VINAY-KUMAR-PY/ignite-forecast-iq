@@ -12,10 +12,10 @@
 # Playwright, and frontend tooling. scikit-learn is pinned so the committed
 # joblib artifact loads predictably.
 # Python: 3.11-3.14 (trained artifact); CI runs 3.11, 3.12, 3.13, 3.14.
-# Build environment: Python 3.14.4, scikit-learn 1.9.0
-pandas==3.0.3
-numpy==2.4.6
-scikit-learn==1.9.0
+# Build environment: Python 3.14.4, pandas 2.3.3, numpy 2.3.5, scikit-learn 1.7.2
+pandas==2.3.3
+numpy==2.3.5
+scikit-learn==1.7.2
 scipy==1.17.1
 joblib==1.5.3
 packaging==24.1

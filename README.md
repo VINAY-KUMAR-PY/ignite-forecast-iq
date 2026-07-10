@@ -19,6 +19,8 @@ and multi-source held-out-style inputs; see
 root `Dockerfile` mirrors the same evaluator-only path and is smoke-tested in
 Evaluator CI.
 
+These guarantees were verified against commit `c12b274468583fc16a191adfbcddd85b21db76a3`; the fastest trust check is `python -m pytest tests/test_run_sh_contract.py -q`.
+
 ## Repository
 
 Clone: `git clone https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq.git`
@@ -41,14 +43,16 @@ chmod +x run.sh
 ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
 ```
 
+Build environment: Python 3.14.4 with pandas 2.3.3, numpy 2.3.5, scikit-learn 1.7.2, scipy 1.17.1, joblib 1.5.3, and packaging 24.1.
+
 Current committed sample output includes all required forecast grains:
 
 | Grain | Example | Horizon | Expected revenue | Revenue range | Expected ROAS |
 |---|---|---:|---:|---:|---:|
 | Overall | all | 90d | $1,407,079 | $1,196,553-$1,617,605 | 4.05x |
 | Channel | Microsoft Ads | 90d | $213,676 | $180,214-$247,137 | 5.40x |
-| Campaign type | Advantage+ | 90d | $161,610 | $128,265-$194,955 | 3.03x |
-| Campaign | Brand Search | 30d | $83,832 | $73,698-$93,966 | 5.33x |
+| Campaign type | Advantage+ | 90d | $161,610 | $128,339-$194,881 | 3.03x |
+| Campaign | Brand Search | 30d | $84,058 | $73,924-$94,193 | 5.33x |
 
 Example decision: Google Ads shows low-confidence directional
 underperformance around the June 11 ROAS anomaly (`p=0.185`), while Microsoft

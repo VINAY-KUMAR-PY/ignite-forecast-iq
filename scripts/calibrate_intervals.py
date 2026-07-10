@@ -12,7 +12,6 @@ import argparse
 import json
 import math
 import re
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -20,10 +19,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
+import _path_bootstrap  # noqa: F401
 from backend.backtest import _slice_segment
 from backend.evaluator_contract import HORIZONS, safe_float
 from backend.evaluator_intervals import CV_QUANTILE_HORIZON_INTERVAL_FLOOR_PCT, horizon_confidence_z
@@ -31,6 +27,7 @@ from backend.evaluator_io import canonicalize_frame, fallback_model_config, read
 from backend.inference import _segment_interval_multiplier, forecast_segment, trained_forecast_segment
 from backend.segment_utils import aggregate_segment_daily, segment_specs
 
+ROOT = Path(__file__).resolve().parents[1]
 TARGET_COVERAGE = 0.90
 LOW_SAMPLE_WIDENING = 1.25
 CALIBRATION_WINDOWS = 2

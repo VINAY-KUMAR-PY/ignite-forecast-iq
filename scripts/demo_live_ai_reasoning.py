@@ -13,16 +13,12 @@ import asyncio
 import hashlib
 import json
 import os
-import sys
 from copy import deepcopy
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
+import _path_bootstrap  # noqa: F401
 from backend.gemini import _build_prompt, _extract_json, _gemini_model_name, _validate_insights_payload
 from scripts.gemini_ci_utils import assert_live_insight_payload_shape, normalize_live_insight_payload
 from scripts.verify_gemini_live import (
@@ -32,6 +28,7 @@ from scripts.verify_gemini_live import (
     build_sample_summary,
 )
 
+ROOT = Path(__file__).resolve().parents[1]
 
 SCENARIOS = {
     "anomaly_explanation": {

@@ -146,6 +146,15 @@ One-line verdicts against the seasonal-average baseline:
 - 60d: revenue is a statistical tie with the seasonal-average baseline; ROAS is statistically favored.
 - 90d: revenue is a statistical tie with the seasonal-average baseline; ROAS is a statistical tie with the seasonal-average baseline.
 
+Why 60d MAPE is higher than 90d MAPE: the 60-day rows score four rolling windows
+and include the mid-horizon campaign-mix drift where residual correction is
+slightly worse than the seasonal anchor (10.34% vs 10.11% MAPE,
+paired-bootstrap p=0.602). The 90-day rows have only two sufficiently powered
+rolling windows and are fully baseline anchored by the gate, so trained and
+baseline revenue MAPE are identical at 7.89% (p=1.000). ForecastIQ therefore
+treats the pattern as horizon-gating evidence, not a reason to force
+unsupported residual extrapolation.
+
 ## Walk-Forward Accuracy by Horizon and Segment Level
 
 This table reports revenue and ROAS accuracy for each horizon and forecast grain. It makes clear where

@@ -119,6 +119,17 @@ which in turn reads the latest `reports/backtest_report.json` produced by
 | 60d | 19401.63 | 19199.67 | 31323.71 | 30397.05 | 10.34% | 10.11% | paired bootstrap absolute-error delta | -604.4584 to 987.7232 | 0.602 | statistical tie |
 | 90d | 22141.94 | 22141.94 | 34041.40 | 34041.40 | 7.89% | 7.89% | paired bootstrap absolute-error delta | 0.0000 to 0.0000 | 1.000 | statistical tie |
 
+The non-monotonic revenue MAPE pattern is expected from the rolling-origin
+evaluation design rather than a hidden arithmetic bug. The 60 day horizon
+scores four rolling windows and captures a mid-horizon campaign-mix drift where
+the residual model is slightly worse than the seasonal anchor (10.34% versus
+10.11% MAPE, p=0.602). The 90 day horizon has only two sufficiently powered
+rolling windows, and the gate fully anchors revenue to the seasonal baseline,
+so trained and baseline revenue MAPE are identical at 7.89% with p=1.000. In
+other words, ForecastIQ does not extrapolate a weak 60 day residual signal into
+90 day revenue; it exposes the anchored basis as
+`trained_model_baseline_anchored`.
+
 This is a deliberate model-selection gate, not a hidden failure. The generated
 CSV rows now expose the horizon-level basis directly: 30 day residual-correction
 rows report `trained_model`, while 60/90 day revenue rows report

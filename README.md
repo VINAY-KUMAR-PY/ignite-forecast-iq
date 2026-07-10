@@ -130,7 +130,7 @@ access.
 |---|---|
 | Technical Soundness | `./run.sh`, `reports/backtest_summary.md`, `reports/interval_calibration_report.json`, `tests/test_offline_predict.py`, `tests/test_interval_monotonicity.py` |
 | Practical Relevance | `backend/decision_support.py`, `scripts/validate_budget_elasticity.py`, `reports/budget_elasticity_summary.md`, simulator UI |
-| AI Integration | Graded path: per-run offline synthesis plus automatic one-call Gemini enrichment when `GEMINI_API_KEY` is present, with redacted request/response evidence in `output/causal_summary.txt`; demo path: live Gemini calls through `npm run demo:ai`, `scripts/demo_live_ai_reasoning.py`, and `docs/gemini_sample_transcripts/`. |
+| AI Integration | Graded path: per-run offline synthesis plus automatic one-call Gemini enrichment when `GEMINI_API_KEY` is present, with redacted request/response evidence in `output/causal_summary.txt`; demo path: live Gemini calls through `npm run demo:ai`, `scripts/demo_live_ai_reasoning.py`, and `docs/gemini_sample_transcripts/SCENARIO_COVERAGE.md`. |
 | Product Thinking | One-click demo flow, Upload -> Dashboard -> Forecast -> Simulator -> Insights, `DEMO_GUIDE.md` |
 | Engineering Quality | Evaluator CI, frontend tests, Playwright flow, coverage gate, pinned evaluator dependencies |
 | Independent reproduction | `npm run verify` regenerates interval calibration, rolling-origin backtest reports, coverage summary, and `reports/verification_summary.json` |

@@ -77,6 +77,17 @@ REASONING_TRACE
   4. RULE_APPLICATION: power check failed -> underpowered_sample_watch skeleton; selected_skeleton=underpowered_sample_watch
   5. DRIVER_AND_LIMITATIONS: primary_driver=leading_roas Microsoft Ads (5.44x ROAS); limitations=observational DiD, not randomized incrementality; 95% confidence interval crosses zero; p-value is not statistically strong; minimum sample or power check did not pass
   6. FINAL_COMPOSITION: filled the selected distilled Gemini-authored skeleton with the runtime evidence above.
+Offline reasoning (LLM-equivalent, deterministic)
+Hypothesis generation:
+  1. Google Ads ROAS compression (Jun 11): Google Ads revenue changed because a spend, demand, or campaign-mix shift produced an observational DiD effect of $-2,892.
+  2. Meta Ads ROAS lift (Jun 08): Meta Ads revenue changed because a spend, demand, or campaign-mix shift produced an observational DiD effect of $2,238.
+  3. Meta Ads ROAS lift (May 29): Meta Ads revenue changed because a spend, demand, or campaign-mix shift produced an observational DiD effect of $1,344.
+Evidence ranking:
+  1. budget shift (low confidence, score=0.34) support=Google Ads DiD effect=$-2,892.; p=0.185, CI $-6,306 to $1,192.; caution=Observational DiD is not a randomized lift test.
+  2. platform algorithm change (medium confidence, score=0.66) support=Google Ads anomaly signal on 2026-06-11.; Anomaly z-score=-2.51; metric=roas.; caution=A single-day anomaly can be a tracking or data latency artifact.
+Confidence scoring:
+  1. budget shift: confidence=low, score=0.34; validation=Run a staged budget holdout or geo split around the affected channel.
+  2. platform algorithm change: confidence=medium, score=0.66; validation=Audit platform change history, bids, budgets, and tracking around the anomaly window.
 Generated explanation:
 Meta Ads does not have enough statistical power for a causal claim. The observed effect is $2,238 with p=0.179, CI $-1,105 to $5,400, and low confidence; ROAS moved from 2.96x to 2.98x. This should be read as a measurement-readiness warning, not a proven positive effect.
 Evidence focus: power evidence: p-value 0.179 exceeds 0.15; 95% confidence interval crosses zero; p=0.179; strength=0.79; primary driver: leading_roas Microsoft Ads (5.44x ROAS)

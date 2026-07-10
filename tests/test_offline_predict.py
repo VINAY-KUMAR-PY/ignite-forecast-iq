@@ -1059,6 +1059,10 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertRegex(summary, r"strength=")
         self.assertIn("Competing explanation to test:", summary)
         self.assertIn("observational difference-in-differences", summary)
+        self.assertIn("Offline reasoning (LLM-equivalent, deterministic)", summary)
+        self.assertIn("Hypothesis generation:", summary)
+        self.assertIn("Evidence ranking:", summary)
+        self.assertIn("Confidence scoring:", summary)
 
     def test_spend_response_multiplier_has_non_increasing_marginal_revenue(self) -> None:
         multipliers = [1.0, 1.5, 2.0, 4.0, 10.0]

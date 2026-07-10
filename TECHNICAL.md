@@ -68,6 +68,15 @@ against the same deterministic baseline in `reports/backtest_summary.md`, and
 `tests/test_path_consistency.py` enforces directional consistency rather than
 pretending both systems will be numerically identical.
 
+The graded model deliberately uses scikit-learn `GradientBoostingRegressor`
+instead of XGBoost because the submission contract requires the committed
+pickle/joblib artifact to load under the exact pinned `requirements.txt`
+versions installed by the automated evaluator. XGBoost is valuable in the live
+FastAPI product for richer diagnostics, but it increases binary dependency and
+runtime compatibility risk in a no-network grading path. ForecastIQ therefore
+chooses reproducibility over maximum model capability for `run.sh`, and keeps
+the heavier XGBoost path optional for the product demo.
+
 Alternatives considered:
 
 | Candidate | Decision | Rationale |

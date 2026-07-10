@@ -40,6 +40,7 @@ from .evaluator_contract import (
     safe_float,
 )
 from .evaluator_intervals import DEFAULT_HORIZON_CONFIDENCE_Z
+from .causal_reasoning import build_causal_hypotheses, build_llm_hypothesis_ranking
 from .gemini_offline_cache import (
     DISTILLED_LLM_REASONING_HEADER,
     format_reasoning_provenance,
@@ -707,6 +708,16 @@ def generate_offline_causal_summary(
         _format_runtime_synthesis(distilled),
         "REASONING_TRACE",
         _format_reasoning_trace(distilled),
+        "Offline reasoning (LLM-equivalent, deterministic)",
+        _format_offline_llm_equivalent_reasoning(
+            frame=frame,
+            rows=rows,
+            anomalies=[item.to_dict() for item in top_anomalies],
+            causal_estimates=causal_estimates,
+            planned_budgets=planned_budgets,
+            segment_drivers=segment_drivers,
+            structured_evidence=distilled.get("evidence_object", {}),
+        ),
         "Generated explanation:",
         distilled["summary"],
         f"Evidence focus: {distilled['evidence_focus']}",
@@ -774,6 +785,105 @@ def _format_runtime_synthesis(distilled: dict[str, Any]) -> str:
     if not isinstance(synthesis, list) or not synthesis:
         return "  1. No per-run synthesis was available for this fallback explanation."
     return "\n".join(f"  {index}. {step}" for index, step in enumerate(synthesis, start=1))
+
+
+def _format_offline_llm_equivalent_reasoning(
+    *,
+    frame: pd.DataFrame,
+    rows: list[dict],
+    anomalies: list[dict[str, Any]],
+    causal_estimates: list[dict[str, Any]],
+    planned_budgets: dict[str, float] | None,
+    segment_drivers: list[dict[str, Any]],
+    structured_evidence: dict[str, Any],
+) -> str:
+    """Render Gemini-equivalent hypothesis reasoning without importing app-only dependencies."""
+    channel_summaries = _offline_channel_summaries(frame)
+    total_revenue = sum(safe_float(item.get("revenue")) for item in channel_summaries)
+    total_spend = sum(safe_float(item.get("spend")) for item in channel_summaries)
+    payload = {
+        "forecasts": rows[:12],
+        "plannedBudgets": planned_budgets or {},
+        "anomalies": anomalies,
+        "causalEstimates": causal_estimates,
+        "causalEvidence": causal_estimates,
+        "structuredCausalEvidence": structured_evidence,
+        "driverEvidence": segment_drivers,
+        "channels": channel_summaries,
+        "avgRoas": safe_ratio(total_revenue, total_spend),
+        "roasTrendPct": _offline_roas_trend_pct(frame),
+    }
+    hypotheses = build_causal_hypotheses(payload)
+    ranking = build_llm_hypothesis_ranking(payload)
+
+    lines = ["Hypothesis generation:"]
+    if hypotheses:
+        for item in hypotheses[:3]:
+            lines.append(
+                f"  {int(item.get('rank') or 0)}. {item.get('title', 'Causal hypothesis')}: "
+                f"{item.get('hypothesis', 'No hypothesis text available')}"
+            )
+    else:
+        lines.append("  1. No hypothesis could be generated from the current causal evidence.")
+
+    lines.append("Evidence ranking:")
+    if ranking:
+        for item in ranking[:3]:
+            support = "; ".join(str(value) for value in (item.get("supportingEvidence") or [])[:2])
+            contradiction = "; ".join(str(value) for value in (item.get("contradictingEvidence") or [])[:1])
+            lines.append(
+                f"  {int(item.get('rank') or 0)}. {item.get('hypothesis', 'other')} "
+                f"({item.get('confidence', 'low')} confidence, score={safe_float(item.get('confidenceScore')):.2f}) "
+                f"support={support or 'limited signal'}; caution={contradiction or 'observational evidence only'}"
+            )
+    else:
+        lines.append("  1. No ranked evidence was available.")
+
+    lines.append("Confidence scoring:")
+    if ranking:
+        for item in ranking[:3]:
+            lines.append(
+                f"  {int(item.get('rank') or 0)}. {item.get('hypothesis', 'other')}: "
+                f"confidence={item.get('confidence', 'low')}, score={safe_float(item.get('confidenceScore')):.2f}; "
+                f"validation={item.get('recommendedValidation', 'validate with a controlled budget test')}"
+            )
+    else:
+        lines.append("  1. confidence=low; validation=collect more channel history before treating the signal as causal.")
+    return "\n".join(lines)
+
+
+def _offline_channel_summaries(frame: pd.DataFrame) -> list[dict[str, Any]]:
+    if frame.empty or not {"channel", "spend", "revenue"}.issubset(frame.columns):
+        return []
+    summaries: list[dict[str, Any]] = []
+    total_revenue = safe_float(frame["revenue"].sum())
+    for channel, group in frame.groupby("channel"):
+        spend = safe_float(group["spend"].sum())
+        revenue = safe_float(group["revenue"].sum())
+        summaries.append(
+            {
+                "name": str(channel),
+                "spend": spend,
+                "revenue": revenue,
+                "roas": safe_ratio(revenue, spend),
+                "sharePct": safe_ratio(revenue, total_revenue) * 100,
+            }
+        )
+    return sorted(summaries, key=lambda item: safe_float(item.get("revenue")), reverse=True)
+
+
+def _offline_roas_trend_pct(frame: pd.DataFrame) -> float:
+    if frame.empty or not {"date", "spend", "revenue"}.issubset(frame.columns):
+        return 0.0
+    try:
+        daily = aggregate_segment_daily(frame)
+        if daily.empty:
+            return 0.0
+        daily = daily.copy()
+        daily["roas"] = np.where(daily["spend"] > 0, daily["revenue"] / daily["spend"], 0.0)
+        return window_trend(daily, "roas", 28) * 100
+    except Exception:
+        return 0.0
 
 
 def _causal_channel_metrics(frame: pd.DataFrame) -> dict[str, dict[str, Any]]:

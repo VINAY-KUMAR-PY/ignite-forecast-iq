@@ -66,6 +66,19 @@ def _assert_monotonic_intervals(frame: pd.DataFrame) -> None:
     assert not failures, f"Non-monotonic interval widths: {failures[:5]}"
 
 
+def _assert_detailed_grain_business_bounds(frame: pd.DataFrame) -> None:
+    detailed = frame[frame["level"].isin({"campaign_type", "campaign"})].copy()
+    assert not detailed.empty, "campaign_type/campaign forecast grains are missing"
+    expected_roas = pd.to_numeric(detailed["expected_roas"], errors="raise")
+    lower_revenue = pd.to_numeric(detailed["lower_revenue"], errors="raise")
+    expected_revenue = pd.to_numeric(detailed["expected_revenue"], errors="raise")
+    upper_revenue = pd.to_numeric(detailed["upper_revenue"], errors="raise")
+
+    assert (expected_roas > 0).all(), "detailed forecast grains must have positive expected ROAS"
+    assert (lower_revenue <= expected_revenue).all(), "lower_revenue must not exceed expected_revenue"
+    assert (expected_revenue <= upper_revenue).all(), "expected_revenue must not exceed upper_revenue"
+
+
 def _run_contract_case(data_dir: Path, output: Path) -> subprocess.CompletedProcess[str]:
     result = subprocess.run(
         [
@@ -94,6 +107,13 @@ def test_run_sh_committed_data_folder_contract(tmp_path: Path) -> None:
     assert modes <= set(TRAINED_MODEL_VARIANTS)
     assert TRAINED_MODEL_TYPE in modes
     assert "Prediction mode: trained_model" in result.stdout
+
+
+def test_run_sh_campaign_and_campaign_type_bounds_are_business_plausible(tmp_path: Path) -> None:
+    output = tmp_path / "predictions.csv"
+    _run_contract_case(ROOT / "data", output)
+    frame = _assert_schema_valid(output)
+    _assert_detailed_grain_business_bounds(frame)
 
 
 def test_run_sh_committed_data_matches_golden_numeric_output(tmp_path: Path) -> None:

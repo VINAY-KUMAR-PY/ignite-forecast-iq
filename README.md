@@ -2,6 +2,8 @@
 
 ## Which Requirements File Do I Need?
 
+**The automated grading pipeline only ever installs requirements.txt and runs run.sh; everything else in this repo is optional and irrelevant to grading.**
+
 Use `requirements.txt` for the graded offline evaluator only:
 `./run.sh ./data ./pickle/model.pkl ./output/predictions.csv`. Use
 `requirements-app.txt` only for the full FastAPI app, Gemini/live insights,

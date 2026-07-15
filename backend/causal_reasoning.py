@@ -301,6 +301,56 @@ def build_llm_hypothesis_ranking(summary: dict[str, Any]) -> list[dict[str, Any]
             }
         )
 
+    channel_rows = [item for item in channels if isinstance(item, dict)]
+    if channel_rows:
+        best = max(channel_rows, key=lambda c: float(c.get("roas") or 0))
+        weakest = min(channel_rows, key=lambda c: float(c.get("roas") or 0))
+        total_spend = sum(float(item.get("spend") or 0.0) for item in channel_rows)
+        best_roas = float(best.get("roas") or 0.0)
+        weakest_roas = float(weakest.get("roas") or 0.0)
+        spread = max(0.0, best_roas - weakest_roas)
+        if spread >= 0.75:
+            ranked.append(
+                {
+                    "rank": len(ranked) + 1,
+                    "hypothesis": "budget reallocation implication",
+                    "confidence": "medium" if spread >= 1.25 else "low",
+                    "confidenceScore": _confidence_score("medium" if spread >= 1.25 else "low", spread / 2.0, 0.18),
+                    "supportingEvidence": [
+                        f"{best.get('name', 'Best channel')} ROAS={best_roas:.2f}x versus {weakest.get('name', 'Weakest channel')} ROAS={weakest_roas:.2f}x.",
+                        f"Portfolio ROAS spread={spread:.2f}x across observed channels.",
+                    ],
+                    "contradictingEvidence": [
+                        "Observed ROAS spread does not prove marginal ROAS after budget moves.",
+                        "High-efficiency channels can saturate when spend is increased.",
+                    ],
+                    "recommendedValidation": "Move budget in a staged test from the weakest ROAS channel toward the strongest and monitor marginal ROAS weekly.",
+                    "rationale": "The current run's channel efficiency spread creates an actionable reallocation hypothesis even without live LLM access.",
+                }
+            )
+        if total_spend > 0:
+            dominant = max(channel_rows, key=lambda c: float(c.get("spend") or 0.0))
+            dominant_share = float(dominant.get("spend") or 0.0) / total_spend * 100.0
+            if dominant_share >= 45.0 and len(channel_rows) >= 2:
+                ranked.append(
+                    {
+                        "rank": len(ranked) + 1,
+                        "hypothesis": "channel cannibalization risk",
+                        "confidence": "low" if spread < 1.0 else "medium",
+                        "confidenceScore": _confidence_score("medium" if spread >= 1.0 else "low", dominant_share / 50.0, 0.22),
+                        "supportingEvidence": [
+                            f"{dominant.get('name', 'Dominant channel')} holds {dominant_share:.1f}% of observed spend.",
+                            f"Observed ROAS spread={spread:.2f}x suggests incremental spend could shift demand rather than create it.",
+                        ],
+                        "contradictingEvidence": [
+                            "The evaluator data does not include user-level path overlap or assisted conversions.",
+                            "Cannibalization needs geo, audience, or incrementality testing to confirm.",
+                        ],
+                        "recommendedValidation": "Run a holdout or audience split before moving large budgets across channels with overlapping demand.",
+                        "rationale": "Spend concentration and cross-channel ROAS spread are enough to flag cannibalization as a competing deterministic hypothesis.",
+                    }
+                )
+
     if len(ranked) < 2:
         roas_values = [float(item.get("roas") or 0) for item in channels if isinstance(item, dict)]
         roas_spread = max(roas_values) - min(roas_values) if roas_values else 0.0

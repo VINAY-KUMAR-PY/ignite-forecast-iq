@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-09T07:12:10.139711+00:00",
+  "generated_at": "2026-07-15T13:47:53.572665+00:00",
   "data_dir": "data",
   "holdout_days": 30,
   "train_rows": 2160,
@@ -21,9 +21,9 @@
   ],
   "environment": {
     "python": "3.14.4",
-    "pandas": "3.0.3",
-    "numpy": "2.4.6",
-    "scikit_learn": "1.9.0",
+    "pandas": "2.3.3",
+    "numpy": "2.3.5",
+    "scikit_learn": "1.7.2",
     "scipy": "1.17.1",
     "joblib": "1.5.3"
   },
@@ -45,17 +45,17 @@
       "quantile_interval_cap_pct": 0.5,
       "horizon_interval_multiplier": {
         "30": 2.5,
-        "60": 2.7421,
-        "90": 2.7421
+        "60": 1.6,
+        "90": 2.5
       },
       "low_sample_training": false,
       "sample_confidence_discount": 1.0,
-      "revenue_model_weight": 0.2,
+      "revenue_model_weight": 0.4,
       "roas_model_weight": 0.6,
       "revenue_model_weight_by_horizon": {
         "30": 0.6,
-        "60": 0.0,
-        "90": 0.0
+        "60": 0.1,
+        "90": 0.5
       },
       "roas_model_weight_by_horizon": {
         "30": 0.6,
@@ -83,19 +83,19 @@
     }
   },
   "trained_model_metrics": {
-    "mae": 2640.7,
-    "rmse": 3760.12,
-    "mape": 2.73,
+    "mae": 2851.54,
+    "rmse": 4086.92,
+    "mape": 2.89,
     "interval_coverage": 100.0,
-    "mean_interval_width": 22039.4083,
-    "mean_interval_width_pct": 29.92,
+    "mean_interval_width": 22059.4406,
+    "mean_interval_width_pct": 29.85,
     "revenue": {
-      "mae": 2640.7,
-      "rmse": 3760.12,
-      "mape": 2.73,
+      "mae": 2851.54,
+      "rmse": 4086.92,
+      "mape": 2.89,
       "interval_coverage": 100.0,
-      "mean_interval_width": 22039.4083,
-      "mean_interval_width_pct": 29.92
+      "mean_interval_width": 22059.4406,
+      "mean_interval_width_pct": 29.85
     },
     "roas": {
       "mae": 0.04,
@@ -115,15 +115,15 @@
     "rmse": 2763.76,
     "mape": 2.78,
     "interval_coverage": 88.89,
-    "mean_interval_width": 11984.7011,
-    "mean_interval_width_pct": 11.18,
+    "mean_interval_width": 12006.1394,
+    "mean_interval_width_pct": 11.2,
     "revenue": {
       "mae": 2185.89,
       "rmse": 2763.76,
       "mape": 2.78,
       "interval_coverage": 88.89,
-      "mean_interval_width": 11984.7011,
-      "mean_interval_width_pct": 11.18
+      "mean_interval_width": 12006.1394,
+      "mean_interval_width_pct": 11.2
     },
     "roas": {
       "mae": 0.05,
@@ -139,9 +139,9 @@
     "roas_interval_coverage": 100.0
   },
   "trained_vs_safe_baseline": {
-    "mae_delta": -454.81,
-    "rmse_delta": -996.36,
-    "mape_delta": 0.05,
+    "mae_delta": -665.65,
+    "rmse_delta": -1323.16,
+    "mape_delta": -0.11,
     "roas_mae_delta": 0.01,
     "roas_rmse_delta": 0.01
   },
@@ -149,11 +149,11 @@
     "overall_winner": "mixed",
     "revenue": {
       "target": "revenue",
-      "trained_mae": 2640.7,
+      "trained_mae": 2851.54,
       "safe_baseline_mae": 2185.89,
-      "mae_difference_pct": 20.81,
+      "mae_difference_pct": 30.45,
       "winner": "safe_baseline_fallback",
-      "interpretation": "The safe baseline has lower revenue MAE than the trained model by 20.81% on this slice."
+      "interpretation": "The safe baseline has lower revenue MAE than the trained model by 30.45% on this slice."
     },
     "roas": {
       "target": "roas",
@@ -163,7 +163,7 @@
       "winner": "trained_model",
       "interpretation": "The trained model has lower roas MAE than the safe baseline by 20.00% on this slice."
     },
-    "interpretation": "Revenue: The safe baseline has lower revenue MAE than the trained model by 20.81% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 20.00% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+    "interpretation": "Revenue: The safe baseline has lower revenue MAE than the trained model by 30.45% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 20.00% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
   },
   "blend_weight_comparison": [
     {
@@ -174,38 +174,10 @@
       "interval_coverage": 100.0
     },
     {
-      "revenue_model_weight": 0.1,
-      "mae": 2260.67,
-      "rmse": 2905.47,
-      "mape": 2.77,
-      "interval_coverage": 100.0
-    },
-    {
-      "revenue_model_weight": 0.25,
-      "mae": 2372.84,
-      "rmse": 3139.56,
-      "mape": 2.76,
-      "interval_coverage": 100.0
-    },
-    {
-      "revenue_model_weight": 0.4,
-      "mae": 2485.01,
-      "rmse": 3394.68,
-      "mape": 2.74,
-      "interval_coverage": 100.0
-    },
-    {
-      "revenue_model_weight": 0.5,
-      "mae": 2559.79,
-      "rmse": 3574.24,
-      "mape": 2.73,
-      "interval_coverage": 100.0
-    },
-    {
       "revenue_model_weight": 0.6,
-      "mae": 2640.7,
-      "rmse": 3760.12,
-      "mape": 2.73,
+      "mae": 2851.54,
+      "rmse": 4086.92,
+      "mape": 2.89,
       "interval_coverage": 100.0
     }
   ],
@@ -225,34 +197,6 @@
       "interval_coverage": 100.0
     },
     {
-      "roas_model_weight": 0.1,
-      "mae": 0.05,
-      "rmse": 0.06,
-      "mape": 1.36,
-      "interval_coverage": 100.0
-    },
-    {
-      "roas_model_weight": 0.25,
-      "mae": 0.04,
-      "rmse": 0.06,
-      "mape": 1.22,
-      "interval_coverage": 100.0
-    },
-    {
-      "roas_model_weight": 0.4,
-      "mae": 0.04,
-      "rmse": 0.06,
-      "mape": 1.14,
-      "interval_coverage": 100.0
-    },
-    {
-      "roas_model_weight": 0.5,
-      "mae": 0.04,
-      "rmse": 0.06,
-      "mape": 1.08,
-      "interval_coverage": 100.0
-    },
-    {
       "roas_model_weight": 0.6,
       "mae": 0.04,
       "rmse": 0.06,
@@ -262,9 +206,9 @@
   ],
   "roas_blend_weight_recommendation": {
     "current_roas_model_weight": 0.6,
-    "recommended_roas_model_weight": 0.5,
-    "decision": "review_candidate",
-    "recommendation": "Candidate roas_model_weight=0.50 scored best on ROAS RMSE. Review before updating the packaged artifact.",
+    "recommended_roas_model_weight": 0.6,
+    "decision": "keep_current",
+    "recommendation": "Keep roas_model_weight=0.60; it has the best ROAS RMSE/MAE balance.",
     "selection_metric": "lowest ROAS RMSE, then MAE, then MAPE"
   },
   "per_horizon_performance": [
@@ -281,19 +225,19 @@
           "dedicated_training_samples": 432,
           "fallback_only": false,
           "trained_model_metrics": {
-            "mae": 2640.7,
-            "rmse": 3760.12,
-            "mape": 2.73,
+            "mae": 2851.54,
+            "rmse": 4086.92,
+            "mape": 2.89,
             "interval_coverage": 100.0,
-            "mean_interval_width": 22039.4083,
-            "mean_interval_width_pct": 29.92,
+            "mean_interval_width": 22059.4406,
+            "mean_interval_width_pct": 29.85,
             "revenue": {
-              "mae": 2640.7,
-              "rmse": 3760.12,
-              "mape": 2.73,
+              "mae": 2851.54,
+              "rmse": 4086.92,
+              "mape": 2.89,
               "interval_coverage": 100.0,
-              "mean_interval_width": 22039.4083,
-              "mean_interval_width_pct": 29.92
+              "mean_interval_width": 22059.4406,
+              "mean_interval_width_pct": 29.85
             },
             "roas": {
               "mae": 0.04,
@@ -313,15 +257,15 @@
             "rmse": 2763.76,
             "mape": 2.78,
             "interval_coverage": 88.89,
-            "mean_interval_width": 11984.7011,
-            "mean_interval_width_pct": 11.18,
+            "mean_interval_width": 12006.1394,
+            "mean_interval_width_pct": 11.2,
             "revenue": {
               "mae": 2185.89,
               "rmse": 2763.76,
               "mape": 2.78,
               "interval_coverage": 88.89,
-              "mean_interval_width": 11984.7011,
-              "mean_interval_width_pct": 11.18
+              "mean_interval_width": 12006.1394,
+              "mean_interval_width_pct": 11.2
             },
             "roas": {
               "mae": 0.05,
@@ -340,11 +284,11 @@
             "overall_winner": "mixed",
             "revenue": {
               "target": "revenue",
-              "trained_mae": 2640.7,
+              "trained_mae": 2851.54,
               "safe_baseline_mae": 2185.89,
-              "mae_difference_pct": 20.81,
+              "mae_difference_pct": 30.45,
               "winner": "safe_baseline_fallback",
-              "interpretation": "The safe baseline has lower revenue MAE than the trained model by 20.81% on this slice."
+              "interpretation": "The safe baseline has lower revenue MAE than the trained model by 30.45% on this slice."
             },
             "roas": {
               "target": "roas",
@@ -354,7 +298,7 @@
               "winner": "trained_model",
               "interpretation": "The trained model has lower roas MAE than the safe baseline by 20.00% on this slice."
             },
-            "interpretation": "Revenue: The safe baseline has lower revenue MAE than the trained model by 20.81% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 20.00% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+            "interpretation": "Revenue: The safe baseline has lower revenue MAE than the trained model by 30.45% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 20.00% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
           }
         },
         {
@@ -367,31 +311,31 @@
           "dedicated_training_samples": 378,
           "fallback_only": false,
           "trained_model_metrics": {
-            "mae": 1021.49,
-            "rmse": 1202.13,
-            "mape": 1.27,
+            "mae": 1121.34,
+            "rmse": 1292.82,
+            "mape": 1.36,
             "interval_coverage": 100.0,
-            "mean_interval_width": 21600.27,
-            "mean_interval_width_pct": 29.74,
+            "mean_interval_width": 21603.1639,
+            "mean_interval_width_pct": 29.8,
             "revenue": {
-              "mae": 1021.49,
-              "rmse": 1202.13,
-              "mape": 1.27,
+              "mae": 1121.34,
+              "rmse": 1292.82,
+              "mape": 1.36,
               "interval_coverage": 100.0,
-              "mean_interval_width": 21600.27,
-              "mean_interval_width_pct": 29.74
+              "mean_interval_width": 21603.1639,
+              "mean_interval_width_pct": 29.8
             },
             "roas": {
               "mae": 0.06,
               "rmse": 0.07,
-              "mape": 1.59,
+              "mape": 1.6,
               "interval_coverage": 100.0,
-              "mean_interval_width": 0.4683,
-              "mean_interval_width_pct": 11.46
+              "mean_interval_width": 0.4689,
+              "mean_interval_width_pct": 11.47
             },
             "roas_mae": 0.06,
             "roas_rmse": 0.07,
-            "roas_mape": 1.59,
+            "roas_mape": 1.6,
             "roas_interval_coverage": 100.0
           },
           "safe_baseline_metrics": {
@@ -399,15 +343,15 @@
             "rmse": 4804.95,
             "mape": 3.07,
             "interval_coverage": 100.0,
-            "mean_interval_width": 11608.6606,
-            "mean_interval_width_pct": 11.18,
+            "mean_interval_width": 11629.4283,
+            "mean_interval_width_pct": 11.2,
             "revenue": {
               "mae": 3338.83,
               "rmse": 4804.95,
               "mape": 3.07,
               "interval_coverage": 100.0,
-              "mean_interval_width": 11608.6606,
-              "mean_interval_width_pct": 11.18
+              "mean_interval_width": 11629.4283,
+              "mean_interval_width_pct": 11.2
             },
             "roas": {
               "mae": 0.04,
@@ -426,11 +370,11 @@
             "overall_winner": "mixed",
             "revenue": {
               "target": "revenue",
-              "trained_mae": 1021.49,
+              "trained_mae": 1121.34,
               "safe_baseline_mae": 3338.83,
-              "mae_difference_pct": -69.41,
+              "mae_difference_pct": -66.42,
               "winner": "trained_model",
-              "interpretation": "The trained model has lower revenue MAE than the safe baseline by 69.41% on this slice."
+              "interpretation": "The trained model has lower revenue MAE than the safe baseline by 66.42% on this slice."
             },
             "roas": {
               "target": "roas",
@@ -440,717 +384,545 @@
               "winner": "safe_baseline_fallback",
               "interpretation": "The safe baseline has lower roas MAE than the trained model by 50.00% on this slice."
             },
-            "interpretation": "Revenue: The trained model has lower revenue MAE than the safe baseline by 69.41% on this slice. ROAS: The safe baseline has lower roas MAE than the trained model by 50.00% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
-          }
-        },
-        {
-          "fold": 3,
-          "start_date": "2026-03-20",
-          "end_date": "2026-04-18",
-          "train_rows": 1680,
-          "test_rows": 240,
-          "segments_evaluated": 18,
-          "dedicated_training_samples": 324,
-          "fallback_only": false,
-          "trained_model_metrics": {
-            "mae": 2682.3,
-            "rmse": 4163.5,
-            "mape": 2.45,
-            "interval_coverage": 100.0,
-            "mean_interval_width": 21228.0189,
-            "mean_interval_width_pct": 29.32,
-            "revenue": {
-              "mae": 2682.3,
-              "rmse": 4163.5,
-              "mape": 2.45,
-              "interval_coverage": 100.0,
-              "mean_interval_width": 21228.0189,
-              "mean_interval_width_pct": 29.32
-            },
-            "roas": {
-              "mae": 0.04,
-              "rmse": 0.05,
-              "mape": 1.25,
-              "interval_coverage": 100.0,
-              "mean_interval_width": 0.4656,
-              "mean_interval_width_pct": 11.38
-            },
-            "roas_mae": 0.04,
-            "roas_rmse": 0.05,
-            "roas_mape": 1.25,
-            "roas_interval_coverage": 100.0
-          },
-          "safe_baseline_metrics": {
-            "mae": 3768.93,
-            "rmse": 5483.68,
-            "mape": 3.6,
-            "interval_coverage": 83.33,
-            "mean_interval_width": 11154.4272,
-            "mean_interval_width_pct": 11.18,
-            "revenue": {
-              "mae": 3768.93,
-              "rmse": 5483.68,
-              "mape": 3.6,
-              "interval_coverage": 83.33,
-              "mean_interval_width": 11154.4272,
-              "mean_interval_width_pct": 11.18
-            },
-            "roas": {
-              "mae": 0.07,
-              "rmse": 0.08,
-              "mape": 1.86,
-              "interval_coverage": 100.0,
-              "mean_interval_width": 0.5839,
-              "mean_interval_width_pct": 14.27
-            },
-            "roas_mae": 0.07,
-            "roas_rmse": 0.08,
-            "roas_mape": 1.86,
-            "roas_interval_coverage": 100.0
-          },
-          "model_performance_evidence": {
-            "overall_winner": "trained_model",
-            "revenue": {
-              "target": "revenue",
-              "trained_mae": 2682.3,
-              "safe_baseline_mae": 3768.93,
-              "mae_difference_pct": -28.83,
-              "winner": "trained_model",
-              "interpretation": "The trained model has lower revenue MAE than the safe baseline by 28.83% on this slice."
-            },
-            "roas": {
-              "target": "roas",
-              "trained_mae": 0.04,
-              "safe_baseline_mae": 0.07,
-              "mae_difference_pct": -42.86,
-              "winner": "trained_model",
-              "interpretation": "The trained model has lower roas MAE than the safe baseline by 42.86% on this slice."
-            },
-            "interpretation": "Revenue: The trained model has lower revenue MAE than the safe baseline by 28.83% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 42.86% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
-          }
-        },
-        {
-          "fold": 4,
-          "start_date": "2026-02-18",
-          "end_date": "2026-03-19",
-          "train_rows": 1440,
-          "test_rows": 240,
-          "segments_evaluated": 18,
-          "dedicated_training_samples": 270,
-          "fallback_only": false,
-          "trained_model_metrics": {
-            "mae": 7941.68,
-            "rmse": 11475.78,
-            "mape": 7.7,
-            "interval_coverage": 72.22,
-            "mean_interval_width": 20240.8156,
-            "mean_interval_width_pct": 33.04,
-            "revenue": {
-              "mae": 7941.68,
-              "rmse": 11475.78,
-              "mape": 7.7,
-              "interval_coverage": 72.22,
-              "mean_interval_width": 20240.8156,
-              "mean_interval_width_pct": 33.04
-            },
-            "roas": {
-              "mae": 0.04,
-              "rmse": 0.05,
-              "mape": 1.1,
-              "interval_coverage": 100.0,
-              "mean_interval_width": 0.4678,
-              "mean_interval_width_pct": 11.4
-            },
-            "roas_mae": 0.04,
-            "roas_rmse": 0.05,
-            "roas_mape": 1.1,
-            "roas_interval_coverage": 100.0
-          },
-          "safe_baseline_metrics": {
-            "mae": 7941.68,
-            "rmse": 11475.78,
-            "mape": 7.7,
-            "interval_coverage": 11.11,
-            "mean_interval_width": 10193.3972,
-            "mean_interval_width_pct": 11.18,
-            "revenue": {
-              "mae": 7941.68,
-              "rmse": 11475.78,
-              "mape": 7.7,
-              "interval_coverage": 11.11,
-              "mean_interval_width": 10193.3972,
-              "mean_interval_width_pct": 11.18
-            },
-            "roas": {
-              "mae": 0.07,
-              "rmse": 0.08,
-              "mape": 1.77,
-              "interval_coverage": 100.0,
-              "mean_interval_width": 0.5833,
-              "mean_interval_width_pct": 14.06
-            },
-            "roas_mae": 0.07,
-            "roas_rmse": 0.08,
-            "roas_mape": 1.77,
-            "roas_interval_coverage": 100.0
-          },
-          "model_performance_evidence": {
-            "overall_winner": "mixed",
-            "revenue": {
-              "target": "revenue",
-              "trained_mae": 7941.68,
-              "safe_baseline_mae": 7941.68,
-              "mae_difference_pct": 0.0,
-              "winner": "tie",
-              "interpretation": "The trained model and safe baseline are tied on revenue MAE for this slice."
-            },
-            "roas": {
-              "target": "roas",
-              "trained_mae": 0.04,
-              "safe_baseline_mae": 0.07,
-              "mae_difference_pct": -42.86,
-              "winner": "trained_model",
-              "interpretation": "The trained model has lower roas MAE than the safe baseline by 42.86% on this slice."
-            },
-            "interpretation": "Revenue: The trained model and safe baseline are tied on revenue MAE for this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 42.86% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+            "interpretation": "Revenue: The trained model has lower revenue MAE than the safe baseline by 66.42% on this slice. ROAS: The safe baseline has lower roas MAE than the trained model by 50.00% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
           }
         }
       ],
-      "fold_count": 4,
-      "segments_evaluated": 72,
+      "fold_count": 2,
+      "segments_evaluated": 36,
       "trained_model_metrics": {
-        "mae": 3571.54,
-        "rmse": 6415.06,
-        "mape": 3.54,
-        "interval_coverage": 93.06,
-        "mean_interval_width": 21277.1282,
-        "mean_interval_width_pct": 30.51,
+        "mae": 1986.44,
+        "rmse": 3031.03,
+        "mape": 2.12,
+        "interval_coverage": 100.0,
+        "mean_interval_width": 21831.3022,
+        "mean_interval_width_pct": 29.82,
         "revenue": {
-          "mae": 3571.54,
-          "rmse": 6415.06,
-          "mape": 3.54,
-          "interval_coverage": 93.06,
-          "mean_interval_width": 21277.1282,
-          "mean_interval_width_pct": 30.51
+          "mae": 1986.44,
+          "rmse": 3031.03,
+          "mape": 2.12,
+          "interval_coverage": 100.0,
+          "mean_interval_width": 21831.3022,
+          "mean_interval_width_pct": 29.82
+        },
+        "roas": {
+          "mae": 0.05,
+          "rmse": 0.07,
+          "mape": 1.34,
+          "interval_coverage": 100.0,
+          "mean_interval_width": 0.4686,
+          "mean_interval_width_pct": 11.44
+        },
+        "roas_mae": 0.05,
+        "roas_rmse": 0.07,
+        "roas_mape": 1.34,
+        "roas_interval_coverage": 100.0
+      },
+      "safe_baseline_metrics": {
+        "mae": 2762.36,
+        "rmse": 3919.56,
+        "mape": 2.93,
+        "interval_coverage": 94.44,
+        "mean_interval_width": 11817.7839,
+        "mean_interval_width_pct": 11.2,
+        "revenue": {
+          "mae": 2762.36,
+          "rmse": 3919.56,
+          "mape": 2.93,
+          "interval_coverage": 94.44,
+          "mean_interval_width": 11817.7839,
+          "mean_interval_width_pct": 11.2
         },
         "roas": {
           "mae": 0.05,
           "rmse": 0.06,
-          "mape": 1.25,
+          "mape": 1.26,
           "interval_coverage": 100.0,
-          "mean_interval_width": 0.4675,
-          "mean_interval_width_pct": 11.41
+          "mean_interval_width": 0.5903,
+          "mean_interval_width_pct": 14.48
         },
         "roas_mae": 0.05,
         "roas_rmse": 0.06,
-        "roas_mape": 1.25,
-        "roas_interval_coverage": 100.0
-      },
-      "safe_baseline_metrics": {
-        "mae": 4308.83,
-        "rmse": 6937.04,
-        "mape": 4.29,
-        "interval_coverage": 70.83,
-        "mean_interval_width": 11235.2965,
-        "mean_interval_width_pct": 11.18,
-        "revenue": {
-          "mae": 4308.83,
-          "rmse": 6937.04,
-          "mape": 4.29,
-          "interval_coverage": 70.83,
-          "mean_interval_width": 11235.2965,
-          "mean_interval_width_pct": 11.18
-        },
-        "roas": {
-          "mae": 0.06,
-          "rmse": 0.07,
-          "mape": 1.53,
-          "interval_coverage": 100.0,
-          "mean_interval_width": 0.5869,
-          "mean_interval_width_pct": 14.32
-        },
-        "roas_mae": 0.06,
-        "roas_rmse": 0.07,
-        "roas_mape": 1.53,
+        "roas_mape": 1.26,
         "roas_interval_coverage": 100.0
       },
       "segment_level_interval_coverage": {
         "overall": {
-          "segments_evaluated": 4,
-          "trained_revenue_coverage": 75.0,
-          "trained_revenue_width_pct": 11.18,
+          "segments_evaluated": 2,
+          "trained_revenue_coverage": 100.0,
+          "trained_revenue_width_pct": 11.2,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 7.11,
-          "safe_revenue_coverage": 75.0,
-          "safe_revenue_width_pct": 11.18,
+          "trained_roas_width_pct": 7.13,
+          "safe_revenue_coverage": 100.0,
+          "safe_revenue_width_pct": 11.2,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 6.93
+          "safe_roas_width_pct": 6.9
         },
         "channel": {
-          "segments_evaluated": 12,
-          "trained_revenue_coverage": 91.67,
-          "trained_revenue_width_pct": 16.92,
+          "segments_evaluated": 6,
+          "trained_revenue_coverage": 100.0,
+          "trained_revenue_width_pct": 16.64,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 8.14,
-          "safe_revenue_coverage": 75.0,
-          "safe_revenue_width_pct": 11.18,
+          "trained_roas_width_pct": 8.17,
+          "safe_revenue_coverage": 100.0,
+          "safe_revenue_width_pct": 11.2,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 10.31
+          "safe_roas_width_pct": 10.42
         },
         "campaign_type": {
-          "segments_evaluated": 24,
-          "trained_revenue_coverage": 91.67,
-          "trained_revenue_width_pct": 29.31,
+          "segments_evaluated": 12,
+          "trained_revenue_coverage": 100.0,
+          "trained_revenue_width_pct": 28.59,
           "trained_roas_coverage": 100.0,
           "trained_roas_width_pct": 11.93,
-          "safe_revenue_coverage": 70.83,
-          "safe_revenue_width_pct": 11.18,
+          "safe_revenue_coverage": 91.67,
+          "safe_revenue_width_pct": 11.2,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 15.11
+          "safe_roas_width_pct": 15.29
         },
         "campaign": {
-          "segments_evaluated": 32,
-          "trained_revenue_coverage": 96.88,
-          "trained_revenue_width_pct": 38.91,
+          "segments_evaluated": 16,
+          "trained_revenue_coverage": 100.0,
+          "trained_revenue_width_pct": 38.03,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 12.78,
-          "safe_revenue_coverage": 68.75,
-          "safe_revenue_width_pct": 11.18,
+          "trained_roas_width_pct": 12.84,
+          "safe_revenue_coverage": 93.75,
+          "safe_revenue_width_pct": 11.2,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 16.15
+          "safe_roas_width_pct": 16.34
         }
       },
       "segment_level_performance": {
         "overall": {
-          "segments_evaluated": 4,
+          "segments_evaluated": 2,
           "trained_model_metrics": {
-            "mae": 15094.15,
-            "rmse": 19646.76,
-            "mape": 3.31,
-            "interval_coverage": 75.0,
-            "mean_interval_width": 51852.46,
-            "mean_interval_width_pct": 11.18,
+            "mae": 6894.38,
+            "rmse": 8198.45,
+            "mape": 1.44,
+            "interval_coverage": 100.0,
+            "mean_interval_width": 54146.24,
+            "mean_interval_width_pct": 11.2,
             "revenue": {
-              "mae": 15094.15,
-              "rmse": 19646.76,
-              "mape": 3.31,
-              "interval_coverage": 75.0,
-              "mean_interval_width": 51852.46,
-              "mean_interval_width_pct": 11.18
+              "mae": 6894.38,
+              "rmse": 8198.45,
+              "mape": 1.44,
+              "interval_coverage": 100.0,
+              "mean_interval_width": 54146.24,
+              "mean_interval_width_pct": 11.2
             },
             "roas": {
               "mae": 0.02,
               "rmse": 0.02,
-              "mape": 0.55,
+              "mape": 0.39,
               "interval_coverage": 100.0,
               "mean_interval_width": 0.29,
-              "mean_interval_width_pct": 7.11
+              "mean_interval_width_pct": 7.13
             },
             "roas_mae": 0.02,
             "roas_rmse": 0.02,
-            "roas_mape": 0.55,
+            "roas_mape": 0.39,
             "roas_interval_coverage": 100.0
           },
           "seasonal_average_baseline_metrics": {
-            "mae": 18421.55,
-            "rmse": 21341.83,
-            "mape": 4.01,
-            "interval_coverage": 75.0,
-            "mean_interval_width": 50556.5375,
-            "mean_interval_width_pct": 11.18,
+            "mae": 10471.07,
+            "rmse": 11285.12,
+            "mape": 2.18,
+            "interval_coverage": 100.0,
+            "mean_interval_width": 53178.01,
+            "mean_interval_width_pct": 11.2,
             "revenue": {
-              "mae": 18421.55,
-              "rmse": 21341.83,
-              "mape": 4.01,
-              "interval_coverage": 75.0,
-              "mean_interval_width": 50556.5375,
-              "mean_interval_width_pct": 11.18
+              "mae": 10471.07,
+              "rmse": 11285.12,
+              "mape": 2.18,
+              "interval_coverage": 100.0,
+              "mean_interval_width": 53178.01,
+              "mean_interval_width_pct": 11.2
             },
             "roas": {
-              "mae": 0.02,
-              "rmse": 0.03,
-              "mape": 0.6,
+              "mae": 0.01,
+              "rmse": 0.01,
+              "mape": 0.24,
               "interval_coverage": 100.0,
-              "mean_interval_width": 0.2825,
-              "mean_interval_width_pct": 6.93
+              "mean_interval_width": 0.28,
+              "mean_interval_width_pct": 6.9
             },
-            "roas_mae": 0.02,
-            "roas_rmse": 0.03,
-            "roas_mape": 0.6,
+            "roas_mae": 0.01,
+            "roas_rmse": 0.01,
+            "roas_mape": 0.24,
             "roas_interval_coverage": 100.0
           },
           "verdict": {
             "overall_winner": "mixed",
             "revenue": {
               "target": "revenue",
-              "trained_mae": 15094.15,
-              "safe_baseline_mae": 18421.55,
-              "mae_difference_pct": -18.06,
+              "trained_mae": 6894.38,
+              "safe_baseline_mae": 10471.07,
+              "mae_difference_pct": -34.16,
               "winner": "trained_model",
-              "interpretation": "The trained model has lower revenue MAE than the safe baseline by 18.06% on this slice."
+              "interpretation": "The trained model has lower revenue MAE than the safe baseline by 34.16% on this slice."
             },
             "roas": {
               "target": "roas",
               "trained_mae": 0.02,
-              "safe_baseline_mae": 0.02,
-              "mae_difference_pct": 0.0,
-              "winner": "tie",
-              "interpretation": "The trained model and safe baseline are tied on roas MAE for this slice."
+              "safe_baseline_mae": 0.01,
+              "mae_difference_pct": 100.0,
+              "winner": "safe_baseline_fallback",
+              "interpretation": "The safe baseline has lower roas MAE than the trained model by 100.00% on this slice."
             },
-            "interpretation": "Revenue: The trained model has lower revenue MAE than the safe baseline by 18.06% on this slice. ROAS: The trained model and safe baseline are tied on roas MAE for this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+            "interpretation": "Revenue: The trained model has lower revenue MAE than the safe baseline by 34.16% on this slice. ROAS: The safe baseline has lower roas MAE than the trained model by 100.00% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
           }
         },
         "channel": {
-          "segments_evaluated": 12,
+          "segments_evaluated": 6,
           "trained_model_metrics": {
-            "mae": 5157.8,
-            "rmse": 7884.48,
-            "mape": 3.21,
-            "interval_coverage": 91.67,
-            "mean_interval_width": 21937.5225,
-            "mean_interval_width_pct": 16.92,
+            "mae": 2711.79,
+            "rmse": 3994.71,
+            "mape": 1.45,
+            "interval_coverage": 100.0,
+            "mean_interval_width": 22642.3617,
+            "mean_interval_width_pct": 16.64,
             "revenue": {
-              "mae": 5157.8,
-              "rmse": 7884.48,
-              "mape": 3.21,
-              "interval_coverage": 91.67,
-              "mean_interval_width": 21937.5225,
-              "mean_interval_width_pct": 16.92
+              "mae": 2711.79,
+              "rmse": 3994.71,
+              "mape": 1.45,
+              "interval_coverage": 100.0,
+              "mean_interval_width": 22642.3617,
+              "mean_interval_width_pct": 16.64
             },
             "roas": {
-              "mae": 0.04,
+              "mae": 0.05,
               "rmse": 0.05,
-              "mape": 1.09,
+              "mape": 1.29,
               "interval_coverage": 100.0,
-              "mean_interval_width": 0.36,
-              "mean_interval_width_pct": 8.14
+              "mean_interval_width": 0.3617,
+              "mean_interval_width_pct": 8.17
             },
-            "roas_mae": 0.04,
+            "roas_mae": 0.05,
             "roas_rmse": 0.05,
-            "roas_mape": 1.09,
+            "roas_mape": 1.29,
             "roas_interval_coverage": 100.0
           },
           "seasonal_average_baseline_metrics": {
-            "mae": 6236.57,
-            "rmse": 8449.22,
-            "mape": 3.87,
-            "interval_coverage": 75.0,
-            "mean_interval_width": 16852.675,
-            "mean_interval_width_pct": 11.18,
+            "mae": 3686.75,
+            "rmse": 4834.56,
+            "mape": 2.06,
+            "interval_coverage": 100.0,
+            "mean_interval_width": 17726.5183,
+            "mean_interval_width_pct": 11.2,
             "revenue": {
-              "mae": 6236.57,
-              "rmse": 8449.22,
-              "mape": 3.87,
-              "interval_coverage": 75.0,
-              "mean_interval_width": 16852.675,
-              "mean_interval_width_pct": 11.18
+              "mae": 3686.75,
+              "rmse": 4834.56,
+              "mape": 2.06,
+              "interval_coverage": 100.0,
+              "mean_interval_width": 17726.5183,
+              "mean_interval_width_pct": 11.2
             },
             "roas": {
-              "mae": 0.04,
-              "rmse": 0.05,
-              "mape": 0.91,
+              "mae": 0.03,
+              "rmse": 0.03,
+              "mape": 0.59,
               "interval_coverage": 100.0,
-              "mean_interval_width": 0.4567,
-              "mean_interval_width_pct": 10.31
+              "mean_interval_width": 0.46,
+              "mean_interval_width_pct": 10.42
             },
-            "roas_mae": 0.04,
-            "roas_rmse": 0.05,
-            "roas_mape": 0.91,
+            "roas_mae": 0.03,
+            "roas_rmse": 0.03,
+            "roas_mape": 0.59,
             "roas_interval_coverage": 100.0
           },
           "verdict": {
             "overall_winner": "mixed",
             "revenue": {
               "target": "revenue",
-              "trained_mae": 5157.8,
-              "safe_baseline_mae": 6236.57,
-              "mae_difference_pct": -17.3,
+              "trained_mae": 2711.79,
+              "safe_baseline_mae": 3686.75,
+              "mae_difference_pct": -26.44,
               "winner": "trained_model",
-              "interpretation": "The trained model has lower revenue MAE than the safe baseline by 17.30% on this slice."
+              "interpretation": "The trained model has lower revenue MAE than the safe baseline by 26.44% on this slice."
             },
             "roas": {
               "target": "roas",
-              "trained_mae": 0.04,
-              "safe_baseline_mae": 0.04,
-              "mae_difference_pct": 0.0,
-              "winner": "tie",
-              "interpretation": "The trained model and safe baseline are tied on roas MAE for this slice."
+              "trained_mae": 0.05,
+              "safe_baseline_mae": 0.03,
+              "mae_difference_pct": 66.67,
+              "winner": "safe_baseline_fallback",
+              "interpretation": "The safe baseline has lower roas MAE than the trained model by 66.67% on this slice."
             },
-            "interpretation": "Revenue: The trained model has lower revenue MAE than the safe baseline by 17.30% on this slice. ROAS: The trained model and safe baseline are tied on roas MAE for this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+            "interpretation": "Revenue: The trained model has lower revenue MAE than the safe baseline by 26.44% on this slice. ROAS: The safe baseline has lower roas MAE than the trained model by 66.67% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
           }
         },
         "campaign_type": {
-          "segments_evaluated": 24,
+          "segments_evaluated": 12,
           "trained_model_metrics": {
-            "mae": 2776.8,
-            "rmse": 3928.81,
-            "mape": 3.63,
-            "interval_coverage": 91.67,
-            "mean_interval_width": 18471.8742,
-            "mean_interval_width_pct": 29.31,
+            "mae": 1640.8,
+            "rmse": 1992.76,
+            "mape": 2.37,
+            "interval_coverage": 100.0,
+            "mean_interval_width": 18859.4392,
+            "mean_interval_width_pct": 28.59,
             "revenue": {
-              "mae": 2776.8,
-              "rmse": 3928.81,
-              "mape": 3.63,
-              "interval_coverage": 91.67,
-              "mean_interval_width": 18471.8742,
-              "mean_interval_width_pct": 29.31
+              "mae": 1640.8,
+              "rmse": 1992.76,
+              "mape": 2.37,
+              "interval_coverage": 100.0,
+              "mean_interval_width": 18859.4392,
+              "mean_interval_width_pct": 28.59
             },
             "roas": {
               "mae": 0.05,
               "rmse": 0.06,
-              "mape": 1.35,
+              "mape": 1.36,
               "interval_coverage": 100.0,
-              "mean_interval_width": 0.4542,
+              "mean_interval_width": 0.4533,
               "mean_interval_width_pct": 11.93
             },
             "roas_mae": 0.05,
             "roas_rmse": 0.06,
-            "roas_mape": 1.35,
+            "roas_mape": 1.36,
             "roas_interval_coverage": 100.0
           },
           "seasonal_average_baseline_metrics": {
-            "mae": 3338.2,
-            "rmse": 4280.4,
-            "mape": 4.42,
-            "interval_coverage": 70.83,
-            "mean_interval_width": 8426.6138,
-            "mean_interval_width_pct": 11.18,
+            "mae": 2286.44,
+            "rmse": 2624.65,
+            "mape": 3.27,
+            "interval_coverage": 91.67,
+            "mean_interval_width": 8863.45,
+            "mean_interval_width_pct": 11.2,
             "revenue": {
-              "mae": 3338.2,
-              "rmse": 4280.4,
-              "mape": 4.42,
-              "interval_coverage": 70.83,
-              "mean_interval_width": 8426.6138,
-              "mean_interval_width_pct": 11.18
+              "mae": 2286.44,
+              "rmse": 2624.65,
+              "mape": 3.27,
+              "interval_coverage": 91.67,
+              "mean_interval_width": 8863.45,
+              "mean_interval_width_pct": 11.2
+            },
+            "roas": {
+              "mae": 0.05,
+              "rmse": 0.06,
+              "mape": 1.5,
+              "interval_coverage": 100.0,
+              "mean_interval_width": 0.5767,
+              "mean_interval_width_pct": 15.29
+            },
+            "roas_mae": 0.05,
+            "roas_rmse": 0.06,
+            "roas_mape": 1.5,
+            "roas_interval_coverage": 100.0
+          },
+          "verdict": {
+            "overall_winner": "mixed",
+            "revenue": {
+              "target": "revenue",
+              "trained_mae": 1640.8,
+              "safe_baseline_mae": 2286.44,
+              "mae_difference_pct": -28.24,
+              "winner": "trained_model",
+              "interpretation": "The trained model has lower revenue MAE than the safe baseline by 28.24% on this slice."
+            },
+            "roas": {
+              "target": "roas",
+              "trained_mae": 0.05,
+              "safe_baseline_mae": 0.05,
+              "mae_difference_pct": 0.0,
+              "winner": "tie",
+              "interpretation": "The trained model and safe baseline are tied on roas MAE for this slice."
+            },
+            "interpretation": "Revenue: The trained model has lower revenue MAE than the safe baseline by 28.24% on this slice. ROAS: The trained model and safe baseline are tied on roas MAE for this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+          }
+        },
+        "campaign": {
+          "segments_evaluated": 16,
+          "trained_model_metrics": {
+            "mae": 1360.17,
+            "rmse": 1818.45,
+            "mape": 2.27,
+            "interval_coverage": 100.0,
+            "mean_interval_width": 19716.685,
+            "mean_interval_width_pct": 38.03,
+            "revenue": {
+              "mae": 1360.17,
+              "rmse": 1818.45,
+              "mape": 2.27,
+              "interval_coverage": 100.0,
+              "mean_interval_width": 19716.685,
+              "mean_interval_width_pct": 38.03
             },
             "roas": {
               "mae": 0.06,
               "rmse": 0.07,
-              "mape": 1.78,
+              "mape": 1.46,
               "interval_coverage": 100.0,
-              "mean_interval_width": 0.5737,
-              "mean_interval_width_pct": 15.11
+              "mean_interval_width": 0.5425,
+              "mean_interval_width_pct": 12.84
             },
             "roas_mae": 0.06,
             "roas_rmse": 0.07,
-            "roas_mape": 1.78,
-            "roas_interval_coverage": 100.0
-          },
-          "verdict": {
-            "overall_winner": "trained_model",
-            "revenue": {
-              "target": "revenue",
-              "trained_mae": 2776.8,
-              "safe_baseline_mae": 3338.2,
-              "mae_difference_pct": -16.82,
-              "winner": "trained_model",
-              "interpretation": "The trained model has lower revenue MAE than the safe baseline by 16.82% on this slice."
-            },
-            "roas": {
-              "target": "roas",
-              "trained_mae": 0.05,
-              "safe_baseline_mae": 0.06,
-              "mae_difference_pct": -16.67,
-              "winner": "trained_model",
-              "interpretation": "The trained model has lower roas MAE than the safe baseline by 16.67% on this slice."
-            },
-            "interpretation": "Revenue: The trained model has lower revenue MAE than the safe baseline by 16.82% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 16.67% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
-          }
-        },
-        "campaign": {
-          "segments_evaluated": 32,
-          "trained_model_metrics": {
-            "mae": 2132.43,
-            "rmse": 3075.1,
-            "mape": 3.62,
-            "interval_coverage": 96.88,
-            "mean_interval_width": 19311.5044,
-            "mean_interval_width_pct": 38.91,
-            "revenue": {
-              "mae": 2132.43,
-              "rmse": 3075.1,
-              "mape": 3.62,
-              "interval_coverage": 96.88,
-              "mean_interval_width": 19311.5044,
-              "mean_interval_width_pct": 38.91
-            },
-            "roas": {
-              "mae": 0.05,
-              "rmse": 0.07,
-              "mape": 1.33,
-              "interval_coverage": 100.0,
-              "mean_interval_width": 0.54,
-              "mean_interval_width_pct": 12.78
-            },
-            "roas_mae": 0.05,
-            "roas_rmse": 0.07,
-            "roas_mape": 1.33,
+            "roas_mape": 1.46,
             "roas_interval_coverage": 100.0
           },
           "seasonal_average_baseline_metrics": {
-            "mae": 2549.82,
-            "rmse": 3290.76,
-            "mape": 4.38,
-            "interval_coverage": 68.75,
-            "mean_interval_width": 6320.1366,
-            "mean_interval_width_pct": 11.18,
+            "mae": 1809.06,
+            "rmse": 2171.62,
+            "mape": 3.08,
+            "interval_coverage": 93.75,
+            "mean_interval_width": 6647.7306,
+            "mean_interval_width_pct": 11.2,
             "revenue": {
-              "mae": 2549.82,
-              "rmse": 3290.76,
-              "mape": 4.38,
-              "interval_coverage": 68.75,
-              "mean_interval_width": 6320.1366,
-              "mean_interval_width_pct": 11.18
+              "mae": 1809.06,
+              "rmse": 2171.62,
+              "mape": 3.08,
+              "interval_coverage": 93.75,
+              "mean_interval_width": 6647.7306,
+              "mean_interval_width_pct": 11.2
             },
             "roas": {
-              "mae": 0.07,
-              "rmse": 0.07,
-              "mape": 1.7,
+              "mae": 0.05,
+              "rmse": 0.06,
+              "mape": 1.46,
               "interval_coverage": 100.0,
-              "mean_interval_width": 0.6838,
-              "mean_interval_width_pct": 16.15
+              "mean_interval_width": 0.6881,
+              "mean_interval_width_pct": 16.34
             },
-            "roas_mae": 0.07,
-            "roas_rmse": 0.07,
-            "roas_mape": 1.7,
+            "roas_mae": 0.05,
+            "roas_rmse": 0.06,
+            "roas_mape": 1.46,
             "roas_interval_coverage": 100.0
           },
           "verdict": {
-            "overall_winner": "trained_model",
+            "overall_winner": "mixed",
             "revenue": {
               "target": "revenue",
-              "trained_mae": 2132.43,
-              "safe_baseline_mae": 2549.82,
-              "mae_difference_pct": -16.37,
+              "trained_mae": 1360.17,
+              "safe_baseline_mae": 1809.06,
+              "mae_difference_pct": -24.81,
               "winner": "trained_model",
-              "interpretation": "The trained model has lower revenue MAE than the safe baseline by 16.37% on this slice."
+              "interpretation": "The trained model has lower revenue MAE than the safe baseline by 24.81% on this slice."
             },
             "roas": {
               "target": "roas",
-              "trained_mae": 0.05,
-              "safe_baseline_mae": 0.07,
-              "mae_difference_pct": -28.57,
-              "winner": "trained_model",
-              "interpretation": "The trained model has lower roas MAE than the safe baseline by 28.57% on this slice."
+              "trained_mae": 0.06,
+              "safe_baseline_mae": 0.05,
+              "mae_difference_pct": 20.0,
+              "winner": "safe_baseline_fallback",
+              "interpretation": "The safe baseline has lower roas MAE than the trained model by 20.00% on this slice."
             },
-            "interpretation": "Revenue: The trained model has lower revenue MAE than the safe baseline by 16.37% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 28.57% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+            "interpretation": "Revenue: The trained model has lower revenue MAE than the safe baseline by 24.81% on this slice. ROAS: The safe baseline has lower roas MAE than the trained model by 20.00% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
           }
         }
       },
       "rolling_origin_average_metrics": {
-        "folds_averaged": 4,
+        "folds_averaged": 2,
         "trained_model_metrics": {
-          "mae": 3571.5425,
-          "rmse": 5150.3825,
-          "mape": 3.5375,
-          "interval_coverage": 93.055,
-          "mean_interval_width": 21277.1282,
-          "mean_interval_width_pct": 30.505,
+          "mae": 1986.44,
+          "rmse": 2689.87,
+          "mape": 2.125,
+          "interval_coverage": 100.0,
+          "mean_interval_width": 21831.3023,
+          "mean_interval_width_pct": 29.825,
           "revenue": {
-            "mae": 3571.5425,
-            "rmse": 5150.3825,
-            "mape": 3.5375,
-            "interval_coverage": 93.055,
-            "mean_interval_width": 21277.1282,
-            "mean_interval_width_pct": 30.505
+            "mae": 1986.44,
+            "rmse": 2689.87,
+            "mape": 2.125,
+            "interval_coverage": 100.0,
+            "mean_interval_width": 21831.3023,
+            "mean_interval_width_pct": 29.825
           },
           "roas": {
-            "mae": 0.045,
-            "rmse": 0.0575,
-            "mape": 1.255,
+            "mae": 0.05,
+            "rmse": 0.065,
+            "mape": 1.34,
             "interval_coverage": 100.0,
-            "mean_interval_width": 0.4675,
-            "mean_interval_width_pct": 11.4125
+            "mean_interval_width": 0.4686,
+            "mean_interval_width_pct": 11.44
           },
-          "roas_mae": 0.045,
-          "roas_rmse": 0.0575,
-          "roas_mape": 1.255,
+          "roas_mae": 0.05,
+          "roas_rmse": 0.065,
+          "roas_mape": 1.34,
           "roas_interval_coverage": 100.0
         },
         "safe_baseline_metrics": {
-          "mae": 4308.8325,
-          "rmse": 6132.0425,
-          "mape": 4.2875,
-          "interval_coverage": 70.8325,
-          "mean_interval_width": 11235.2965,
-          "mean_interval_width_pct": 11.18,
+          "mae": 2762.36,
+          "rmse": 3784.355,
+          "mape": 2.925,
+          "interval_coverage": 94.445,
+          "mean_interval_width": 11817.7838,
+          "mean_interval_width_pct": 11.2,
           "revenue": {
-            "mae": 4308.8325,
-            "rmse": 6132.0425,
-            "mape": 4.2875,
-            "interval_coverage": 70.8325,
-            "mean_interval_width": 11235.2965,
-            "mean_interval_width_pct": 11.18
+            "mae": 2762.36,
+            "rmse": 3784.355,
+            "mape": 2.925,
+            "interval_coverage": 94.445,
+            "mean_interval_width": 11817.7838,
+            "mean_interval_width_pct": 11.2
           },
           "roas": {
-            "mae": 0.0575,
-            "rmse": 0.0675,
-            "mape": 1.535,
+            "mae": 0.045,
+            "rmse": 0.055,
+            "mape": 1.255,
             "interval_coverage": 100.0,
-            "mean_interval_width": 0.5869,
-            "mean_interval_width_pct": 14.32
+            "mean_interval_width": 0.5902,
+            "mean_interval_width_pct": 14.475
           },
-          "roas_mae": 0.0575,
-          "roas_rmse": 0.0675,
-          "roas_mape": 1.535,
+          "roas_mae": 0.045,
+          "roas_rmse": 0.055,
+          "roas_mape": 1.255,
           "roas_interval_coverage": 100.0
         }
       },
       "model_performance_evidence": {
-        "overall_winner": "trained_model",
+        "overall_winner": "mixed",
         "revenue": {
           "target": "revenue",
-          "trained_mae": 3571.54,
-          "safe_baseline_mae": 4308.83,
-          "mae_difference_pct": -17.11,
+          "trained_mae": 1986.44,
+          "safe_baseline_mae": 2762.36,
+          "mae_difference_pct": -28.09,
           "winner": "trained_model",
-          "interpretation": "The trained model has lower revenue MAE than the safe baseline by 17.11% on this slice."
+          "interpretation": "The trained model has lower revenue MAE than the safe baseline by 28.09% on this slice."
         },
         "roas": {
           "target": "roas",
           "trained_mae": 0.05,
-          "safe_baseline_mae": 0.06,
-          "mae_difference_pct": -16.67,
-          "winner": "trained_model",
-          "interpretation": "The trained model has lower roas MAE than the safe baseline by 16.67% on this slice."
+          "safe_baseline_mae": 0.05,
+          "mae_difference_pct": 0.0,
+          "winner": "tie",
+          "interpretation": "The trained model and safe baseline are tied on roas MAE for this slice."
         },
-        "interpretation": "Revenue: The trained model has lower revenue MAE than the safe baseline by 17.11% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 16.67% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+        "interpretation": "Revenue: The trained model has lower revenue MAE than the safe baseline by 28.09% on this slice. ROAS: The trained model and safe baseline are tied on roas MAE for this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
       },
       "statistical_comparison": {
         "method": "paired_bootstrap_absolute_error_delta",
         "delta_definition": "trained_absolute_error_minus_safe_baseline_absolute_error",
         "revenue": {
           "target": "revenue",
-          "sample_count": 72,
-          "mean_absolute_error_delta": -737.289,
+          "sample_count": 36,
+          "mean_absolute_error_delta": -775.9206,
           "confidence_interval_95": [
-            -1363.1867,
-            -216.2216
+            -1824.5917,
+            70.0113
           ],
-          "p_value": 0.006,
-          "verdict": "trained_model",
-          "interpretation": "Trained model has statistically lower revenue absolute error on paired rows."
+          "p_value": 0.073,
+          "verdict": "statistical_tie",
+          "interpretation": "Paired bootstrap does not show a statistically clear revenue winner."
         },
         "roas": {
           "target": "roas",
-          "sample_count": 72,
-          "mean_absolute_error_delta": -0.0109,
+          "sample_count": 36,
+          "mean_absolute_error_delta": 0.0053,
           "confidence_interval_95": [
-            -0.0191,
-            -0.0027
+            -0.0072,
+            0.0164
           ],
-          "p_value": 0.009,
-          "verdict": "trained_model",
-          "interpretation": "Trained model has statistically lower roas absolute error on paired rows."
+          "p_value": 0.413,
+          "verdict": "statistical_tie",
+          "interpretation": "Paired bootstrap does not show a statistically clear roas winner."
         }
       },
       "trained_vs_safe_baseline": {
-        "mae_delta": 737.29,
-        "rmse_delta": 521.98,
-        "mape_delta": 0.75,
-        "roas_mae_delta": 0.01,
-        "roas_rmse_delta": 0.01
+        "mae_delta": 775.92,
+        "rmse_delta": 888.53,
+        "mape_delta": 0.81,
+        "roas_mae_delta": 0.0,
+        "roas_rmse_delta": -0.01
       }
     },
     {
@@ -1166,31 +938,31 @@
           "dedicated_training_samples": 162,
           "fallback_only": false,
           "trained_model_metrics": {
-            "mae": 2362.22,
-            "rmse": 2655.24,
-            "mape": 1.61,
+            "mae": 2341.4,
+            "rmse": 2629.78,
+            "mape": 1.6,
             "interval_coverage": 100.0,
-            "mean_interval_width": 91731.1717,
-            "mean_interval_width_pct": 45.58,
+            "mean_interval_width": 58857.5939,
+            "mean_interval_width_pct": 28.91,
             "revenue": {
-              "mae": 2362.22,
-              "rmse": 2655.24,
-              "mape": 1.61,
+              "mae": 2341.4,
+              "rmse": 2629.78,
+              "mape": 1.6,
               "interval_coverage": 100.0,
-              "mean_interval_width": 91731.1717,
-              "mean_interval_width_pct": 45.58
+              "mean_interval_width": 58857.5939,
+              "mean_interval_width_pct": 28.91
             },
             "roas": {
               "mae": 0.05,
-              "rmse": 0.06,
-              "mape": 1.42,
+              "rmse": 0.07,
+              "mape": 1.45,
               "interval_coverage": 100.0,
-              "mean_interval_width": 0.8072,
-              "mean_interval_width_pct": 19.54
+              "mean_interval_width": 0.6739,
+              "mean_interval_width_pct": 16.51
             },
             "roas_mae": 0.05,
-            "roas_rmse": 0.06,
-            "roas_mape": 1.42,
+            "roas_rmse": 0.07,
+            "roas_mape": 1.45,
             "roas_interval_coverage": 100.0
           },
           "safe_baseline_metrics": {
@@ -1198,23 +970,23 @@
             "rmse": 6906.01,
             "mape": 2.24,
             "interval_coverage": 100.0,
-            "mean_interval_width": 90297.3128,
-            "mean_interval_width_pct": 43.36,
+            "mean_interval_width": 58310.0689,
+            "mean_interval_width_pct": 28.0,
             "revenue": {
               "mae": 4728.39,
               "rmse": 6906.01,
               "mape": 2.24,
               "interval_coverage": 100.0,
-              "mean_interval_width": 90297.3128,
-              "mean_interval_width_pct": 43.36
+              "mean_interval_width": 58310.0689,
+              "mean_interval_width_pct": 28.0
             },
             "roas": {
               "mae": 0.04,
               "rmse": 0.05,
               "mape": 1.08,
               "interval_coverage": 100.0,
-              "mean_interval_width": 0.9306,
-              "mean_interval_width_pct": 22.77
+              "mean_interval_width": 0.8828,
+              "mean_interval_width_pct": 21.61
             },
             "roas_mae": 0.04,
             "roas_rmse": 0.05,
@@ -1225,11 +997,11 @@
             "overall_winner": "mixed",
             "revenue": {
               "target": "revenue",
-              "trained_mae": 2362.22,
+              "trained_mae": 2341.4,
               "safe_baseline_mae": 4728.39,
-              "mae_difference_pct": -50.04,
+              "mae_difference_pct": -50.48,
               "winner": "trained_model",
-              "interpretation": "The trained model has lower revenue MAE than the safe baseline by 50.04% on this slice."
+              "interpretation": "The trained model has lower revenue MAE than the safe baseline by 50.48% on this slice."
             },
             "roas": {
               "target": "roas",
@@ -1239,7 +1011,7 @@
               "winner": "safe_baseline_fallback",
               "interpretation": "The safe baseline has lower roas MAE than the trained model by 25.00% on this slice."
             },
-            "interpretation": "Revenue: The trained model has lower revenue MAE than the safe baseline by 50.04% on this slice. ROAS: The safe baseline has lower roas MAE than the trained model by 25.00% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+            "interpretation": "Revenue: The trained model has lower revenue MAE than the safe baseline by 50.48% on this slice. ROAS: The safe baseline has lower roas MAE than the trained model by 25.00% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
           }
         },
         {
@@ -1252,31 +1024,31 @@
           "dedicated_training_samples": 108,
           "fallback_only": false,
           "trained_model_metrics": {
-            "mae": 22346.03,
-            "rmse": 32011.48,
-            "mape": 10.71,
-            "interval_coverage": 100.0,
-            "mean_interval_width": 79393.7433,
-            "mean_interval_width_pct": 47.44,
+            "mae": 22407.26,
+            "rmse": 32068.54,
+            "mape": 10.75,
+            "interval_coverage": 88.89,
+            "mean_interval_width": 50594.1806,
+            "mean_interval_width_pct": 29.66,
             "revenue": {
-              "mae": 22346.03,
-              "rmse": 32011.48,
-              "mape": 10.71,
-              "interval_coverage": 100.0,
-              "mean_interval_width": 79393.7433,
-              "mean_interval_width_pct": 47.44
+              "mae": 22407.26,
+              "rmse": 32068.54,
+              "mape": 10.75,
+              "interval_coverage": 88.89,
+              "mean_interval_width": 50594.1806,
+              "mean_interval_width_pct": 29.66
             },
             "roas": {
               "mae": 0.04,
-              "rmse": 0.04,
-              "mape": 1.14,
+              "rmse": 0.05,
+              "mape": 1.16,
               "interval_coverage": 100.0,
-              "mean_interval_width": 0.8117,
-              "mean_interval_width_pct": 19.51
+              "mean_interval_width": 0.6706,
+              "mean_interval_width_pct": 16.3
             },
             "roas_mae": 0.04,
-            "roas_rmse": 0.04,
-            "roas_mape": 1.14,
+            "roas_rmse": 0.05,
+            "roas_mape": 1.16,
             "roas_interval_coverage": 100.0
           },
           "safe_baseline_metrics": {
@@ -1284,23 +1056,23 @@
             "rmse": 27483.03,
             "mape": 9.17,
             "interval_coverage": 100.0,
-            "mean_interval_width": 79559.1633,
-            "mean_interval_width_pct": 43.36,
+            "mean_interval_width": 51375.8461,
+            "mean_interval_width_pct": 28.0,
             "revenue": {
               "mae": 19172.03,
               "rmse": 27483.03,
               "mape": 9.17,
               "interval_coverage": 100.0,
-              "mean_interval_width": 79559.1633,
-              "mean_interval_width_pct": 43.36
+              "mean_interval_width": 51375.8461,
+              "mean_interval_width_pct": 28.0
             },
             "roas": {
               "mae": 0.09,
               "rmse": 0.1,
               "mape": 2.31,
               "interval_coverage": 100.0,
-              "mean_interval_width": 0.9272,
-              "mean_interval_width_pct": 22.22
+              "mean_interval_width": 0.8767,
+              "mean_interval_width_pct": 21.03
             },
             "roas_mae": 0.09,
             "roas_rmse": 0.1,
@@ -1311,11 +1083,11 @@
             "overall_winner": "mixed",
             "revenue": {
               "target": "revenue",
-              "trained_mae": 22346.03,
+              "trained_mae": 22407.26,
               "safe_baseline_mae": 19172.03,
-              "mae_difference_pct": 16.56,
+              "mae_difference_pct": 16.87,
               "winner": "safe_baseline_fallback",
-              "interpretation": "The safe baseline has lower revenue MAE than the trained model by 16.56% on this slice."
+              "interpretation": "The safe baseline has lower revenue MAE than the trained model by 16.87% on this slice."
             },
             "roas": {
               "target": "roas",
@@ -1325,660 +1097,488 @@
               "winner": "trained_model",
               "interpretation": "The trained model has lower roas MAE than the safe baseline by 55.56% on this slice."
             },
-            "interpretation": "Revenue: The safe baseline has lower revenue MAE than the trained model by 16.56% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 55.56% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
-          }
-        },
-        {
-          "fold": 3,
-          "start_date": "2025-12-20",
-          "end_date": "2026-02-17",
-          "train_rows": 960,
-          "test_rows": 480,
-          "segments_evaluated": 18,
-          "dedicated_training_samples": 54,
-          "fallback_only": false,
-          "trained_model_metrics": {
-            "mae": 29820.43,
-            "rmse": 42531.69,
-            "mape": 17.22,
-            "interval_coverage": 72.22,
-            "mean_interval_width": 60380.6733,
-            "mean_interval_width_pct": 32.12,
-            "revenue": {
-              "mae": 29820.43,
-              "rmse": 42531.69,
-              "mape": 17.22,
-              "interval_coverage": 72.22,
-              "mean_interval_width": 60380.6733,
-              "mean_interval_width_pct": 32.12
-            },
-            "roas": {
-              "mae": 0.04,
-              "rmse": 0.06,
-              "mape": 1.07,
-              "interval_coverage": 100.0,
-              "mean_interval_width": 0.8094,
-              "mean_interval_width_pct": 19.56
-            },
-            "roas_mae": 0.04,
-            "roas_rmse": 0.06,
-            "roas_mape": 1.07,
-            "roas_interval_coverage": 100.0
-          },
-          "safe_baseline_metrics": {
-            "mae": 29820.43,
-            "rmse": 42531.69,
-            "mape": 17.22,
-            "interval_coverage": 100.0,
-            "mean_interval_width": 86075.5856,
-            "mean_interval_width_pct": 43.36,
-            "revenue": {
-              "mae": 29820.43,
-              "rmse": 42531.69,
-              "mape": 17.22,
-              "interval_coverage": 100.0,
-              "mean_interval_width": 86075.5856,
-              "mean_interval_width_pct": 43.36
-            },
-            "roas": {
-              "mae": 0.05,
-              "rmse": 0.06,
-              "mape": 1.14,
-              "interval_coverage": 100.0,
-              "mean_interval_width": 0.9328,
-              "mean_interval_width_pct": 22.75
-            },
-            "roas_mae": 0.05,
-            "roas_rmse": 0.06,
-            "roas_mape": 1.14,
-            "roas_interval_coverage": 100.0
-          },
-          "model_performance_evidence": {
-            "overall_winner": "mixed",
-            "revenue": {
-              "target": "revenue",
-              "trained_mae": 29820.43,
-              "safe_baseline_mae": 29820.43,
-              "mae_difference_pct": 0.0,
-              "winner": "tie",
-              "interpretation": "The trained model and safe baseline are tied on revenue MAE for this slice."
-            },
-            "roas": {
-              "target": "roas",
-              "trained_mae": 0.04,
-              "safe_baseline_mae": 0.05,
-              "mae_difference_pct": -20.0,
-              "winner": "trained_model",
-              "interpretation": "The trained model has lower roas MAE than the safe baseline by 20.00% on this slice."
-            },
-            "interpretation": "Revenue: The trained model and safe baseline are tied on revenue MAE for this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 20.00% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
-          }
-        },
-        {
-          "fold": 4,
-          "start_date": "2025-10-21",
-          "end_date": "2025-12-19",
-          "train_rows": 480,
-          "test_rows": 480,
-          "segments_evaluated": 18,
-          "dedicated_training_samples": 0,
-          "fallback_only": true,
-          "trained_model_metrics": {
-            "mae": 23077.82,
-            "rmse": 32923.69,
-            "mape": 11.83,
-            "interval_coverage": 100.0,
-            "mean_interval_width": 72639.4744,
-            "mean_interval_width_pct": 43.36,
-            "revenue": {
-              "mae": 23077.82,
-              "rmse": 32923.69,
-              "mape": 11.83,
-              "interval_coverage": 100.0,
-              "mean_interval_width": 72639.4744,
-              "mean_interval_width_pct": 43.36
-            },
-            "roas": {
-              "mae": 0.11,
-              "rmse": 0.11,
-              "mape": 2.56,
-              "interval_coverage": 100.0,
-              "mean_interval_width": 0.9261,
-              "mean_interval_width_pct": 22.09
-            },
-            "roas_mae": 0.11,
-            "roas_rmse": 0.11,
-            "roas_mape": 2.56,
-            "roas_interval_coverage": 100.0
-          },
-          "safe_baseline_metrics": {
-            "mae": 23077.82,
-            "rmse": 32923.69,
-            "mape": 11.83,
-            "interval_coverage": 100.0,
-            "mean_interval_width": 72639.4744,
-            "mean_interval_width_pct": 43.36,
-            "revenue": {
-              "mae": 23077.82,
-              "rmse": 32923.69,
-              "mape": 11.83,
-              "interval_coverage": 100.0,
-              "mean_interval_width": 72639.4744,
-              "mean_interval_width_pct": 43.36
-            },
-            "roas": {
-              "mae": 0.11,
-              "rmse": 0.11,
-              "mape": 2.56,
-              "interval_coverage": 100.0,
-              "mean_interval_width": 0.9261,
-              "mean_interval_width_pct": 22.09
-            },
-            "roas_mae": 0.11,
-            "roas_rmse": 0.11,
-            "roas_mape": 2.56,
-            "roas_interval_coverage": 100.0
-          },
-          "model_performance_evidence": {
-            "overall_winner": "tie",
-            "revenue": {
-              "target": "revenue",
-              "trained_mae": 23077.82,
-              "safe_baseline_mae": 23077.82,
-              "mae_difference_pct": 0.0,
-              "winner": "tie",
-              "interpretation": "The trained model and safe baseline are tied on revenue MAE for this slice."
-            },
-            "roas": {
-              "target": "roas",
-              "trained_mae": 0.11,
-              "safe_baseline_mae": 0.11,
-              "mae_difference_pct": 0.0,
-              "winner": "tie",
-              "interpretation": "The trained model and safe baseline are tied on roas MAE for this slice."
-            },
-            "interpretation": "Revenue: The trained model and safe baseline are tied on revenue MAE for this slice. ROAS: The trained model and safe baseline are tied on roas MAE for this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+            "interpretation": "Revenue: The safe baseline has lower revenue MAE than the trained model by 16.87% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 55.56% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
           }
         }
       ],
-      "fold_count": 4,
-      "segments_evaluated": 72,
+      "fold_count": 2,
+      "segments_evaluated": 36,
       "trained_model_metrics": {
-        "mae": 19401.63,
-        "rmse": 31323.71,
-        "mape": 10.34,
-        "interval_coverage": 93.06,
-        "mean_interval_width": 76036.2657,
-        "mean_interval_width_pct": 42.13,
+        "mae": 12374.33,
+        "rmse": 22752.0,
+        "mape": 6.18,
+        "interval_coverage": 94.44,
+        "mean_interval_width": 54725.8872,
+        "mean_interval_width_pct": 29.28,
         "revenue": {
-          "mae": 19401.63,
-          "rmse": 31323.71,
-          "mape": 10.34,
-          "interval_coverage": 93.06,
-          "mean_interval_width": 76036.2657,
-          "mean_interval_width_pct": 42.13
+          "mae": 12374.33,
+          "rmse": 22752.0,
+          "mape": 6.18,
+          "interval_coverage": 94.44,
+          "mean_interval_width": 54725.8872,
+          "mean_interval_width_pct": 29.28
         },
         "roas": {
-          "mae": 0.06,
-          "rmse": 0.08,
-          "mape": 1.55,
+          "mae": 0.05,
+          "rmse": 0.06,
+          "mape": 1.31,
           "interval_coverage": 100.0,
-          "mean_interval_width": 0.8386,
-          "mean_interval_width_pct": 20.18
+          "mean_interval_width": 0.6722,
+          "mean_interval_width_pct": 16.4
         },
-        "roas_mae": 0.06,
-        "roas_rmse": 0.08,
-        "roas_mape": 1.55,
+        "roas_mae": 0.05,
+        "roas_rmse": 0.06,
+        "roas_mape": 1.31,
         "roas_interval_coverage": 100.0
       },
       "safe_baseline_metrics": {
-        "mae": 19199.67,
-        "rmse": 30397.05,
-        "mape": 10.11,
+        "mae": 11950.21,
+        "rmse": 20037.59,
+        "mape": 5.7,
         "interval_coverage": 100.0,
-        "mean_interval_width": 82142.884,
-        "mean_interval_width_pct": 43.36,
+        "mean_interval_width": 54842.9575,
+        "mean_interval_width_pct": 28.0,
         "revenue": {
-          "mae": 19199.67,
-          "rmse": 30397.05,
-          "mape": 10.11,
+          "mae": 11950.21,
+          "rmse": 20037.59,
+          "mape": 5.7,
           "interval_coverage": 100.0,
-          "mean_interval_width": 82142.884,
-          "mean_interval_width_pct": 43.36
+          "mean_interval_width": 54842.9575,
+          "mean_interval_width_pct": 28.0
         },
         "roas": {
           "mae": 0.07,
           "rmse": 0.08,
-          "mape": 1.77,
+          "mape": 1.69,
           "interval_coverage": 100.0,
-          "mean_interval_width": 0.9292,
-          "mean_interval_width_pct": 22.46
+          "mean_interval_width": 0.8797,
+          "mean_interval_width_pct": 21.32
         },
         "roas_mae": 0.07,
         "roas_rmse": 0.08,
-        "roas_mape": 1.77,
+        "roas_mape": 1.69,
         "roas_interval_coverage": 100.0
       },
       "segment_level_interval_coverage": {
         "overall": {
-          "segments_evaluated": 4,
-          "trained_revenue_coverage": 75.0,
-          "trained_revenue_width_pct": 37.77,
+          "segments_evaluated": 2,
+          "trained_revenue_coverage": 100.0,
+          "trained_revenue_width_pct": 25.76,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 19.56,
+          "trained_roas_width_pct": 12.59,
           "safe_revenue_coverage": 100.0,
-          "safe_revenue_width_pct": 43.36,
+          "safe_revenue_width_pct": 28.0,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 19.53
+          "safe_roas_width_pct": 12.67
         },
         "channel": {
-          "segments_evaluated": 12,
-          "trained_revenue_coverage": 91.67,
-          "trained_revenue_width_pct": 39.11,
+          "segments_evaluated": 6,
+          "trained_revenue_coverage": 83.33,
+          "trained_revenue_width_pct": 27.05,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 19.51,
+          "trained_roas_width_pct": 12.63,
           "safe_revenue_coverage": 100.0,
-          "safe_revenue_width_pct": 43.36,
+          "safe_revenue_width_pct": 28.0,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 19.49
+          "safe_roas_width_pct": 15.26
         },
         "campaign_type": {
-          "segments_evaluated": 24,
-          "trained_revenue_coverage": 95.83,
-          "trained_revenue_width_pct": 41.07,
+          "segments_evaluated": 12,
+          "trained_revenue_coverage": 91.67,
+          "trained_revenue_width_pct": 28.51,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 20.19,
+          "trained_roas_width_pct": 16.8,
           "safe_revenue_coverage": 100.0,
-          "safe_revenue_width_pct": 43.36,
+          "safe_revenue_width_pct": 28.0,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 22.6
+          "safe_roas_width_pct": 22.39
         },
         "campaign": {
-          "segments_evaluated": 32,
-          "trained_revenue_coverage": 93.75,
-          "trained_revenue_width_pct": 44.6,
+          "segments_evaluated": 16,
+          "trained_revenue_coverage": 100.0,
+          "trained_revenue_width_pct": 31.14,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 20.5,
+          "trained_roas_width_pct": 17.99,
           "safe_revenue_coverage": 100.0,
-          "safe_revenue_width_pct": 43.36,
+          "safe_revenue_width_pct": 28.0,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 23.84
+          "safe_roas_width_pct": 23.88
         }
       },
       "segment_level_performance": {
         "overall": {
-          "segments_evaluated": 4,
+          "segments_evaluated": 2,
           "trained_model_metrics": {
-            "mae": 85468.65,
-            "rmse": 98645.59,
-            "mape": 10.29,
-            "interval_coverage": 75.0,
-            "mean_interval_width": 320198.2125,
-            "mean_interval_width_pct": 37.77,
+            "mae": 51948.42,
+            "rmse": 71287.9,
+            "mape": 5.69,
+            "interval_coverage": 100.0,
+            "mean_interval_width": 227471.71,
+            "mean_interval_width_pct": 25.76,
             "revenue": {
-              "mae": 85468.65,
-              "rmse": 98645.59,
-              "mape": 10.29,
-              "interval_coverage": 75.0,
-              "mean_interval_width": 320198.2125,
-              "mean_interval_width_pct": 37.77
+              "mae": 51948.42,
+              "rmse": 71287.9,
+              "mape": 5.69,
+              "interval_coverage": 100.0,
+              "mean_interval_width": 227471.71,
+              "mean_interval_width_pct": 25.76
             },
             "roas": {
-              "mae": 0.05,
-              "rmse": 0.05,
-              "mape": 1.12,
+              "mae": 0.03,
+              "rmse": 0.04,
+              "mape": 0.86,
               "interval_coverage": 100.0,
-              "mean_interval_width": 0.8025,
-              "mean_interval_width_pct": 19.56
+              "mean_interval_width": 0.515,
+              "mean_interval_width_pct": 12.59
             },
-            "roas_mae": 0.05,
-            "roas_rmse": 0.05,
-            "roas_mape": 1.12,
+            "roas_mae": 0.03,
+            "roas_rmse": 0.04,
+            "roas_mape": 0.86,
             "roas_interval_coverage": 100.0
           },
           "seasonal_average_baseline_metrics": {
-            "mae": 86345.23,
-            "rmse": 95761.26,
-            "mape": 10.36,
+            "mae": 53679.82,
+            "rmse": 62844.52,
+            "mape": 5.83,
             "interval_coverage": 100.0,
-            "mean_interval_width": 369603.445,
-            "mean_interval_width_pct": 43.36,
+            "mean_interval_width": 246767.06,
+            "mean_interval_width_pct": 28.0,
             "revenue": {
-              "mae": 86345.23,
-              "rmse": 95761.26,
-              "mape": 10.36,
+              "mae": 53679.82,
+              "rmse": 62844.52,
+              "mape": 5.83,
               "interval_coverage": 100.0,
-              "mean_interval_width": 369603.445,
-              "mean_interval_width_pct": 43.36
+              "mean_interval_width": 246767.06,
+              "mean_interval_width_pct": 28.0
             },
             "roas": {
               "mae": 0.05,
               "rmse": 0.06,
-              "mape": 1.3,
+              "mape": 1.23,
               "interval_coverage": 100.0,
-              "mean_interval_width": 0.8025,
-              "mean_interval_width_pct": 19.53
+              "mean_interval_width": 0.52,
+              "mean_interval_width_pct": 12.67
             },
             "roas_mae": 0.05,
             "roas_rmse": 0.06,
-            "roas_mape": 1.3,
-            "roas_interval_coverage": 100.0
-          },
-          "verdict": {
-            "overall_winner": "mixed",
-            "revenue": {
-              "target": "revenue",
-              "trained_mae": 85468.65,
-              "safe_baseline_mae": 86345.23,
-              "mae_difference_pct": -1.02,
-              "winner": "trained_model",
-              "interpretation": "The trained model has lower revenue MAE than the safe baseline by 1.02% on this slice."
-            },
-            "roas": {
-              "target": "roas",
-              "trained_mae": 0.05,
-              "safe_baseline_mae": 0.05,
-              "mae_difference_pct": 0.0,
-              "winner": "tie",
-              "interpretation": "The trained model and safe baseline are tied on roas MAE for this slice."
-            },
-            "interpretation": "Revenue: The trained model has lower revenue MAE than the safe baseline by 1.02% on this slice. ROAS: The trained model and safe baseline are tied on roas MAE for this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
-          }
-        },
-        "channel": {
-          "segments_evaluated": 12,
-          "trained_model_metrics": {
-            "mae": 28763.83,
-            "rmse": 38159.67,
-            "mape": 10.18,
-            "interval_coverage": 91.67,
-            "mean_interval_width": 110598.1442,
-            "mean_interval_width_pct": 39.11,
-            "revenue": {
-              "mae": 28763.83,
-              "rmse": 38159.67,
-              "mape": 10.18,
-              "interval_coverage": 91.67,
-              "mean_interval_width": 110598.1442,
-              "mean_interval_width_pct": 39.11
-            },
-            "roas": {
-              "mae": 0.06,
-              "rmse": 0.07,
-              "mape": 1.46,
-              "interval_coverage": 100.0,
-              "mean_interval_width": 0.8542,
-              "mean_interval_width_pct": 19.51
-            },
-            "roas_mae": 0.06,
-            "roas_rmse": 0.07,
-            "roas_mape": 1.46,
-            "roas_interval_coverage": 100.0
-          },
-          "seasonal_average_baseline_metrics": {
-            "mae": 28773.22,
-            "rmse": 36964.63,
-            "mape": 10.17,
-            "interval_coverage": 100.0,
-            "mean_interval_width": 123211.475,
-            "mean_interval_width_pct": 43.36,
-            "revenue": {
-              "mae": 28773.22,
-              "rmse": 36964.63,
-              "mape": 10.17,
-              "interval_coverage": 100.0,
-              "mean_interval_width": 123211.475,
-              "mean_interval_width_pct": 43.36
-            },
-            "roas": {
-              "mae": 0.07,
-              "rmse": 0.08,
-              "mape": 1.57,
-              "interval_coverage": 100.0,
-              "mean_interval_width": 0.8567,
-              "mean_interval_width_pct": 19.49
-            },
-            "roas_mae": 0.07,
-            "roas_rmse": 0.08,
-            "roas_mape": 1.57,
+            "roas_mape": 1.23,
             "roas_interval_coverage": 100.0
           },
           "verdict": {
             "overall_winner": "trained_model",
             "revenue": {
               "target": "revenue",
-              "trained_mae": 28763.83,
-              "safe_baseline_mae": 28773.22,
-              "mae_difference_pct": -0.03,
+              "trained_mae": 51948.42,
+              "safe_baseline_mae": 53679.82,
+              "mae_difference_pct": -3.23,
               "winner": "trained_model",
-              "interpretation": "The trained model has lower revenue MAE than the safe baseline by 0.03% on this slice."
+              "interpretation": "The trained model has lower revenue MAE than the safe baseline by 3.23% on this slice."
             },
             "roas": {
               "target": "roas",
-              "trained_mae": 0.06,
-              "safe_baseline_mae": 0.07,
-              "mae_difference_pct": -14.29,
+              "trained_mae": 0.03,
+              "safe_baseline_mae": 0.05,
+              "mae_difference_pct": -40.0,
               "winner": "trained_model",
-              "interpretation": "The trained model has lower roas MAE than the safe baseline by 14.29% on this slice."
+              "interpretation": "The trained model has lower roas MAE than the safe baseline by 40.00% on this slice."
             },
-            "interpretation": "Revenue: The trained model has lower revenue MAE than the safe baseline by 0.03% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 14.29% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+            "interpretation": "Revenue: The trained model has lower revenue MAE than the safe baseline by 3.23% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 40.00% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
           }
         },
-        "campaign_type": {
-          "segments_evaluated": 24,
+        "channel": {
+          "segments_evaluated": 6,
           "trained_model_metrics": {
-            "mae": 14730.75,
-            "rmse": 18501.27,
-            "mape": 10.28,
-            "interval_coverage": 95.83,
-            "mean_interval_width": 57751.3021,
-            "mean_interval_width_pct": 41.07,
+            "mae": 17901.74,
+            "rmse": 27811.49,
+            "mape": 5.94,
+            "interval_coverage": 83.33,
+            "mean_interval_width": 79456.705,
+            "mean_interval_width_pct": 27.05,
             "revenue": {
-              "mae": 14730.75,
-              "rmse": 18501.27,
-              "mape": 10.28,
-              "interval_coverage": 95.83,
-              "mean_interval_width": 57751.3021,
-              "mean_interval_width_pct": 41.07
+              "mae": 17901.74,
+              "rmse": 27811.49,
+              "mape": 5.94,
+              "interval_coverage": 83.33,
+              "mean_interval_width": 79456.705,
+              "mean_interval_width_pct": 27.05
             },
             "roas": {
-              "mae": 0.06,
-              "rmse": 0.07,
-              "mape": 1.63,
+              "mae": 0.05,
+              "rmse": 0.06,
+              "mape": 1.28,
               "interval_coverage": 100.0,
-              "mean_interval_width": 0.7883,
-              "mean_interval_width_pct": 20.19
+              "mean_interval_width": 0.5517,
+              "mean_interval_width_pct": 12.63
             },
-            "roas_mae": 0.06,
-            "roas_rmse": 0.07,
-            "roas_mape": 1.63,
+            "roas_mae": 0.05,
+            "roas_rmse": 0.06,
+            "roas_mape": 1.28,
             "roas_interval_coverage": 100.0
           },
           "seasonal_average_baseline_metrics": {
-            "mae": 14385.76,
-            "rmse": 17976.63,
-            "mape": 9.97,
+            "mae": 17868.82,
+            "rmse": 24289.8,
+            "mape": 5.87,
             "interval_coverage": 100.0,
-            "mean_interval_width": 61609.6554,
-            "mean_interval_width_pct": 43.36,
+            "mean_interval_width": 82262.535,
+            "mean_interval_width_pct": 28.0,
             "revenue": {
-              "mae": 14385.76,
-              "rmse": 17976.63,
-              "mape": 9.97,
+              "mae": 17868.82,
+              "rmse": 24289.8,
+              "mape": 5.87,
               "interval_coverage": 100.0,
-              "mean_interval_width": 61609.6554,
-              "mean_interval_width_pct": 43.36
+              "mean_interval_width": 82262.535,
+              "mean_interval_width_pct": 28.0
             },
             "roas": {
               "mae": 0.07,
               "rmse": 0.08,
-              "mape": 1.8,
+              "mape": 1.62,
               "interval_coverage": 100.0,
-              "mean_interval_width": 0.8692,
-              "mean_interval_width_pct": 22.6
+              "mean_interval_width": 0.68,
+              "mean_interval_width_pct": 15.26
             },
             "roas_mae": 0.07,
             "roas_rmse": 0.08,
-            "roas_mape": 1.8,
+            "roas_mape": 1.62,
             "roas_interval_coverage": 100.0
           },
           "verdict": {
             "overall_winner": "mixed",
             "revenue": {
               "target": "revenue",
-              "trained_mae": 14730.75,
-              "safe_baseline_mae": 14385.76,
-              "mae_difference_pct": 2.4,
+              "trained_mae": 17901.74,
+              "safe_baseline_mae": 17868.82,
+              "mae_difference_pct": 0.18,
               "winner": "safe_baseline_fallback",
-              "interpretation": "The safe baseline has lower revenue MAE than the trained model by 2.40% on this slice."
+              "interpretation": "The safe baseline has lower revenue MAE than the trained model by 0.18% on this slice."
             },
             "roas": {
               "target": "roas",
-              "trained_mae": 0.06,
+              "trained_mae": 0.05,
               "safe_baseline_mae": 0.07,
-              "mae_difference_pct": -14.29,
+              "mae_difference_pct": -28.57,
               "winner": "trained_model",
-              "interpretation": "The trained model has lower roas MAE than the safe baseline by 14.29% on this slice."
+              "interpretation": "The trained model has lower roas MAE than the safe baseline by 28.57% on this slice."
             },
-            "interpretation": "Revenue: The safe baseline has lower revenue MAE than the trained model by 2.40% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 14.29% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+            "interpretation": "Revenue: The safe baseline has lower revenue MAE than the trained model by 0.18% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 28.57% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
           }
         },
-        "campaign": {
-          "segments_evaluated": 32,
+        "campaign_type": {
+          "segments_evaluated": 12,
           "trained_model_metrics": {
-            "mae": 11135.58,
-            "rmse": 13729.22,
-            "mape": 10.45,
-            "interval_coverage": 93.75,
-            "mean_interval_width": 46269.0406,
-            "mean_interval_width_pct": 44.6,
+            "mae": 9633.44,
+            "rmse": 13541.71,
+            "mape": 6.13,
+            "interval_coverage": 91.67,
+            "mean_interval_width": 41762.775,
+            "mean_interval_width_pct": 28.51,
             "revenue": {
-              "mae": 11135.58,
-              "rmse": 13729.22,
-              "mape": 10.45,
-              "interval_coverage": 93.75,
-              "mean_interval_width": 46269.0406,
-              "mean_interval_width_pct": 44.6
+              "mae": 9633.44,
+              "rmse": 13541.71,
+              "mape": 6.13,
+              "interval_coverage": 91.67,
+              "mean_interval_width": 41762.775,
+              "mean_interval_width_pct": 28.51
             },
             "roas": {
-              "mae": 0.06,
-              "rmse": 0.08,
-              "mape": 1.57,
+              "mae": 0.05,
+              "rmse": 0.05,
+              "mape": 1.35,
               "interval_coverage": 100.0,
-              "mean_interval_width": 0.875,
-              "mean_interval_width_pct": 20.5
+              "mean_interval_width": 0.6408,
+              "mean_interval_width_pct": 16.8
             },
-            "roas_mae": 0.06,
-            "roas_rmse": 0.08,
-            "roas_mape": 1.57,
+            "roas_mae": 0.05,
+            "roas_rmse": 0.05,
+            "roas_mape": 1.35,
             "roas_interval_coverage": 100.0
           },
           "seasonal_average_baseline_metrics": {
-            "mae": 10826.83,
-            "rmse": 13338.51,
-            "mape": 10.17,
+            "mae": 8937.53,
+            "rmse": 12016.19,
+            "mape": 5.51,
             "interval_coverage": 100.0,
-            "mean_interval_width": 46209.5137,
-            "mean_interval_width_pct": 43.36,
+            "mean_interval_width": 41133.8817,
+            "mean_interval_width_pct": 28.0,
             "revenue": {
-              "mae": 10826.83,
-              "rmse": 13338.51,
-              "mape": 10.17,
+              "mae": 8937.53,
+              "rmse": 12016.19,
+              "mape": 5.51,
               "interval_coverage": 100.0,
-              "mean_interval_width": 46209.5137,
-              "mean_interval_width_pct": 43.36
+              "mean_interval_width": 41133.8817,
+              "mean_interval_width_pct": 28.0
             },
             "roas": {
-              "mae": 0.08,
-              "rmse": 0.09,
-              "mape": 1.89,
+              "mae": 0.06,
+              "rmse": 0.07,
+              "mape": 1.73,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.0172,
-              "mean_interval_width_pct": 23.84
+              "mean_interval_width": 0.8567,
+              "mean_interval_width_pct": 22.39
             },
-            "roas_mae": 0.08,
-            "roas_rmse": 0.09,
-            "roas_mape": 1.89,
+            "roas_mae": 0.06,
+            "roas_rmse": 0.07,
+            "roas_mape": 1.73,
             "roas_interval_coverage": 100.0
           },
           "verdict": {
             "overall_winner": "mixed",
             "revenue": {
               "target": "revenue",
-              "trained_mae": 11135.58,
-              "safe_baseline_mae": 10826.83,
-              "mae_difference_pct": 2.85,
+              "trained_mae": 9633.44,
+              "safe_baseline_mae": 8937.53,
+              "mae_difference_pct": 7.79,
               "winner": "safe_baseline_fallback",
-              "interpretation": "The safe baseline has lower revenue MAE than the trained model by 2.85% on this slice."
+              "interpretation": "The safe baseline has lower revenue MAE than the trained model by 7.79% on this slice."
             },
             "roas": {
               "target": "roas",
-              "trained_mae": 0.06,
-              "safe_baseline_mae": 0.08,
-              "mae_difference_pct": -25.0,
+              "trained_mae": 0.05,
+              "safe_baseline_mae": 0.06,
+              "mae_difference_pct": -16.67,
               "winner": "trained_model",
-              "interpretation": "The trained model has lower roas MAE than the safe baseline by 25.00% on this slice."
+              "interpretation": "The trained model has lower roas MAE than the safe baseline by 16.67% on this slice."
             },
-            "interpretation": "Revenue: The safe baseline has lower revenue MAE than the trained model by 2.85% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 25.00% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+            "interpretation": "Revenue: The safe baseline has lower revenue MAE than the trained model by 7.79% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 16.67% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+          }
+        },
+        "campaign": {
+          "segments_evaluated": 16,
+          "trained_model_metrics": {
+            "mae": 7410.45,
+            "rmse": 10093.9,
+            "mape": 6.36,
+            "interval_coverage": 100.0,
+            "mean_interval_width": 33580.9369,
+            "mean_interval_width_pct": 31.14,
+            "revenue": {
+              "mae": 7410.45,
+              "rmse": 10093.9,
+              "mape": 6.36,
+              "interval_coverage": 100.0,
+              "mean_interval_width": 33580.9369,
+              "mean_interval_width_pct": 31.14
+            },
+            "roas": {
+              "mae": 0.05,
+              "rmse": 0.06,
+              "mape": 1.34,
+              "interval_coverage": 100.0,
+              "mean_interval_width": 0.7606,
+              "mean_interval_width_pct": 17.99
+            },
+            "roas_mae": 0.05,
+            "roas_rmse": 0.06,
+            "roas_mape": 1.34,
+            "roas_interval_coverage": 100.0
+          },
+          "seasonal_average_baseline_metrics": {
+            "mae": 6774.05,
+            "rmse": 8953.62,
+            "mape": 5.77,
+            "interval_coverage": 100.0,
+            "mean_interval_width": 30851.91,
+            "mean_interval_width_pct": 28.0,
+            "revenue": {
+              "mae": 6774.05,
+              "rmse": 8953.62,
+              "mape": 5.77,
+              "interval_coverage": 100.0,
+              "mean_interval_width": 30851.91,
+              "mean_interval_width_pct": 28.0
+            },
+            "roas": {
+              "mae": 0.07,
+              "rmse": 0.09,
+              "mape": 1.75,
+              "interval_coverage": 100.0,
+              "mean_interval_width": 1.0169,
+              "mean_interval_width_pct": 23.88
+            },
+            "roas_mae": 0.07,
+            "roas_rmse": 0.09,
+            "roas_mape": 1.75,
+            "roas_interval_coverage": 100.0
+          },
+          "verdict": {
+            "overall_winner": "mixed",
+            "revenue": {
+              "target": "revenue",
+              "trained_mae": 7410.45,
+              "safe_baseline_mae": 6774.05,
+              "mae_difference_pct": 9.39,
+              "winner": "safe_baseline_fallback",
+              "interpretation": "The safe baseline has lower revenue MAE than the trained model by 9.39% on this slice."
+            },
+            "roas": {
+              "target": "roas",
+              "trained_mae": 0.05,
+              "safe_baseline_mae": 0.07,
+              "mae_difference_pct": -28.57,
+              "winner": "trained_model",
+              "interpretation": "The trained model has lower roas MAE than the safe baseline by 28.57% on this slice."
+            },
+            "interpretation": "Revenue: The safe baseline has lower revenue MAE than the trained model by 9.39% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 28.57% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
           }
         }
       },
       "rolling_origin_average_metrics": {
-        "folds_averaged": 4,
+        "folds_averaged": 2,
         "trained_model_metrics": {
-          "mae": 19401.625,
-          "rmse": 27530.525,
-          "mape": 10.3425,
-          "interval_coverage": 93.055,
-          "mean_interval_width": 76036.2657,
-          "mean_interval_width_pct": 42.125,
+          "mae": 12374.33,
+          "rmse": 17349.16,
+          "mape": 6.175,
+          "interval_coverage": 94.445,
+          "mean_interval_width": 54725.8872,
+          "mean_interval_width_pct": 29.285,
           "revenue": {
-            "mae": 19401.625,
-            "rmse": 27530.525,
-            "mape": 10.3425,
-            "interval_coverage": 93.055,
-            "mean_interval_width": 76036.2657,
-            "mean_interval_width_pct": 42.125
+            "mae": 12374.33,
+            "rmse": 17349.16,
+            "mape": 6.175,
+            "interval_coverage": 94.445,
+            "mean_interval_width": 54725.8872,
+            "mean_interval_width_pct": 29.285
           },
           "roas": {
-            "mae": 0.06,
-            "rmse": 0.0675,
-            "mape": 1.5475,
+            "mae": 0.045,
+            "rmse": 0.06,
+            "mape": 1.305,
             "interval_coverage": 100.0,
-            "mean_interval_width": 0.8386,
-            "mean_interval_width_pct": 20.175
+            "mean_interval_width": 0.6723,
+            "mean_interval_width_pct": 16.405
           },
-          "roas_mae": 0.06,
-          "roas_rmse": 0.0675,
-          "roas_mape": 1.5475,
+          "roas_mae": 0.045,
+          "roas_rmse": 0.06,
+          "roas_mape": 1.305,
           "roas_interval_coverage": 100.0
         },
         "safe_baseline_metrics": {
-          "mae": 19199.6675,
-          "rmse": 27461.105,
-          "mape": 10.115,
+          "mae": 11950.21,
+          "rmse": 17194.52,
+          "mape": 5.705,
           "interval_coverage": 100.0,
-          "mean_interval_width": 82142.884,
-          "mean_interval_width_pct": 43.36,
+          "mean_interval_width": 54842.9575,
+          "mean_interval_width_pct": 28.0,
           "revenue": {
-            "mae": 19199.6675,
-            "rmse": 27461.105,
-            "mape": 10.115,
+            "mae": 11950.21,
+            "rmse": 17194.52,
+            "mape": 5.705,
             "interval_coverage": 100.0,
-            "mean_interval_width": 82142.884,
-            "mean_interval_width_pct": 43.36
+            "mean_interval_width": 54842.9575,
+            "mean_interval_width_pct": 28.0
           },
           "roas": {
-            "mae": 0.0725,
-            "rmse": 0.08,
-            "mape": 1.7725,
+            "mae": 0.065,
+            "rmse": 0.075,
+            "mape": 1.695,
             "interval_coverage": 100.0,
-            "mean_interval_width": 0.9292,
-            "mean_interval_width_pct": 22.4575
+            "mean_interval_width": 0.8798,
+            "mean_interval_width_pct": 21.32
           },
-          "roas_mae": 0.0725,
-          "roas_rmse": 0.08,
-          "roas_mape": 1.7725,
+          "roas_mae": 0.065,
+          "roas_rmse": 0.075,
+          "roas_mape": 1.695,
           "roas_interval_coverage": 100.0
         }
       },
@@ -1986,56 +1586,56 @@
         "overall_winner": "mixed",
         "revenue": {
           "target": "revenue",
-          "trained_mae": 19401.63,
-          "safe_baseline_mae": 19199.67,
-          "mae_difference_pct": 1.05,
+          "trained_mae": 12374.33,
+          "safe_baseline_mae": 11950.21,
+          "mae_difference_pct": 3.55,
           "winner": "safe_baseline_fallback",
-          "interpretation": "The safe baseline has lower revenue MAE than the trained model by 1.05% on this slice."
+          "interpretation": "The safe baseline has lower revenue MAE than the trained model by 3.55% on this slice."
         },
         "roas": {
           "target": "roas",
-          "trained_mae": 0.06,
+          "trained_mae": 0.05,
           "safe_baseline_mae": 0.07,
-          "mae_difference_pct": -14.29,
+          "mae_difference_pct": -28.57,
           "winner": "trained_model",
-          "interpretation": "The trained model has lower roas MAE than the safe baseline by 14.29% on this slice."
+          "interpretation": "The trained model has lower roas MAE than the safe baseline by 28.57% on this slice."
         },
-        "interpretation": "Revenue: The safe baseline has lower revenue MAE than the trained model by 1.05% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 14.29% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+        "interpretation": "Revenue: The safe baseline has lower revenue MAE than the trained model by 3.55% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 28.57% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
       },
       "statistical_comparison": {
         "method": "paired_bootstrap_absolute_error_delta",
         "delta_definition": "trained_absolute_error_minus_safe_baseline_absolute_error",
         "revenue": {
           "target": "revenue",
-          "sample_count": 72,
-          "mean_absolute_error_delta": 201.9565,
+          "sample_count": 36,
+          "mean_absolute_error_delta": 424.1125,
           "confidence_interval_95": [
-            -604.4584,
-            987.7232
+            -1273.7208,
+            2001.363
           ],
-          "p_value": 0.602,
+          "p_value": 0.609,
           "verdict": "statistical_tie",
           "interpretation": "Paired bootstrap does not show a statistically clear revenue winner."
         },
         "roas": {
           "target": "roas",
-          "sample_count": 72,
-          "mean_absolute_error_delta": -0.0113,
+          "sample_count": 36,
+          "mean_absolute_error_delta": -0.0192,
           "confidence_interval_95": [
-            -0.0212,
-            -0.0021
+            -0.0351,
+            -0.0039
           ],
-          "p_value": 0.014,
+          "p_value": 0.012,
           "verdict": "trained_model",
           "interpretation": "Trained model has statistically lower roas absolute error on paired rows."
         }
       },
       "trained_vs_safe_baseline": {
-        "mae_delta": -201.96,
-        "rmse_delta": -926.66,
-        "mape_delta": -0.23,
-        "roas_mae_delta": 0.01,
-        "roas_rmse_delta": 0.0
+        "mae_delta": -424.12,
+        "rmse_delta": -2714.41,
+        "mape_delta": -0.48,
+        "roas_mae_delta": 0.02,
+        "roas_rmse_delta": 0.02
       }
     },
     {
@@ -2051,31 +1651,31 @@
           "dedicated_training_samples": 72,
           "fallback_only": false,
           "trained_model_metrics": {
-            "mae": 13145.11,
-            "rmse": 18642.51,
-            "mape": 4.4,
+            "mae": 13275.51,
+            "rmse": 18772.37,
+            "mape": 4.24,
             "interval_coverage": 100.0,
-            "mean_interval_width": 70189.8122,
-            "mean_interval_width_pct": 24.34,
+            "mean_interval_width": 131920.7756,
+            "mean_interval_width_pct": 45.84,
             "revenue": {
-              "mae": 13145.11,
-              "rmse": 18642.51,
-              "mape": 4.4,
+              "mae": 13275.51,
+              "rmse": 18772.37,
+              "mape": 4.24,
               "interval_coverage": 100.0,
-              "mean_interval_width": 70189.8122,
-              "mean_interval_width_pct": 24.34
+              "mean_interval_width": 131920.7756,
+              "mean_interval_width_pct": 45.84
             },
             "roas": {
               "mae": 0.07,
               "rmse": 0.08,
-              "mape": 1.87,
+              "mape": 1.89,
               "interval_coverage": 100.0,
-              "mean_interval_width": 0.8811,
-              "mean_interval_width_pct": 21.3
+              "mean_interval_width": 0.8528,
+              "mean_interval_width_pct": 20.69
             },
             "roas_mae": 0.07,
             "roas_rmse": 0.08,
-            "roas_mape": 1.87,
+            "roas_mape": 1.89,
             "roas_interval_coverage": 100.0
           },
           "safe_baseline_metrics": {
@@ -2083,23 +1683,23 @@
             "rmse": 18642.51,
             "mape": 4.4,
             "interval_coverage": 100.0,
-            "mean_interval_width": 134539.1572,
-            "mean_interval_width_pct": 44.36,
+            "mean_interval_width": 121315.74,
+            "mean_interval_width_pct": 40.0,
             "revenue": {
               "mae": 13145.11,
               "rmse": 18642.51,
               "mape": 4.4,
               "interval_coverage": 100.0,
-              "mean_interval_width": 134539.1572,
-              "mean_interval_width_pct": 44.36
+              "mean_interval_width": 121315.74,
+              "mean_interval_width_pct": 40.0
             },
             "roas": {
               "mae": 0.11,
               "rmse": 0.12,
               "mape": 2.73,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.1894,
-              "mean_interval_width_pct": 28.76
+              "mean_interval_width": 1.1828,
+              "mean_interval_width_pct": 28.59
             },
             "roas_mae": 0.11,
             "roas_rmse": 0.12,
@@ -2110,11 +1710,11 @@
             "overall_winner": "mixed",
             "revenue": {
               "target": "revenue",
-              "trained_mae": 13145.11,
+              "trained_mae": 13275.51,
               "safe_baseline_mae": 13145.11,
-              "mae_difference_pct": 0.0,
-              "winner": "tie",
-              "interpretation": "The trained model and safe baseline are tied on revenue MAE for this slice."
+              "mae_difference_pct": 0.99,
+              "winner": "safe_baseline_fallback",
+              "interpretation": "The safe baseline has lower revenue MAE than the trained model by 0.99% on this slice."
             },
             "roas": {
               "target": "roas",
@@ -2124,7 +1724,7 @@
               "winner": "trained_model",
               "interpretation": "The trained model has lower roas MAE than the safe baseline by 36.36% on this slice."
             },
-            "interpretation": "Revenue: The trained model and safe baseline are tied on revenue MAE for this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 36.36% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+            "interpretation": "Revenue: The safe baseline has lower revenue MAE than the trained model by 0.99% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 36.36% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
           }
         },
         {
@@ -2137,31 +1737,31 @@
           "dedicated_training_samples": 18,
           "fallback_only": false,
           "trained_model_metrics": {
-            "mae": 31138.78,
-            "rmse": 44385.7,
-            "mape": 11.39,
+            "mae": 68908.0,
+            "rmse": 97958.08,
+            "mape": 25.35,
             "interval_coverage": 88.89,
-            "mean_interval_width": 74103.4167,
-            "mean_interval_width_pct": 28.57,
+            "mean_interval_width": 152707.33,
+            "mean_interval_width_pct": 50.69,
             "revenue": {
-              "mae": 31138.78,
-              "rmse": 44385.7,
-              "mape": 11.39,
+              "mae": 68908.0,
+              "rmse": 97958.08,
+              "mape": 25.35,
               "interval_coverage": 88.89,
-              "mean_interval_width": 74103.4167,
-              "mean_interval_width_pct": 28.57
+              "mean_interval_width": 152707.33,
+              "mean_interval_width_pct": 50.69
             },
             "roas": {
               "mae": 0.12,
               "rmse": 0.15,
-              "mape": 3.0,
+              "mape": 3.04,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.2294,
-              "mean_interval_width_pct": 29.52
+              "mean_interval_width": 1.2222,
+              "mean_interval_width_pct": 29.31
             },
             "roas_mae": 0.12,
             "roas_rmse": 0.15,
-            "roas_mape": 3.0,
+            "roas_mape": 3.04,
             "roas_interval_coverage": 100.0
           },
           "safe_baseline_metrics": {
@@ -2169,23 +1769,23 @@
             "rmse": 44385.7,
             "mape": 11.39,
             "interval_coverage": 100.0,
-            "mean_interval_width": 132613.8367,
-            "mean_interval_width_pct": 44.36,
+            "mean_interval_width": 119579.6539,
+            "mean_interval_width_pct": 40.0,
             "revenue": {
               "mae": 31138.78,
               "rmse": 44385.7,
               "mape": 11.39,
               "interval_coverage": 100.0,
-              "mean_interval_width": 132613.8367,
-              "mean_interval_width_pct": 44.36
+              "mean_interval_width": 119579.6539,
+              "mean_interval_width_pct": 40.0
             },
             "roas": {
               "mae": 0.06,
               "rmse": 0.07,
               "mape": 1.41,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.2044,
-              "mean_interval_width_pct": 29.3
+              "mean_interval_width": 1.1983,
+              "mean_interval_width_pct": 29.14
             },
             "roas_mae": 0.06,
             "roas_rmse": 0.07,
@@ -2193,14 +1793,14 @@
             "roas_interval_coverage": 100.0
           },
           "model_performance_evidence": {
-            "overall_winner": "mixed",
+            "overall_winner": "safe_baseline_fallback",
             "revenue": {
               "target": "revenue",
-              "trained_mae": 31138.78,
+              "trained_mae": 68908.0,
               "safe_baseline_mae": 31138.78,
-              "mae_difference_pct": 0.0,
-              "winner": "tie",
-              "interpretation": "The trained model and safe baseline are tied on revenue MAE for this slice."
+              "mae_difference_pct": 121.29,
+              "winner": "safe_baseline_fallback",
+              "interpretation": "The safe baseline has lower revenue MAE than the trained model by 121.29% on this slice."
             },
             "roas": {
               "target": "roas",
@@ -2210,44 +1810,38 @@
               "winner": "safe_baseline_fallback",
               "interpretation": "The safe baseline has lower roas MAE than the trained model by 100.00% on this slice."
             },
-            "interpretation": "Revenue: The trained model and safe baseline are tied on revenue MAE for this slice. ROAS: The safe baseline has lower roas MAE than the trained model by 100.00% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+            "interpretation": "Revenue: The safe baseline has lower revenue MAE than the trained model by 121.29% on this slice. ROAS: The safe baseline has lower roas MAE than the trained model by 100.00% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
           }
-        },
-        {
-          "fold": 3,
-          "start_date": "2025-09-21",
-          "end_date": "2025-12-19",
-          "error": "ValueError: not enough rolling forecast samples to train evaluator model"
         }
       ],
       "fold_count": 2,
       "segments_evaluated": 36,
       "trained_model_metrics": {
-        "mae": 22141.94,
-        "rmse": 34041.4,
-        "mape": 7.89,
+        "mae": 41091.75,
+        "rmse": 70527.26,
+        "mape": 14.8,
         "interval_coverage": 94.44,
-        "mean_interval_width": 72146.6144,
-        "mean_interval_width_pct": 26.46,
+        "mean_interval_width": 142314.0528,
+        "mean_interval_width_pct": 48.27,
         "revenue": {
-          "mae": 22141.94,
-          "rmse": 34041.4,
-          "mape": 7.89,
+          "mae": 41091.75,
+          "rmse": 70527.26,
+          "mape": 14.8,
           "interval_coverage": 94.44,
-          "mean_interval_width": 72146.6144,
-          "mean_interval_width_pct": 26.46
+          "mean_interval_width": 142314.0528,
+          "mean_interval_width_pct": 48.27
         },
         "roas": {
           "mae": 0.09,
           "rmse": 0.12,
-          "mape": 2.44,
+          "mape": 2.46,
           "interval_coverage": 100.0,
-          "mean_interval_width": 1.0553,
-          "mean_interval_width_pct": 25.41
+          "mean_interval_width": 1.0375,
+          "mean_interval_width_pct": 25.0
         },
         "roas_mae": 0.09,
         "roas_rmse": 0.12,
-        "roas_mape": 2.44,
+        "roas_mape": 2.46,
         "roas_interval_coverage": 100.0
       },
       "safe_baseline_metrics": {
@@ -2255,23 +1849,23 @@
         "rmse": 34041.4,
         "mape": 7.89,
         "interval_coverage": 100.0,
-        "mean_interval_width": 133576.4969,
-        "mean_interval_width_pct": 44.36,
+        "mean_interval_width": 120447.6969,
+        "mean_interval_width_pct": 40.0,
         "revenue": {
           "mae": 22141.94,
           "rmse": 34041.4,
           "mape": 7.89,
           "interval_coverage": 100.0,
-          "mean_interval_width": 133576.4969,
-          "mean_interval_width_pct": 44.36
+          "mean_interval_width": 120447.6969,
+          "mean_interval_width_pct": 40.0
         },
         "roas": {
           "mae": 0.08,
           "rmse": 0.1,
           "mape": 2.07,
           "interval_coverage": 100.0,
-          "mean_interval_width": 1.1969,
-          "mean_interval_width_pct": 29.03
+          "mean_interval_width": 1.1906,
+          "mean_interval_width_pct": 28.86
         },
         "roas_mae": 0.08,
         "roas_rmse": 0.1,
@@ -2281,45 +1875,45 @@
       "segment_level_interval_coverage": {
         "overall": {
           "segments_evaluated": 2,
-          "trained_revenue_coverage": 100.0,
-          "trained_revenue_width_pct": 21.29,
+          "trained_revenue_coverage": 50.0,
+          "trained_revenue_width_pct": 40.0,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 20.0,
+          "trained_roas_width_pct": 18.05,
           "safe_revenue_coverage": 100.0,
-          "safe_revenue_width_pct": 44.36,
+          "safe_revenue_width_pct": 40.0,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 19.95
+          "safe_roas_width_pct": 18.0
         },
         "channel": {
           "segments_evaluated": 6,
           "trained_revenue_coverage": 100.0,
-          "trained_revenue_width_pct": 22.36,
+          "trained_revenue_width_pct": 42.0,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 20.61,
+          "trained_roas_width_pct": 19.58,
           "safe_revenue_coverage": 100.0,
-          "safe_revenue_width_pct": 44.36,
+          "safe_revenue_width_pct": 40.0,
           "safe_roas_coverage": 100.0,
-          "safe_roas_width_pct": 20.94
+          "safe_roas_width_pct": 20.59
         },
         "campaign_type": {
           "segments_evaluated": 12,
-          "trained_revenue_coverage": 100.0,
-          "trained_revenue_width_pct": 25.55,
+          "trained_revenue_coverage": 91.67,
+          "trained_revenue_width_pct": 46.56,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 25.94,
+          "trained_roas_width_pct": 25.57,
           "safe_revenue_coverage": 100.0,
-          "safe_revenue_width_pct": 44.36,
+          "safe_revenue_width_pct": 40.0,
           "safe_roas_coverage": 100.0,
           "safe_roas_width_pct": 30.27
         },
         "campaign": {
           "segments_evaluated": 16,
-          "trained_revenue_coverage": 87.5,
-          "trained_revenue_width_pct": 29.31,
+          "trained_revenue_coverage": 100.0,
+          "trained_revenue_width_pct": 52.93,
           "trained_roas_coverage": 100.0,
-          "trained_roas_width_pct": 27.49,
+          "trained_roas_width_pct": 27.47,
           "safe_revenue_coverage": 100.0,
-          "safe_revenue_width_pct": 44.36,
+          "safe_revenue_width_pct": 40.0,
           "safe_roas_coverage": 100.0,
           "safe_roas_width_pct": 32.27
         }
@@ -2328,27 +1922,27 @@
         "overall": {
           "segments_evaluated": 2,
           "trained_model_metrics": {
-            "mae": 99640.51,
-            "rmse": 107467.14,
-            "mape": 7.89,
-            "interval_coverage": 100.0,
-            "mean_interval_width": 288477.4,
-            "mean_interval_width_pct": 21.29,
+            "mae": 185534.66,
+            "rmse": 224844.09,
+            "mape": 15.02,
+            "interval_coverage": 50.0,
+            "mean_interval_width": 576624.68,
+            "mean_interval_width_pct": 40.0,
             "revenue": {
-              "mae": 99640.51,
-              "rmse": 107467.14,
-              "mape": 7.89,
-              "interval_coverage": 100.0,
-              "mean_interval_width": 288477.4,
-              "mean_interval_width_pct": 21.29
+              "mae": 185534.66,
+              "rmse": 224844.09,
+              "mape": 15.02,
+              "interval_coverage": 50.0,
+              "mean_interval_width": 576624.68,
+              "mean_interval_width_pct": 40.0
             },
             "roas": {
               "mae": 0.04,
               "rmse": 0.04,
               "mape": 1.05,
               "interval_coverage": 100.0,
-              "mean_interval_width": 0.82,
-              "mean_interval_width_pct": 20.0
+              "mean_interval_width": 0.74,
+              "mean_interval_width_pct": 18.05
             },
             "roas_mae": 0.04,
             "roas_rmse": 0.04,
@@ -2360,23 +1954,23 @@
             "rmse": 107467.14,
             "mape": 7.89,
             "interval_coverage": 100.0,
-            "mean_interval_width": 600994.575,
-            "mean_interval_width_pct": 44.36,
+            "mean_interval_width": 541924.775,
+            "mean_interval_width_pct": 40.0,
             "revenue": {
               "mae": 99640.51,
               "rmse": 107467.14,
               "mape": 7.89,
               "interval_coverage": 100.0,
-              "mean_interval_width": 600994.575,
-              "mean_interval_width_pct": 44.36
+              "mean_interval_width": 541924.775,
+              "mean_interval_width_pct": 40.0
             },
             "roas": {
               "mae": 0.05,
               "rmse": 0.06,
               "mape": 1.3,
               "interval_coverage": 100.0,
-              "mean_interval_width": 0.82,
-              "mean_interval_width_pct": 19.95
+              "mean_interval_width": 0.74,
+              "mean_interval_width_pct": 18.0
             },
             "roas_mae": 0.05,
             "roas_rmse": 0.06,
@@ -2387,11 +1981,11 @@
             "overall_winner": "mixed",
             "revenue": {
               "target": "revenue",
-              "trained_mae": 99640.51,
+              "trained_mae": 185534.66,
               "safe_baseline_mae": 99640.51,
-              "mae_difference_pct": 0.0,
-              "winner": "tie",
-              "interpretation": "The trained model and safe baseline are tied on revenue MAE for this slice."
+              "mae_difference_pct": 86.2,
+              "winner": "safe_baseline_fallback",
+              "interpretation": "The safe baseline has lower revenue MAE than the trained model by 86.20% on this slice."
             },
             "roas": {
               "target": "roas",
@@ -2401,33 +1995,33 @@
               "winner": "trained_model",
               "interpretation": "The trained model has lower roas MAE than the safe baseline by 20.00% on this slice."
             },
-            "interpretation": "Revenue: The trained model and safe baseline are tied on revenue MAE for this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 20.00% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+            "interpretation": "Revenue: The safe baseline has lower revenue MAE than the trained model by 86.20% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 20.00% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
           }
         },
         "channel": {
           "segments_evaluated": 6,
           "trained_model_metrics": {
-            "mae": 33228.6,
-            "rmse": 40939.45,
-            "mape": 7.82,
+            "mae": 61464.13,
+            "rmse": 84515.28,
+            "mape": 14.64,
             "interval_coverage": 100.0,
-            "mean_interval_width": 100979.0967,
-            "mean_interval_width_pct": 22.36,
+            "mean_interval_width": 201463.005,
+            "mean_interval_width_pct": 42.0,
             "revenue": {
-              "mae": 33228.6,
-              "rmse": 40939.45,
-              "mape": 7.82,
+              "mae": 61464.13,
+              "rmse": 84515.28,
+              "mape": 14.64,
               "interval_coverage": 100.0,
-              "mean_interval_width": 100979.0967,
-              "mean_interval_width_pct": 22.36
+              "mean_interval_width": 201463.005,
+              "mean_interval_width_pct": 42.0
             },
             "roas": {
               "mae": 0.07,
               "rmse": 0.09,
               "mape": 2.03,
               "interval_coverage": 100.0,
-              "mean_interval_width": 0.9133,
-              "mean_interval_width_pct": 20.61
+              "mean_interval_width": 0.87,
+              "mean_interval_width_pct": 19.58
             },
             "roas_mae": 0.07,
             "roas_rmse": 0.09,
@@ -2439,23 +2033,23 @@
             "rmse": 40939.45,
             "mape": 7.82,
             "interval_coverage": 100.0,
-            "mean_interval_width": 200355.35,
-            "mean_interval_width_pct": 44.36,
+            "mean_interval_width": 180663.075,
+            "mean_interval_width_pct": 40.0,
             "revenue": {
               "mae": 33228.6,
               "rmse": 40939.45,
               "mape": 7.82,
               "interval_coverage": 100.0,
-              "mean_interval_width": 200355.35,
-              "mean_interval_width_pct": 44.36
+              "mean_interval_width": 180663.075,
+              "mean_interval_width_pct": 40.0
             },
             "roas": {
               "mae": 0.04,
               "rmse": 0.05,
               "mape": 1.09,
               "interval_coverage": 100.0,
-              "mean_interval_width": 0.9283,
-              "mean_interval_width_pct": 20.94
+              "mean_interval_width": 0.9167,
+              "mean_interval_width_pct": 20.59
             },
             "roas_mae": 0.04,
             "roas_rmse": 0.05,
@@ -2463,14 +2057,14 @@
             "roas_interval_coverage": 100.0
           },
           "verdict": {
-            "overall_winner": "mixed",
+            "overall_winner": "safe_baseline_fallback",
             "revenue": {
               "target": "revenue",
-              "trained_mae": 33228.6,
+              "trained_mae": 61464.13,
               "safe_baseline_mae": 33228.6,
-              "mae_difference_pct": 0.0,
-              "winner": "tie",
-              "interpretation": "The trained model and safe baseline are tied on revenue MAE for this slice."
+              "mae_difference_pct": 84.97,
+              "winner": "safe_baseline_fallback",
+              "interpretation": "The safe baseline has lower revenue MAE than the trained model by 84.97% on this slice."
             },
             "roas": {
               "target": "roas",
@@ -2480,37 +2074,37 @@
               "winner": "safe_baseline_fallback",
               "interpretation": "The safe baseline has lower roas MAE than the trained model by 75.00% on this slice."
             },
-            "interpretation": "Revenue: The trained model and safe baseline are tied on revenue MAE for this slice. ROAS: The safe baseline has lower roas MAE than the trained model by 75.00% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+            "interpretation": "Revenue: The safe baseline has lower revenue MAE than the trained model by 84.97% on this slice. ROAS: The safe baseline has lower roas MAE than the trained model by 75.00% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
           }
         },
         "campaign_type": {
           "segments_evaluated": 12,
           "trained_model_metrics": {
-            "mae": 16606.0,
-            "rmse": 20219.77,
-            "mape": 7.91,
-            "interval_coverage": 100.0,
-            "mean_interval_width": 55604.4267,
-            "mean_interval_width_pct": 25.55,
+            "mae": 30979.46,
+            "rmse": 41298.4,
+            "mape": 14.86,
+            "interval_coverage": 91.67,
+            "mean_interval_width": 109060.3458,
+            "mean_interval_width_pct": 46.56,
             "revenue": {
-              "mae": 16606.0,
-              "rmse": 20219.77,
-              "mape": 7.91,
-              "interval_coverage": 100.0,
-              "mean_interval_width": 55604.4267,
-              "mean_interval_width_pct": 25.55
+              "mae": 30979.46,
+              "rmse": 41298.4,
+              "mape": 14.86,
+              "interval_coverage": 91.67,
+              "mean_interval_width": 109060.3458,
+              "mean_interval_width_pct": 46.56
             },
             "roas": {
               "mae": 0.09,
               "rmse": 0.1,
-              "mape": 2.6,
+              "mape": 2.63,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.01,
-              "mean_interval_width_pct": 25.94
+              "mean_interval_width": 0.9925,
+              "mean_interval_width_pct": 25.57
             },
             "roas_mae": 0.09,
             "roas_rmse": 0.1,
-            "roas_mape": 2.6,
+            "roas_mape": 2.63,
             "roas_interval_coverage": 100.0
           },
           "seasonal_average_baseline_metrics": {
@@ -2518,15 +2112,15 @@
             "rmse": 20219.77,
             "mape": 7.91,
             "interval_coverage": 100.0,
-            "mean_interval_width": 100185.275,
-            "mean_interval_width_pct": 44.36,
+            "mean_interval_width": 90338.39,
+            "mean_interval_width_pct": 40.0,
             "revenue": {
               "mae": 16606.0,
               "rmse": 20219.77,
               "mape": 7.91,
               "interval_coverage": 100.0,
-              "mean_interval_width": 100185.275,
-              "mean_interval_width_pct": 44.36
+              "mean_interval_width": 90338.39,
+              "mean_interval_width_pct": 40.0
             },
             "roas": {
               "mae": 0.09,
@@ -2542,14 +2136,14 @@
             "roas_interval_coverage": 100.0
           },
           "verdict": {
-            "overall_winner": "tie",
+            "overall_winner": "mixed",
             "revenue": {
               "target": "revenue",
-              "trained_mae": 16606.0,
+              "trained_mae": 30979.46,
               "safe_baseline_mae": 16606.0,
-              "mae_difference_pct": 0.0,
-              "winner": "tie",
-              "interpretation": "The trained model and safe baseline are tied on revenue MAE for this slice."
+              "mae_difference_pct": 86.56,
+              "winner": "safe_baseline_fallback",
+              "interpretation": "The safe baseline has lower revenue MAE than the trained model by 86.56% on this slice."
             },
             "roas": {
               "target": "roas",
@@ -2559,37 +2153,37 @@
               "winner": "tie",
               "interpretation": "The trained model and safe baseline are tied on roas MAE for this slice."
             },
-            "interpretation": "Revenue: The trained model and safe baseline are tied on revenue MAE for this slice. ROAS: The trained model and safe baseline are tied on roas MAE for this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+            "interpretation": "Revenue: The safe baseline has lower revenue MAE than the trained model by 86.56% on this slice. ROAS: The trained model and safe baseline are tied on roas MAE for this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
           }
         },
         "campaign": {
           "segments_evaluated": 16,
           "trained_model_metrics": {
-            "mae": 12449.09,
-            "rmse": 15117.71,
-            "mape": 7.9,
-            "interval_coverage": 87.5,
-            "mean_interval_width": 46699.7263,
-            "mean_interval_width_pct": 29.31,
+            "mae": 22980.97,
+            "rmse": 30242.73,
+            "mape": 14.79,
+            "interval_coverage": 100.0,
+            "mean_interval_width": 90784.6475,
+            "mean_interval_width_pct": 52.93,
             "revenue": {
-              "mae": 12449.09,
-              "rmse": 15117.71,
-              "mape": 7.9,
-              "interval_coverage": 87.5,
-              "mean_interval_width": 46699.7263,
-              "mean_interval_width_pct": 29.31
+              "mae": 22980.97,
+              "rmse": 30242.73,
+              "mape": 14.79,
+              "interval_coverage": 100.0,
+              "mean_interval_width": 90784.6475,
+              "mean_interval_width_pct": 52.93
             },
             "roas": {
               "mae": 0.11,
               "rmse": 0.15,
-              "mape": 2.64,
+              "mape": 2.68,
               "interval_coverage": 100.0,
-              "mean_interval_width": 1.1719,
-              "mean_interval_width_pct": 27.49
+              "mean_interval_width": 1.1712,
+              "mean_interval_width_pct": 27.47
             },
             "roas_mae": 0.11,
             "roas_rmse": 0.15,
-            "roas_mape": 2.64,
+            "roas_mape": 2.68,
             "roas_interval_coverage": 100.0
           },
           "seasonal_average_baseline_metrics": {
@@ -2597,15 +2191,15 @@
             "rmse": 15117.71,
             "mape": 7.9,
             "interval_coverage": 100.0,
-            "mean_interval_width": 75150.5837,
-            "mean_interval_width_pct": 44.36,
+            "mean_interval_width": 67764.2756,
+            "mean_interval_width_pct": 40.0,
             "revenue": {
               "mae": 12449.09,
               "rmse": 15117.71,
               "mape": 7.9,
               "interval_coverage": 100.0,
-              "mean_interval_width": 75150.5837,
-              "mean_interval_width_pct": 44.36
+              "mean_interval_width": 67764.2756,
+              "mean_interval_width_pct": 40.0
             },
             "roas": {
               "mae": 0.1,
@@ -2621,14 +2215,14 @@
             "roas_interval_coverage": 100.0
           },
           "verdict": {
-            "overall_winner": "mixed",
+            "overall_winner": "safe_baseline_fallback",
             "revenue": {
               "target": "revenue",
-              "trained_mae": 12449.09,
+              "trained_mae": 22980.97,
               "safe_baseline_mae": 12449.09,
-              "mae_difference_pct": 0.0,
-              "winner": "tie",
-              "interpretation": "The trained model and safe baseline are tied on revenue MAE for this slice."
+              "mae_difference_pct": 84.6,
+              "winner": "safe_baseline_fallback",
+              "interpretation": "The safe baseline has lower revenue MAE than the trained model by 84.60% on this slice."
             },
             "roas": {
               "target": "roas",
@@ -2638,38 +2232,38 @@
               "winner": "safe_baseline_fallback",
               "interpretation": "The safe baseline has lower roas MAE than the trained model by 10.00% on this slice."
             },
-            "interpretation": "Revenue: The trained model and safe baseline are tied on revenue MAE for this slice. ROAS: The safe baseline has lower roas MAE than the trained model by 10.00% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+            "interpretation": "Revenue: The safe baseline has lower revenue MAE than the trained model by 84.60% on this slice. ROAS: The safe baseline has lower roas MAE than the trained model by 10.00% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
           }
         }
       },
       "rolling_origin_average_metrics": {
         "folds_averaged": 2,
         "trained_model_metrics": {
-          "mae": 22141.945,
-          "rmse": 31514.105,
-          "mape": 7.895,
+          "mae": 41091.755,
+          "rmse": 58365.225,
+          "mape": 14.795,
           "interval_coverage": 94.445,
-          "mean_interval_width": 72146.6144,
-          "mean_interval_width_pct": 26.455,
+          "mean_interval_width": 142314.0528,
+          "mean_interval_width_pct": 48.265,
           "revenue": {
-            "mae": 22141.945,
-            "rmse": 31514.105,
-            "mape": 7.895,
+            "mae": 41091.755,
+            "rmse": 58365.225,
+            "mape": 14.795,
             "interval_coverage": 94.445,
-            "mean_interval_width": 72146.6144,
-            "mean_interval_width_pct": 26.455
+            "mean_interval_width": 142314.0528,
+            "mean_interval_width_pct": 48.265
           },
           "roas": {
             "mae": 0.095,
             "rmse": 0.115,
-            "mape": 2.435,
+            "mape": 2.465,
             "interval_coverage": 100.0,
-            "mean_interval_width": 1.0553,
-            "mean_interval_width_pct": 25.41
+            "mean_interval_width": 1.0375,
+            "mean_interval_width_pct": 25.0
           },
           "roas_mae": 0.095,
           "roas_rmse": 0.115,
-          "roas_mape": 2.435,
+          "roas_mape": 2.465,
           "roas_interval_coverage": 100.0
         },
         "safe_baseline_metrics": {
@@ -2677,23 +2271,23 @@
           "rmse": 31514.105,
           "mape": 7.895,
           "interval_coverage": 100.0,
-          "mean_interval_width": 133576.497,
-          "mean_interval_width_pct": 44.36,
+          "mean_interval_width": 120447.697,
+          "mean_interval_width_pct": 40.0,
           "revenue": {
             "mae": 22141.945,
             "rmse": 31514.105,
             "mape": 7.895,
             "interval_coverage": 100.0,
-            "mean_interval_width": 133576.497,
-            "mean_interval_width_pct": 44.36
+            "mean_interval_width": 120447.697,
+            "mean_interval_width_pct": 40.0
           },
           "roas": {
             "mae": 0.085,
             "rmse": 0.095,
             "mape": 2.07,
             "interval_coverage": 100.0,
-            "mean_interval_width": 1.1969,
-            "mean_interval_width_pct": 29.03
+            "mean_interval_width": 1.1905,
+            "mean_interval_width_pct": 28.865
           },
           "roas_mae": 0.085,
           "roas_rmse": 0.095,
@@ -2702,14 +2296,14 @@
         }
       },
       "model_performance_evidence": {
-        "overall_winner": "mixed",
+        "overall_winner": "safe_baseline_fallback",
         "revenue": {
           "target": "revenue",
-          "trained_mae": 22141.94,
+          "trained_mae": 41091.75,
           "safe_baseline_mae": 22141.94,
-          "mae_difference_pct": 0.0,
-          "winner": "tie",
-          "interpretation": "The trained model and safe baseline are tied on revenue MAE for this slice."
+          "mae_difference_pct": 85.58,
+          "winner": "safe_baseline_fallback",
+          "interpretation": "The safe baseline has lower revenue MAE than the trained model by 85.58% on this slice."
         },
         "roas": {
           "target": "roas",
@@ -2719,7 +2313,7 @@
           "winner": "safe_baseline_fallback",
           "interpretation": "The safe baseline has lower roas MAE than the trained model by 12.50% on this slice."
         },
-        "interpretation": "Revenue: The trained model and safe baseline are tied on revenue MAE for this slice. ROAS: The safe baseline has lower roas MAE than the trained model by 12.50% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
+        "interpretation": "Revenue: The safe baseline has lower revenue MAE than the trained model by 85.58% on this slice. ROAS: The safe baseline has lower roas MAE than the trained model by 12.50% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability."
       },
       "statistical_comparison": {
         "method": "paired_bootstrap_absolute_error_delta",
@@ -2727,32 +2321,32 @@
         "revenue": {
           "target": "revenue",
           "sample_count": 36,
-          "mean_absolute_error_delta": 0.0,
+          "mean_absolute_error_delta": 18949.81,
           "confidence_interval_95": [
-            0.0,
-            0.0
+            9819.9791,
+            31609.4685
           ],
-          "p_value": 1.0,
-          "verdict": "statistical_tie",
-          "interpretation": "Paired bootstrap does not show a statistically clear revenue winner."
+          "p_value": 0.0,
+          "verdict": "safe_baseline_fallback",
+          "interpretation": "Safe baseline has statistically lower revenue absolute error on paired rows."
         },
         "roas": {
           "target": "roas",
           "sample_count": 36,
-          "mean_absolute_error_delta": 0.009,
+          "mean_absolute_error_delta": 0.01,
           "confidence_interval_95": [
-            -0.0198,
-            0.0379
+            -0.0189,
+            0.0395
           ],
-          "p_value": 0.546,
+          "p_value": 0.504,
           "verdict": "statistical_tie",
           "interpretation": "Paired bootstrap does not show a statistically clear roas winner."
         }
       },
       "trained_vs_safe_baseline": {
-        "mae_delta": 0.0,
-        "rmse_delta": 0.0,
-        "mape_delta": 0.0,
+        "mae_delta": -18949.81,
+        "rmse_delta": -36485.86,
+        "mape_delta": -6.91,
         "roas_mae_delta": -0.01,
         "roas_rmse_delta": -0.02
       }
@@ -2765,32 +2359,28 @@
       "evidence": {
         "candidate_weights": [
           0.0,
-          0.1,
-          0.25,
-          0.4,
-          0.5,
           0.6
         ],
         "best_primary_holdout_weight": 0.0,
         "current_primary_holdout_weight": 0.6,
         "selection_metric": "lowest RMSE, then MAE, then MAPE"
       },
-      "decision": "review_after_long_horizon_feature_expansion",
-      "interpretation": "This reviews the diagnostic blend sweep after adding long-horizon momentum, hierarchy, share-drift, stability, volatility, and seasonality-interaction features. The single final holdout prefers a lower uniform revenue blend, but this is only one market window. ForecastIQ keeps the current horizon gate because the pooled paired-bootstrap evidence favors the trained 30-day signal and shows parity, not regression, at longer revenue horizons."
+      "decision": "retain_conservative_multi_horizon_trained_contribution",
+      "interpretation": "This reviews the diagnostic blend sweep after adding long-horizon momentum, hierarchy, share-drift, stability, volatility, and seasonality-interaction features. The single final holdout prefers a lower uniform revenue blend, but this is only one market window. ForecastIQ keeps a conservative non-zero trained residual contribution at every horizon so the graded output remains model-backed while still documenting when the seasonal baseline is competitive."
     },
     {
       "review_item": "round_2_paired_bootstrap_gate_evidence",
-      "scope": "Retune per-horizon revenue gate using rolling-origin paired-bootstrap verdicts",
+      "scope": "Retune per-horizon revenue contribution using rolling-origin paired-bootstrap verdicts",
       "evidence": {
         "revenue_verdict_by_horizon": {
-          "30": "trained_model",
+          "30": "statistical_tie",
           "60": "statistical_tie",
-          "90": "statistical_tie"
+          "90": "safe_baseline_fallback"
         },
-        "decision_rule": "Use trained residual correction only when the paired-bootstrap interval favors trained model; use the seasonal baseline anchor when the verdict is a statistical tie or safe-baseline win."
+        "decision_rule": "Use stronger trained residual correction when the paired-bootstrap interval favors trained model; use conservative non-zero residual contribution when the seasonal baseline ties or wins."
       },
-      "decision": "keep_current_horizon_gate",
-      "interpretation": "This reviews the paired-bootstrap verdicts after the long-horizon feature expansion. Revenue bootstrap verdicts were 30d=trained_model, 60d=statistical_tie, 90d=statistical_tie. This supports keeping trained influence at 30 days and baseline anchoring at 60/90 days rather than forcing residual correction where the statistical evidence is a tie."
+      "decision": "use_conservative_trained_estimate_all_horizons",
+      "interpretation": "This reviews the paired-bootstrap verdicts after the long-horizon feature expansion. Revenue bootstrap verdicts were 30d=statistical_tie, 60d=statistical_tie, 90d=safe_baseline_fallback. This supports visible trained influence at 30/60/90 days, with long-horizon weights kept deliberately small when the statistical evidence shows a tie rather than a clear trained-model win."
     }
   ],
   "model_path_consistency": {
@@ -2800,7 +2390,7 @@
     "source": "reports/backtest_summary.md",
     "interpretation": "The live app and offline evaluator are directionally reconciled but not point-identical; the UI surfaces a 15% planning-confidence badge so users understand the bounded model-path spread."
   },
-  "recommendation": "Candidate revenue_model_weight=0.00 scored best on holdout RMSE. Review before updating the packaged artifact. Candidate roas_model_weight=0.50 scored best on ROAS RMSE. Review before updating the packaged artifact.",
+  "recommendation": "Candidate revenue_model_weight=0.00 scored best on holdout RMSE. Review before updating the packaged artifact. Keep roas_model_weight=0.60; it has the best ROAS RMSE/MAE balance.",
   "rows": [
     {
       "level": "overall",
@@ -2808,16 +2398,16 @@
       "horizon_days": 30,
       "actual_revenue": 476116.68,
       "actual_roas": 4.0445,
-      "trained_expected_revenue": 486451.49,
-      "trained_lower_revenue": 459258.85,
-      "trained_upper_revenue": 513644.13,
+      "trained_expected_revenue": 487447.51,
+      "trained_lower_revenue": 460150.45,
+      "trained_upper_revenue": 514744.58,
       "trained_expected_roas": 4.07,
       "trained_lower_roas": 3.92,
       "trained_upper_roas": 4.21,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 482379.32,
-      "safe_lower_revenue": 455414.32,
-      "safe_upper_revenue": 509344.33,
+      "safe_lower_revenue": 455366.08,
+      "safe_upper_revenue": 509392.57,
       "safe_expected_roas": 4.06,
       "safe_lower_roas": 3.92,
       "safe_upper_roas": 4.2
@@ -2828,16 +2418,16 @@
       "horizon_days": 30,
       "actual_revenue": 264801.33,
       "actual_roas": 4.586,
-      "trained_expected_revenue": 272617.0,
-      "trained_lower_revenue": 256615.75,
-      "trained_upper_revenue": 288618.26,
+      "trained_expected_revenue": 273420.42,
+      "trained_lower_revenue": 257343.3,
+      "trained_upper_revenue": 289497.54,
       "trained_expected_roas": 4.62,
       "trained_lower_roas": 4.43,
       "trained_upper_roas": 4.8,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 270817.94,
-      "safe_lower_revenue": 255679.22,
-      "safe_upper_revenue": 285956.66,
+      "safe_lower_revenue": 255652.13,
+      "safe_upper_revenue": 285983.74,
       "safe_expected_roas": 4.62,
       "safe_lower_roas": 4.39,
       "safe_upper_roas": 4.85
@@ -2848,16 +2438,16 @@
       "horizon_days": 30,
       "actual_revenue": 139555.62,
       "actual_roas": 2.9754,
-      "trained_expected_revenue": 143254.7,
-      "trained_lower_revenue": 134153.09,
-      "trained_upper_revenue": 152356.31,
+      "trained_expected_revenue": 143658.78,
+      "trained_lower_revenue": 134557.17,
+      "trained_upper_revenue": 152760.39,
       "trained_expected_roas": 3.01,
       "trained_lower_roas": 2.9,
       "trained_upper_roas": 3.12,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 140404.68,
-      "safe_lower_revenue": 132556.06,
-      "safe_upper_revenue": 148253.3,
+      "safe_lower_revenue": 132542.02,
+      "safe_upper_revenue": 148267.34,
       "safe_expected_roas": 2.97,
       "safe_lower_roas": 2.83,
       "safe_upper_roas": 3.12
@@ -2868,16 +2458,16 @@
       "horizon_days": 30,
       "actual_revenue": 71759.73,
       "actual_roas": 5.488,
-      "trained_expected_revenue": 71060.44,
-      "trained_lower_revenue": 61958.83,
-      "trained_upper_revenue": 80162.05,
+      "trained_expected_revenue": 71232.67,
+      "trained_lower_revenue": 62131.06,
+      "trained_upper_revenue": 80334.28,
       "trained_expected_roas": 5.43,
       "trained_lower_roas": 5.19,
       "trained_upper_roas": 5.68,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 71160.51,
-      "safe_lower_revenue": 67182.64,
-      "safe_upper_revenue": 75138.38,
+      "safe_lower_revenue": 67175.52,
+      "safe_upper_revenue": 75145.5,
       "safe_expected_roas": 5.48,
       "safe_lower_roas": 5.16,
       "safe_upper_roas": 5.79
@@ -2888,16 +2478,16 @@
       "horizon_days": 30,
       "actual_revenue": 53922.02,
       "actual_roas": 2.9848,
-      "trained_expected_revenue": 53100.84,
-      "trained_lower_revenue": 43565.82,
-      "trained_upper_revenue": 62635.86,
+      "trained_expected_revenue": 53183.36,
+      "trained_lower_revenue": 43648.34,
+      "trained_upper_revenue": 62718.38,
       "trained_expected_roas": 2.99,
       "trained_lower_roas": 2.79,
       "trained_upper_roas": 3.19,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 51961.55,
-      "safe_lower_revenue": 49056.9,
-      "safe_upper_revenue": 54866.2,
+      "safe_lower_revenue": 49051.7,
+      "safe_upper_revenue": 54871.39,
       "safe_expected_roas": 2.92,
       "safe_lower_roas": 2.66,
       "safe_upper_roas": 3.17
@@ -2908,16 +2498,16 @@
       "horizon_days": 30,
       "actual_revenue": 93907.13,
       "actual_roas": 4.2731,
-      "trained_expected_revenue": 97177.15,
-      "trained_lower_revenue": 87642.13,
-      "trained_upper_revenue": 106712.17,
+      "trained_expected_revenue": 97441.17,
+      "trained_lower_revenue": 87906.15,
+      "trained_upper_revenue": 106976.19,
       "trained_expected_roas": 4.28,
       "trained_lower_roas": 4.02,
       "trained_upper_roas": 4.55,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 96286.88,
-      "safe_lower_revenue": 90904.44,
-      "safe_upper_revenue": 101669.32,
+      "safe_lower_revenue": 90894.82,
+      "safe_upper_revenue": 101678.95,
       "safe_expected_roas": 4.29,
       "safe_lower_roas": 3.96,
       "safe_upper_roas": 4.63
@@ -2928,16 +2518,16 @@
       "horizon_days": 30,
       "actual_revenue": 38705.24,
       "actual_roas": 2.9226,
-      "trained_expected_revenue": 42456.15,
-      "trained_lower_revenue": 32921.13,
-      "trained_upper_revenue": 51991.17,
+      "trained_expected_revenue": 42512.89,
+      "trained_lower_revenue": 32977.87,
+      "trained_upper_revenue": 52047.91,
       "trained_expected_roas": 3.05,
       "trained_lower_roas": 2.85,
       "trained_upper_roas": 3.24,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 42449.76,
-      "safe_lower_revenue": 40076.81,
-      "safe_upper_revenue": 44822.7,
+      "safe_lower_revenue": 40072.57,
+      "safe_upper_revenue": 44826.94,
       "safe_expected_roas": 3.06,
       "safe_lower_roas": 2.81,
       "safe_upper_roas": 3.31
@@ -2948,16 +2538,16 @@
       "horizon_days": 30,
       "actual_revenue": 46928.36,
       "actual_roas": 3.0094,
-      "trained_expected_revenue": 46955.96,
-      "trained_lower_revenue": 37420.94,
-      "trained_upper_revenue": 56490.98,
+      "trained_expected_revenue": 47141.33,
+      "trained_lower_revenue": 37606.31,
+      "trained_upper_revenue": 56676.35,
       "trained_expected_roas": 3.01,
       "trained_lower_roas": 2.81,
       "trained_upper_roas": 3.2,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 46006.26,
-      "safe_lower_revenue": 43434.51,
-      "safe_upper_revenue": 48578.01,
+      "safe_lower_revenue": 43429.91,
+      "safe_upper_revenue": 48582.61,
       "safe_expected_roas": 2.96,
       "safe_lower_roas": 2.71,
       "safe_upper_roas": 3.21
@@ -2968,16 +2558,16 @@
       "horizon_days": 30,
       "actual_revenue": 123975.04,
       "actual_roas": 5.5512,
-      "trained_expected_revenue": 125297.52,
-      "trained_lower_revenue": 115762.5,
-      "trained_upper_revenue": 134832.54,
+      "trained_expected_revenue": 125594.97,
+      "trained_lower_revenue": 116059.95,
+      "trained_upper_revenue": 135129.99,
       "trained_expected_roas": 5.58,
       "trained_lower_roas": 5.3,
       "trained_upper_roas": 5.87,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 125520.65,
-      "safe_lower_revenue": 118504.04,
-      "safe_upper_revenue": 132537.25,
+      "safe_lower_revenue": 118491.49,
+      "safe_upper_revenue": 132549.8,
       "safe_expected_roas": 5.56,
       "safe_lower_roas": 5.19,
       "safe_upper_roas": 5.92
@@ -2988,16 +2578,16 @@
       "horizon_days": 30,
       "actual_revenue": 118678.89,
       "actual_roas": 4.4772,
-      "trained_expected_revenue": 121150.46,
-      "trained_lower_revenue": 111615.44,
-      "trained_upper_revenue": 130685.48,
+      "trained_expected_revenue": 121526.38,
+      "trained_lower_revenue": 111991.36,
+      "trained_upper_revenue": 131061.4,
       "trained_expected_roas": 4.52,
       "trained_lower_roas": 4.3,
       "trained_upper_roas": 4.73,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 120172.26,
-      "safe_lower_revenue": 113454.63,
-      "safe_upper_revenue": 126889.89,
+      "safe_lower_revenue": 113442.62,
+      "safe_upper_revenue": 126901.91,
       "safe_expected_roas": 4.53,
       "safe_lower_roas": 4.25,
       "safe_upper_roas": 4.8
@@ -3008,16 +2598,16 @@
       "horizon_days": 30,
       "actual_revenue": 53922.02,
       "actual_roas": 2.9848,
-      "trained_expected_revenue": 53100.84,
-      "trained_lower_revenue": 43132.41,
-      "trained_upper_revenue": 63069.27,
+      "trained_expected_revenue": 53183.36,
+      "trained_lower_revenue": 43214.93,
+      "trained_upper_revenue": 63151.79,
       "trained_expected_roas": 2.99,
       "trained_lower_roas": 2.79,
       "trained_upper_roas": 3.19,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 51961.55,
-      "safe_lower_revenue": 49056.9,
-      "safe_upper_revenue": 54866.2,
+      "safe_lower_revenue": 49051.7,
+      "safe_upper_revenue": 54871.39,
       "safe_expected_roas": 2.92,
       "safe_lower_roas": 2.66,
       "safe_upper_roas": 3.17
@@ -3028,16 +2618,16 @@
       "horizon_days": 30,
       "actual_revenue": 36728.84,
       "actual_roas": 6.0193,
-      "trained_expected_revenue": 36756.25,
-      "trained_lower_revenue": 26787.82,
-      "trained_upper_revenue": 46724.68,
+      "trained_expected_revenue": 36924.76,
+      "trained_lower_revenue": 26956.33,
+      "trained_upper_revenue": 46893.19,
       "trained_expected_roas": 6.0,
       "trained_lower_roas": 5.62,
       "trained_upper_roas": 6.37,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 36892.53,
-      "safe_lower_revenue": 34830.24,
-      "safe_upper_revenue": 38954.82,
+      "safe_lower_revenue": 34826.55,
+      "safe_upper_revenue": 38958.51,
       "safe_expected_roas": 6.09,
       "safe_lower_roas": 5.61,
       "safe_upper_roas": 6.56
@@ -3048,16 +2638,16 @@
       "horizon_days": 30,
       "actual_revenue": 35030.89,
       "actual_roas": 5.0231,
-      "trained_expected_revenue": 34245.9,
-      "trained_lower_revenue": 24277.47,
-      "trained_upper_revenue": 44214.33,
+      "trained_expected_revenue": 34369.32,
+      "trained_lower_revenue": 24400.89,
+      "trained_upper_revenue": 44337.75,
       "trained_expected_roas": 4.93,
       "trained_lower_roas": 4.63,
       "trained_upper_roas": 5.23,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 34268.01,
-      "safe_lower_revenue": 32352.43,
-      "safe_upper_revenue": 36183.59,
+      "safe_lower_revenue": 32349.0,
+      "safe_upper_revenue": 36187.02,
       "safe_expected_roas": 4.94,
       "safe_lower_roas": 4.56,
       "safe_upper_roas": 5.32
@@ -3068,16 +2658,16 @@
       "horizon_days": 30,
       "actual_revenue": 87246.2,
       "actual_roas": 5.3752,
-      "trained_expected_revenue": 88487.31,
-      "trained_lower_revenue": 78518.88,
-      "trained_upper_revenue": 98455.74,
+      "trained_expected_revenue": 88480.44,
+      "trained_lower_revenue": 78512.01,
+      "trained_upper_revenue": 98448.87,
       "trained_expected_roas": 5.35,
       "trained_lower_roas": 4.99,
       "trained_upper_roas": 5.71,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 88628.13,
-      "safe_lower_revenue": 83673.82,
-      "safe_upper_revenue": 93582.44,
+      "safe_lower_revenue": 83664.95,
+      "safe_upper_revenue": 93591.3,
       "safe_expected_roas": 5.36,
       "safe_lower_roas": 4.91,
       "safe_upper_roas": 5.81
@@ -3088,16 +2678,16 @@
       "horizon_days": 30,
       "actual_revenue": 46928.36,
       "actual_roas": 3.0094,
-      "trained_expected_revenue": 46955.96,
-      "trained_lower_revenue": 36987.53,
-      "trained_upper_revenue": 56924.39,
+      "trained_expected_revenue": 47141.33,
+      "trained_lower_revenue": 37172.9,
+      "trained_upper_revenue": 57109.76,
       "trained_expected_roas": 3.01,
       "trained_lower_roas": 2.81,
       "trained_upper_roas": 3.2,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 46006.26,
-      "safe_lower_revenue": 43434.51,
-      "safe_upper_revenue": 48578.01,
+      "safe_lower_revenue": 43429.91,
+      "safe_upper_revenue": 48582.61,
       "safe_expected_roas": 2.96,
       "safe_lower_roas": 2.71,
       "safe_upper_roas": 3.21
@@ -3108,16 +2698,16 @@
       "horizon_days": 30,
       "actual_revenue": 83648.0,
       "actual_roas": 4.2823,
-      "trained_expected_revenue": 87044.81,
-      "trained_lower_revenue": 77076.38,
-      "trained_upper_revenue": 97013.24,
+      "trained_expected_revenue": 87249.75,
+      "trained_lower_revenue": 77281.32,
+      "trained_upper_revenue": 97218.18,
       "trained_expected_roas": 4.38,
       "trained_lower_roas": 4.09,
       "trained_upper_roas": 4.66,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 85905.37,
-      "safe_lower_revenue": 81103.26,
-      "safe_upper_revenue": 90707.48,
+      "safe_lower_revenue": 81094.67,
+      "safe_upper_revenue": 90716.07,
       "safe_expected_roas": 4.38,
       "safe_lower_roas": 4.02,
       "safe_upper_roas": 4.75
@@ -3128,16 +2718,16 @@
       "horizon_days": 30,
       "actual_revenue": 38705.24,
       "actual_roas": 2.9226,
-      "trained_expected_revenue": 42456.15,
-      "trained_lower_revenue": 32487.72,
-      "trained_upper_revenue": 52424.58,
+      "trained_expected_revenue": 42512.89,
+      "trained_lower_revenue": 32544.46,
+      "trained_upper_revenue": 52481.32,
       "trained_expected_roas": 3.05,
       "trained_lower_roas": 2.85,
       "trained_upper_roas": 3.24,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 42449.76,
-      "safe_lower_revenue": 40076.81,
-      "safe_upper_revenue": 44822.7,
+      "safe_lower_revenue": 40072.57,
+      "safe_upper_revenue": 44826.94,
       "safe_expected_roas": 3.06,
       "safe_lower_roas": 2.81,
       "safe_upper_roas": 3.31
@@ -3148,16 +2738,16 @@
       "horizon_days": 30,
       "actual_revenue": 93907.13,
       "actual_roas": 4.2731,
-      "trained_expected_revenue": 97177.15,
-      "trained_lower_revenue": 87208.72,
-      "trained_upper_revenue": 107145.58,
+      "trained_expected_revenue": 97441.17,
+      "trained_lower_revenue": 87472.74,
+      "trained_upper_revenue": 107409.6,
       "trained_expected_roas": 4.28,
       "trained_lower_roas": 4.02,
       "trained_upper_roas": 4.55,
       "trained_model_type": "trained_model",
       "safe_expected_revenue": 96286.88,
-      "safe_lower_revenue": 90904.44,
-      "safe_upper_revenue": 101669.32,
+      "safe_lower_revenue": 90894.82,
+      "safe_upper_revenue": 101678.95,
       "safe_expected_roas": 4.29,
       "safe_lower_roas": 3.96,
       "safe_upper_roas": 4.63

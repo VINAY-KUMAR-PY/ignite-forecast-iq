@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-09T07:01:47.528376+00:00",
+  "generated_at": "2026-07-15T10:08:18.038579+00:00",
   "method": "split_conformal_absolute_revenue_residual",
   "target_coverage": 0.9,
   "data_dir": "data",
@@ -9,27 +9,27 @@
   "calibration_note": "Each horizon uses consecutive chronological windows immediately before the final holdout. The final holdout remains reserved for reports/backtest_summary.md coverage validation.",
   "derived_constants": {
     "default_horizon_interval_multiplier": {
-      "30": 2.5,
-      "60": 2.7421,
-      "90": 2.7421
+      "30": 1.6,
+      "60": 1.6,
+      "90": 2.5
     },
     "low_sample_horizon_interval_multiplier": {
-      "30": 3.125,
-      "60": 3.4276,
-      "90": 3.4276
+      "30": 2.0,
+      "60": 2.0,
+      "90": 3.125
     },
     "horizon_interval_floor_pct": {
-      "30": 0.0559,
-      "60": 0.2168,
-      "90": 0.2218
+      "30": 0.056,
+      "60": 0.14,
+      "90": 0.2
     }
   },
   "interval_method_comparison": [
     {
       "method": "residual_conformal_default",
       "horizon_days": 30,
-      "coverage_pct": 97.22,
-      "mean_interval_width_pct": 11.18,
+      "coverage_pct": 91.67,
+      "mean_interval_width_pct": 11.2,
       "segments_scored": 36,
       "selected_by_default": true,
       "description": "Default evaluator interval profile used by run.sh."
@@ -37,7 +37,7 @@
     {
       "method": "cv_quantile_conformal_option",
       "horizon_days": 30,
-      "coverage_pct": 97.22,
+      "coverage_pct": 91.67,
       "mean_interval_width_pct": 11.18,
       "segments_scored": 36,
       "selected_by_default": false,
@@ -46,8 +46,8 @@
     {
       "method": "residual_conformal_default",
       "horizon_days": 60,
-      "coverage_pct": 97.22,
-      "mean_interval_width_pct": 43.36,
+      "coverage_pct": 91.67,
+      "mean_interval_width_pct": 39.58,
       "segments_scored": 36,
       "selected_by_default": true,
       "description": "Default evaluator interval profile used by run.sh."
@@ -55,7 +55,7 @@
     {
       "method": "cv_quantile_conformal_option",
       "horizon_days": 60,
-      "coverage_pct": 97.22,
+      "coverage_pct": 100.0,
       "mean_interval_width_pct": 43.36,
       "segments_scored": 36,
       "selected_by_default": false,
@@ -65,7 +65,7 @@
       "method": "residual_conformal_default",
       "horizon_days": 90,
       "coverage_pct": 100.0,
-      "mean_interval_width_pct": 44.36,
+      "mean_interval_width_pct": 40.58,
       "segments_scored": 36,
       "selected_by_default": true,
       "description": "Default evaluator interval profile used by run.sh."
@@ -101,34 +101,34 @@
       ],
       "segments_scored": 36,
       "target_coverage": 0.9,
-      "half_width_pct_quantile": 0.055894459922016984,
+      "half_width_pct_quantile": 0.0560169129152964,
       "half_width_quantile_level": 0.9444444444444444,
-      "residual_multiplier_quantile": 5.239831828355986,
+      "residual_multiplier_quantile": 5.182129209610288,
       "residual_multiplier_quantile_level": 0.9444444444444444,
       "level_summary": {
         "overall": {
           "sample_count": 2,
-          "half_width_pct_quantile": 0.048161,
+          "half_width_pct_quantile": 0.047927,
           "quantile_level": 1.0,
-          "mean_absolute_residual_pct": 4.4008
+          "mean_absolute_residual_pct": 4.3663
         },
         "channel": {
           "sample_count": 6,
-          "half_width_pct_quantile": 0.044143,
+          "half_width_pct_quantile": 0.044607,
           "quantile_level": 1.0,
-          "mean_absolute_residual_pct": 3.9145
+          "mean_absolute_residual_pct": 3.9138
         },
         "campaign_type": {
           "sample_count": 12,
-          "half_width_pct_quantile": 0.055894,
+          "half_width_pct_quantile": 0.056017,
           "quantile_level": 1.0,
-          "mean_absolute_residual_pct": 3.6362
+          "mean_absolute_residual_pct": 3.6668
         },
         "campaign": {
           "sample_count": 16,
-          "half_width_pct_quantile": 0.057232,
+          "half_width_pct_quantile": 0.057865,
           "quantile_level": 1.0,
-          "mean_absolute_residual_pct": 3.779
+          "mean_absolute_residual_pct": 3.7726
         }
       },
       "rows": [
@@ -138,8 +138,8 @@
           "segment": "all",
           "model_type": "trained_model",
           "actual_revenue": 481907.48,
-          "expected_revenue": 463437.23,
-          "absolute_residual_pct": 3.9855
+          "expected_revenue": 463640.63,
+          "absolute_residual_pct": 3.9399
         },
         {
           "calibration_window": 1,
@@ -147,8 +147,8 @@
           "segment": "Google Ads",
           "model_type": "trained_model",
           "actual_revenue": 271410.93,
-          "expected_revenue": 260944.17,
-          "absolute_residual_pct": 4.0111
+          "expected_revenue": 260895.67,
+          "absolute_residual_pct": 4.0304
         },
         {
           "calibration_window": 1,
@@ -156,8 +156,8 @@
           "segment": "Meta Ads",
           "model_type": "trained_model",
           "actual_revenue": 139584.66,
-          "expected_revenue": 134973.49,
-          "absolute_residual_pct": 3.4164
+          "expected_revenue": 134882.72,
+          "absolute_residual_pct": 3.4859
         },
         {
           "calibration_window": 1,
@@ -165,8 +165,8 @@
           "segment": "Microsoft Ads",
           "model_type": "trained_model",
           "actual_revenue": 70911.89,
-          "expected_revenue": 68355.72,
-          "absolute_residual_pct": 3.7395
+          "expected_revenue": 68382.5,
+          "absolute_residual_pct": 3.6989
         },
         {
           "calibration_window": 1,
@@ -174,8 +174,8 @@
           "segment": "Advantage+",
           "model_type": "trained_model",
           "actual_revenue": 51991.35,
-          "expected_revenue": 50264.05,
-          "absolute_residual_pct": 3.4365
+          "expected_revenue": 50227.43,
+          "absolute_residual_pct": 3.5119
         },
         {
           "calibration_window": 1,
@@ -183,8 +183,8 @@
           "segment": "Performance Max",
           "model_type": "trained_model",
           "actual_revenue": 95719.27,
-          "expected_revenue": 91343.24,
-          "absolute_residual_pct": 4.7908
+          "expected_revenue": 91243.87,
+          "absolute_residual_pct": 4.9049
         },
         {
           "calibration_window": 1,
@@ -192,8 +192,8 @@
           "segment": "Prospecting",
           "model_type": "trained_model",
           "actual_revenue": 41889.86,
-          "expected_revenue": 40296.83,
-          "absolute_residual_pct": 3.9532
+          "expected_revenue": 40246.43,
+          "absolute_residual_pct": 4.0834
         },
         {
           "calibration_window": 1,
@@ -201,8 +201,8 @@
           "segment": "Retargeting",
           "model_type": "trained_model",
           "actual_revenue": 45703.45,
-          "expected_revenue": 44790.07,
-          "absolute_residual_pct": 2.0392
+          "expected_revenue": 44862.71,
+          "absolute_residual_pct": 1.874
         },
         {
           "calibration_window": 1,
@@ -210,8 +210,8 @@
           "segment": "Search",
           "model_type": "trained_model",
           "actual_revenue": 126060.63,
-          "expected_revenue": 123679.71,
-          "absolute_residual_pct": 1.9251
+          "expected_revenue": 123634.93,
+          "absolute_residual_pct": 1.962
         },
         {
           "calibration_window": 1,
@@ -219,8 +219,8 @@
           "segment": "Shopping",
           "model_type": "trained_model",
           "actual_revenue": 120542.92,
-          "expected_revenue": 115479.85,
-          "absolute_residual_pct": 4.3844
+          "expected_revenue": 115524.92,
+          "absolute_residual_pct": 4.3437
         },
         {
           "calibration_window": 1,
@@ -228,8 +228,8 @@
           "segment": "Advantage Shopping",
           "model_type": "trained_model",
           "actual_revenue": 51991.35,
-          "expected_revenue": 50264.05,
-          "absolute_residual_pct": 3.4365
+          "expected_revenue": 50227.43,
+          "absolute_residual_pct": 3.5119
         },
         {
           "calibration_window": 1,
@@ -237,8 +237,8 @@
           "segment": "Bing Brand",
           "model_type": "trained_model",
           "actual_revenue": 36998.47,
-          "expected_revenue": 35697.27,
-          "absolute_residual_pct": 3.6451
+          "expected_revenue": 35779.09,
+          "absolute_residual_pct": 3.4081
         },
         {
           "calibration_window": 1,
@@ -246,8 +246,8 @@
           "segment": "Bing Generic",
           "model_type": "trained_model",
           "actual_revenue": 33913.42,
-          "expected_revenue": 32584.75,
-          "absolute_residual_pct": 4.0776
+          "expected_revenue": 32569.81,
+          "absolute_residual_pct": 4.1253
         },
         {
           "calibration_window": 1,
@@ -255,8 +255,8 @@
           "segment": "Brand Search",
           "model_type": "trained_model",
           "actual_revenue": 89062.16,
-          "expected_revenue": 87096.01,
-          "absolute_residual_pct": 2.2575
+          "expected_revenue": 87000.84,
+          "absolute_residual_pct": 2.3693
         },
         {
           "calibration_window": 1,
@@ -264,8 +264,8 @@
           "segment": "Cart Retargeting",
           "model_type": "trained_model",
           "actual_revenue": 45703.45,
-          "expected_revenue": 44790.07,
-          "absolute_residual_pct": 2.0392
+          "expected_revenue": 44862.71,
+          "absolute_residual_pct": 1.874
         },
         {
           "calibration_window": 1,
@@ -273,8 +273,8 @@
           "segment": "Generic Search",
           "model_type": "trained_model",
           "actual_revenue": 86629.5,
-          "expected_revenue": 82687.81,
-          "absolute_residual_pct": 4.767
+          "expected_revenue": 82683.78,
+          "absolute_residual_pct": 4.7721
         },
         {
           "calibration_window": 1,
@@ -282,8 +282,8 @@
           "segment": "Lookalike Prospecting",
           "model_type": "trained_model",
           "actual_revenue": 41889.86,
-          "expected_revenue": 40296.83,
-          "absolute_residual_pct": 3.9532
+          "expected_revenue": 40246.43,
+          "absolute_residual_pct": 4.0834
         },
         {
           "calibration_window": 1,
@@ -291,8 +291,8 @@
           "segment": "Shopping Best Sellers",
           "model_type": "trained_model",
           "actual_revenue": 95719.27,
-          "expected_revenue": 91343.24,
-          "absolute_residual_pct": 4.7908
+          "expected_revenue": 91243.87,
+          "absolute_residual_pct": 4.9049
         },
         {
           "calibration_window": 2,
@@ -300,8 +300,8 @@
           "segment": "all",
           "model_type": "trained_model",
           "actual_revenue": 465930.94,
-          "expected_revenue": 444522.22,
-          "absolute_residual_pct": 4.8161
+          "expected_revenue": 444621.75,
+          "absolute_residual_pct": 4.7927
         },
         {
           "calibration_window": 2,
@@ -309,8 +309,8 @@
           "segment": "Google Ads",
           "model_type": "trained_model",
           "actual_revenue": 262185.49,
-          "expected_revenue": 251821.88,
-          "absolute_residual_pct": 4.1155
+          "expected_revenue": 251768.78,
+          "absolute_residual_pct": 4.1374
         },
         {
           "calibration_window": 2,
@@ -318,8 +318,8 @@
           "segment": "Meta Ads",
           "model_type": "trained_model",
           "actual_revenue": 135167.48,
-          "expected_revenue": 129453.03,
-          "absolute_residual_pct": 4.4143
+          "expected_revenue": 129395.55,
+          "absolute_residual_pct": 4.4607
         },
         {
           "calibration_window": 2,
@@ -327,8 +327,8 @@
           "segment": "Microsoft Ads",
           "model_type": "trained_model",
           "actual_revenue": 68577.97,
-          "expected_revenue": 66073.75,
-          "absolute_residual_pct": 3.79
+          "expected_revenue": 66150.74,
+          "absolute_residual_pct": 3.6692
         },
         {
           "calibration_window": 2,
@@ -336,8 +336,8 @@
           "segment": "Advantage+",
           "model_type": "trained_model",
           "actual_revenue": 49768.55,
-          "expected_revenue": 48251.69,
-          "absolute_residual_pct": 3.1436
+          "expected_revenue": 48288.49,
+          "absolute_residual_pct": 3.065
         },
         {
           "calibration_window": 2,
@@ -345,8 +345,8 @@
           "segment": "Performance Max",
           "model_type": "trained_model",
           "actual_revenue": 91549.57,
-          "expected_revenue": 90142.04,
-          "absolute_residual_pct": 1.5615
+          "expected_revenue": 90085.68,
+          "absolute_residual_pct": 1.625
         },
         {
           "calibration_window": 2,
@@ -354,8 +354,8 @@
           "segment": "Prospecting",
           "model_type": "trained_model",
           "actual_revenue": 39414.23,
-          "expected_revenue": 38165.69,
-          "absolute_residual_pct": 3.2714
+          "expected_revenue": 38120.1,
+          "absolute_residual_pct": 3.3949
         },
         {
           "calibration_window": 2,
@@ -363,8 +363,8 @@
           "segment": "Retargeting",
           "model_type": "trained_model",
           "actual_revenue": 45984.7,
-          "expected_revenue": 43550.47,
-          "absolute_residual_pct": 5.5894
+          "expected_revenue": 43545.42,
+          "absolute_residual_pct": 5.6017
         },
         {
           "calibration_window": 2,
@@ -372,8 +372,8 @@
           "segment": "Search",
           "model_type": "trained_model",
           "actual_revenue": 123012.74,
-          "expected_revenue": 117537.91,
-          "absolute_residual_pct": 4.6579
+          "expected_revenue": 117432.8,
+          "absolute_residual_pct": 4.7516
         },
         {
           "calibration_window": 2,
@@ -381,8 +381,8 @@
           "segment": "Shopping",
           "model_type": "trained_model",
           "actual_revenue": 116201.15,
-          "expected_revenue": 110793.08,
-          "absolute_residual_pct": 4.8812
+          "expected_revenue": 110790.16,
+          "absolute_residual_pct": 4.884
         },
         {
           "calibration_window": 2,
@@ -390,8 +390,8 @@
           "segment": "Advantage Shopping",
           "model_type": "trained_model",
           "actual_revenue": 49768.55,
-          "expected_revenue": 48251.69,
-          "absolute_residual_pct": 3.1436
+          "expected_revenue": 48288.49,
+          "absolute_residual_pct": 3.065
         },
         {
           "calibration_window": 2,
@@ -399,8 +399,8 @@
           "segment": "Bing Brand",
           "model_type": "trained_model",
           "actual_revenue": 35852.94,
-          "expected_revenue": 34216.02,
-          "absolute_residual_pct": 4.7841
+          "expected_revenue": 34260.97,
+          "absolute_residual_pct": 4.6466
         },
         {
           "calibration_window": 2,
@@ -408,8 +408,8 @@
           "segment": "Bing Generic",
           "model_type": "trained_model",
           "actual_revenue": 32725.03,
-          "expected_revenue": 31830.32,
-          "absolute_residual_pct": 2.8109
+          "expected_revenue": 31850.99,
+          "absolute_residual_pct": 2.7442
         },
         {
           "calibration_window": 2,
@@ -417,8 +417,8 @@
           "segment": "Brand Search",
           "model_type": "trained_model",
           "actual_revenue": 87159.8,
-          "expected_revenue": 83316.78,
-          "absolute_residual_pct": 4.6125
+          "expected_revenue": 83446.81,
+          "absolute_residual_pct": 4.4495
         },
         {
           "calibration_window": 2,
@@ -426,8 +426,8 @@
           "segment": "Cart Retargeting",
           "model_type": "trained_model",
           "actual_revenue": 45984.7,
-          "expected_revenue": 43550.47,
-          "absolute_residual_pct": 5.5894
+          "expected_revenue": 43545.42,
+          "absolute_residual_pct": 5.6017
         },
         {
           "calibration_window": 2,
@@ -435,8 +435,8 @@
           "segment": "Generic Search",
           "model_type": "trained_model",
           "actual_revenue": 83476.12,
-          "expected_revenue": 78957.26,
-          "absolute_residual_pct": 5.7232
+          "expected_revenue": 78910.0,
+          "absolute_residual_pct": 5.7865
         },
         {
           "calibration_window": 2,
@@ -444,8 +444,8 @@
           "segment": "Lookalike Prospecting",
           "model_type": "trained_model",
           "actual_revenue": 39414.23,
-          "expected_revenue": 38165.69,
-          "absolute_residual_pct": 3.2714
+          "expected_revenue": 38120.1,
+          "absolute_residual_pct": 3.3949
         },
         {
           "calibration_window": 2,
@@ -453,8 +453,8 @@
           "segment": "Shopping Best Sellers",
           "model_type": "trained_model",
           "actual_revenue": 91549.57,
-          "expected_revenue": 90142.04,
-          "absolute_residual_pct": 1.5615
+          "expected_revenue": 90085.68,
+          "absolute_residual_pct": 1.625
         }
       ]
     },
@@ -478,34 +478,34 @@
       ],
       "segments_scored": 36,
       "target_coverage": 0.9,
-      "half_width_pct_quantile": 0.21675168376082785,
+      "half_width_pct_quantile": 0.19791298658497047,
       "half_width_quantile_level": 0.9444444444444444,
-      "residual_multiplier_quantile": 9.145954552977306,
+      "residual_multiplier_quantile": 8.416892444851696,
       "residual_multiplier_quantile_level": 0.9444444444444444,
       "level_summary": {
         "overall": {
           "sample_count": 2,
-          "half_width_pct_quantile": 0.172898,
+          "half_width_pct_quantile": 0.16067,
           "quantile_level": 1.0,
-          "mean_absolute_residual_pct": 11.0809
+          "mean_absolute_residual_pct": 10.2167
         },
         "channel": {
           "sample_count": 6,
-          "half_width_pct_quantile": 0.188858,
+          "half_width_pct_quantile": 0.17144,
           "quantile_level": 1.0,
-          "mean_absolute_residual_pct": 10.6902
+          "mean_absolute_residual_pct": 9.6603
         },
         "campaign_type": {
           "sample_count": 12,
-          "half_width_pct_quantile": 0.216752,
+          "half_width_pct_quantile": 0.197913,
           "quantile_level": 1.0,
-          "mean_absolute_residual_pct": 11.0626
+          "mean_absolute_residual_pct": 10.0107
         },
         "campaign": {
           "sample_count": 16,
-          "half_width_pct_quantile": 0.223065,
+          "half_width_pct_quantile": 0.204482,
           "quantile_level": 1.0,
-          "mean_absolute_residual_pct": 10.9332
+          "mean_absolute_residual_pct": 9.8635
         }
       },
       "rows": [
@@ -515,8 +515,8 @@
           "segment": "all",
           "model_type": "trained_model",
           "actual_revenue": 947838.42,
-          "expected_revenue": 903804.15,
-          "absolute_residual_pct": 4.8721
+          "expected_revenue": 908182.92,
+          "absolute_residual_pct": 4.3665
         },
         {
           "calibration_window": 1,
@@ -524,8 +524,8 @@
           "segment": "Google Ads",
           "model_type": "trained_model",
           "actual_revenue": 533596.42,
-          "expected_revenue": 509892.23,
-          "absolute_residual_pct": 4.6489
+          "expected_revenue": 512350.6,
+          "absolute_residual_pct": 4.1467
         },
         {
           "calibration_window": 1,
@@ -533,8 +533,8 @@
           "segment": "Meta Ads",
           "model_type": "trained_model",
           "actual_revenue": 274752.14,
-          "expected_revenue": 260563.55,
-          "absolute_residual_pct": 5.4453
+          "expected_revenue": 261904.62,
+          "absolute_residual_pct": 4.9054
         },
         {
           "calibration_window": 1,
@@ -542,8 +542,8 @@
           "segment": "Microsoft Ads",
           "model_type": "trained_model",
           "actual_revenue": 139489.86,
-          "expected_revenue": 133399.84,
-          "absolute_residual_pct": 4.5652
+          "expected_revenue": 134079.6,
+          "absolute_residual_pct": 4.0351
         },
         {
           "calibration_window": 1,
@@ -551,8 +551,8 @@
           "segment": "Advantage+",
           "model_type": "trained_model",
           "actual_revenue": 101759.9,
-          "expected_revenue": 97005.71,
-          "absolute_residual_pct": 4.9009
+          "expected_revenue": 97492.34,
+          "absolute_residual_pct": 4.3773
         },
         {
           "calibration_window": 1,
@@ -560,8 +560,8 @@
           "segment": "Performance Max",
           "model_type": "trained_model",
           "actual_revenue": 187268.84,
-          "expected_revenue": 183399.24,
-          "absolute_residual_pct": 2.1099
+          "expected_revenue": 184151.83,
+          "absolute_residual_pct": 1.6926
         },
         {
           "calibration_window": 1,
@@ -569,8 +569,8 @@
           "segment": "Prospecting",
           "model_type": "trained_model",
           "actual_revenue": 81304.09,
-          "expected_revenue": 77528.16,
-          "absolute_residual_pct": 4.8704
+          "expected_revenue": 77898.03,
+          "absolute_residual_pct": 4.3725
         },
         {
           "calibration_window": 1,
@@ -578,8 +578,8 @@
           "segment": "Retargeting",
           "model_type": "trained_model",
           "actual_revenue": 91688.15,
-          "expected_revenue": 86061.07,
-          "absolute_residual_pct": 6.5385
+          "expected_revenue": 86543.4,
+          "absolute_residual_pct": 5.9447
         },
         {
           "calibration_window": 1,
@@ -587,8 +587,8 @@
           "segment": "Search",
           "model_type": "trained_model",
           "actual_revenue": 249073.37,
-          "expected_revenue": 238082.84,
-          "absolute_residual_pct": 4.6163
+          "expected_revenue": 239351.1,
+          "absolute_residual_pct": 4.0619
         },
         {
           "calibration_window": 1,
@@ -596,8 +596,8 @@
           "segment": "Shopping",
           "model_type": "trained_model",
           "actual_revenue": 236744.07,
-          "expected_revenue": 221846.44,
-          "absolute_residual_pct": 6.7153
+          "expected_revenue": 222992.84,
+          "absolute_residual_pct": 6.1667
         },
         {
           "calibration_window": 1,
@@ -605,8 +605,8 @@
           "segment": "Advantage Shopping",
           "model_type": "trained_model",
           "actual_revenue": 101759.9,
-          "expected_revenue": 97005.71,
-          "absolute_residual_pct": 4.9009
+          "expected_revenue": 97492.34,
+          "absolute_residual_pct": 4.3773
         },
         {
           "calibration_window": 1,
@@ -614,8 +614,8 @@
           "segment": "Bing Brand",
           "model_type": "trained_model",
           "actual_revenue": 72851.41,
-          "expected_revenue": 68294.16,
-          "absolute_residual_pct": 6.673
+          "expected_revenue": 68712.28,
+          "absolute_residual_pct": 6.0239
         },
         {
           "calibration_window": 1,
@@ -623,8 +623,8 @@
           "segment": "Bing Generic",
           "model_type": "trained_model",
           "actual_revenue": 66638.45,
-          "expected_revenue": 65113.1,
-          "absolute_residual_pct": 2.3426
+          "expected_revenue": 65419.24,
+          "absolute_residual_pct": 1.8637
         },
         {
           "calibration_window": 1,
@@ -632,8 +632,8 @@
           "segment": "Brand Search",
           "model_type": "trained_model",
           "actual_revenue": 176221.96,
-          "expected_revenue": 169897.34,
-          "absolute_residual_pct": 3.7226
+          "expected_revenue": 170700.18,
+          "absolute_residual_pct": 3.2348
         },
         {
           "calibration_window": 1,
@@ -641,8 +641,8 @@
           "segment": "Cart Retargeting",
           "model_type": "trained_model",
           "actual_revenue": 91688.15,
-          "expected_revenue": 86061.07,
-          "absolute_residual_pct": 6.5385
+          "expected_revenue": 86543.4,
+          "absolute_residual_pct": 5.9447
         },
         {
           "calibration_window": 1,
@@ -650,8 +650,8 @@
           "segment": "Generic Search",
           "model_type": "trained_model",
           "actual_revenue": 170105.62,
-          "expected_revenue": 156737.1,
-          "absolute_residual_pct": 8.5293
+          "expected_revenue": 157639.14,
+          "absolute_residual_pct": 7.9082
         },
         {
           "calibration_window": 1,
@@ -659,8 +659,8 @@
           "segment": "Lookalike Prospecting",
           "model_type": "trained_model",
           "actual_revenue": 81304.09,
-          "expected_revenue": 77528.16,
-          "absolute_residual_pct": 4.8704
+          "expected_revenue": 77898.03,
+          "absolute_residual_pct": 4.3725
         },
         {
           "calibration_window": 1,
@@ -668,8 +668,8 @@
           "segment": "Shopping Best Sellers",
           "model_type": "trained_model",
           "actual_revenue": 187268.84,
-          "expected_revenue": 183399.24,
-          "absolute_residual_pct": 2.1099
+          "expected_revenue": 184151.83,
+          "absolute_residual_pct": 1.6926
         },
         {
           "calibration_window": 2,
@@ -677,8 +677,8 @@
           "segment": "all",
           "model_type": "trained_model",
           "actual_revenue": 852362.51,
-          "expected_revenue": 726715.21,
-          "absolute_residual_pct": 17.2898
+          "expected_revenue": 734371.33,
+          "absolute_residual_pct": 16.067
         },
         {
           "calibration_window": 2,
@@ -686,8 +686,8 @@
           "segment": "Google Ads",
           "model_type": "trained_model",
           "actual_revenue": 475651.89,
-          "expected_revenue": 400091.46,
-          "absolute_residual_pct": 18.8858
+          "expected_revenue": 406040.21,
+          "absolute_residual_pct": 17.144
         },
         {
           "calibration_window": 2,
@@ -695,8 +695,8 @@
           "segment": "Meta Ads",
           "model_type": "trained_model",
           "actual_revenue": 251153.96,
-          "expected_revenue": 217765.99,
-          "absolute_residual_pct": 15.332
+          "expected_revenue": 220400.42,
+          "absolute_residual_pct": 13.9535
         },
         {
           "calibration_window": 2,
@@ -704,8 +704,8 @@
           "segment": "Microsoft Ads",
           "model_type": "trained_model",
           "actual_revenue": 125556.66,
-          "expected_revenue": 108929.59,
-          "absolute_residual_pct": 15.2641
+          "expected_revenue": 110353.28,
+          "absolute_residual_pct": 13.777
         },
         {
           "calibration_window": 2,
@@ -713,8 +713,8 @@
           "segment": "Advantage+",
           "model_type": "trained_model",
           "actual_revenue": 94053.4,
-          "expected_revenue": 84235.96,
-          "absolute_residual_pct": 11.6547
+          "expected_revenue": 85251.71,
+          "absolute_residual_pct": 10.3244
         },
         {
           "calibration_window": 2,
@@ -722,8 +722,8 @@
           "segment": "Performance Max",
           "model_type": "trained_model",
           "actual_revenue": 169836.44,
-          "expected_revenue": 140359.89,
-          "absolute_residual_pct": 21.0007
+          "expected_revenue": 142515.81,
+          "absolute_residual_pct": 19.1702
         },
         {
           "calibration_window": 2,
@@ -731,8 +731,8 @@
           "segment": "Prospecting",
           "model_type": "trained_model",
           "actual_revenue": 73748.95,
-          "expected_revenue": 60611.34,
-          "absolute_residual_pct": 21.6752
+          "expected_revenue": 61564.53,
+          "absolute_residual_pct": 19.7913
         },
         {
           "calibration_window": 2,
@@ -740,8 +740,8 @@
           "segment": "Retargeting",
           "model_type": "trained_model",
           "actual_revenue": 83351.61,
-          "expected_revenue": 72967.67,
-          "absolute_residual_pct": 14.2309
+          "expected_revenue": 73942.59,
+          "absolute_residual_pct": 12.7248
         },
         {
           "calibration_window": 2,
@@ -749,8 +749,8 @@
           "segment": "Search",
           "model_type": "trained_model",
           "actual_revenue": 222485.72,
-          "expected_revenue": 195461.78,
-          "absolute_residual_pct": 13.8257
+          "expected_revenue": 197722.16,
+          "absolute_residual_pct": 12.5244
         },
         {
           "calibration_window": 2,
@@ -758,8 +758,8 @@
           "segment": "Shopping",
           "model_type": "trained_model",
           "actual_revenue": 208886.39,
-          "expected_revenue": 173187.87,
-          "absolute_residual_pct": 20.6126
+          "expected_revenue": 175568.22,
+          "absolute_residual_pct": 18.9773
         },
         {
           "calibration_window": 2,
@@ -767,8 +767,8 @@
           "segment": "Advantage Shopping",
           "model_type": "trained_model",
           "actual_revenue": 94053.4,
-          "expected_revenue": 84235.96,
-          "absolute_residual_pct": 11.6547
+          "expected_revenue": 85251.71,
+          "absolute_residual_pct": 10.3244
         },
         {
           "calibration_window": 2,
@@ -776,8 +776,8 @@
           "segment": "Bing Brand",
           "model_type": "trained_model",
           "actual_revenue": 65532.77,
-          "expected_revenue": 57438.7,
-          "absolute_residual_pct": 14.0917
+          "expected_revenue": 58188.08,
+          "absolute_residual_pct": 12.6223
         },
         {
           "calibration_window": 2,
@@ -785,8 +785,8 @@
           "segment": "Bing Generic",
           "model_type": "trained_model",
           "actual_revenue": 60023.89,
-          "expected_revenue": 51491.19,
-          "absolute_residual_pct": 16.5712
+          "expected_revenue": 52156.99,
+          "absolute_residual_pct": 15.0831
         },
         {
           "calibration_window": 2,
@@ -794,8 +794,8 @@
           "segment": "Brand Search",
           "model_type": "trained_model",
           "actual_revenue": 156952.95,
-          "expected_revenue": 138025.83,
-          "absolute_residual_pct": 13.7127
+          "expected_revenue": 139844.1,
+          "absolute_residual_pct": 12.2342
         },
         {
           "calibration_window": 2,
@@ -803,8 +803,8 @@
           "segment": "Cart Retargeting",
           "model_type": "trained_model",
           "actual_revenue": 83351.61,
-          "expected_revenue": 72967.67,
-          "absolute_residual_pct": 14.2309
+          "expected_revenue": 73942.59,
+          "absolute_residual_pct": 12.7248
         },
         {
           "calibration_window": 2,
@@ -812,8 +812,8 @@
           "segment": "Generic Search",
           "model_type": "trained_model",
           "actual_revenue": 148862.5,
-          "expected_revenue": 121712.71,
-          "absolute_residual_pct": 22.3065
+          "expected_revenue": 123590.46,
+          "absolute_residual_pct": 20.4482
         },
         {
           "calibration_window": 2,
@@ -821,8 +821,8 @@
           "segment": "Lookalike Prospecting",
           "model_type": "trained_model",
           "actual_revenue": 73748.95,
-          "expected_revenue": 60611.34,
-          "absolute_residual_pct": 21.6752
+          "expected_revenue": 61564.53,
+          "absolute_residual_pct": 19.7913
         },
         {
           "calibration_window": 2,
@@ -830,8 +830,8 @@
           "segment": "Shopping Best Sellers",
           "model_type": "trained_model",
           "actual_revenue": 169836.44,
-          "expected_revenue": 140359.89,
-          "absolute_residual_pct": 21.0007
+          "expected_revenue": 142515.81,
+          "absolute_residual_pct": 19.1702
         }
       ]
     },
@@ -855,34 +855,34 @@
       ],
       "segments_scored": 36,
       "target_coverage": 0.9,
-      "half_width_pct_quantile": 0.13886186192777158,
+      "half_width_pct_quantile": 0.09030174667870411,
       "half_width_quantile_level": 0.9444444444444444,
-      "residual_multiplier_quantile": 7.37425055020146,
+      "residual_multiplier_quantile": 5.218714614233069,
       "residual_multiplier_quantile_level": 0.9444444444444444,
       "level_summary": {
         "overall": {
           "sample_count": 2,
-          "half_width_pct_quantile": 0.118678,
+          "half_width_pct_quantile": 0.076028,
           "quantile_level": 1.0,
-          "mean_absolute_residual_pct": 8.8022
+          "mean_absolute_residual_pct": 5.2892
         },
         "channel": {
           "sample_count": 6,
-          "half_width_pct_quantile": 0.127152,
+          "half_width_pct_quantile": 0.080303,
           "quantile_level": 1.0,
-          "mean_absolute_residual_pct": 8.418
+          "mean_absolute_residual_pct": 4.4324
         },
         "campaign_type": {
           "sample_count": 12,
-          "half_width_pct_quantile": 0.138862,
+          "half_width_pct_quantile": 0.090302,
           "quantile_level": 1.0,
-          "mean_absolute_residual_pct": 8.3019
+          "mean_absolute_residual_pct": 4.8189
         },
         "campaign": {
           "sample_count": 16,
-          "half_width_pct_quantile": 0.138862,
+          "half_width_pct_quantile": 0.090302,
           "quantile_level": 1.0,
-          "mean_absolute_residual_pct": 8.4252
+          "mean_absolute_residual_pct": 4.7211
         }
       },
       "rows": [
@@ -892,8 +892,8 @@
           "segment": "all",
           "model_type": "trained_model",
           "actual_revenue": 1393864.85,
-          "expected_revenue": 1245992.81,
-          "absolute_residual_pct": 11.8678
+          "expected_revenue": 1295380.03,
+          "absolute_residual_pct": 7.6028
         },
         {
           "calibration_window": 1,
@@ -901,8 +901,8 @@
           "segment": "Google Ads",
           "model_type": "trained_model",
           "actual_revenue": 784138.22,
-          "expected_revenue": 695681.14,
-          "absolute_residual_pct": 12.7152
+          "expected_revenue": 725850.46,
+          "absolute_residual_pct": 8.0303
         },
         {
           "calibration_window": 1,
@@ -910,8 +910,8 @@
           "segment": "Meta Ads",
           "model_type": "trained_model",
           "actual_revenue": 404277.68,
-          "expected_revenue": 367131.11,
-          "absolute_residual_pct": 10.1181
+          "expected_revenue": 382065.45,
+          "absolute_residual_pct": 5.8137
         },
         {
           "calibration_window": 1,
@@ -919,8 +919,8 @@
           "segment": "Microsoft Ads",
           "model_type": "trained_model",
           "actual_revenue": 205448.95,
-          "expected_revenue": 183296.05,
-          "absolute_residual_pct": 12.0859
+          "expected_revenue": 193872.34,
+          "absolute_residual_pct": 5.9713
         },
         {
           "calibration_window": 1,
@@ -928,8 +928,8 @@
           "segment": "Advantage+",
           "model_type": "trained_model",
           "actual_revenue": 149826.96,
-          "expected_revenue": 139645.33,
-          "absolute_residual_pct": 7.2911
+          "expected_revenue": 145163.48,
+          "absolute_residual_pct": 3.2126
         },
         {
           "calibration_window": 1,
@@ -937,8 +937,8 @@
           "segment": "Performance Max",
           "model_type": "trained_model",
           "actual_revenue": 277607.43,
-          "expected_revenue": 243758.65,
-          "absolute_residual_pct": 13.8862
+          "expected_revenue": 254615.23,
+          "absolute_residual_pct": 9.0302
         },
         {
           "calibration_window": 1,
@@ -946,8 +946,8 @@
           "segment": "Prospecting",
           "model_type": "trained_model",
           "actual_revenue": 119685.37,
-          "expected_revenue": 108276.22,
-          "absolute_residual_pct": 10.5371
+          "expected_revenue": 112193.33,
+          "absolute_residual_pct": 6.6778
         },
         {
           "calibration_window": 1,
@@ -955,8 +955,8 @@
           "segment": "Retargeting",
           "model_type": "trained_model",
           "actual_revenue": 134765.35,
-          "expected_revenue": 119384.66,
-          "absolute_residual_pct": 12.8833
+          "expected_revenue": 124510.02,
+          "absolute_residual_pct": 8.2365
         },
         {
           "calibration_window": 1,
@@ -964,8 +964,8 @@
           "segment": "Search",
           "model_type": "trained_model",
           "actual_revenue": 365735.79,
-          "expected_revenue": 326369.47,
-          "absolute_residual_pct": 12.0619
+          "expected_revenue": 342045.46,
+          "absolute_residual_pct": 6.9261
         },
         {
           "calibration_window": 1,
@@ -973,8 +973,8 @@
           "segment": "Shopping",
           "model_type": "trained_model",
           "actual_revenue": 346243.95,
-          "expected_revenue": 308871.49,
-          "absolute_residual_pct": 12.0997
+          "expected_revenue": 324810.56,
+          "absolute_residual_pct": 6.5987
         },
         {
           "calibration_window": 1,
@@ -982,8 +982,8 @@
           "segment": "Advantage Shopping",
           "model_type": "trained_model",
           "actual_revenue": 149826.96,
-          "expected_revenue": 139645.33,
-          "absolute_residual_pct": 7.2911
+          "expected_revenue": 145163.48,
+          "absolute_residual_pct": 3.2126
         },
         {
           "calibration_window": 1,
@@ -991,8 +991,8 @@
           "segment": "Bing Brand",
           "model_type": "trained_model",
           "actual_revenue": 106966.22,
-          "expected_revenue": 95701.3,
-          "absolute_residual_pct": 11.7709
+          "expected_revenue": 101848.5,
+          "absolute_residual_pct": 5.0248
         },
         {
           "calibration_window": 1,
@@ -1000,8 +1000,8 @@
           "segment": "Bing Generic",
           "model_type": "trained_model",
           "actual_revenue": 98482.73,
-          "expected_revenue": 87602.1,
-          "absolute_residual_pct": 12.4205
+          "expected_revenue": 91749.65,
+          "absolute_residual_pct": 7.3385
         },
         {
           "calibration_window": 1,
@@ -1009,8 +1009,8 @@
           "segment": "Brand Search",
           "model_type": "trained_model",
           "actual_revenue": 258769.57,
-          "expected_revenue": 230687.07,
-          "absolute_residual_pct": 12.1734
+          "expected_revenue": 242312.87,
+          "absolute_residual_pct": 6.7915
         },
         {
           "calibration_window": 1,
@@ -1018,8 +1018,8 @@
           "segment": "Cart Retargeting",
           "model_type": "trained_model",
           "actual_revenue": 134765.35,
-          "expected_revenue": 119384.66,
-          "absolute_residual_pct": 12.8833
+          "expected_revenue": 124510.02,
+          "absolute_residual_pct": 8.2365
         },
         {
           "calibration_window": 1,
@@ -1027,8 +1027,8 @@
           "segment": "Generic Search",
           "model_type": "trained_model",
           "actual_revenue": 247761.22,
-          "expected_revenue": 221270.13,
-          "absolute_residual_pct": 11.9723
+          "expected_revenue": 232802.02,
+          "absolute_residual_pct": 6.4257
         },
         {
           "calibration_window": 1,
@@ -1036,8 +1036,8 @@
           "segment": "Lookalike Prospecting",
           "model_type": "trained_model",
           "actual_revenue": 119685.37,
-          "expected_revenue": 108276.22,
-          "absolute_residual_pct": 10.5371
+          "expected_revenue": 112193.33,
+          "absolute_residual_pct": 6.6778
         },
         {
           "calibration_window": 1,
@@ -1045,8 +1045,8 @@
           "segment": "Shopping Best Sellers",
           "model_type": "trained_model",
           "actual_revenue": 277607.43,
-          "expected_revenue": 243758.65,
-          "absolute_residual_pct": 13.8862
+          "expected_revenue": 254615.23,
+          "absolute_residual_pct": 9.0302
         },
         {
           "calibration_window": 2,
@@ -1054,8 +1054,8 @@
           "segment": "all",
           "model_type": "trained_model",
           "actual_revenue": 1201911.69,
-          "expected_revenue": 1275057.71,
-          "absolute_residual_pct": 5.7367
+          "expected_revenue": 1238772.36,
+          "absolute_residual_pct": 2.9756
         },
         {
           "calibration_window": 2,
@@ -1063,8 +1063,8 @@
           "segment": "Google Ads",
           "model_type": "trained_model",
           "actual_revenue": 669233.75,
-          "expected_revenue": 721032.3,
-          "absolute_residual_pct": 7.1839
+          "expected_revenue": 696251.21,
+          "absolute_residual_pct": 3.8804
         },
         {
           "calibration_window": 2,
@@ -1072,8 +1072,8 @@
           "segment": "Meta Ads",
           "model_type": "trained_model",
           "actual_revenue": 354969.56,
-          "expected_revenue": 366631.75,
-          "absolute_residual_pct": 3.1809
+          "expected_revenue": 357897.66,
+          "absolute_residual_pct": 0.8181
         },
         {
           "calibration_window": 2,
@@ -1081,8 +1081,8 @@
           "segment": "Microsoft Ads",
           "model_type": "trained_model",
           "actual_revenue": 177708.38,
-          "expected_revenue": 187503.23,
-          "absolute_residual_pct": 5.2238
+          "expected_revenue": 181484.87,
+          "absolute_residual_pct": 2.0809
         },
         {
           "calibration_window": 2,
@@ -1090,8 +1090,8 @@
           "segment": "Advantage+",
           "model_type": "trained_model",
           "actual_revenue": 133108.48,
-          "expected_revenue": 136582.17,
-          "absolute_residual_pct": 2.5433
+          "expected_revenue": 133320.22,
+          "absolute_residual_pct": 0.1588
         },
         {
           "calibration_window": 2,
@@ -1099,8 +1099,8 @@
           "segment": "Performance Max",
           "model_type": "trained_model",
           "actual_revenue": 234869.6,
-          "expected_revenue": 258973.11,
-          "absolute_residual_pct": 9.3073
+          "expected_revenue": 250138.76,
+          "absolute_residual_pct": 6.1043
         },
         {
           "calibration_window": 2,
@@ -1108,8 +1108,8 @@
           "segment": "Prospecting",
           "model_type": "trained_model",
           "actual_revenue": 102189.72,
-          "expected_revenue": 109605.11,
-          "absolute_residual_pct": 6.7656
+          "expected_revenue": 106645.88,
+          "absolute_residual_pct": 4.1785
         },
         {
           "calibration_window": 2,
@@ -1117,8 +1117,8 @@
           "segment": "Retargeting",
           "model_type": "trained_model",
           "actual_revenue": 119671.36,
-          "expected_revenue": 120510.84,
-          "absolute_residual_pct": 0.6966
+          "expected_revenue": 118303.05,
+          "absolute_residual_pct": 1.1566
         },
         {
           "calibration_window": 2,
@@ -1126,8 +1126,8 @@
           "segment": "Search",
           "model_type": "trained_model",
           "actual_revenue": 317507.34,
-          "expected_revenue": 337626.4,
-          "absolute_residual_pct": 5.959
+          "expected_revenue": 327719.48,
+          "absolute_residual_pct": 3.1161
         },
         {
           "calibration_window": 2,
@@ -1135,8 +1135,8 @@
           "segment": "Shopping",
           "model_type": "trained_model",
           "actual_revenue": 294565.19,
-          "expected_revenue": 312013.05,
-          "absolute_residual_pct": 5.592
+          "expected_revenue": 301904.8,
+          "absolute_residual_pct": 2.4311
         },
         {
           "calibration_window": 2,
@@ -1144,8 +1144,8 @@
           "segment": "Advantage Shopping",
           "model_type": "trained_model",
           "actual_revenue": 133108.48,
-          "expected_revenue": 136582.17,
-          "absolute_residual_pct": 2.5433
+          "expected_revenue": 133320.22,
+          "absolute_residual_pct": 0.1588
         },
         {
           "calibration_window": 2,
@@ -1153,8 +1153,8 @@
           "segment": "Bing Brand",
           "model_type": "trained_model",
           "actual_revenue": 93405.29,
-          "expected_revenue": 95737.39,
-          "absolute_residual_pct": 2.4359
+          "expected_revenue": 93633.15,
+          "absolute_residual_pct": 0.2434
         },
         {
           "calibration_window": 2,
@@ -1162,8 +1162,8 @@
           "segment": "Bing Generic",
           "model_type": "trained_model",
           "actual_revenue": 84303.09,
-          "expected_revenue": 91781.7,
-          "absolute_residual_pct": 8.1483
+          "expected_revenue": 88680.11,
+          "absolute_residual_pct": 4.9357
         },
         {
           "calibration_window": 2,
@@ -1171,8 +1171,8 @@
           "segment": "Brand Search",
           "model_type": "trained_model",
           "actual_revenue": 224102.05,
-          "expected_revenue": 242120.1,
-          "absolute_residual_pct": 7.4418
+          "expected_revenue": 234954.24,
+          "absolute_residual_pct": 4.6189
         },
         {
           "calibration_window": 2,
@@ -1180,8 +1180,8 @@
           "segment": "Cart Retargeting",
           "model_type": "trained_model",
           "actual_revenue": 119671.36,
-          "expected_revenue": 120510.84,
-          "absolute_residual_pct": 0.6966
+          "expected_revenue": 118303.05,
+          "absolute_residual_pct": 1.1566
         },
         {
           "calibration_window": 2,
@@ -1189,8 +1189,8 @@
           "segment": "Generic Search",
           "model_type": "trained_model",
           "actual_revenue": 210262.1,
-          "expected_revenue": 220239.41,
-          "absolute_residual_pct": 4.5302
+          "expected_revenue": 213256.24,
+          "absolute_residual_pct": 1.404
         },
         {
           "calibration_window": 2,
@@ -1198,8 +1198,8 @@
           "segment": "Lookalike Prospecting",
           "model_type": "trained_model",
           "actual_revenue": 102189.72,
-          "expected_revenue": 109605.11,
-          "absolute_residual_pct": 6.7656
+          "expected_revenue": 106645.88,
+          "absolute_residual_pct": 4.1785
         },
         {
           "calibration_window": 2,
@@ -1207,10 +1207,33 @@
           "segment": "Shopping Best Sellers",
           "model_type": "trained_model",
           "actual_revenue": 234869.6,
-          "expected_revenue": 258973.11,
-          "absolute_residual_pct": 9.3073
+          "expected_revenue": 250138.76,
+          "absolute_residual_pct": 6.1043
         }
       ]
+    }
+  ],
+  "latest_walk_forward_backtest": [
+    {
+      "horizon_days": 30,
+      "revenue_mape": 2.12,
+      "roas_mape": 1.34,
+      "revenue_interval_coverage": 100.0,
+      "mean_interval_width_pct": 29.82
+    },
+    {
+      "horizon_days": 60,
+      "revenue_mape": 6.18,
+      "roas_mape": 1.31,
+      "revenue_interval_coverage": 94.44,
+      "mean_interval_width_pct": 29.28
+    },
+    {
+      "horizon_days": 90,
+      "revenue_mape": 14.8,
+      "roas_mape": 2.46,
+      "revenue_interval_coverage": 94.44,
+      "mean_interval_width_pct": 48.27
     }
   ]
 }

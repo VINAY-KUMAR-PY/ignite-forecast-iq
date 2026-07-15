@@ -52,9 +52,9 @@ Current committed sample output includes all required forecast grains:
 
 | Grain | Example | Horizon | Expected revenue | Revenue range | Expected ROAS |
 |---|---|---:|---:|---:|---:|
-| Overall | all | 90d | $1,407,079 | $1,196,553-$1,617,605 | 4.05x |
-| Channel | Microsoft Ads | 90d | $213,676 | $180,214-$247,137 | 5.40x |
-| Campaign type | Advantage+ | 90d | $161,610 | $128,339-$194,881 | 3.03x |
+| Overall | all | 90d | $1,537,641 | $1,230,113-$1,845,170 | 4.05x |
+| Channel | Microsoft Ads | 90d | $232,551 | $183,715-$281,387 | 5.40x |
+| Campaign type | Advantage+ | 90d | $174,245 | $135,911-$212,579 | 3.03x |
 | Campaign | Brand Search | 30d | $84,058 | $73,924-$94,193 | 5.33x |
 
 Example decision: Google Ads shows low-confidence directional
@@ -101,10 +101,10 @@ Core Flow:
 
 ## Forecast Accuracy At A Glance
 
-Latest walk-forward revenue interval coverage is **93.06% / 93.06% / 94.44%**
-for 30/60/90-day trained intervals. Revenue MAPE is
-**3.54% / 10.34% / 7.89%** for 30/60/90 days; overall-level ROAS MAPE is
-**0.55% / 1.12% / 1.05%**. Full tables:
+Latest regenerated walk-forward revenue interval coverage is
+**100.0% / 94.44% / 94.44%** for 30/60/90-day trained intervals. Revenue MAPE is
+**2.12% / 6.18% / 14.80%** for 30/60/90 days; overall-level ROAS MAPE is
+**0.39% / 0.86% / 1.05%**. Full tables:
 [reports/backtest_summary.md](./reports/backtest_summary.md).
 
 Backend coverage is **93.69% measured locally** with
@@ -208,10 +208,12 @@ forecast_confidence
 ```
 
 The committed sample output has 54 rows, horizons `{30, 60, 90}`, no NaN, no
-infinite values, **18 `trained_model` rows**, **36
+infinite values, **54 `trained_model` rows**, **0
 `trained_model_baseline_anchored` rows**, and **0 confidence inversions**.
-The anchored rows show where 60/90-day revenue is deliberately anchored to the
-seasonal baseline inside the loaded artifact.
+All 30/60/90-day rows now include a trained residual-correction contribution;
+the 90-day backtest remains a statistical tie with the seasonal baseline, so
+the long-horizon accuracy delta is documented honestly in
+`reports/backtest_summary.md`.
 
 ## Deployment
 

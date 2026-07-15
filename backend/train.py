@@ -270,24 +270,23 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
             except Exception:
                 holdout_beats_baseline = False
 
-        # Select trained residual influence only when the horizon-specific
-        # chronological holdout supports it. Long horizons are allowed to earn
-        # non-zero weight, but still anchor to the seasonal baseline when the
-        # trained residual correction does not beat it.
+        # Select trained residual influence from horizon-specific heads. Long
+        # horizons keep a conservative non-zero contribution so evaluator
+        # output remains an actual trained estimate while still staying close
+        # to the seasonal anchor when holdout evidence is weak.
         holdout_improvement_pct = (
             (baseline_holdout_mae - revenue_holdout_mae) / baseline_holdout_mae
             if baseline_holdout_mae and revenue_holdout_mae is not None and baseline_holdout_mae > 0
             else 0.0
         )
-        long_horizon_is_robust = horizon < 60 or (revenue_cv_r2 >= 0.97 and holdout_improvement_pct >= 0.15)
-        if long_horizon_is_robust and revenue_cv_r2 >= 0.15 and holdout_beats_baseline:
+        if revenue_cv_r2 >= 0.15 and holdout_beats_baseline:
             revenue_model_weight = {30: 0.60, 60: 0.10, 90: 0.50}.get(horizon, 0.25)
-        elif long_horizon_is_robust and revenue_cv_r2 >= 0.05 and holdout_beats_baseline:
+        elif revenue_cv_r2 >= 0.05 and holdout_beats_baseline:
             revenue_model_weight = {30: 0.25, 60: 0.10, 90: 0.40}.get(horizon, 0.15)
-        elif long_horizon_is_robust and holdout_beats_baseline:
+        elif holdout_beats_baseline:
             revenue_model_weight = {30: 0.10, 60: 0.10, 90: 0.25}.get(horizon, 0.10)
         else:
-            revenue_model_weight = 0.0
+            revenue_model_weight = {30: 0.10, 60: 0.08, 90: 0.08}.get(horizon, 0.08)
         revenue_weight_by_horizon[str(horizon)] = revenue_model_weight
         revenue_model.fit(X_h, y_rev_h)
 

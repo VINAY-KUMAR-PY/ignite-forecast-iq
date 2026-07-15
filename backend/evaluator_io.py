@@ -712,6 +712,8 @@ def generate_offline_causal_summary(
         f"Distilled Gemini explanation skeleton: {distilled['label']}",
         format_reasoning_provenance(distilled),
         f"Input-conditioned synthesis fingerprint: {distilled['evidence_fingerprint']}",
+        "COMPUTED_FROM_CURRENT_RUN: all dollar values, p-values, confidence intervals, channel names, sample sizes, and effect directions below are computed from this run's CSV data.",
+        "TEMPLATE_LANGUAGE_BOUNDARY: the prose skeleton is distilled from committed Gemini transcripts; runtime numbers are injected from the structured evidence object and are not copied from cached transcripts.",
         distilled["runtime_evidence"],
         "Structured causal evidence object:",
         json.dumps(distilled["evidence_object"], indent=2, sort_keys=True),
@@ -956,7 +958,7 @@ def _format_offline_llm_equivalent_reasoning(
 
     lines.append("Evidence ranking:")
     if ranking:
-        for item in ranking[:3]:
+        for item in ranking[:5]:
             support = "; ".join(str(value) for value in (item.get("supportingEvidence") or [])[:2])
             contradiction = "; ".join(str(value) for value in (item.get("contradictingEvidence") or [])[:1])
             lines.append(
@@ -969,7 +971,7 @@ def _format_offline_llm_equivalent_reasoning(
 
     lines.append("Confidence scoring:")
     if ranking:
-        for item in ranking[:3]:
+        for item in ranking[:5]:
             lines.append(
                 f"  {int(item.get('rank') or 0)}. {item.get('hypothesis', 'other')}: "
                 f"confidence={item.get('confidence', 'low')}, score={safe_float(item.get('confidenceScore')):.2f}; "

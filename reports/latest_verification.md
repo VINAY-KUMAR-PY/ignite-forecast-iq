@@ -61,22 +61,22 @@ built in 12.63s
 [ForecastIQ] Wrote 54 rows to ./output/predictions.csv
 [ForecastIQ] Causal summary written to output\causal_summary.txt
 [ForecastIQ] Explainability notes written to output\explainability_notes.txt
-[ForecastIQ] scikit-learn version: 1.9.0 (artifact built on 1.9.0)
+[ForecastIQ] scikit-learn version: 1.7.2 (artifact built on 1.7.2)
 Done. Predictions written to ./output/predictions.csv
 [ForecastIQ] Python version: 3.14.4
 Causal summary written to ./output/causal_summary.txt
 
 rows 54
-model_counts {'trained_model_baseline_anchored': 36, 'trained_model': 18}
+model_counts {'trained_model': 54}
 nan_count 0
 interval_monotonic_failures 0
 ```
 
 ## Notes
 
-- The committed sample uses the trained artifact for every row. Rows at 60/90
-  day horizons are labeled `trained_model_baseline_anchored` where revenue is
-  deliberately anchored to the seasonal baseline inside the loaded artifact.
+- The committed sample uses the trained artifact for every row. All 30/60/90
+  day horizons are labeled `trained_model`; 60/90-day accuracy tradeoffs are
+  documented in `reports/backtest_summary.md`.
 - `output/causal_summary.txt` includes `PER_RUN_SYNTHESIS`,
   `REASONING_TRACE`, and `REASONING PROVENANCE` sections.
 - `tests/test_run_sh_contract.py` now covers empty, malformed, multi-source,

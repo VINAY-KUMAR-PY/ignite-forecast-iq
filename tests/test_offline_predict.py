@@ -20,6 +20,7 @@ from backend.predict import (
     OUTPUT_COLUMNS,
     MODEL_TYPE,
     SAFE_BASELINE_MODEL_TYPE,
+    TRAINED_BASELINE_ANCHORED_MODEL_TYPE,
     TRAINED_ESTIMATED_SPEND_MODEL_TYPE,
     TRAINED_MODEL_TYPE,
     TRAINED_MODEL_VARIANTS,
@@ -436,12 +437,23 @@ class OfflinePredictionTests(unittest.TestCase):
         cleaned = canonicalize_frame(raw)
         rows = build_predictions(cleaned.frame, safe_load_model("pickle/model.pkl"))
 
-        trained_rows = sum(1 for row in rows if row["model_type"] in TRAINED_MODEL_VARIANTS)
-        trained_ratio = trained_rows / len(rows)
-
         self.assertEqual(len(rows), 54)
-        self.assertGreaterEqual(trained_ratio, 0.99)
-        self.assertEqual(trained_rows, len(rows))
+        self.assertEqual({row["model_type"] for row in rows}, {TRAINED_MODEL_TYPE})
+        self.assertNotIn(TRAINED_BASELINE_ANCHORED_MODEL_TYPE, {row["model_type"] for row in rows})
+        for horizon in (60, 90):
+            self.assertEqual(
+                {row["model_type"] for row in rows if int(row["horizon_days"]) == horizon},
+                {TRAINED_MODEL_TYPE},
+            )
+
+    def test_heldout_style_fixture_uses_trained_model_for_long_horizons(self) -> None:
+        raw = pd.read_csv("tests/fixtures/heldout_schema_compliant_unusual_filename.csv")
+        cleaned = canonicalize_frame(raw)
+        rows = build_predictions(cleaned.frame, safe_load_model("pickle/model.pkl"))
+        long_horizon_rows = [row for row in rows if int(row["horizon_days"]) in {60, 90}]
+
+        self.assertTrue(long_horizon_rows)
+        self.assertEqual({row["model_type"] for row in long_horizon_rows}, {TRAINED_MODEL_TYPE})
 
     def test_adaptive_blend_weight_matches_artifact(self) -> None:
         """Artifact revenue_blend_weight and roas_blend_weight must equal mean of per-horizon weights."""
@@ -1068,6 +1080,46 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertIn("Hypothesis generation:", summary)
         self.assertIn("Evidence ranking:", summary)
         self.assertIn("Confidence scoring:", summary)
+        self.assertIn("budget reallocation implication", summary)
+        self.assertIn("channel cannibalization risk", summary)
+        self.assertIn("COMPUTED_FROM_CURRENT_RUN", summary)
+        self.assertIn("TEMPLATE_LANGUAGE_BOUNDARY", summary)
+
+    def test_causal_summary_runtime_numbers_change_with_input_data(self) -> None:
+        def evidence_from_summary(summary: str) -> dict:
+            marker = "Structured causal evidence object:\n"
+            start = summary.index(marker) + len(marker)
+            end = summary.index("\nPER_RUN_SYNTHESIS", start)
+            return json.loads(summary[start:end])
+
+        raw = pd.read_csv("data/sample_campaigns.csv")
+        base = canonicalize_frame(raw)
+        mutated_raw = raw.copy()
+        dates = pd.to_datetime(mutated_raw["date"], errors="coerce")
+        recent_cutoff = dates.max() - pd.Timedelta(days=29)
+        mask = (mutated_raw["channel"].astype(str) == "Meta Ads") & (dates >= recent_cutoff)
+        mutated_raw.loc[mask, "revenue"] = mutated_raw.loc[mask, "revenue"].astype(float) * 2.37 + 1234.56
+        mutated = canonicalize_frame(mutated_raw)
+
+        base_summary = generate_offline_causal_summary(
+            base.frame,
+            build_predictions(base.frame, fallback_model_config("base causal variation")),
+        )
+        mutated_summary = generate_offline_causal_summary(
+            mutated.frame,
+            build_predictions(mutated.frame, fallback_model_config("mutated causal variation")),
+        )
+        base_evidence = evidence_from_summary(base_summary)
+        mutated_evidence = evidence_from_summary(mutated_summary)
+
+        self.assertNotEqual(base_evidence["effect_size"], mutated_evidence["effect_size"])
+        self.assertNotEqual(base_evidence["delta_percent"], mutated_evidence["delta_percent"])
+        fingerprint = mutated_summary.split("Input-conditioned synthesis fingerprint: ")[1].splitlines()[0]
+        transcript_text = "\n".join(
+            path.read_text(encoding="utf-8", errors="replace")
+            for path in Path("docs/gemini_sample_transcripts").glob("*.json")
+        )
+        self.assertNotIn(fingerprint, transcript_text)
 
     def test_spend_response_multiplier_has_non_increasing_marginal_revenue(self) -> None:
         multipliers = [1.0, 1.5, 2.0, 4.0, 10.0]

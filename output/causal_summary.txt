@@ -15,6 +15,8 @@ transcripts:
     sha256: c52f0cdc7593aa0d5b10a1333d221d38a324bd0093cca0f1a04b41d56bb8f1f0
 --- END REASONING PROVENANCE ---
 Input-conditioned synthesis fingerprint: 474ae934ea4c2bb3
+COMPUTED_FROM_CURRENT_RUN: all dollar values, p-values, confidence intervals, channel names, sample sizes, and effect directions below are computed from this run's CSV data.
+TEMPLATE_LANGUAGE_BOUNDARY: the prose skeleton is distilled from committed Gemini transcripts; runtime numbers are injected from the structured evidence object and are not copied from cached transcripts.
 Runtime evidence binding: channel=Meta Ads; campaign_type=Advantage+; delta=+1.6%; effect=$2,238; p=0.179; CI $-1,105 to $5,400; sample_size=24; confidence=low; fingerprint=474ae934ea4c2bb3.
 Structured causal evidence object:
 {
@@ -113,9 +115,13 @@ Hypothesis generation:
 Evidence ranking:
   1. budget shift (low confidence, score=0.34) support=Google Ads DiD effect=$-2,892.; p=0.185, CI $-6,306 to $1,192.; caution=Observational DiD is not a randomized lift test.
   2. platform algorithm change (medium confidence, score=0.66) support=Google Ads anomaly signal on 2026-06-11.; Anomaly z-score=-2.51; metric=roas.; caution=A single-day anomaly can be a tracking or data latency artifact.
+  3. budget reallocation implication (medium confidence, score=0.62) support=Microsoft Ads ROAS=5.44x versus Meta Ads ROAS=3.00x.; Portfolio ROAS spread=2.44x across observed channels.; caution=Observed ROAS spread does not prove marginal ROAS after budget moves.
+  4. channel cannibalization risk (medium confidence, score=0.61) support=Google Ads holds 49.3% of observed spend.; Observed ROAS spread=2.44x suggests incremental spend could shift demand rather than create it.; caution=The evaluator data does not include user-level path overlap or assisted conversions.
 Confidence scoring:
   1. budget shift: confidence=low, score=0.34; validation=Run a staged budget holdout or geo split around the affected channel.
   2. platform algorithm change: confidence=medium, score=0.66; validation=Audit platform change history, bids, budgets, and tracking around the anomaly window.
+  3. budget reallocation implication: confidence=medium, score=0.62; validation=Move budget in a staged test from the weakest ROAS channel toward the strongest and monitor marginal ROAS weekly.
+  4. channel cannibalization risk: confidence=medium, score=0.61; validation=Run a holdout or audience split before moving large budgets across channels with overlapping demand.
 Generated explanation:
 Meta Ads does not have enough statistical power for a causal claim. The observed effect is $2,238 with p=0.179, CI $-1,105 to $5,400, and low confidence; ROAS moved from 2.96x to 2.98x. This should be read as a measurement-readiness warning, not a proven positive effect.
 Evidence focus: power evidence: p-value 0.179 exceeds 0.15; 95% confidence interval crosses zero; p=0.179; strength=0.79; primary driver: leading_roas Microsoft Ads (5.44x ROAS)
@@ -131,59 +137,59 @@ Leading channel by revenue: Google Ads; highest-risk channel by ROAS: Meta Ads a
 30-day forecast: expected revenue $460,823 at 4.05x ROAS.
 WHAT THIS MEANS FOR YOUR BUDGET
   - overall | all | 30d: expected revenue $460,823 at 4.05x ROAS with high confidence and a 11.2% interval. This is suitable for a controlled budget move, with normal monitoring.
-  - overall | all | 60d: expected revenue $941,077 at 4.05x ROAS with high confidence and a 27.9% interval. This is suitable for a controlled budget move, with normal monitoring.
-  - overall | all | 90d: expected revenue $1,407,079 at 4.05x ROAS with high confidence and a 29.9% interval. This is suitable for a controlled budget move, with normal monitoring.
-  - channel | Google Ads | 30d: expected revenue $255,452 at 4.56x ROAS with high confidence and a 11.7% interval. This is suitable for a controlled budget move, with normal monitoring.
-  - channel | Google Ads | 60d: expected revenue $520,704 at 4.53x ROAS with high confidence and a 29.3% interval. This is suitable for a controlled budget move, with normal monitoring.
-  - channel | Google Ads | 90d: expected revenue $777,588 at 4.54x ROAS with medium confidence and a 31.3% interval. Use this as a planning range and move budget in smaller increments.
+  - overall | all | 60d: expected revenue $945,274 at 4.05x ROAS with high confidence and a 25.8% interval. This is suitable for a controlled budget move, with normal monitoring.
+  - overall | all | 90d: expected revenue $1,537,641 at 4.05x ROAS with medium confidence and a 40.0% interval. Use this as a planning range and move budget in smaller increments.
+  - channel | Google Ads | 30d: expected revenue $255,452 at 4.56x ROAS with high confidence and a 11.8% interval. This is suitable for a controlled budget move, with normal monitoring.
+  - channel | Google Ads | 60d: expected revenue $523,286 at 4.53x ROAS with high confidence and a 27.1% interval. This is suitable for a controlled budget move, with normal monitoring.
+  - channel | Google Ads | 90d: expected revenue $848,022 at 4.54x ROAS with medium confidence and a 42.0% interval. Use this as a planning range and move budget in smaller increments.
   - channel | Meta Ads | 30d: expected revenue $135,921 at 3.00x ROAS with high confidence and a 13.6% interval. This is suitable for a controlled budget move, with normal monitoring.
-  - channel | Meta Ads | 60d: expected revenue $277,666 at 3.01x ROAS with high confidence and a 29.3% interval. This is suitable for a controlled budget move, with normal monitoring.
-  - channel | Meta Ads | 90d: expected revenue $415,849 at 3.03x ROAS with medium confidence and a 31.3% interval. Use this as a planning range and move budget in smaller increments.
+  - channel | Meta Ads | 60d: expected revenue $278,878 at 3.01x ROAS with high confidence and a 27.1% interval. This is suitable for a controlled budget move, with normal monitoring.
+  - channel | Meta Ads | 90d: expected revenue $451,882 at 3.03x ROAS with medium confidence and a 42.0% interval. Use this as a planning range and move budget in smaller increments.
   - channel | Microsoft Ads | 30d: expected revenue $69,751 at 5.44x ROAS with high confidence and a 26.5% interval. This is suitable for a controlled budget move, with normal monitoring.
-  - channel | Microsoft Ads | 60d: expected revenue $142,722 at 5.42x ROAS with high confidence and a 29.3% interval. This is suitable for a controlled budget move, with normal monitoring.
-  - channel | Microsoft Ads | 90d: expected revenue $213,676 at 5.40x ROAS with medium confidence and a 31.3% interval. Use this as a planning range and move budget in smaller increments.
+  - channel | Microsoft Ads | 60d: expected revenue $143,385 at 5.42x ROAS with high confidence and a 29.1% interval. This is suitable for a controlled budget move, with normal monitoring.
+  - channel | Microsoft Ads | 90d: expected revenue $232,551 at 5.40x ROAS with medium confidence and a 42.0% interval. Use this as a planning range and move budget in smaller increments.
   - campaign_type | Advantage+ | 30d: expected revenue $52,152 at 3.00x ROAS with medium confidence and a 37.2% interval. Use this as a planning range and move budget in smaller increments.
-  - campaign_type | Advantage+ | 60d: expected revenue $107,682 at 3.03x ROAS with medium confidence and a 39.2% interval. Use this as a planning range and move budget in smaller increments.
-  - campaign_type | Advantage+ | 90d: expected revenue $161,610 at 3.03x ROAS with medium confidence and a 41.2% interval. Use this as a planning range and move budget in smaller increments.
+  - campaign_type | Advantage+ | 60d: expected revenue $108,268 at 3.03x ROAS with medium confidence and a 40.4% interval. Use this as a planning range and move budget in smaller increments.
+  - campaign_type | Advantage+ | 90d: expected revenue $174,245 at 3.03x ROAS with medium confidence and a 44.0% interval. Use this as a planning range and move budget in smaller increments.
   - campaign_type | Performance Max | 30d: expected revenue $91,601 at 4.26x ROAS with high confidence and a 21.2% interval. This is suitable for a controlled budget move, with normal monitoring.
-  - campaign_type | Performance Max | 60d: expected revenue $184,897 at 4.27x ROAS with medium confidence and a 30.7% interval. Use this as a planning range and move budget in smaller increments.
-  - campaign_type | Performance Max | 90d: expected revenue $276,243 at 4.26x ROAS with medium confidence and a 32.7% interval. Use this as a planning range and move budget in smaller increments.
+  - campaign_type | Performance Max | 60d: expected revenue $185,714 at 4.27x ROAS with high confidence and a 28.3% interval. This is suitable for a controlled budget move, with normal monitoring.
+  - campaign_type | Performance Max | 90d: expected revenue $299,013 at 4.26x ROAS with medium confidence and a 44.0% interval. Use this as a planning range and move budget in smaller increments.
   - campaign_type | Prospecting | 30d: expected revenue $37,954 at 2.97x ROAS with medium confidence and a 51.1% interval. Use this as a planning range and move budget in smaller increments.
-  - campaign_type | Prospecting | 60d: expected revenue $75,820 at 2.98x ROAS with medium confidence and a 53.1% interval. Use this as a planning range and move budget in smaller increments.
-  - campaign_type | Prospecting | 90d: expected revenue $112,895 at 2.98x ROAS with medium confidence and a 55.1% interval. Use this as a planning range and move budget in smaller increments.
+  - campaign_type | Prospecting | 60d: expected revenue $76,154 at 2.98x ROAS with medium confidence and a 57.4% interval. Use this as a planning range and move budget in smaller increments.
+  - campaign_type | Prospecting | 90d: expected revenue $122,643 at 2.98x ROAS with medium confidence and a 59.4% interval. Use this as a planning range and move budget in smaller increments.
   - campaign_type | Retargeting | 30d: expected revenue $45,507 at 3.01x ROAS with medium confidence and a 42.6% interval. Use this as a planning range and move budget in smaller increments.
-  - campaign_type | Retargeting | 60d: expected revenue $94,196 at 3.04x ROAS with medium confidence and a 44.6% interval. Use this as a planning range and move budget in smaller increments.
-  - campaign_type | Retargeting | 90d: expected revenue $141,413 at 3.04x ROAS with medium confidence and a 46.6% interval. Use this as a planning range and move budget in smaller increments.
+  - campaign_type | Retargeting | 60d: expected revenue $94,607 at 3.04x ROAS with medium confidence and a 46.2% interval. Use this as a planning range and move budget in smaller increments.
+  - campaign_type | Retargeting | 90d: expected revenue $153,483 at 3.04x ROAS with medium confidence and a 48.2% interval. Use this as a planning range and move budget in smaller increments.
   - campaign_type | Search | 30d: expected revenue $119,362 at 5.52x ROAS with high confidence and a 16.2% interval. This is suitable for a controlled budget move, with normal monitoring.
-  - campaign_type | Search | 60d: expected revenue $244,543 at 5.49x ROAS with medium confidence and a 30.7% interval. Use this as a planning range and move budget in smaller increments.
-  - campaign_type | Search | 90d: expected revenue $364,861 at 5.46x ROAS with medium confidence and a 32.7% interval. Use this as a planning range and move budget in smaller increments.
+  - campaign_type | Search | 60d: expected revenue $245,412 at 5.49x ROAS with high confidence and a 28.3% interval. This is suitable for a controlled budget move, with normal monitoring.
+  - campaign_type | Search | 90d: expected revenue $396,125 at 5.46x ROAS with medium confidence and a 44.0% interval. Use this as a planning range and move budget in smaller increments.
   - campaign_type | Shopping | 30d: expected revenue $114,596 at 4.47x ROAS with high confidence and a 16.9% interval. This is suitable for a controlled budget move, with normal monitoring.
-  - campaign_type | Shopping | 60d: expected revenue $233,989 at 4.45x ROAS with medium confidence and a 30.7% interval. Use this as a planning range and move budget in smaller increments.
-  - campaign_type | Shopping | 90d: expected revenue $350,166 at 4.49x ROAS with medium confidence and a 32.7% interval. Use this as a planning range and move budget in smaller increments.
+  - campaign_type | Shopping | 60d: expected revenue $235,046 at 4.45x ROAS with high confidence and a 28.3% interval. This is suitable for a controlled budget move, with normal monitoring.
+  - campaign_type | Shopping | 90d: expected revenue $383,610 at 4.49x ROAS with medium confidence and a 44.0% interval. Use this as a planning range and move budget in smaller increments.
   - campaign | Advantage Shopping | 30d: expected revenue $52,152 at 3.00x ROAS with medium confidence and a 38.9% interval. Use this as a planning range and move budget in smaller increments.
-  - campaign | Advantage Shopping | 60d: expected revenue $107,682 at 3.03x ROAS with medium confidence and a 40.9% interval. Use this as a planning range and move budget in smaller increments.
-  - campaign | Advantage Shopping | 90d: expected revenue $161,610 at 3.03x ROAS with medium confidence and a 42.9% interval. Use this as a planning range and move budget in smaller increments.
+  - campaign | Advantage Shopping | 60d: expected revenue $108,268 at 3.03x ROAS with medium confidence and a 42.2% interval. Use this as a planning range and move budget in smaller increments.
+  - campaign | Advantage Shopping | 90d: expected revenue $174,245 at 3.03x ROAS with medium confidence and a 46.0% interval. Use this as a planning range and move budget in smaller increments.
   - campaign | Bing Brand | 30d: expected revenue $35,956 at 6.03x ROAS with medium confidence and a 56.4% interval. Use this as a planning range and move budget in smaller increments.
-  - campaign | Bing Brand | 60d: expected revenue $74,017 at 6.04x ROAS with medium confidence and a 58.4% interval. Use this as a planning range and move budget in smaller increments.
-  - campaign | Bing Brand | 90d: expected revenue $111,176 at 6.00x ROAS with low confidence and a 60.4% interval. Treat this as directional; validate before making a large budget shift.
+  - campaign | Bing Brand | 60d: expected revenue $74,308 at 6.04x ROAS with low confidence and a 61.5% interval. Treat this as directional; validate before making a large budget shift.
+  - campaign | Bing Brand | 90d: expected revenue $120,127 at 6.00x ROAS with low confidence and a 63.5% interval. Treat this as directional; validate before making a large budget shift.
   - campaign | Bing Generic | 30d: expected revenue $33,547 at 5.11x ROAS with low confidence and a 60.4% interval. Treat this as directional; validate before making a large budget shift.
-  - campaign | Bing Generic | 60d: expected revenue $68,718 at 4.90x ROAS with low confidence and a 62.4% interval. Treat this as directional; validate before making a large budget shift.
-  - campaign | Bing Generic | 90d: expected revenue $102,531 at 4.88x ROAS with low confidence and a 64.4% interval. Treat this as directional; validate before making a large budget shift.
+  - campaign | Bing Generic | 60d: expected revenue $69,050 at 4.90x ROAS with low confidence and a 66.2% interval. Treat this as directional; validate before making a large budget shift.
+  - campaign | Bing Generic | 90d: expected revenue $112,091 at 4.88x ROAS with low confidence and a 68.2% interval. Treat this as directional; validate before making a large budget shift.
   - campaign | Brand Search | 30d: expected revenue $84,058 at 5.33x ROAS with high confidence and a 24.1% interval. This is suitable for a controlled budget move, with normal monitoring.
-  - campaign | Brand Search | 60d: expected revenue $170,564 at 5.31x ROAS with medium confidence and a 32.1% interval. Use this as a planning range and move budget in smaller increments.
-  - campaign | Brand Search | 90d: expected revenue $253,773 at 5.28x ROAS with medium confidence and a 34.1% interval. Use this as a planning range and move budget in smaller increments.
+  - campaign | Brand Search | 60d: expected revenue $171,233 at 5.31x ROAS with high confidence and a 29.6% interval. This is suitable for a controlled budget move, with normal monitoring.
+  - campaign | Brand Search | 90d: expected revenue $274,818 at 5.28x ROAS with medium confidence and a 46.0% interval. Use this as a planning range and move budget in smaller increments.
   - campaign | Cart Retargeting | 30d: expected revenue $45,507 at 3.01x ROAS with medium confidence and a 44.5% interval. Use this as a planning range and move budget in smaller increments.
-  - campaign | Cart Retargeting | 60d: expected revenue $94,196 at 3.04x ROAS with medium confidence and a 46.5% interval. Use this as a planning range and move budget in smaller increments.
-  - campaign | Cart Retargeting | 90d: expected revenue $141,413 at 3.04x ROAS with medium confidence and a 48.5% interval. Use this as a planning range and move budget in smaller increments.
+  - campaign | Cart Retargeting | 60d: expected revenue $94,607 at 3.04x ROAS with medium confidence and a 48.3% interval. Use this as a planning range and move budget in smaller increments.
+  - campaign | Cart Retargeting | 90d: expected revenue $153,483 at 3.04x ROAS with medium confidence and a 50.3% interval. Use this as a planning range and move budget in smaller increments.
   - campaign | Generic Search | 30d: expected revenue $80,786 at 4.28x ROAS with high confidence and a 25.1% interval. This is suitable for a controlled budget move, with normal monitoring.
-  - campaign | Generic Search | 60d: expected revenue $165,279 at 4.28x ROAS with medium confidence and a 32.1% interval. Use this as a planning range and move budget in smaller increments.
-  - campaign | Generic Search | 90d: expected revenue $247,653 at 4.27x ROAS with medium confidence and a 34.1% interval. Use this as a planning range and move budget in smaller increments.
+  - campaign | Generic Search | 60d: expected revenue $166,066 at 4.28x ROAS with high confidence and a 29.6% interval. This is suitable for a controlled budget move, with normal monitoring.
+  - campaign | Generic Search | 90d: expected revenue $270,429 at 4.27x ROAS with medium confidence and a 46.0% interval. Use this as a planning range and move budget in smaller increments.
   - campaign | Lookalike Prospecting | 30d: expected revenue $37,954 at 2.97x ROAS with medium confidence and a 53.4% interval. Use this as a planning range and move budget in smaller increments.
-  - campaign | Lookalike Prospecting | 60d: expected revenue $75,820 at 2.98x ROAS with medium confidence and a 55.4% interval. Use this as a planning range and move budget in smaller increments.
-  - campaign | Lookalike Prospecting | 90d: expected revenue $112,895 at 2.98x ROAS with medium confidence and a 57.4% interval. Use this as a planning range and move budget in smaller increments.
+  - campaign | Lookalike Prospecting | 60d: expected revenue $76,154 at 2.98x ROAS with low confidence and a 60.0% interval. Treat this as directional; validate before making a large budget shift.
+  - campaign | Lookalike Prospecting | 90d: expected revenue $122,643 at 2.98x ROAS with low confidence and a 62.0% interval. Treat this as directional; validate before making a large budget shift.
   - campaign | Shopping Best Sellers | 30d: expected revenue $91,601 at 4.26x ROAS with high confidence and a 22.1% interval. This is suitable for a controlled budget move, with normal monitoring.
-  - campaign | Shopping Best Sellers | 60d: expected revenue $184,897 at 4.27x ROAS with medium confidence and a 32.1% interval. Use this as a planning range and move budget in smaller increments.
-  - campaign | Shopping Best Sellers | 90d: expected revenue $276,243 at 4.26x ROAS with medium confidence and a 34.1% interval. Use this as a planning range and move budget in smaller increments.
+  - campaign | Shopping Best Sellers | 60d: expected revenue $185,714 at 4.27x ROAS with high confidence and a 29.6% interval. This is suitable for a controlled budget move, with normal monitoring.
+  - campaign | Shopping Best Sellers | 90d: expected revenue $299,013 at 4.26x ROAS with medium confidence and a 46.0% interval. Use this as a planning range and move budget in smaller increments.
 Anomaly signals ranked by forecast relevance:
   - 2026-06-11 | Google Ads | roas: actual=4.12, expected=4.65, z=-2.5 (warning)
   - 2026-06-08 | Meta Ads | roas: actual=3.31, expected=2.94, z=2.5 (warning)

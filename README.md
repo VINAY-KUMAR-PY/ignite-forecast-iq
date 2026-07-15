@@ -44,7 +44,9 @@ recommendations. The graded artifact is intentionally simple and offline:
 `predictions.csv`, writes `causal_summary.txt`, and exits without servers,
 Gemini, frontend dependencies, or network calls.
 
-Build environment: Python 3.14.4 with pandas 2.3.3, numpy 2.3.5, scikit-learn 1.7.2, scipy 1.17.1, joblib 1.5.3, and packaging 24.1.
+Build environment: Python 3.14.4 with pandas 2.3.3, numpy 2.3.5,
+scikit-learn 1.7.2, scipy 1.17.1, joblib 1.5.3, threadpoolctl 3.6.0,
+narwhals 2.22.1, and packaging 24.1.
 
 Current committed sample output includes all required forecast grains:
 

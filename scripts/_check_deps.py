@@ -7,7 +7,7 @@ import sys
 
 
 def main() -> int:
-    required = ["pandas", "numpy", "joblib"]
+    required = ["pandas", "numpy", "joblib", "sklearn", "threadpoolctl", "narwhals", "packaging"]
     missing = [name for name in required if importlib.util.find_spec(name) is None]
     if missing:
         print(

@@ -10,11 +10,21 @@ BACKEND_ROOT = ROOT / "backend"
 
 IMPORT_TO_REQUIREMENT = {
     "joblib": "joblib",
+    "narwhals": "narwhals",
     "numpy": "numpy",
     "pandas": "pandas",
     "packaging": "packaging",
     "scipy": "scipy",
     "sklearn": "scikit-learn",
+    "threadpoolctl": "threadpoolctl",
+}
+
+SKLEARN_RUNTIME_REQUIREMENTS = {
+    "numpy",
+    "scipy",
+    "joblib",
+    "threadpoolctl",
+    "narwhals",
 }
 
 
@@ -112,3 +122,13 @@ def test_requirements_txt_covers_backend_predict_runtime_import_graph() -> None:
     assert "google-genai" not in required_names
     assert "xgboost" not in required_names
     assert "sklearn" not in sys.stdlib_module_names
+
+
+def test_requirements_txt_declares_sklearn_runtime_support_dependencies() -> None:
+    """Guard the exact-sklearn CI job against incomplete --no-deps environments."""
+    required_names = _requirements_names()
+    missing = SKLEARN_RUNTIME_REQUIREMENTS - required_names
+    assert not missing, (
+        "requirements.txt must include sklearn runtime support packages used by "
+        f"the evaluator installation path. Missing: {sorted(missing)}"
+    )

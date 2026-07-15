@@ -413,7 +413,6 @@ jobs:
       - name: Install exact evaluator dependencies without cache
         run: |
           python -m pip install --no-cache-dir -r requirements.txt
-          python -m pip install --no-cache-dir --force-reinstall --no-deps scikit-learn==1.9.0
 
       - name: Assert trained-model output has no fallback warning
         run: |
@@ -429,6 +428,7 @@ jobs:
           from pathlib import Path
 
           import pandas as pd
+          import narwhals
           import sklearn
 
           output = Path("output/predictions.csv")
@@ -440,7 +440,7 @@ jobs:
           if len(frame) != 54:
               raise SystemExit(f"Expected 54 committed-sample rows, got {len(frame)}")
           print(
-              f"sklearn {sklearn.__version__} produced trained_model variant output with no fallback warning "
+              f"sklearn {sklearn.__version__} and narwhals {narwhals.__version__} produced trained_model variant output with no fallback warning "
               f"on Python {sys.version.split()[0]}"
           )
           PY
@@ -465,7 +465,7 @@ jobs:
       - name: Install evaluator dependencies and alternate sklearn
         run: |
           python -m pip install --no-cache-dir -r requirements.txt
-          python -m pip install --no-cache-dir --force-reinstall --no-deps scikit-learn==${{ matrix.scikit-learn-version }}
+          python -m pip install --no-cache-dir --force-reinstall scikit-learn==${{ matrix.scikit-learn-version }}
 
       - name: Assert drift is trained or loudly guarded
         run: |

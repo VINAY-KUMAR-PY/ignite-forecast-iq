@@ -9,6 +9,13 @@ from pathlib import Path
 
 import pandas as pd
 
+from backend.evaluator_intervals import (
+    DEFAULT_HORIZON_INTERVAL_MULTIPLIER,
+    HORIZON_INTERVAL_FLOOR_PCT,
+    LOW_SAMPLE_HORIZON_INTERVAL_MULTIPLIER,
+)
+from backend.inference import forecast_confidence_from_interval_width
+
 
 def test_overall_interval_width_strictly_monotonic():
     """interval_width_pct must be strictly increasing: 30d < 60d < 90d."""
@@ -211,3 +218,58 @@ def test_backtest_report_keeps_tightened_interval_coverage_above_90_percent():
             )
         else:
             assert coverage >= 90.0, f"{horizon}d coverage dropped below 90%: {coverage}"
+
+
+def test_interval_calibration_report_matches_source_constants_and_backtest_summary():
+    """Calibration evidence should agree across source constants, JSON, and summary Markdown."""
+    calibration = json.loads(Path("reports/interval_calibration_report.json").read_text(encoding="utf-8"))
+    backtest = json.loads(Path("reports/backtest_report.json").read_text(encoding="utf-8"))
+    summary = Path("reports/backtest_summary.md").read_text(encoding="utf-8")
+
+    constants = calibration["derived_constants"]
+    assert constants["default_horizon_interval_multiplier"] == {
+        str(horizon): float(DEFAULT_HORIZON_INTERVAL_MULTIPLIER[str(horizon)])
+        for horizon in (30, 60, 90)
+    }
+    assert constants["low_sample_horizon_interval_multiplier"] == {
+        str(horizon): float(LOW_SAMPLE_HORIZON_INTERVAL_MULTIPLIER[str(horizon)])
+        for horizon in (30, 60, 90)
+    }
+    assert constants["horizon_interval_floor_pct"] == {
+        str(horizon): float(HORIZON_INTERVAL_FLOOR_PCT[horizon])
+        for horizon in (30, 60, 90)
+    }
+    assert HORIZON_INTERVAL_FLOOR_PCT[30] < HORIZON_INTERVAL_FLOOR_PCT[60] <= HORIZON_INTERVAL_FLOOR_PCT[90]
+    assert "four-window rolling-origin residual ratio correction" in calibration["calibration_note"]
+
+    latest = {
+        int(item["horizon_days"]): item
+        for item in calibration.get("latest_walk_forward_backtest", [])
+    }
+    for item in backtest["per_horizon_performance"]:
+        horizon = int(item["horizon_days"])
+        coverage = float(item["trained_model_metrics"]["interval_coverage"])
+        width = float(item["trained_model_metrics"]["mean_interval_width_pct"])
+        assert latest[horizon]["revenue_interval_coverage"] == coverage
+        assert latest[horizon]["mean_interval_width_pct"] == width
+        assert f"| {horizon} |" in summary
+        assert f"| {coverage}%" in summary
+
+
+def test_committed_output_bounds_and_confidence_match_final_intervals():
+    """Committed predictions should reflect final calibrated bounds, not pre-repair labels."""
+    df = pd.read_csv("output/predictions.csv")
+    for _, row in df.iterrows():
+        expected = float(row["expected_revenue"])
+        lower = float(row["lower_revenue"])
+        upper = float(row["upper_revenue"])
+        assert lower <= expected <= upper
+        width_pct = round(((upper - lower) / expected) * 100, 2) if expected > 0 else 0.0
+        assert abs(width_pct - float(row["interval_width_pct"])) <= 1.0
+        assert row["forecast_confidence"] == forecast_confidence_from_interval_width(
+            float(row["interval_width_pct"]),
+            expected,
+            float(row["expected_roas"]),
+            float(row["lower_roas"]),
+            float(row["upper_roas"]),
+        )

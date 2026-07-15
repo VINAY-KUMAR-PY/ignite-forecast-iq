@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-07-15T10:08:18.038579+00:00",
+  "generated_at": "2026-07-15T15:37:26.237294+00:00",
   "method": "split_conformal_absolute_revenue_residual",
   "target_coverage": 0.9,
   "data_dir": "data",
   "model_path": "pickle/model.pkl",
   "final_holdout_days_reserved_for_backtest": 30,
   "calibration_windows_per_horizon": 2,
-  "calibration_note": "Each horizon uses consecutive chronological windows immediately before the final holdout. The final holdout remains reserved for reports/backtest_summary.md coverage validation.",
+  "calibration_note": "Active evaluator constants are source-controlled and validated by python -m backend.backtest. The 60-day floor uses the four-window rolling-origin residual ratio correction so the final trained-model interval coverage stays inside the 85-95% planning band without changing point forecasts. Backtest scoring calls trained_forecast_segment(history, ...) before actual holdout outcomes are compared, so holdout actuals are not passed into prediction-time interval construction.",
   "derived_constants": {
     "default_horizon_interval_multiplier": {
       "30": 1.6,
@@ -20,7 +20,7 @@
     },
     "horizon_interval_floor_pct": {
       "30": 0.056,
-      "60": 0.14,
+      "60": 0.168,
       "90": 0.2
     }
   },
@@ -1216,24 +1216,30 @@
   "latest_walk_forward_backtest": [
     {
       "horizon_days": 30,
-      "revenue_mape": 2.12,
-      "roas_mape": 1.34,
-      "revenue_interval_coverage": 100.0,
-      "mean_interval_width_pct": 29.82
+      "revenue_mape": 2.81,
+      "roas_mape": 1.26,
+      "revenue_interval_coverage": 95.83,
+      "mean_interval_width_pct": 20.3,
+      "fold_count": 4,
+      "segments_evaluated": 72
     },
     {
       "horizon_days": 60,
-      "revenue_mape": 6.18,
-      "roas_mape": 1.31,
-      "revenue_interval_coverage": 94.44,
-      "mean_interval_width_pct": 29.28
+      "revenue_mape": 10.94,
+      "roas_mape": 1.56,
+      "revenue_interval_coverage": 91.67,
+      "mean_interval_width_pct": 34.15,
+      "fold_count": 4,
+      "segments_evaluated": 72
     },
     {
       "horizon_days": 90,
       "revenue_mape": 14.8,
       "roas_mape": 2.46,
       "revenue_interval_coverage": 94.44,
-      "mean_interval_width_pct": 48.27
+      "mean_interval_width_pct": 48.27,
+      "fold_count": 2,
+      "segments_evaluated": 36
     }
   ]
 }

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-09T07:19:27.192355+00:00",
+  "generated_at": "2026-07-15T00:00:00Z",
   "commands": [
     {
       "name": "interval calibration",
@@ -33,34 +33,35 @@
     }
   ],
   "coverage": {
-    "statements": 4561,
-    "missing": 353,
-    "coverage_pct": 92.26,
-    "passed": 216,
+    "statements": 4739,
+    "missing": 296,
+    "coverage_pct": 93.75,
+    "passed": 245,
     "skipped": 2,
     "warnings": 7,
-    "duration_seconds": 431.91,
+    "duration_seconds": 392.1,
     "modules": {
       "backend/__init__.py": 100.0,
       "backend/anomaly.py": 94.81,
-      "backend/causal_lite.py": 87.07,
-      "backend/data_preprocessing.py": 89.83,
+      "backend/causal_lite.py": 87.76,
+      "backend/causal_reasoning.py": 97.9,
+      "backend/data_preprocessing.py": 90.4,
       "backend/decision_support.py": 94.09,
       "backend/evaluator_contract.py": 100.0,
       "backend/evaluator_intervals.py": 92.59,
-      "backend/evaluator_io.py": 90.19,
-      "backend/forecasting.py": 83.68,
-      "backend/gemini.py": 92.39,
+      "backend/evaluator_io.py": 94.91,
+      "backend/forecasting.py": 91.12,
+      "backend/gemini.py": 92.04,
       "backend/gemini_offline_cache.py": 98.02,
       "backend/inference.py": 92.87,
       "backend/lightweight_api.py": 93.92,
       "backend/main.py": 89.58,
-      "backend/predict.py": 98.11,
+      "backend/predict.py": 98.15,
       "backend/schema_adapters.py": 94.07,
       "backend/schemas.py": 98.26,
       "backend/segment_utils.py": 95.6,
-      "backend/train.py": 92.02,
-      "backend/utils.py": 100.0
+      "backend/train.py": 91.98,
+      "backend/utils.py": 96.0
     }
   },
   "artifacts": [

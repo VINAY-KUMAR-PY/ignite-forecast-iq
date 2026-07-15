@@ -1,50 +1,43 @@
-# Latest Verification Report
+﻿# Latest Verification Report
 
-Generated: 2026-07-09
+Generated: 2026-07-15
 
-Scope: offline evaluator contract, regenerated model/backtest evidence,
-backend coverage, frontend tests, and production build validation.
+Scope: interval calibration regression fix, rolling-origin backtest regeneration,
+backend coverage, and offline evaluator contract validation.
 
 ## Commands Run
 
 ```text
-npm run verify
+python -m compileall backend scripts tests -q
 
-PASS interval calibration
-PASS rolling-origin backtest
-PASS backend coverage
-216 passed, 2 skipped, 7 warnings in 431.91s (0:07:11)
-PASS verify-all: regenerated interval calibration, backtest reports, and coverage evidence (92.26%).
+PASS
 ```
 
 ```text
-python -m pytest tests -q --cov=backend --cov-report=term-missing
+python -m backend.backtest
 
-216 passed, 2 skipped, 7 warnings in 543.46s (0:09:03)
-TOTAL 4561 statements, 353 missing, 92.26% coverage
+[ForecastIQ] Loaded 2400 rows from sample_campaigns.csv as ads schema
+Backtest report written to reports\backtest_report.json
+Backtest summary written to reports\backtest_summary.md
+
+Trained revenue interval coverage by horizon:
+30d = 95.83%
+60d = 91.67%
+90d = 94.44%
 ```
 
 ```text
-npm run test
+python -m pytest tests/test_interval_monotonicity.py::test_backtest_report_keeps_tightened_interval_coverage_above_90_percent -q
 
-Test Files  4 passed (4)
-Tests       14 passed (14)
-Duration    9.44s
+1 passed in 0.28s
 ```
 
 ```text
-npm run check
+python -m pytest tests -q --cov=backend --cov-report=term-missing --cov-fail-under=92.05
 
-tsc --noEmit && eslint . && vite build --configLoader runner
-2787 modules transformed.
-built in 17.96s
-```
-
-```text
-npm run build
-
-2787 modules transformed.
-built in 12.63s
+245 passed, 2 skipped, 7 warnings in 392.10s (0:06:32)
+TOTAL 4739 statements, 296 missing, 93.75% coverage
+Required test coverage of 92.05% reached.
 ```
 
 ```text
@@ -61,23 +54,29 @@ built in 12.63s
 [ForecastIQ] Wrote 54 rows to ./output/predictions.csv
 [ForecastIQ] Causal summary written to output\causal_summary.txt
 [ForecastIQ] Explainability notes written to output\explainability_notes.txt
+[ForecastIQ] Offline AI reasoning trace: deterministic multi-scenario evidence chains written to causal_summary.txt
 [ForecastIQ] scikit-learn version: 1.7.2 (artifact built on 1.7.2)
 Done. Predictions written to ./output/predictions.csv
 [ForecastIQ] Python version: 3.14.4
 Causal summary written to ./output/causal_summary.txt
 
 rows 54
+exact_schema True
 model_counts {'trained_model': 54}
-nan_count 0
+nan 0
+inf 0
+bounds_ok True
 interval_monotonic_failures 0
+confidence_inversions 0
 ```
 
 ## Notes
 
+- The 60-day interval undercoverage regression was reproduced by regenerating
+  the four-window rolling-origin backtest, then fixed through a source-level
+  60-day interval floor recalibration rather than manual report edits.
 - The committed sample uses the trained artifact for every row. All 30/60/90
-  day horizons are labeled `trained_model`; 60/90-day accuracy tradeoffs are
-  documented in `reports/backtest_summary.md`.
+  day horizons are labeled `trained_model`; long-horizon point-accuracy
+  tradeoffs are documented in `reports/backtest_summary.md`.
 - `output/causal_summary.txt` includes `PER_RUN_SYNTHESIS`,
   `REASONING_TRACE`, and `REASONING PROVENANCE` sections.
-- `tests/test_run_sh_contract.py` now covers empty, malformed, multi-source,
-  unusual-filename, larger-row-count, and unseen-channel held-out-style inputs.

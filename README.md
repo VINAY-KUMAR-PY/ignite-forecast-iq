@@ -102,12 +102,12 @@ Core Flow:
 ## Forecast Accuracy At A Glance
 
 Latest regenerated walk-forward revenue interval coverage is
-**100.0% / 94.44% / 94.44%** for 30/60/90-day trained intervals. Revenue MAPE is
-**2.12% / 6.18% / 14.80%** for 30/60/90 days; overall-level ROAS MAPE is
-**0.39% / 0.86% / 1.05%**. Full tables:
+**95.83% / 91.67% / 94.44%** for 30/60/90-day trained intervals. Revenue MAPE is
+**2.81% / 10.94% / 14.80%** for 30/60/90 days; pooled ROAS MAPE is
+**1.26% / 1.56% / 2.46%**. Full tables:
 [reports/backtest_summary.md](./reports/backtest_summary.md).
 
-Backend coverage is **93.69% measured locally** with
+Backend coverage is **93.75% measured locally** with
 `python -m pytest tests -q --cov=backend --cov-report=term-missing`; Evaluator CI
 enforces **92.05%** with `--cov-fail-under=92.05`.
 

@@ -1,16 +1,5 @@
 # ForecastIQ
 
-## Which Requirements File Do I Need?
-
-**The automated grading pipeline only ever installs requirements.txt and runs run.sh; everything else in this repo is optional and irrelevant to grading.**
-
-Use `requirements.txt` for the graded offline evaluator only:
-`./run.sh ./data ./pickle/model.pkl ./output/predictions.csv`. Use
-`requirements-app.txt` only for the full FastAPI app, Gemini/live insights,
-tests, and local frontend demo.
-
-[![Evaluator CI](https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq/actions/workflows/evaluator-ci.yml/badge.svg)](https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq/actions/workflows/evaluator-ci.yml)
-
 ## Grading Contract Verification
 
 `run.sh` is tested end-to-end in CI against empty, malformed, single-source,
@@ -19,7 +8,27 @@ and multi-source held-out-style inputs; see
 root `Dockerfile` mirrors the same evaluator-only path and is smoke-tested in
 Evaluator CI.
 
-These guarantees were verified against commit `c12b274468583fc16a191adfbcddd85b21db76a3`; the fastest trust check is `python -m pytest tests/test_run_sh_contract.py -q`.
+These guarantees were refreshed on the current main lineage after
+`6f557a9dd0b0f9d025c443396f75a803caa7d8ad`; the fastest trust check is
+`python -m pytest tests/test_run_sh_contract.py -q`.
+
+## Exact Evaluator Command
+
+```bash
+pip install -r requirements.txt
+chmod +x run.sh
+./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
+```
+
+## Which Requirements File Do I Need?
+
+**The automated grading pipeline only ever installs requirements.txt and runs run.sh; everything else in this repo is optional and irrelevant to grading.**
+
+Use `requirements.txt` for the graded offline evaluator only. Use
+`requirements-app.txt` only for the full FastAPI app, Gemini/live insights,
+tests, and local frontend demo.
+
+[![Evaluator CI](https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq/actions/workflows/evaluator-ci.yml/badge.svg)](https://github.com/VINAY-KUMAR-PY/ignite-forecast-iq/actions/workflows/evaluator-ci.yml)
 
 ## Repository
 
@@ -34,14 +43,6 @@ recommendations. The graded artifact is intentionally simple and offline:
 `run.sh` loads `pickle/model.pkl`, reads CSVs from `data/`, writes
 `predictions.csv`, writes `causal_summary.txt`, and exits without servers,
 Gemini, frontend dependencies, or network calls.
-
-Exact evaluator command:
-
-```bash
-pip install -r requirements.txt
-chmod +x run.sh
-./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
-```
 
 Build environment: Python 3.14.4 with pandas 2.3.3, numpy 2.3.5, scikit-learn 1.7.2, scipy 1.17.1, joblib 1.5.3, and packaging 24.1.
 
@@ -60,6 +61,15 @@ Ads has the strongest ROAS. A marketer can test shifting $10,000 from Google
 Ads to Microsoft Ads; the simulator projects 90-day revenue moving from
 $1,428,350 to $1,434,421, about $6,071 incremental revenue, while total spend
 stays unchanged.
+
+## Deliverables Map
+
+| Brief deliverable | ForecastIQ artifact |
+|---|---|
+| Working Prototype | `run.sh`, `pickle/model.pkl`, `backend/predict.py`, FastAPI + React app |
+| Technical Documentation | [TECHNICAL.md](./TECHNICAL.md) |
+| Architecture Overview | [ARCHITECTURE.md](./ARCHITECTURE.md) |
+| Demo Workflow | [DEMO_GUIDE.md](./DEMO_GUIDE.md) and the one-click demo path |
 
 ## System Architecture
 
@@ -103,10 +113,11 @@ enforces **92.05%** with `--cov-fail-under=92.05`.
 
 The graded `run.sh` path is offline-safe by default. The evaluator prints an
 `AI MODE` banner and writes the same convention at the top of
-`causal_summary.txt`: `OFFLINE_DETERMINISTIC_FALLBACK` means input-conditioned
-offline synthesis, while `LIVE_GEMINI_AUTOMATIC_ENRICHMENT` means
-`GEMINI_API_KEY` was present and one bounded Gemini call was attempted with a
-redacted request/response transcript. To see real Gemini causal reasoning in
+`causal_summary.txt`: `OFFLINE DETERMINISTIC MODE — set GEMINI_API_KEY for
+live Gemini reasoning` means input-conditioned offline synthesis, while
+`LIVE_GEMINI_AUTOMATIC_ENRICHMENT` means `GEMINI_API_KEY` was present and one
+bounded Gemini call was attempted with a redacted request/response transcript.
+To see real Gemini causal reasoning in
 the separate demo script, add `GEMINI_API_KEY` to `.env` and run:
 
 ```bash
@@ -175,6 +186,8 @@ walk through Dashboard -> Forecast -> Budget Simulator -> AI Insights.
 
 - [TECHNICAL.md](./TECHNICAL.md): methodology, model selection, features,
   assumptions, interval calibration, AI architecture, operations, and evidence.
+- [ARCHITECTURE.md](./ARCHITECTURE.md): standalone frontend/backend,
+  forecasting-pipeline, and LLM workflow architecture overview.
 - [DEMO_GUIDE.md](./DEMO_GUIDE.md): demo walkthrough.
 - [PRESENTATION_GUIDE.md](./PRESENTATION_GUIDE.md): presentation framing.
 - [reports/latest_verification.md](./reports/latest_verification.md): latest

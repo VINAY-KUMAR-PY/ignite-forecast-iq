@@ -9,6 +9,8 @@ cd "$SCRIPT_DIR"
 # GEMINI_API_KEY, when present, triggers one bounded live AI call automatically.
 # None of these extensions may be required for:
 # ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
+# run.sh never invokes requirements-app.txt; that file is additive only for
+# FastAPI, Gemini demos, frontend checks, and local development.
 DATA_DIR="${1:-./data}"
 MODEL_PATH="${2:-./pickle/model.pkl}"
 OUTPUT_PATH="${3:-./output/predictions.csv}"

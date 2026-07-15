@@ -50,6 +50,7 @@ from .segment_utils import FEATURE_COLUMNS, aggregate_segment_daily, safe_ratio,
 from .utils import parse_dates_safely
 
 OFFLINE_AI_MODE_HEADER = (
+    "OFFLINE DETERMINISTIC MODE — set GEMINI_API_KEY for live Gemini reasoning\n"
     "AI mode: OFFLINE_DETERMINISTIC_FALLBACK "
     "(no live LLM call was made in this run; GEMINI_API_KEY was absent or the "
     "bounded live call was unavailable)."

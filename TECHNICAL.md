@@ -3,7 +3,8 @@
 This is the concise methodology document for the NetElixir AIgnition 3.0
 submission. Detailed historical tables, older validation transcripts, and
 expanded diagrams are preserved in
-[docs/technical-appendix.md](./docs/technical-appendix.md).
+[docs/technical-appendix.md](./docs/technical-appendix.md). The standalone
+architecture deliverable is [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ## Table of Contents
 
@@ -15,7 +16,6 @@ expanded diagrams are preserved in
 - [Known Degradation Paths](#known-degradation-paths)
 - [Assumptions & Limitations](#assumptions--limitations)
 - [AI Reasoning Architecture](#ai-reasoning-architecture)
-- [Architecture Overview](#architecture-overview)
 - [Test & Backtest Evidence](#test--backtest-evidence)
 - [Operational Security](#operational-security)
 
@@ -240,6 +240,14 @@ supporting_observations`
   nonzero target revenue to avoid nonsensical simulator output.
 - The evaluator prioritizes reproducibility over live cloud services.
 
+Interval widths are calibrated from empirical residuals and then enforced as
+monotonic for each `(level, segment)` row group in `predictions.csv`. When
+reviewing aggregate calibration tables, apparent non-monotonic
+`interval_width_pct` patterns across 30/60/90 day horizons can still appear
+because each horizon has different valid rolling windows, segment sparsity,
+calendar effects, and spend-response nonlinearity. The supporting comparison is
+stored in [reports/interval_calibration_report.json](./reports/interval_calibration_report.json).
+
 ### Known Limitations
 
 - The graded evaluator path uses synthesized, offline LLM-style reasoning rather
@@ -283,7 +291,7 @@ so reviewers can see which numeric rule path was used for the current run.
 This offline-deterministic design exists specifically for the submission
 guide's Section 6 rule that the automated grading pipeline installs only
 `requirements.txt` and runs `./run.sh ./data ./pickle/model.pkl
-./output/predictions.csv` with no runtime network dependency. The graded path
+./output/predictions.csv` with "no network calls at run time." The graded path
 therefore uses committed sklearn/joblib artifacts plus deterministic
 LLM-derived templates and writes the visible `AI Reasoning Trace` section
 without opening a socket. `npm run demo:ai` proves the same evidence pipeline
@@ -297,6 +305,10 @@ Live LLM mode is bounded and optional-by-environment: `run.sh` auto-detects
 the graded path. `npm run demo:ai` and the FastAPI insights endpoints use the
 same principle for richer demos. If the key or network is unavailable,
 ForecastIQ keeps the deterministic offline summary and exits successfully.
+A readable committed example of real Gemini causal reasoning is available in
+[docs/live_ai_sample_output.md](./docs/live_ai_sample_output.md), sourced from
+the redacted transcript
+[`live_gemini_transcript_20260705T051036Z.json`](./docs/gemini_sample_transcripts/live_gemini_transcript_20260705T051036Z.json).
 
 The optional live app path is separate:
 
@@ -334,42 +346,6 @@ is malformed, the same file records the safe failure and keeps the deterministic
 offline `PER_RUN_SYNTHESIS`/`REASONING_TRACE`. This preserves the no-manual-fix
 evaluator contract while making true live LLM reasoning visible in the graded
 artifact whenever a judge supplies a key.
-
-## Architecture Overview
-
-```mermaid
-flowchart LR
-  CSV["CSV folder"] --> Adapter["Schema adapters + validation"]
-  Adapter --> Features["Feature engineering + segment hierarchy"]
-  Features --> Evaluator["run.sh / backend.predict"]
-  Evaluator --> Model["pickle/model.pkl trained artifact"]
-  Evaluator --> Baseline["safe seasonal baseline"]
-  Model --> Intervals["interval calibration + monotonic widening"]
-  Baseline --> Intervals
-  Intervals --> Predictions["output/predictions.csv"]
-  Features --> Causal["anomaly.py + causal_lite.py"]
-  Causal --> OfflineAI["offline evidence synthesis"]
-  Causal --> LiveAI["optional Gemini call when GEMINI_API_KEY exists"]
-  OfflineAI --> Summary["output/causal_summary.txt"]
-  LiveAI --> Summary
-
-  Adapter --> API["FastAPI backend"]
-  API --> XGB["live XGBoost/product inference"]
-  API --> Gemini["Gemini insights fallback-safe"]
-  XGB --> UI["React dashboard/forecast/simulator"]
-  Gemini --> UI
-```
-
-Core files:
-
-| Area | Files |
-|---|---|
-| Offline prediction | `run.sh`, `backend/predict.py`, `backend/inference.py`, `backend/evaluator_io.py` |
-| Training/backtesting | `backend/train.py`, `backend/backtest.py`, `scripts/calibrate_intervals.py` |
-| Source schemas | `backend/schema_adapters.py`, `tests/test_schema_adapters.py` |
-| Causal/AI | `backend/causal_lite.py`, `backend/anomaly.py`, `backend/gemini.py`, `backend/gemini_offline_cache.py` |
-| Product API | `backend/main.py`, `backend/decision_support.py`, `backend/forecasting.py` |
-| Frontend | `src/routes/*`, `src/components/*`, `tests/e2e/*` |
 
 ## Test & Backtest Evidence
 

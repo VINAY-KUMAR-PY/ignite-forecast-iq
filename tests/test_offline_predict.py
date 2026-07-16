@@ -432,28 +432,27 @@ class OfflinePredictionTests(unittest.TestCase):
         self.assertTrue(modes <= set(TRAINED_MODEL_VARIANTS))
         self.assertIn(TRAINED_MODEL_TYPE, modes)
 
-    def test_committed_sample_uses_trained_estimates_for_every_forecast_row(self) -> None:
+    def test_committed_sample_uses_trained_artifact_variants_for_every_forecast_row(self) -> None:
         raw = read_csv_folder("data")
         cleaned = canonicalize_frame(raw)
         rows = build_predictions(cleaned.frame, safe_load_model("pickle/model.pkl"))
 
         self.assertEqual(len(rows), 54)
-        self.assertEqual({row["model_type"] for row in rows}, {TRAINED_MODEL_TYPE})
-        self.assertNotIn(TRAINED_BASELINE_ANCHORED_MODEL_TYPE, {row["model_type"] for row in rows})
+        modes = {row["model_type"] for row in rows}
+        self.assertTrue(modes <= set(TRAINED_MODEL_VARIANTS))
+        self.assertEqual({row["model_type"] for row in rows if int(row["horizon_days"]) == 30}, {TRAINED_MODEL_TYPE})
         for horizon in (60, 90):
-            self.assertEqual(
-                {row["model_type"] for row in rows if int(row["horizon_days"]) == horizon},
-                {TRAINED_MODEL_TYPE},
-            )
+            horizon_modes = {row["model_type"] for row in rows if int(row["horizon_days"]) == horizon}
+            self.assertEqual(horizon_modes, {TRAINED_BASELINE_ANCHORED_MODEL_TYPE})
 
-    def test_heldout_style_fixture_uses_trained_model_for_long_horizons(self) -> None:
+    def test_heldout_style_fixture_uses_trained_artifact_variants_for_long_horizons(self) -> None:
         raw = pd.read_csv("tests/fixtures/heldout_schema_compliant_unusual_filename.csv")
         cleaned = canonicalize_frame(raw)
         rows = build_predictions(cleaned.frame, safe_load_model("pickle/model.pkl"))
         long_horizon_rows = [row for row in rows if int(row["horizon_days"]) in {60, 90}]
 
         self.assertTrue(long_horizon_rows)
-        self.assertEqual({row["model_type"] for row in long_horizon_rows}, {TRAINED_MODEL_TYPE})
+        self.assertEqual({row["model_type"] for row in long_horizon_rows}, {TRAINED_BASELINE_ANCHORED_MODEL_TYPE})
 
     def test_adaptive_blend_weight_matches_artifact(self) -> None:
         """Artifact revenue_blend_weight and roas_blend_weight must equal mean of per-horizon weights."""

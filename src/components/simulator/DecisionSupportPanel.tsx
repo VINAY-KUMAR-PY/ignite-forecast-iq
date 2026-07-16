@@ -57,6 +57,9 @@ export function DecisionSupportPanel({
     currentRevenue,
     currentRoas,
   );
+  const topOpportunity = opportunityAlerts[0];
+  const topRisk = riskAlerts[0];
+  const topRecommendation = optimizer.recommendations[0];
 
   return (
     <div data-testid="decision-support" className="mt-6 grid min-w-0 gap-4">
@@ -164,6 +167,39 @@ export function DecisionSupportPanel({
               hint="expected lift"
             />
           </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-4">
+          <EvidenceCard
+            title="Opportunity"
+            value={topOpportunity?.message ?? "Keep the current plan under watch."}
+            detail={topOpportunity?.recommendation ?? "No high-confidence upside alert is active."}
+          />
+          <EvidenceCard
+            title="Risk"
+            value={topRisk?.message ?? "No major risk alert is active."}
+            detail={
+              topRisk?.recommendation ?? "Continue monitoring interval width and channel health."
+            }
+          />
+          <EvidenceCard
+            title="Recommended Action"
+            value={
+              topRecommendation
+                ? `${formatMoneyDelta(topRecommendation.deltaBudget)} ${topRecommendation.channel}`
+                : "Hold budget steady"
+            }
+            detail={
+              topRecommendation?.rationale ?? "Wait for stronger evidence before reallocating."
+            }
+          />
+          <EvidenceCard
+            title="Evidence and Confidence"
+            value={`${brief.confidenceScore}/100 confidence, ${brief.riskLevel.toLowerCase()} risk`}
+            detail={`Expected ${formatMoneyDelta(brief.revenueLift)} revenue lift and ${formatRoasDelta(
+              brief.roasLift,
+            )} ROAS impact from computed simulator outputs.`}
+          />
         </div>
 
         <div className="mt-4 min-w-0 rounded-lg border border-border/40 bg-background/40 p-4">
@@ -340,6 +376,18 @@ function DecisionStat({ label, value, hint }: { label: string; value: string; hi
       <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
       <div className="mt-1 break-words text-lg font-semibold">{value}</div>
       <div className="mt-1 break-words text-xs text-muted-foreground">{hint}</div>
+    </div>
+  );
+}
+
+function EvidenceCard({ title, value, detail }: { title: string; value: string; detail: string }) {
+  return (
+    <div className="min-w-0 rounded-lg border border-border/40 bg-background/50 p-3">
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {title}
+      </div>
+      <div className="mt-1 break-words text-sm font-semibold">{value}</div>
+      <p className="mt-2 break-words text-xs text-muted-foreground">{detail}</p>
     </div>
   );
 }

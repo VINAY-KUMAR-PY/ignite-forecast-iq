@@ -1,6 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Sparkles } from "lucide-react";
+import {
+  CartesianGrid,
+  ResponsiveContainer,
+  Scatter,
+  ScatterChart,
+  Tooltip,
+  XAxis,
+  YAxis,
+  ZAxis,
+} from "recharts";
 import { BudgetSliders, type BudgetSliderChannel } from "@/components/simulator/BudgetSliders";
 import { SimulatorResultsPanel } from "@/components/simulator/ChannelResultCard";
 import { DecisionSupportPanel } from "@/components/simulator/DecisionSupportPanel";
@@ -28,6 +38,7 @@ import {
   type WhatIfScenarioInput,
 } from "@/lib/backend-api";
 import { useData } from "@/lib/data-store";
+import { buildEfficientFrontier, type FrontierPoint } from "@/lib/efficient-frontier";
 import { fmtCurrency, fmtRoas } from "@/lib/format";
 
 export const Route = createFileRoute("/app/simulator")({
@@ -212,6 +223,7 @@ export function SimulatorPage() {
   const baselineRoas = totalBaseSpend > 0 ? totalBaseRevenue / totalBaseSpend : 0;
   const revenueChangePct = pctChange(totalProjectedRevenue, totalBaseRevenue);
   const roasChangePct = pctChange(projectedRoas, baselineRoas);
+  const frontier = buildEfficientFrontier(decisionSupport?.scenarios ?? []);
   const sliderChannels: BudgetSliderChannel[] = CHANNELS.map((channel) => {
     const sim = sims.find((item) => item.channel === channel);
     return {
@@ -445,6 +457,11 @@ export function SimulatorPage() {
         />
       )}
 
+      <EfficientFrontierPanel
+        loading={!decisionSupport && whatIfScenarios.length > 0}
+        frontier={frontier}
+      />
+
       <Card className="bg-gradient-card border-border/60 mt-6 min-w-0 overflow-hidden p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -515,4 +532,147 @@ export function SimulatorPage() {
 
 function pctChange(current: number, previous: number) {
   return previous > 0 ? ((current - previous) / previous) * 100 : 0;
+}
+
+function EfficientFrontierPanel({
+  frontier,
+  loading,
+}: {
+  frontier: FrontierPoint[];
+  loading: boolean;
+}) {
+  const recommended = frontier.find((point) => point.isRecommended);
+  return (
+    <Card className="bg-gradient-card border-border/60 mt-6 min-w-0 overflow-hidden p-5">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h3 className="text-sm font-semibold">Efficient frontier</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Spend vs revenue tradeoff across deterministic budget scenarios.
+          </p>
+        </div>
+        {recommended && (
+          <Badge variant="outline" className="border-primary/40 bg-primary/10 text-primary">
+            {recommended.name}: balanced option
+          </Badge>
+        )}
+      </div>
+      {loading ? (
+        <div className="grid h-[260px] place-items-center rounded-lg border border-dashed border-border/60 text-sm text-muted-foreground">
+          Loading frontier scenarios...
+        </div>
+      ) : frontier.length === 0 ? (
+        <div className="grid h-[260px] place-items-center rounded-lg border border-dashed border-border/60 text-center text-sm text-muted-foreground">
+          Run scenario comparisons to plot the frontier.
+        </div>
+      ) : (
+        <>
+          <div
+            className="h-[300px] min-w-0"
+            role="img"
+            aria-label="Efficient frontier chart showing planned spend on the x-axis and expected revenue on the y-axis."
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <ScatterChart margin={{ left: -12, right: 16, top: 12, bottom: 8 }}>
+                <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="totalSpend"
+                  name="Planned spend"
+                  tickFormatter={(value) => fmtCurrency(Number(value))}
+                  stroke="var(--color-muted-foreground)"
+                  fontSize={11}
+                />
+                <YAxis
+                  dataKey="projectedRevenue"
+                  name="Expected revenue"
+                  tickFormatter={(value) => fmtCurrency(Number(value))}
+                  stroke="var(--color-muted-foreground)"
+                  fontSize={11}
+                />
+                <ZAxis dataKey="uncertaintyWidthPct" range={[80, 240]} name="Uncertainty width" />
+                <Tooltip content={<FrontierTooltip />} cursor={{ strokeDasharray: "3 3" }} />
+                <Scatter
+                  name="Budget scenarios"
+                  data={frontier}
+                  fill="var(--color-chart-1)"
+                  line={{ stroke: "var(--color-chart-1)", strokeWidth: 1.5 }}
+                  shape={(props) => <FrontierDot {...props} />}
+                />
+              </ScatterChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            {frontier
+              .filter(
+                (point) =>
+                  point.isRecommended ||
+                  point.isHighestRevenue ||
+                  point.isHighestRoas ||
+                  point.isLowestRisk,
+              )
+              .slice(0, 4)
+              .map((point) => (
+                <div
+                  key={`${point.name}-${point.recommendationLabel}`}
+                  className="rounded-lg border border-border/50 bg-background/50 p-3"
+                >
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    {point.recommendationLabel}
+                  </div>
+                  <div className="mt-1 text-sm font-medium">{point.name}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    {fmtCurrency(point.totalSpend)} spend, {fmtRoas(point.projectedRoas)} ROAS
+                  </div>
+                </div>
+              ))}
+          </div>
+        </>
+      )}
+    </Card>
+  );
+}
+
+function FrontierTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{ payload: FrontierPoint }>;
+}) {
+  if (!active || !payload?.length) return null;
+  const point = payload[0].payload;
+  return (
+    <div className="rounded-lg border border-border bg-popover p-3 text-xs shadow-md">
+      <div className="font-semibold text-foreground">{point.name}</div>
+      <div className="mt-1 text-muted-foreground">Spend: {fmtCurrency(point.totalSpend)}</div>
+      <div className="text-muted-foreground">Revenue: {fmtCurrency(point.projectedRevenue)}</div>
+      <div className="text-muted-foreground">ROAS: {fmtRoas(point.projectedRoas)}</div>
+      <div className="text-muted-foreground">
+        Uncertainty width: {point.uncertaintyWidthPct.toFixed(1)}%
+      </div>
+      <div className="text-muted-foreground">Risk: {point.riskLevel}</div>
+      <div className="mt-1 font-medium text-primary">{point.recommendationLabel}</div>
+    </div>
+  );
+}
+
+function FrontierDot(props: { cx?: number; cy?: number; payload?: FrontierPoint }) {
+  const { cx = 0, cy = 0, payload } = props;
+  const fill = payload?.isRecommended
+    ? "var(--color-primary)"
+    : payload?.riskLevel === "high"
+      ? "var(--color-destructive)"
+      : payload?.riskLevel === "medium"
+        ? "var(--color-warning)"
+        : "var(--color-chart-1)";
+  return (
+    <circle
+      cx={cx}
+      cy={cy}
+      r={payload?.isRecommended ? 7 : 5}
+      fill={fill}
+      stroke="var(--color-background)"
+      strokeWidth={2}
+    />
+  );
 }

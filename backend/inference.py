@@ -13,7 +13,6 @@ from .evaluator_contract import (
     MIN_TRAINED_MODEL_ROWS,
     ROAS_NOT_COMPUTABLE_CONFIDENCE,
     SAFE_BASELINE_MODEL_TYPE,
-    TRAINED_BASELINE_ANCHORED_MODEL_TYPE,
     TRAINED_ESTIMATED_SPEND_MODEL_TYPE,
     TRAINED_MODEL_TYPE,
     clean_number,
@@ -28,6 +27,11 @@ from .evaluator_intervals import (
     interval_multiplier_map,
 )
 from .evaluator_io import fallback_model_config, is_trained_model_artifact
+from .model_selection import (
+    model_type_for_selected_method,
+    selected_method_for_horizon,
+    selected_revenue_weight,
+)
 from .segment_utils import (
     FEATURE_COLUMNS,
     aggregate_segment_daily,
@@ -42,7 +46,10 @@ from .segment_utils import (
 MODEL_TYPE = SAFE_BASELINE_MODEL_TYPE
 SPEND_ESTIMATED_ATTR = "forecastiq_spend_estimated"
 SPEND_ESTIMATION_NOTE_ATTR = "forecastiq_spend_estimation_note"
-BASELINE_ANCHORED_INTERVAL_SCALE = {60: 0.70, 90: 0.48}
+# Baseline-anchored long-horizon rows use the seasonal planning point estimate,
+# but still need calibrated planning bands. These scales preserve the
+# rolling-origin 85-95% interval target after champion-challenger selection.
+BASELINE_ANCHORED_INTERVAL_SCALE = {60: 0.90, 90: 0.52}
 LONG_HORIZON_INTERVAL_SCALE = {60: 0.92}
 
 def roas_interval_from_revenue(
@@ -437,7 +444,10 @@ def _horizon_model_weight(model: dict[str, Any], key: str, horizon: int, default
     confidence = model.get("confidence", {}) or {}
     horizon_weights = confidence.get(f"{key}_by_horizon") or {}
     value = horizon_weights.get(str(horizon), confidence.get(key, default))
-    return min(0.8, max(0.0, safe_float(value, default)))
+    configured = min(0.8, max(0.0, safe_float(value, default)))
+    if key == "revenue_model_weight":
+        return selected_revenue_weight(model, horizon, configured)
+    return configured
 
 def _thin_segment_weight_multiplier(history_days: int, min_prediction_rows: int) -> float:
     """Shrink trained-model influence for sparse segments instead of hard fallback."""
@@ -556,10 +566,8 @@ def build_trained_predictions(
                     parent_channel_segment,
                     frame,
                 )
-                model_type = trained_model_type
-                revenue_weight = _horizon_model_weight(model, "revenue_model_weight", horizon, 0.25)
-                if trained_model_type == TRAINED_MODEL_TYPE and revenue_weight <= 1e-9:
-                    model_type = TRAINED_BASELINE_ANCHORED_MODEL_TYPE
+                selected_method = selected_method_for_horizon(model, horizon)
+                model_type = model_type_for_selected_method(selected_method, trained_model_type)
                 trained_count += 1
             except Exception as exc:
                 segment_fallback_count += 1

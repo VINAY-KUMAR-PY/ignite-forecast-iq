@@ -8,16 +8,16 @@ Command run:
 python -m pytest tests -q --cov=backend --cov-report=term-missing --cov-fail-under=92.05
 ```
 
-Result: **246 passed, 2 skipped, 7 warnings** in 649.16s.
+Result: **252 passed, 2 skipped, 7 warnings** in 541.51s.
 
-Overall backend coverage: **93.75%** (4443/4739 lines).
+Overall backend coverage: **93.70%** (4503/4806 lines).
 
 | Module | Coverage |
 |---|---:|
 | `backend/decision_support.py` | 94.09% |
 | `backend/evaluator_io.py` | 94.91% |
 | `backend/gemini.py` | 92.04% |
-| `backend/inference.py` | 92.87% |
+| `backend/inference.py` | 92.91% |
 | `backend/segment_utils.py` | 95.60% |
 | `backend/train.py` | 91.98% |
 

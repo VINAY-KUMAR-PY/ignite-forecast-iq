@@ -356,6 +356,14 @@ checks, Vitest, Playwright demo flow, run.sh contract tests, and schema
 compatibility tests. `npm run verify` regenerates interval calibration,
 backtest, coverage, and verification summaries from a clean checkout.
 
+Test totals are environment-dependent within the supported matrix. The
+committed local evidence used Windows and Python 3.14.4, where SHAP is
+intentionally unavailable and two POSIX-shell-only tests skip; environments
+with SHAP and a POSIX shell exercise those paths instead. This can change the
+pass/skip count and measured coverage slightly without changing the enforced
+contract. The canonical GitHub Actions result and its **92.05%** coverage gate
+are the submission source of truth.
+
 ## Operational Security
 
 `GEMINI_API_KEY` and `TRAINING_ADMIN_TOKEN` must be configured only as

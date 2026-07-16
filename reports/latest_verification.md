@@ -6,6 +6,12 @@ Scope: finalist horizon champion-challenger policy, rolling-origin backtest
 regeneration, backend coverage, frontend checks, and offline evaluator contract
 validation.
 
+Environment: Windows (`win32`), Python 3.14.4. SHAP is intentionally excluded
+on Python 3.14, and two POSIX-shell-only tests skip on Windows. Supported
+Python/OS combinations can therefore report slightly different pass, skip,
+and coverage totals; the canonical GitHub Actions result and its enforced
+**92.05%** coverage gate are the submission source of truth.
+
 ## Commands Run
 
 ```text
@@ -37,8 +43,8 @@ python -m pytest tests/test_interval_monotonicity.py::test_interval_calibration_
 ```text
 python -m pytest tests -q --cov=backend --cov-report=term-missing --cov-report=json --cov-fail-under=92.05
 
-252 passed, 2 skipped, 7 warnings in 541.51s (0:09:01)
-TOTAL 4806 statements, 303 missing, 93.70% coverage
+252 passed, 2 skipped, 7 warnings in 364.31s (0:06:04)
+TOTAL 4805 statements, 303 missing, 93.69% coverage
 Required test coverage of 92.05% reached.
 ```
 

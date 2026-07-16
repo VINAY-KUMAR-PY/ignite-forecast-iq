@@ -975,6 +975,13 @@ Generated: {report["generated_at"]}
 | ---: | ---: | ---: | ---: | ---: |
 {coverage_rows}
 
+These widths are empirical averages over different rolling-origin window sets,
+not a monotonic forecast trajectory. The 90-day estimate uses fewer
+non-overlapping evaluation windows than the 60-day estimate, so their averages
+are not directly comparable. Production output separately enforces
+per-segment widening across 30/60/90 days; this table does not imply that a
+90-day forecast is generally more certain than a 60-day forecast.
+
 ## Fallback And Degradation
 
 - `trained_model`: artifact-backed forecast selected by rolling-origin evidence.

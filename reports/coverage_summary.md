@@ -1,6 +1,6 @@
 # Backend Coverage Summary
 
-Generated: 2026-07-15 local validation run.
+Generated: 2026-07-16 local validation run.
 
 Command run:
 
@@ -8,7 +8,7 @@ Command run:
 python -m pytest tests -q --cov=backend --cov-report=term-missing --cov-fail-under=92.05
 ```
 
-Result: **245 passed, 2 skipped, 7 warnings** in 392.10s.
+Result: **246 passed, 2 skipped, 7 warnings** in 649.16s.
 
 Overall backend coverage: **93.75%** (4443/4739 lines).
 

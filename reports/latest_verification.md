@@ -1,6 +1,6 @@
 ﻿# Latest Verification Report
 
-Generated: 2026-07-15
+Generated: 2026-07-16
 
 Scope: interval calibration regression fix, rolling-origin backtest regeneration,
 backend coverage, and offline evaluator contract validation.
@@ -19,6 +19,7 @@ python -m backend.backtest
 [ForecastIQ] Loaded 2400 rows from sample_campaigns.csv as ads schema
 Backtest report written to reports\backtest_report.json
 Backtest summary written to reports\backtest_summary.md
+elapsed_seconds=544.67
 
 Trained revenue interval coverage by horizon:
 30d = 95.83%
@@ -27,15 +28,15 @@ Trained revenue interval coverage by horizon:
 ```
 
 ```text
-python -m pytest tests/test_interval_monotonicity.py::test_backtest_report_keeps_tightened_interval_coverage_above_90_percent -q
+python -m pytest tests/test_interval_monotonicity.py::test_interval_calibration_report_matches_source_constants_and_backtest_summary -q
 
-1 passed in 0.28s
+1 passed in 3.64s
 ```
 
 ```text
 python -m pytest tests -q --cov=backend --cov-report=term-missing --cov-fail-under=92.05
 
-245 passed, 2 skipped, 7 warnings in 392.10s (0:06:32)
+246 passed, 2 skipped, 7 warnings in 649.16s (0:10:49)
 TOTAL 4739 statements, 296 missing, 93.75% coverage
 Required test coverage of 92.05% reached.
 ```
@@ -68,6 +69,7 @@ inf 0
 bounds_ok True
 interval_monotonic_failures 0
 confidence_inversions 0
+deterministic_csv true
 ```
 
 ## Notes
@@ -75,6 +77,10 @@ confidence_inversions 0
 - The 60-day interval undercoverage regression was reproduced by regenerating
   the four-window rolling-origin backtest, then fixed through a source-level
   60-day interval floor recalibration rather than manual report edits.
+- `backend.backtest.write_report_files` now synchronizes
+  `reports/interval_calibration_report.json` from the same in-memory backtest
+  result that writes `reports/backtest_report.json` and
+  `reports/backtest_summary.md`, preventing stale generated-report drift.
 - The committed sample uses the trained artifact for every row. All 30/60/90
   day horizons are labeled `trained_model`; long-horizon point-accuracy
   tradeoffs are documented in `reports/backtest_summary.md`.

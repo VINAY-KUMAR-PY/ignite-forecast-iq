@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-15T00:00:00Z",
+  "generated_at": "2026-07-16T00:00:00Z",
   "commands": [
     {
       "name": "interval calibration",
@@ -36,10 +36,10 @@
     "statements": 4739,
     "missing": 296,
     "coverage_pct": 93.75,
-    "passed": 245,
+    "passed": 246,
     "skipped": 2,
     "warnings": 7,
-    "duration_seconds": 392.1,
+    "duration_seconds": 649.16,
     "modules": {
       "backend/__init__.py": 100.0,
       "backend/anomaly.py": 94.81,

@@ -20,6 +20,16 @@ chmod +x run.sh
 ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
 ```
 
+`run.sh` uses `.venv/Scripts/python.exe` or `.venv/bin/python` when an existing
+project virtual environment is present; otherwise it selects `py -3`,
+`python3`, or `python`, in that order when available. Install
+`requirements.txt` with the same interpreter that runs the evaluator. Graders
+can select it explicitly through `PYTHON`, for example on Linux or Git Bash:
+
+```bash
+PYTHON=python3 ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
+```
+
 ## Which Requirements File Do I Need?
 
 **The automated grading pipeline only ever installs requirements.txt and runs run.sh; everything else in this repo is optional and irrelevant to grading.**
@@ -72,6 +82,10 @@ stays unchanged.
 | Technical Documentation | [TECHNICAL.md](./TECHNICAL.md) |
 | Architecture Overview | [ARCHITECTURE.md](./ARCHITECTURE.md) |
 | Demo Workflow | [DEMO_GUIDE.md](./DEMO_GUIDE.md) and the one-click demo path |
+
+Campaign-level and channel-level budget elasticity, saturation curves,
+scenario simulation, and budget optimization are implemented through
+`backend/forecasting.py` and `backend/decision_support.py`.
 
 ## System Architecture
 

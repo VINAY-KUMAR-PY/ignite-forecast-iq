@@ -72,10 +72,35 @@ fi
 
 # 1. Verify the minimal evaluator dependencies installed from requirements.txt.
 set +e
-"${PYTHON_CMD[@]}" scripts/_check_deps.py
+DEP_CHECK_OUTPUT="$("${PYTHON_CMD[@]}" scripts/_check_deps.py 2>&1)"
 DEP_CHECK_EXIT=$?
 set -e
 if [ $DEP_CHECK_EXIT -ne 0 ]; then
+  PYTHON_SELECTED="${PYTHON_CMD[*]}"
+  printf -v PYTHON_COMMAND '%q ' "${PYTHON_CMD[@]}"
+  PYTHON_COMMAND="${PYTHON_COMMAND% }"
+  PYTHON_VERSION="$("${PYTHON_CMD[@]}" -c "import sys; print(sys.version.split()[0])" 2>/dev/null || true)"
+  PYTHON_VERSION="${PYTHON_VERSION:-unavailable}"
+  MISSING_DEPS="${DEP_CHECK_OUTPUT#Missing Python dependencies: }"
+  MISSING_DEPS="${MISSING_DEPS%. Install them with: pip install -r requirements.txt}"
+  cat >&2 <<EOF
+[ForecastIQ] ERROR: evaluator dependencies are not installed for the selected interpreter:
+$PYTHON_SELECTED
+
+Python version:
+$PYTHON_VERSION
+
+Missing dependencies:
+$MISSING_DEPS
+
+Install the evaluator dependencies with the same interpreter:
+
+$PYTHON_COMMAND -m pip install -r requirements.txt
+
+Then rerun:
+
+PYTHON=$PYTHON_COMMAND ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
+EOF
   exit $DEP_CHECK_EXIT
 fi
 

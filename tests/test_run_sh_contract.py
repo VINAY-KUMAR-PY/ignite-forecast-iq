@@ -182,6 +182,57 @@ def test_run_sh_empty_data_directory_fails_loudly(tmp_path: Path) -> None:
     assert not output.exists()
 
 
+def test_run_sh_dependency_error_uses_selected_interpreter_in_guidance(tmp_path: Path) -> None:
+    fake_interpreter = tmp_path / "fake-python"
+    fake_interpreter.write_text(
+        """#!/usr/bin/env bash
+if [[ "${1:-}" == "scripts/_check_deps.py" ]]; then
+  echo "Missing Python dependencies: pandas, sklearn. Install them with: pip install -r requirements.txt" >&2
+  exit 23
+fi
+if [[ "${1:-}" == "-c" ]]; then
+  echo "0.0-test"
+  exit 0
+fi
+echo "Unexpected fake interpreter invocation: $*" >&2
+exit 99
+""",
+        encoding="utf-8",
+        newline="\n",
+    )
+    fake_interpreter.chmod(0o755)
+    selected_interpreter = fake_interpreter.as_posix()
+    output = tmp_path / "predictions.csv"
+    env = os.environ.copy()
+    env["PYTHON"] = selected_interpreter
+    shell_safe_interpreter = selected_interpreter.replace(" ", r"\ ")
+
+    result = subprocess.run(
+        [
+            _find_bash(),
+            "run.sh",
+            str(ROOT / "data"),
+            "./pickle/model.pkl",
+            str(output),
+        ],
+        cwd=ROOT,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        timeout=60,
+    )
+
+    assert result.returncode == 23
+    assert "ERROR: evaluator dependencies are not installed for the selected interpreter" in result.stderr
+    assert selected_interpreter in result.stderr
+    assert "Python version:\n0.0-test" in result.stderr
+    assert "Missing dependencies:\npandas, sklearn" in result.stderr
+    assert f"{shell_safe_interpreter} -m pip install -r requirements.txt" in result.stderr
+    assert "Done. Predictions written" not in result.stdout + result.stderr
+    assert not output.exists()
+
+
 def test_run_sh_outputs_are_byte_identical_across_repeated_runs(tmp_path: Path) -> None:
     first_output = tmp_path / "first" / "predictions.csv"
     second_output = tmp_path / "second" / "predictions.csv"

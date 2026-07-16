@@ -2,8 +2,9 @@
 
 Generated: 2026-07-16
 
-Scope: interval calibration regression fix, rolling-origin backtest regeneration,
-backend coverage, and offline evaluator contract validation.
+Scope: finalist horizon champion-challenger policy, rolling-origin backtest
+regeneration, backend coverage, frontend checks, and offline evaluator contract
+validation.
 
 ## Commands Run
 
@@ -23,8 +24,8 @@ elapsed_seconds=544.67
 
 Trained revenue interval coverage by horizon:
 30d = 95.83%
-60d = 91.67%
-90d = 94.44%
+60d = 90.28%
+90d = 86.11%
 ```
 
 ```text
@@ -34,11 +35,35 @@ python -m pytest tests/test_interval_monotonicity.py::test_interval_calibration_
 ```
 
 ```text
-python -m pytest tests -q --cov=backend --cov-report=term-missing --cov-fail-under=92.05
+python -m pytest tests -q --cov=backend --cov-report=term-missing --cov-report=json --cov-fail-under=92.05
 
-246 passed, 2 skipped, 7 warnings in 649.16s (0:10:49)
-TOTAL 4739 statements, 296 missing, 93.75% coverage
+252 passed, 2 skipped, 7 warnings in 541.51s (0:09:01)
+TOTAL 4806 statements, 303 missing, 93.70% coverage
 Required test coverage of 92.05% reached.
+```
+
+```text
+npx tsc --noEmit
+
+PASS
+```
+
+```text
+npx eslint .
+
+PASS
+```
+
+```text
+npm run test
+
+5 test files passed, 17 tests passed
+```
+
+```text
+npm run build
+
+PASS - Vite production build completed.
 ```
 
 ```text
@@ -63,7 +88,7 @@ Causal summary written to ./output/causal_summary.txt
 
 rows 54
 exact_schema True
-model_counts {'trained_model': 54}
+model_counts {'trained_model_baseline_anchored': 36, 'trained_model': 18}
 nan 0
 inf 0
 bounds_ok True
@@ -74,15 +99,17 @@ deterministic_csv true
 
 ## Notes
 
-- The 60-day interval undercoverage regression was reproduced by regenerating
-  the four-window rolling-origin backtest, then fixed through a source-level
-  60-day interval floor recalibration rather than manual report edits.
-- `backend.backtest.write_report_files` now synchronizes
+- The 30-day planning forecast uses the trained residual correction. The 60/90
+  day planning forecasts are explicitly labeled
+  `trained_model_baseline_anchored` because rolling-origin evidence found no
+  reliable trained revenue advantage at those horizons.
+- `backend.backtest.write_report_files` synchronizes
   `reports/interval_calibration_report.json` from the same in-memory backtest
   result that writes `reports/backtest_report.json` and
   `reports/backtest_summary.md`, preventing stale generated-report drift.
-- The committed sample uses the trained artifact for every row. All 30/60/90
-  day horizons are labeled `trained_model`; long-horizon point-accuracy
-  tradeoffs are documented in `reports/backtest_summary.md`.
+- The committed sample uses trained-artifact variants for every row; no
+  `safe_baseline_fallback` rows are emitted for the sample data.
 - `output/causal_summary.txt` includes `PER_RUN_SYNTHESIS`,
   `REASONING_TRACE`, and `REASONING PROVENANCE` sections.
+- `reports/model_card.md` and `reports/long_horizon_revenue_ablation.md` are
+  generated from the same canonical backtest report.

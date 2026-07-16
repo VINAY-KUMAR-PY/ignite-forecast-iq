@@ -184,7 +184,7 @@ export function ForecastPage() {
         description={
           apiError
             ? "Backend unavailable; showing local fallback forecast."
-            : "XGBoost backend model with 95% confidence intervals."
+            : "Backend forecast with calibrated downside, expected and upside planning bounds."
         }
       />
 
@@ -290,8 +290,18 @@ export function ForecastPage() {
           value={fmtCurrency(expectedRev)}
           icon={LineIcon}
         />
-        <KpiCard label="Lower bound" value={fmtCurrency(lowerRev)} icon={LineIcon} hint="95% CI" />
-        <KpiCard label="Upper bound" value={fmtCurrency(upperRev)} icon={LineIcon} hint="95% CI" />
+        <KpiCard
+          label="Downside case"
+          value={fmtCurrency(lowerRev)}
+          icon={LineIcon}
+          hint="P10-style planning bound"
+        />
+        <KpiCard
+          label="Upside case"
+          value={fmtCurrency(upperRev)}
+          icon={LineIcon}
+          hint="P90-style planning bound"
+        />
         <KpiCard
           label="Avg forecast ROAS"
           value={
@@ -312,9 +322,10 @@ export function ForecastPage() {
       >
         <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-sm font-semibold">Confidence interval overview</h3>
+            <h3 className="text-sm font-semibold">Planning bounds overview</h3>
             <p className="text-xs text-muted-foreground">
-              Forecast spread shown as total revenue range and average ROAS uncertainty.
+              Lower revenue is a P10-style downside case, expected revenue is the P50-style planning
+              case, and upper revenue is a P90-style upside case.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -332,12 +343,9 @@ export function ForecastPage() {
           </div>
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <DiagnosticStat
-            label="Revenue interval width"
-            value={fmtCurrency(revenueIntervalWidth)}
-          />
-          <DiagnosticStat label="Lower planning case" value={fmtCurrency(lowerRev)} />
-          <DiagnosticStat label="Upper upside case" value={fmtCurrency(upperRev)} />
+          <DiagnosticStat label="Planning range width" value={fmtCurrency(revenueIntervalWidth)} />
+          <DiagnosticStat label="Downside case" value={fmtCurrency(lowerRev)} />
+          <DiagnosticStat label="Upside case" value={fmtCurrency(upperRev)} />
           <DiagnosticStat
             label="ROAS interval"
             value={
@@ -357,11 +365,11 @@ export function ForecastPage() {
             <div>
               <h3 className="text-sm font-semibold">Revenue forecast</h3>
               <p className="text-xs text-muted-foreground">
-                Expected forecast with lower &amp; upper bounds
+                Expected forecast with downside and upside planning bounds
               </p>
             </div>
             <span className="rounded-full border border-border/60 bg-background/60 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              95% CI
+              P10/P50/P90 style
             </span>
           </div>
           <div
@@ -399,7 +407,7 @@ export function ForecastPage() {
                   dataKey="range"
                   stroke="none"
                   fill="url(#revBand)"
-                  name="95% confidence band"
+                  name="Planning range"
                   isAnimationActive={false}
                   activeDot={false}
                   legendType="rect"
@@ -432,7 +440,7 @@ export function ForecastPage() {
                   strokeOpacity={0.6}
                   dot={false}
                   isAnimationActive={false}
-                  name="Upper bound"
+                  name="Upside bound"
                 />
                 <Line
                   type="monotone"
@@ -443,7 +451,7 @@ export function ForecastPage() {
                   strokeOpacity={0.6}
                   dot={false}
                   isAnimationActive={false}
-                  name="Lower bound"
+                  name="Downside bound"
                 />
               </ComposedChart>
             </ResponsiveContainer>
@@ -455,11 +463,11 @@ export function ForecastPage() {
             <div>
               <h3 className="text-sm font-semibold">ROAS forecast</h3>
               <p className="text-xs text-muted-foreground">
-                Daily blended ROAS with lower &amp; upper bounds
+                Daily blended ROAS with downside and upside planning bounds
               </p>
             </div>
             <span className="rounded-full border border-border/60 bg-background/60 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              95% CI
+              Calibrated range
             </span>
           </div>
           <div
@@ -503,7 +511,7 @@ export function ForecastPage() {
                   dataKey="range"
                   stroke="none"
                   fill="url(#roasBand)"
-                  name="95% confidence band"
+                  name="Planning range"
                   isAnimationActive={false}
                   activeDot={false}
                   legendType="rect"
@@ -536,7 +544,7 @@ export function ForecastPage() {
                   strokeOpacity={0.6}
                   dot={false}
                   isAnimationActive={false}
-                  name="Upper bound"
+                  name="Upside bound"
                 />
                 <Line
                   type="monotone"
@@ -547,7 +555,7 @@ export function ForecastPage() {
                   strokeOpacity={0.6}
                   dot={false}
                   isAnimationActive={false}
-                  name="Lower bound"
+                  name="Downside bound"
                 />
               </ComposedChart>
             </ResponsiveContainer>

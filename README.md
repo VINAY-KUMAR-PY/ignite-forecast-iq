@@ -52,9 +52,9 @@ Current committed sample output includes all required forecast grains:
 
 | Grain | Example | Horizon | Expected revenue | Revenue range | Expected ROAS |
 |---|---|---:|---:|---:|---:|
-| Overall | all | 90d | $1,537,641 | $1,230,113-$1,845,170 | 4.05x |
-| Channel | Microsoft Ads | 90d | $232,551 | $183,715-$281,387 | 5.40x |
-| Campaign type | Advantage+ | 90d | $174,245 | $135,911-$212,579 | 3.03x |
+| Overall | all | 90d | $1,407,079 | $1,197,278-$1,616,880 | 4.05x |
+| Channel | Microsoft Ads | 90d | $213,676 | $180,330-$247,022 | 5.40x |
+| Campaign type | Advantage+ | 90d | $161,610 | $128,339-$194,881 | 3.03x |
 | Campaign | Brand Search | 30d | $84,058 | $73,924-$94,193 | 5.33x |
 
 Example decision: Google Ads shows low-confidence directional
@@ -102,14 +102,22 @@ Core Flow:
 ## Forecast Accuracy At A Glance
 
 Latest regenerated walk-forward revenue interval coverage is
-**95.83% / 91.67% / 94.44%** for 30/60/90-day trained intervals. Revenue MAPE is
-**2.81% / 10.94% / 14.80%** for 30/60/90 days; pooled ROAS MAPE is
+**95.83% / 90.28% / 86.11%** for 30/60/90-day selected planning intervals. Revenue MAPE is
+**2.81% / 10.11% / 7.89%** for 30/60/90 days; pooled ROAS MAPE is
 **1.26% / 1.56% / 2.46%**. Full tables:
 [reports/backtest_summary.md](./reports/backtest_summary.md).
 
-Backend coverage is **93.75% measured locally** with
+Backend coverage is **93.70% measured locally** with
 `python -m pytest tests -q --cov=backend --cov-report=term-missing`; Evaluator CI
 enforces **92.05%** with `--cov-fail-under=92.05`.
+
+ForecastIQ uses a horizon champion-challenger policy: 30-day revenue planning
+uses the trained residual model, while 60/90-day revenue planning is
+baseline-anchored when rolling-origin evidence says that is safer. In the UI,
+`lower_revenue`, `expected_revenue`, and `upper_revenue` are described as
+P10-style downside, P50-style expected, and P90-style upside planning bounds.
+The Budget Simulator also plots an Efficient Frontier so judges can compare
+spend, revenue, ROAS, uncertainty, and recommended balanced options.
 
 ## See Live AI Reasoning In 30 Seconds
 
@@ -145,7 +153,7 @@ access.
 
 | Criterion | Fast verification path |
 |---|---|
-| Technical Soundness | `./run.sh`, `reports/backtest_summary.md`, `reports/interval_calibration_report.json`, `tests/test_offline_predict.py`, `tests/test_interval_monotonicity.py` |
+| Technical Soundness | `./run.sh`, horizon champion-challenger policy in `reports/backtest_summary.md`, `reports/interval_calibration_report.json`, `reports/model_card.md`, `tests/test_offline_predict.py`, `tests/test_interval_monotonicity.py` |
 | Practical Relevance | `backend/decision_support.py`, `scripts/validate_budget_elasticity.py`, `reports/budget_elasticity_summary.md`, simulator UI |
 | AI Integration | Graded path: per-run offline synthesis plus automatic one-call Gemini enrichment when `GEMINI_API_KEY` is present, with redacted request/response evidence in `output/causal_summary.txt`; demo path: live Gemini calls through `npm run demo:ai`, `scripts/demo_live_ai_reasoning.py`, and `docs/gemini_sample_transcripts/SCENARIO_COVERAGE.md`. |
 | Product Thinking | One-click demo flow, Upload -> Dashboard -> Forecast -> Simulator -> Insights, `DEMO_GUIDE.md` |
@@ -208,12 +216,13 @@ forecast_confidence
 ```
 
 The committed sample output has 54 rows, horizons `{30, 60, 90}`, no NaN, no
-infinite values, **54 `trained_model` rows**, **0
+infinite values, **18 `trained_model` rows**, **36
 `trained_model_baseline_anchored` rows**, and **0 confidence inversions**.
-All 30/60/90-day rows now include a trained residual-correction contribution;
-the 90-day backtest remains a statistical tie with the seasonal baseline, so
-the long-horizon accuracy delta is documented honestly in
-`reports/backtest_summary.md`.
+The 30-day planning forecast uses the trained residual model. The 60/90-day
+revenue planning forecasts are baseline-anchored because rolling-origin
+evidence shows the seasonal baseline is safer at those horizons; the decision
+is generated in `reports/backtest_summary.md` and summarized in
+`reports/model_card.md`.
 
 ## Deployment
 

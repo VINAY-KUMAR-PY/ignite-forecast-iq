@@ -1,14 +1,6 @@
 {
-  "generated_at": "2026-07-16T00:00:00Z",
+  "generated_at": "2026-07-16T05:55:00Z",
   "commands": [
-    {
-      "name": "interval calibration",
-      "command": [
-        "python",
-        "scripts/calibrate_intervals.py"
-      ],
-      "returncode": 0
-    },
     {
       "name": "rolling-origin backtest",
       "command": [
@@ -24,22 +16,70 @@
         "python",
         "-m",
         "pytest",
-        "tests/",
+        "tests",
         "-q",
         "--cov=backend",
-        "--durations=10"
+        "--cov-report=term-missing",
+        "--cov-report=json",
+        "--cov-fail-under=92.05"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "offline evaluator",
+      "command": [
+        "./run.sh",
+        "./data",
+        "./pickle/model.pkl",
+        "./output/predictions.csv"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "frontend build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "frontend typecheck",
+      "command": [
+        "npx",
+        "tsc",
+        "--noEmit"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "frontend lint",
+      "command": [
+        "npx",
+        "eslint",
+        "."
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "frontend tests",
+      "command": [
+        "npm",
+        "run",
+        "test"
       ],
       "returncode": 0
     }
   ],
   "coverage": {
-    "statements": 4739,
-    "missing": 296,
-    "coverage_pct": 93.75,
-    "passed": 246,
+    "statements": 4806,
+    "missing": 303,
+    "coverage_pct": 93.7,
+    "passed": 252,
     "skipped": 2,
     "warnings": 7,
-    "duration_seconds": 649.16,
+    "duration_seconds": 541.51,
     "modules": {
       "backend/__init__.py": 100.0,
       "backend/anomaly.py": 94.81,
@@ -53,9 +93,10 @@
       "backend/forecasting.py": 91.12,
       "backend/gemini.py": 92.04,
       "backend/gemini_offline_cache.py": 98.02,
-      "backend/inference.py": 92.87,
+      "backend/inference.py": 92.91,
       "backend/lightweight_api.py": 93.92,
       "backend/main.py": 89.58,
+      "backend/model_selection.py": 89.23,
       "backend/predict.py": 98.15,
       "backend/schema_adapters.py": 94.07,
       "backend/schemas.py": 98.26,
@@ -68,6 +109,8 @@
     "reports/interval_calibration_report.json",
     "reports/backtest_report.json",
     "reports/backtest_summary.md",
+    "reports/model_card.md",
+    "reports/long_horizon_revenue_ablation.md",
     "reports/coverage_summary.md"
   ],
   "status": "pass"

@@ -18,7 +18,6 @@ from .predict import (
     HORIZONS,
     OUTPUT_COLUMNS,
     SAFE_BASELINE_MODEL_TYPE,
-    TRAINED_BASELINE_ANCHORED_MODEL_TYPE,
     TRAINED_MODEL_TYPE,
     aggregate_segment_daily,
     canonicalize_frame,

@@ -15,7 +15,6 @@ from backend.backtest import run_backtest
 from backend.predict import (
     OUTPUT_COLUMNS,
     SAFE_BASELINE_MODEL_TYPE,
-    TRAINED_ESTIMATED_SPEND_MODEL_TYPE,
     TRAINED_MODEL_TYPE,
     TRAINED_MODEL_VARIANTS,
     canonicalize_frame,

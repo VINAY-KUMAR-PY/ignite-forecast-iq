@@ -274,11 +274,6 @@ def train_evaluator_model(frame: pd.DataFrame) -> dict[str, Any]:
         # horizons keep a conservative non-zero contribution so evaluator
         # output remains an actual trained estimate while still staying close
         # to the seasonal anchor when holdout evidence is weak.
-        holdout_improvement_pct = (
-            (baseline_holdout_mae - revenue_holdout_mae) / baseline_holdout_mae
-            if baseline_holdout_mae and revenue_holdout_mae is not None and baseline_holdout_mae > 0
-            else 0.0
-        )
         if revenue_cv_r2 >= 0.15 and holdout_beats_baseline:
             revenue_model_weight = {30: 0.60, 60: 0.10, 90: 0.50}.get(horizon, 0.25)
         elif revenue_cv_r2 >= 0.05 and holdout_beats_baseline:

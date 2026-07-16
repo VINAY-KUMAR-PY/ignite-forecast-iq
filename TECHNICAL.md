@@ -146,6 +146,15 @@ changing point forecasts. ForecastIQ reports mean interval width beside coverage
 so reviewers can see the sharpness/coverage tradeoff rather than only a high
 coverage number.
 
+The selected-planning backtest mean widths are **20.30% / 31.56% / 25.96%**
+for 30/60/90 days, but these are empirical averages over different
+rolling-origin window sets rather than one nested forecast trajectory. The
+90-day result has two non-overlapping evaluation windows versus four at 60
+days, so the cross-horizon averages are not directly comparable as a monotonic
+sequence. Production output separately enforces per-segment widening across
+30/60/90 days. The lower 90-day backtest average therefore must not be read as
+a general claim that 90-day forecasts are more certain than 60-day forecasts.
+
 ### Interval Calibration Methodology
 
 Default evaluator intervals use residual/conformal calibration constants stored
@@ -355,6 +364,14 @@ CI enforces the evaluator contract, backend coverage gate, frontend type/lint
 checks, Vitest, Playwright demo flow, run.sh contract tests, and schema
 compatibility tests. `npm run verify` regenerates interval calibration,
 backtest, coverage, and verification summaries from a clean checkout.
+
+Test totals are environment-dependent within the supported matrix. The
+committed local evidence used Windows and Python 3.14.4, where SHAP is
+intentionally unavailable and two POSIX-shell-only tests skip; environments
+with SHAP and a POSIX shell exercise those paths instead. This can change the
+pass/skip count and measured coverage slightly without changing the enforced
+contract. The canonical GitHub Actions result and its **92.05%** coverage gate
+are the submission source of truth.
 
 ## Operational Security
 

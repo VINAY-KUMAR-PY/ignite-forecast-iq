@@ -1,5 +1,10 @@
 {
   "generated_at": "2026-07-16T05:55:00Z",
+  "environment": {
+    "os": "Windows (win32)",
+    "python": "3.14.4",
+    "optional_test_behavior": "SHAP is intentionally unavailable on Python 3.14; two POSIX-shell-only tests skip on Windows. Counts may vary slightly across supported environments, while GitHub Actions and the 92.05% coverage gate remain canonical."
+  },
   "commands": [
     {
       "name": "rolling-origin backtest",
@@ -73,13 +78,13 @@
     }
   ],
   "coverage": {
-    "statements": 4806,
+    "statements": 4805,
     "missing": 303,
-    "coverage_pct": 93.7,
+    "coverage_pct": 93.69,
     "passed": 252,
     "skipped": 2,
     "warnings": 7,
-    "duration_seconds": 541.51,
+    "duration_seconds": 364.31,
     "modules": {
       "backend/__init__.py": 100.0,
       "backend/anomaly.py": 94.81,
@@ -101,7 +106,7 @@
       "backend/schema_adapters.py": 94.07,
       "backend/schemas.py": 98.26,
       "backend/segment_utils.py": 95.6,
-      "backend/train.py": 91.98,
+      "backend/train.py": 91.95,
       "backend/utils.py": 96.0
     }
   },

@@ -2,15 +2,23 @@
 
 Generated: 2026-07-16 local validation run.
 
+Environment: Windows (`win32`), Python 3.14.4. SHAP is intentionally
+unavailable on Python 3.14, and two POSIX-shell-only tests skip on Windows.
+
 Command run:
 
 ```bash
 python -m pytest tests -q --cov=backend --cov-report=term-missing --cov-fail-under=92.05
 ```
 
-Result: **252 passed, 2 skipped, 7 warnings** in 541.51s.
+Result: **252 passed, 2 skipped, 7 warnings** in 364.31s.
 
-Overall backend coverage: **93.70%** (4503/4806 lines).
+Overall backend coverage: **93.69%** (4502/4805 lines).
+
+Test totals may vary slightly across supported Python versions and operating
+systems because SHAP-backed behavior runs where SHAP is installed and POSIX
+contract tests run on Linux. The canonical GitHub Actions result and the
+enforced **92.05%** coverage gate remain the submission source of truth.
 
 | Module | Coverage |
 |---|---:|

@@ -107,9 +107,17 @@ Latest regenerated walk-forward revenue interval coverage is
 **1.26% / 1.56% / 2.46%**. Full tables:
 [reports/backtest_summary.md](./reports/backtest_summary.md).
 
-Backend coverage is **93.70% measured locally** with
+Backend coverage is **93.69% measured locally** with
 `python -m pytest tests -q --cov=backend --cov-report=term-missing`; Evaluator CI
 enforces **92.05%** with `--cov-fail-under=92.05`.
+
+The reported local result is from Windows with Python 3.14.4: **252 passed, 2
+skipped**, with SHAP intentionally unavailable on Python 3.14 and two
+POSIX-shell-only tests skipped on Windows. Test totals can vary slightly by
+supported Python version and OS because SHAP-dependent behavior runs where
+SHAP is installed and POSIX contract tests run on Linux. The canonical GitHub
+Actions result and enforced coverage gate remain the submission source of
+truth.
 
 ForecastIQ uses a horizon champion-challenger policy: 30-day revenue planning
 uses the trained residual model, while 60/90-day revenue planning is

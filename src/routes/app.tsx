@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   BarChart3,
   Brain,
@@ -9,8 +9,10 @@ import {
   ChevronRight,
   LineChart,
   Moon,
+  RotateCcw,
   Sparkles,
   Sun,
+  Trash2,
   Upload,
   X,
 } from "lucide-react";
@@ -114,8 +116,9 @@ class RouteErrorBoundary extends React.Component<
 
 function AppLayout() {
   const { theme, toggle } = useTheme();
-  const { isDemo, rows, workflow, loadDemo } = useData();
+  const { isDemo, rows, workflow, loadDemo, clear, restartWorkflow } = useData();
   const loc = useLocation();
+  const navigate = useNavigate();
   const [tourOpen, setTourOpen] = useState(false);
   const [tourStep, setTourStep] = useState(0);
 
@@ -123,6 +126,13 @@ function AppLayout() {
     if (!rows.length) loadDemo();
     setTourStep(0);
     setTourOpen(true);
+  }
+
+  function restartJudgeWorkflow() {
+    restartWorkflow();
+    setTourStep(0);
+    setTourOpen(true);
+    void navigate({ to: "/app/upload" });
   }
 
   return (
@@ -183,7 +193,7 @@ function AppLayout() {
             </button>
             <button
               onClick={toggle}
-              aria-label="Toggle theme"
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
               className="grid h-9 w-9 place-items-center rounded-md border border-border text-muted-foreground transition hover:bg-accent hover:text-foreground"
             >
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -209,6 +219,40 @@ function AppLayout() {
               </Link>
             );
           })}
+        </div>
+        <div
+          data-testid="workflow-controls"
+          className="flex gap-2 overflow-x-auto border-b border-border bg-muted/30 px-3 py-2 sm:px-6"
+          aria-label="Data and judge workflow controls"
+        >
+          <button
+            type="button"
+            onClick={loadDemo}
+            className="min-h-10 shrink-0 rounded-md border border-border bg-background px-3 text-xs font-medium hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Sparkles className="mr-2 inline h-3.5 w-3.5" aria-hidden="true" />
+            {isDemo ? "Reset demo" : "Load demo data"}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              clear();
+              void navigate({ to: "/app/upload" });
+            }}
+            disabled={!rows.length}
+            className="min-h-10 shrink-0 rounded-md border border-border bg-background px-3 text-xs font-medium hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Trash2 className="mr-2 inline h-3.5 w-3.5" aria-hidden="true" />
+            Clear uploaded data
+          </button>
+          <button
+            type="button"
+            onClick={restartJudgeWorkflow}
+            className="min-h-10 shrink-0 rounded-md border border-border bg-background px-3 text-xs font-medium hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <RotateCcw className="mr-2 inline h-3.5 w-3.5" aria-hidden="true" />
+            Restart judge workflow
+          </button>
         </div>
         <WorkflowIndicator workflow={workflow} pathname={loc.pathname} />
         <main className="flex-1 px-6 py-8">

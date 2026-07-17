@@ -7,6 +7,7 @@ import {
   Download,
   Lightbulb,
   ListChecks,
+  PackageOpen,
   Sparkles,
   Target,
   TrendingDown,
@@ -24,7 +25,6 @@ import { useData } from "@/lib/data-store";
 import { aggregateDaily, type DailyAgg } from "@/lib/forecasting";
 import { fetchAnomaliesApi } from "@/lib/backend-api";
 import { generateInsightsApi, type InsightsResponse } from "@/lib/ai-insights";
-import { exportExecutivePdfReport } from "@/lib/report-export";
 import { MODEL_EVIDENCE } from "@/lib/model-validation.generated";
 import { fmtCurrency, fmtPct, fmtRoas } from "@/lib/format";
 import type { CampaignRow } from "@/lib/types";
@@ -34,10 +34,13 @@ export const Route = createFileRoute("/app/insights")({
   component: InsightsPage,
 });
 
-export function InsightsPage() {
-  const { rows, markWorkflow, planningSnapshot } = useData();
+function InsightsPage() {
+  const { rows, markWorkflow, planningSnapshot, forecastSnapshot, dataReadiness } = useData();
   const [insights, setInsights] = useState<InsightsResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
+  const [partialEvidenceWarning, setPartialEvidenceWarning] = useState<string | null>(null);
 
   const summary = useMemo(() => buildSummary(rows), [rows]);
   const managerBrief = useMemo(
@@ -55,27 +58,36 @@ export function InsightsPage() {
 
   async function run() {
     setLoading(true);
+    setGenerationError(null);
+    setPartialEvidenceWarning(null);
     try {
       let anomalyContext = {};
       try {
         anomalyContext = await fetchAnomaliesApi(rows);
       } catch {
         anomalyContext = {};
+        setPartialEvidenceWarning(
+          "Anomaly evidence could not be loaded; the briefing uses the remaining uploaded-data evidence.",
+        );
       }
       const res = await generateInsightsApi({ ...summary!, ...anomalyContext });
       setInsights(res);
       markWorkflow("explain");
       toast.success("Executive briefing generated");
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "Failed to generate insights");
+      const message = error instanceof Error ? error.message : "Failed to generate insights";
+      setGenerationError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   }
 
-  function exportReport() {
+  async function exportReport() {
     if (!insights || !summary) return;
+    setExportError(null);
     try {
+      const { exportExecutivePdfReport } = await import("@/lib/report-export");
       const dates = rows.map((row) => row.date).sort();
       const selectedHorizon = planningSnapshot?.horizon ?? 30;
       const horizonEvidence = MODEL_EVIDENCE.horizons.find(
@@ -92,7 +104,30 @@ export function InsightsPage() {
       markWorkflow("export");
       toast.success("Executive PDF report ready to print");
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "Unable to export report");
+      const message = error instanceof Error ? error.message : "Unable to export report";
+      setExportError(message);
+      toast.error(message);
+    }
+  }
+
+  async function exportEvidenceBundle() {
+    if (!insights || !summary) return;
+    setExportError(null);
+    try {
+      const { downloadEvidenceBundle } = await import("@/lib/evidence-bundle");
+      downloadEvidenceBundle({
+        executiveReport: { ...summary },
+        insights,
+        forecast: forecastSnapshot,
+        planning: planningSnapshot,
+        dataReadiness,
+      });
+      markWorkflow("export");
+      toast.success("ForecastIQ Evidence Bundle downloaded");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Unable to export evidence bundle";
+      setExportError(message);
+      toast.error(message);
     }
   }
 
@@ -104,10 +139,16 @@ export function InsightsPage() {
         actions={
           <div className="flex flex-wrap gap-2">
             {insights && (
-              <Button variant="outline" onClick={exportReport}>
-                <Download className="mr-2 h-4 w-4" />
-                Export PDF
-              </Button>
+              <>
+                <Button variant="outline" onClick={() => void exportReport()}>
+                  <Download className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Export PDF
+                </Button>
+                <Button variant="outline" onClick={() => void exportEvidenceBundle()}>
+                  <PackageOpen className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Evidence Bundle
+                </Button>
+              </>
             )}
             <Button variant="hero" onClick={run} disabled={loading}>
               <Sparkles className="mr-2 h-4 w-4" />
@@ -116,6 +157,35 @@ export function InsightsPage() {
           </div>
         }
       />
+
+      {generationError && (
+        <Card className="mb-6 border-destructive/40 bg-destructive/5 p-4" role="alert">
+          <p className="text-sm font-semibold">Insight generation failed</p>
+          <p className="mt-1 text-sm text-muted-foreground">{generationError}</p>
+          <Button className="mt-3" variant="outline" onClick={() => void run()}>
+            Retry deterministic briefing
+          </Button>
+        </Card>
+      )}
+
+      {exportError && (
+        <Card className="mb-6 border-warning/40 bg-warning/5 p-4" role="alert">
+          <p className="text-sm font-semibold">Report generation failed</p>
+          <p className="mt-1 text-sm text-muted-foreground">{exportError}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Next step: allow browser downloads, then retry PDF or Evidence Bundle export.
+          </p>
+        </Card>
+      )}
+
+      {partialEvidenceWarning && (
+        <Card className="mb-6 border-warning/40 bg-warning/5 p-4" role="status">
+          <p className="text-sm">{partialEvidenceWarning}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Next step: start the backend and regenerate to include anomaly evidence.
+          </p>
+        </Card>
+      )}
 
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Stat label="Revenue (all time)" value={fmtCurrency(summary.totalRevenue)} />
@@ -142,7 +212,11 @@ export function InsightsPage() {
       )}
 
       {loading && (
-        <Card className="bg-gradient-card border-border/60 min-w-0 p-6 text-center sm:p-10">
+        <Card
+          className="bg-gradient-card border-border/60 min-w-0 p-6 text-center sm:p-10"
+          role="status"
+          aria-live="polite"
+        >
           <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           <p className="mt-4 text-sm text-muted-foreground">
             Analyzing {rows.length.toLocaleString()} rows across {summary.channels.length} channels

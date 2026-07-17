@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { DataReadinessScoreCard } from "@/components/data-readiness-score";
 import { parseCSV, toCSV } from "@/lib/csv";
 import { useData } from "@/lib/data-store";
 import { generateDemoData } from "@/lib/demo-data";
@@ -23,27 +24,60 @@ export function UploadPage() {
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  async function handleFile(file: File) {
-    const text = await file.text();
-    const res = parseCSV(text);
-    let finalResult = res;
-    if (res.rows.length > 0) {
-      try {
-        const backendResult = await validateRowsApi(res.rows);
-        finalResult = {
-          ...backendResult,
-          issues: [...res.issues, ...backendResult.issues],
-          totalRows: res.totalRows,
-        };
-      } catch {
-        toast.warning("Backend validation unavailable; using browser validation");
-      }
+  async function handleFiles(fileList: FileList | File[]) {
+    const files = Array.from(fileList);
+    if (!files.length) return;
+    const parsedFiles = await Promise.all(
+      files.map(async (file, sourceIndex) => ({
+        file,
+        sourceIndex,
+        parsed: parseCSV(await file.text()),
+      })),
+    );
+    let rowOffset = 0;
+    const browserIssues = parsedFiles.flatMap(({ parsed, file }) => {
+      const adjusted = parsed.issues.map((issue) => ({
+        ...issue,
+        row: issue.row > 1 ? issue.row + rowOffset : issue.row,
+        message: files.length > 1 ? `${file.name}: ${issue.message}` : issue.message,
+      }));
+      rowOffset += parsed.totalRows;
+      return adjusted;
+    });
+    const browserRows = parsedFiles.flatMap(({ parsed }) => parsed.rows);
+    const totalRows = parsedFiles.reduce((sum, { parsed }) => sum + parsed.totalRows, 0);
+    const rawRows = parsedFiles.flatMap(({ parsed, file, sourceIndex }) =>
+      parsed.rawRows.map((row) => ({
+        ...row,
+        __source_file_id: `source-${sourceIndex + 1}`,
+        __source_file_name: file.name,
+      })),
+    );
+    let finalResult: ValidationResult = {
+      rows: browserRows,
+      issues: browserIssues,
+      totalRows,
+      validRows: browserRows.length,
+    };
+    try {
+      const backendResult = await validateRowsApi(rawRows);
+      finalResult = {
+        ...backendResult,
+        issues: uniqueIssues([...browserIssues, ...backendResult.issues]),
+        totalRows,
+      };
+    } catch {
+      toast.warning(
+        "Backend validation unavailable; using browser validation without a readiness score",
+      );
     }
     setResult(finalResult);
     if (finalResult.rows.length > 0) {
-      setRows(finalResult.rows, false);
+      setRows(finalResult.rows, false, finalResult.dataReadiness ?? null);
       markWorkflow("validate");
-      toast.success(`Imported ${finalResult.rows.length.toLocaleString()} rows`);
+      toast.success(
+        `Imported ${finalResult.rows.length.toLocaleString()} rows from ${files.length} file${files.length === 1 ? "" : "s"}`,
+      );
     } else {
       toast.error("No valid rows found in file");
     }
@@ -148,8 +182,7 @@ export function UploadPage() {
         onDrop={(e) => {
           e.preventDefault();
           setDragging(false);
-          const f = e.dataTransfer.files[0];
-          if (f) handleFile(f);
+          if (e.dataTransfer.files.length) void handleFiles(e.dataTransfer.files);
         }}
       >
         <div className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-gradient-brand shadow-glow">
@@ -165,14 +198,14 @@ export function UploadPage() {
           ref={inputRef}
           type="file"
           accept=".csv,text/csv"
+          multiple
           className="hidden"
           onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) handleFile(f);
+            if (e.target.files?.length) void handleFiles(e.target.files);
           }}
         />
         <Button variant="hero" className="mt-6" onClick={openFilePicker}>
-          Choose file
+          Choose file(s)
         </Button>
         <p className="mt-2 text-[13px] text-muted-foreground">
           Need sample data?{" "}
@@ -219,6 +252,17 @@ export function UploadPage() {
           </div>
         </Card>
       </div>
+
+      {result && (
+        <div className="mt-6">
+          <DataReadinessScoreCard
+            score={result.dataReadiness ?? null}
+            status={result.dataReadiness ? "available" : "unavailable"}
+            error="The backend readiness assessment could not be completed."
+            context="upload"
+          />
+        </div>
+      )}
 
       {result && (
         <Card className="mt-6 min-w-0 border-border/60 bg-gradient-card p-5">
@@ -331,4 +375,10 @@ function getIssueSeverity(type: string) {
   const normalized = type.toLowerCase();
   if (normalized.includes("warning") || normalized === "duplicate") return "warning";
   return "error";
+}
+
+function uniqueIssues(issues: ValidationResult["issues"]) {
+  return Array.from(
+    new Map(issues.map((issue) => [`${issue.row}|${issue.type}|${issue.message}`, issue])).values(),
+  );
 }

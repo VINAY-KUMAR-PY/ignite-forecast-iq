@@ -4,7 +4,7 @@ import json
 import logging
 import os
 import secrets
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from time import perf_counter
 
@@ -16,7 +16,8 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
-from .data_preprocessing import validate_records
+from .data_preprocessing import validate_records, validate_records_with_context
+from .data_readiness import score_data_readiness
 from .decision_support import compute_driver_evidence, estimate_causal_effects
 from .anomaly import compute_trend_breaks, detect_anomalies
 from .forecasting import forecast_frame
@@ -324,7 +325,14 @@ def health_head() -> Response:
 @app.post("/api/validate", response_model=ValidationResponse)
 def validate_data(request: ValidationRequest) -> ValidationResponse:
     """Validate uploaded campaign rows before they power forecasts."""
-    _, validation = validate_records(request.rows)
+    frame, validation, context = validate_records_with_context(request.rows)
+    readiness = score_data_readiness(
+        frame,
+        validation,
+        context,
+        as_of_date=request.asOfDate or date.today().isoformat(),
+    )
+    validation = validation.model_copy(update={"dataReadiness": readiness})
     logger.info(
         "validate request complete: %s/%s valid rows, %s issues",
         validation.validRows,

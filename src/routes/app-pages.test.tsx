@@ -2,6 +2,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type React from "react";
+import type { DataReadinessScore } from "@/lib/types";
 import { DataProvider } from "@/lib/data-store";
 import { generateDemoData } from "@/lib/demo-data";
 import type {
@@ -68,6 +69,70 @@ function deferred<T>() {
     reject = rej;
   });
   return { promise, resolve, reject };
+}
+
+function readinessScore(): DataReadinessScore {
+  return {
+    score: 94,
+    rating: "Excellent",
+    evaluatedAsOf: "2026-07-17",
+    confidenceExplanation: "Strong validation evidence supports stable forecasting.",
+    components: [
+      {
+        key: "schema_required",
+        label: "Schema and required fields",
+        score: 100,
+        weight: 20,
+        summary: "All core fields mapped.",
+      },
+      {
+        key: "completeness_validity",
+        label: "Completeness and validity",
+        score: 100,
+        weight: 20,
+        summary: "No invalid values.",
+      },
+      {
+        key: "historical_coverage",
+        label: "Historical coverage",
+        score: 90,
+        weight: 20,
+        summary: "Long history.",
+      },
+      {
+        key: "freshness",
+        label: "Data freshness",
+        score: 90,
+        weight: 10,
+        summary: "Current data.",
+      },
+      {
+        key: "channel_campaign_coverage",
+        label: "Channel and campaign coverage",
+        score: 90,
+        weight: 10,
+        summary: "Broad coverage.",
+      },
+      {
+        key: "spend_revenue_consistency",
+        label: "Spend and revenue consistency",
+        score: 90,
+        weight: 10,
+        summary: "Strong coverage.",
+      },
+      {
+        key: "outliers_duplicates",
+        label: "Outliers and duplicates",
+        score: 100,
+        weight: 10,
+        summary: "No severe issues.",
+      },
+    ],
+    positiveEvidence: ["All core fields mapped."],
+    warnings: [],
+    recommendedActions: [],
+    metrics: { historyDays: 365, validRows: 100, usableChannels: 3, dateConsistencyPct: 100 },
+  };
 }
 
 function forecastResponse(horizonDays: 30 | 60 | 90): ForecastApiResponse {
@@ -329,6 +394,7 @@ describe("core dashboard route behavior", () => {
       issues: [],
       totalRows: 1,
       validRows: 1,
+      dataReadiness: readinessScore(),
     });
     apiMocks.fetchForecastApi.mockResolvedValue(forecastResponse(30));
     apiMocks.simulateBudgetsApi.mockResolvedValue(simulationResponse());
@@ -350,6 +416,7 @@ describe("core dashboard route behavior", () => {
       issues: [{ row: 2, type: "invalid_revenue", message: "Negative revenue" }],
       totalRows: 1,
       validRows: 1,
+      dataReadiness: readinessScore(),
     });
     const user = userEvent.setup();
     const { container } = renderWithData(<UploadPage />);
@@ -367,6 +434,7 @@ describe("core dashboard route behavior", () => {
     expect(within(table).getByText("Row")).toBeInTheDocument();
     expect(within(table).getByText("invalid revenue")).toBeInTheDocument();
     expect(within(table).getByText("Negative revenue")).toBeInTheDocument();
+    expect(screen.getByTestId("data-readiness-value")).toHaveTextContent("94");
   });
 
   it("lets the user change the forecast horizon selector", async () => {

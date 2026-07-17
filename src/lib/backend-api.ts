@@ -512,8 +512,11 @@ async function getJson<T>(path: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export function validateRowsApi(rows: CampaignRow[]) {
-  return postJson<ValidationResult>("/api/validate", { rows });
+export function validateRowsApi(rows: Array<CampaignRow | Record<string, unknown>>) {
+  return postJson<ValidationResult>("/api/validate", {
+    rows,
+    asOfDate: new Date().toISOString().slice(0, 10),
+  });
 }
 
 export function fetchForecastApi(

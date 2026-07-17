@@ -19,8 +19,17 @@ test("CSV upload covers dashboard, forecasts, simulator, and fallback insights",
   await expect(page.getByText("Uploaded dataset")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText("Validation details")).toBeVisible();
   await expect(page.getByText("All rows passed validation.")).toBeVisible();
+  const uploadReadiness = page.getByTestId("data-readiness-score");
+  await expect(uploadReadiness).toBeVisible({ timeout: 30_000 });
+  await expect(uploadReadiness.getByTestId("data-readiness-value")).toHaveText(/\d+/);
+  await expect(uploadReadiness.getByTestId("data-readiness-rating")).toBeVisible();
+  await uploadReadiness.getByText("How this score is calculated").click();
+  await expect(
+    uploadReadiness.getByText(/overall score is the rounded weighted sum/i),
+  ).toBeVisible();
 
   await page.getByRole("link", { name: /decision center/i }).click();
+  await expect(page.getByTestId("data-readiness-score")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByTestId("business-impact-dashboard")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByTestId("executive-decision-center")).toBeVisible();
 
@@ -29,6 +38,8 @@ test("CSV upload covers dashboard, forecasts, simulator, and fallback insights",
     timeout: 45_000,
   });
   await expect(page.getByRole("heading", { name: "ROAS forecast" })).toBeVisible();
+  await expect(page.getByText("Data quality and forecast confidence")).toBeVisible();
+  await expect(page.getByTestId("data-readiness-score")).toBeVisible();
   await expect(page.getByTestId("confidence-intervals")).toBeVisible({ timeout: 45_000 });
   await expect(page.getByText("Expected revenue (30d)")).toBeVisible();
 

@@ -34,6 +34,7 @@ import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { DataReadinessPanel } from "@/components/data-readiness-score";
 import { fetchAnomaliesApi, type AnomalyResponse } from "@/lib/backend-api";
 
 export const Route = createFileRoute("/app/")({
@@ -260,6 +261,8 @@ function Dashboard() {
         title="Executive Decision Center"
         description="Start here for forecasted revenue, expected ROAS, risk, opportunity, and the next budget move."
       />
+
+      <DataReadinessPanel context="decision" />
 
       {anomalyResponse && anomalyResponse.anomalies.length > 0 && !dismissedAnomalies && (
         <Card

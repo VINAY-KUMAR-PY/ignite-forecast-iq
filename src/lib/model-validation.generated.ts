@@ -2,7 +2,11 @@
 export type ModelEvidenceHorizon = {
   readonly horizonDays: number;
   readonly selectedMethod: string;
+  readonly challengerMethod: string;
   readonly selectionReason: string;
+  readonly validationResult: string;
+  readonly challengerRevenueMapePct: number | null;
+  readonly majorLimitation: string;
   readonly revenueMapePct: number | null;
   readonly roasMapePct: number | null;
   readonly revenueIntervalCoveragePct: number | null;
@@ -51,6 +55,16 @@ export type ModelEvidence = {
     readonly version: number | null;
     readonly modelType: string;
     readonly scikitLearnVersion: string;
+    readonly trainingRows: number | null;
+    readonly trainingSamples: number | null;
+    readonly trainingStartDate: string | null;
+    readonly trainingEndDate: string | null;
+  };
+  readonly runtime: {
+    readonly verificationDate: string | null;
+    readonly deterministic: boolean | null;
+    readonly networkRequired: boolean | null;
+    readonly outputSha256: string | null;
   };
   readonly sources: readonly string[];
   readonly error?: string;
@@ -64,7 +78,13 @@ export const MODEL_EVIDENCE: ModelEvidence = {
     {
       horizonDays: 30,
       selectedMethod: "trained_model",
+      challengerMethod: "safe_baseline_fallback",
       selectionReason: "Trained residual correction has statistically lower paired error.",
+      validationResult:
+        "Revenue: The trained model has lower revenue MAE than the safe baseline by 33.26% on this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 16.67% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability.",
+      challengerRevenueMapePct: 4.29,
+      majorLimitation:
+        "Validation covers 72 segment-fold observations; performance on unseen regimes can still differ.",
       revenueMapePct: 2.81,
       roasMapePct: 1.26,
       revenueIntervalCoveragePct: 95.83,
@@ -76,8 +96,14 @@ export const MODEL_EVIDENCE: ModelEvidence = {
     {
       horizonDays: 60,
       selectedMethod: "trained_model_baseline_anchored",
+      challengerMethod: "trained_model",
       selectionReason:
         "Evaluator scorer applied the baseline anchor for this horizon after rolling-origin evidence found no reliable trained revenue advantage.",
+      validationResult:
+        "Revenue: The trained model and safe baseline are tied on revenue MAE for this slice. ROAS: The trained model has lower roas MAE than the safe baseline by 14.29% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability.",
+      challengerRevenueMapePct: 10.11,
+      majorLimitation:
+        "Validation covers 72 segment-fold observations; performance on unseen regimes can still differ.",
       revenueMapePct: 10.11,
       roasMapePct: 1.56,
       revenueIntervalCoveragePct: 90.28,
@@ -89,8 +115,13 @@ export const MODEL_EVIDENCE: ModelEvidence = {
     {
       horizonDays: 90,
       selectedMethod: "trained_model_baseline_anchored",
+      challengerMethod: "trained_model",
       selectionReason:
         "Evaluator scorer applied the baseline anchor for this horizon after rolling-origin evidence found no reliable trained revenue advantage.",
+      validationResult:
+        "Revenue: The trained model and safe baseline are tied on revenue MAE for this slice. ROAS: The safe baseline has lower roas MAE than the trained model by 12.50% on this slice. ForecastIQ keeps both systems because hidden data can favor either point accuracy or reliability.",
+      challengerRevenueMapePct: 7.89,
+      majorLimitation: "Only 2 rolling-origin folds were available at this horizon.",
       revenueMapePct: 7.89,
       roasMapePct: 2.46,
       revenueIntervalCoveragePct: 86.11,
@@ -163,6 +194,16 @@ export const MODEL_EVIDENCE: ModelEvidence = {
     version: 5,
     modelType: "trained_model",
     scikitLearnVersion: "1.7.2",
+    trainingRows: 2160,
+    trainingSamples: 738,
+    trainingStartDate: "2025-08-22",
+    trainingEndDate: "2026-05-18",
+  },
+  runtime: {
+    verificationDate: "2026-07-17T09:56:58Z",
+    deterministic: true,
+    networkRequired: false,
+    outputSha256: "602F679A33EE27BA04ECDFC16E3BC4EE357606183F4E78741F11217633EE59A1",
   },
   sources: [
     "reports/backtest_report.json",
@@ -170,6 +211,7 @@ export const MODEL_EVIDENCE: ModelEvidence = {
     "reports/verification_summary.json",
     "requirements.txt",
     "output/predictions.csv",
+    "data/sample_campaigns.csv",
   ],
 } as const;
 

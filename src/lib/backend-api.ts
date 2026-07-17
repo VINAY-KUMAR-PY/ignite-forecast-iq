@@ -478,13 +478,37 @@ function safeSpendCurveChannel(rows: CampaignRow[], channel: string): string {
   return channels.includes(channel) ? channel : channels[0];
 }
 
-async function postJson<T>(path: string, body: unknown): Promise<T> {
+interface RequestOptions {
+  signal?: AbortSignal;
+}
+
+const inFlightPosts = new Map<string, Promise<unknown>>();
+
+async function postJson<T>(path: string, body: unknown, options: RequestOptions = {}): Promise<T> {
+  const serializedBody = JSON.stringify(body);
+  const requestKey = `${path}:${serializedBody}`;
+  let request = inFlightPosts.get(requestKey) as Promise<T> | undefined;
+  if (!request) {
+    request = performPost<T>(path, serializedBody);
+    inFlightPosts.set(requestKey, request);
+    void request
+      .finally(() => {
+        globalThis.setTimeout(() => {
+          if (inFlightPosts.get(requestKey) === request) inFlightPosts.delete(requestKey);
+        }, 1_000);
+      })
+      .catch(() => undefined);
+  }
+  return abortable(request, options.signal);
+}
+
+async function performPost<T>(path: string, serializedBody: string): Promise<T> {
   let response: Response;
   try {
     response = await fetch(`${API_BASE}${path}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: serializedBody,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "network request failed";
@@ -497,11 +521,31 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-async function getJson<T>(path: string): Promise<T> {
+function abortable<T>(request: Promise<T>, signal?: AbortSignal): Promise<T> {
+  if (!signal) return request;
+  if (signal.aborted) return Promise.reject(new DOMException("Request canceled", "AbortError"));
+  return new Promise<T>((resolve, reject) => {
+    const cancel = () => reject(new DOMException("Request canceled", "AbortError"));
+    signal.addEventListener("abort", cancel, { once: true });
+    void request.then(
+      (value) => {
+        signal.removeEventListener("abort", cancel);
+        resolve(value);
+      },
+      (error) => {
+        signal.removeEventListener("abort", cancel);
+        reject(error);
+      },
+    );
+  });
+}
+
+async function getJson<T>(path: string, options: RequestOptions = {}): Promise<T> {
   let response: Response;
   try {
-    response = await fetch(`${API_BASE}${path}`);
+    response = await fetch(`${API_BASE}${path}`, { signal: options.signal });
   } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") throw error;
     const message = error instanceof Error ? error.message : "network request failed";
     throw new Error(`Failed to reach ForecastIQ backend at ${API_BASE}${path}: ${message}`);
   }
@@ -524,18 +568,20 @@ export function fetchForecastApi(
   horizon: 30 | 60 | 90,
   level: "overall" | "channel" | "campaign_type" | "campaign",
   value?: string,
+  options: RequestOptions = {},
 ) {
-  return postJson<ForecastApiResponse>("/api/forecast", { rows, horizon, level, value });
+  return postJson<ForecastApiResponse>("/api/forecast", { rows, horizon, level, value }, options);
 }
 
 export function simulateBudgetsApi(
   rows: CampaignRow[],
   horizon: 30 | 60 | 90,
   budgets: Record<string, number>,
+  options: RequestOptions = {},
 ) {
   const cleanedRows = safeRows(rows);
   const body = { rows: cleanedRows, horizon, budgets: safeBudgetMap(cleanedRows, budgets) };
-  return postJson<SimulationApiResponse>("/api/simulate", body);
+  return postJson<SimulationApiResponse>("/api/simulate", body, options);
 }
 
 export function decisionSupportApi(
@@ -544,6 +590,7 @@ export function decisionSupportApi(
   budgets: Record<string, number>,
   targets: { targetRevenue?: number; targetRoas?: number } = {},
   scenarios: WhatIfScenarioInput[] = [],
+  options: RequestOptions = {},
 ) {
   const cleanedRows = safeRows(rows);
   const cleanedBudgets = safeBudgetMap(cleanedRows, budgets);
@@ -554,7 +601,7 @@ export function decisionSupportApi(
     ...safeTargets(targets, cleanedBudgets),
     scenarios: safeScenarios(cleanedRows, scenarios),
   };
-  return postJson<DecisionSupportResponse>("/api/decision-support", body);
+  return postJson<DecisionSupportResponse>("/api/decision-support", body, options);
 }
 
 export function generateInsightsApi(summary: Record<string, unknown>) {
@@ -566,6 +613,7 @@ export function fetchSpendCurveApi(
   channel: string,
   horizon: 30 | 60 | 90,
   currentBudget: number,
+  options: RequestOptions = {},
 ) {
   const cleanedRows = safeRows(rows);
   const body: SpendCurveRequest = {
@@ -574,7 +622,7 @@ export function fetchSpendCurveApi(
     horizon,
     currentBudget: finiteNonNegative(currentBudget),
   };
-  return postJson<SpendCurveResponse>("/api/spend-curve", body);
+  return postJson<SpendCurveResponse>("/api/spend-curve", body, options);
 }
 
 export function fetchAnomaliesApi(rows: CampaignRow[]) {
@@ -582,6 +630,16 @@ export function fetchAnomaliesApi(rows: CampaignRow[]) {
   return postJson<AnomalyResponse>("/api/anomalies", body);
 }
 
+let modelValidationRequest: Promise<ModelValidationResponse> | null = null;
+
 export function fetchModelValidationApi() {
-  return getJson<ModelValidationResponse>("/api/model-validation");
+  if (!modelValidationRequest) {
+    modelValidationRequest = getJson<ModelValidationResponse>("/api/model-validation").catch(
+      (error) => {
+        modelValidationRequest = null;
+        throw error;
+      },
+    );
+  }
+  return modelValidationRequest;
 }

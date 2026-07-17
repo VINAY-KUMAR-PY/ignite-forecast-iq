@@ -24,6 +24,14 @@ import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { ModelPathConfidenceBadge } from "@/components/model-path-confidence-badge";
 import { DataReadinessPanel } from "@/components/data-readiness-score";
+import {
+  ForecastConfidencePanel,
+  ForecastContributionWaterfall,
+  ForecastEvidencePanel,
+  HistoricalForecastComparison,
+  WhyThisModelPanel,
+  type ChannelForecastComparison,
+} from "@/components/forecast-evidence";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -44,6 +52,7 @@ import {
   type ModelValidationResponse,
 } from "@/lib/backend-api";
 import { fmtCompact, fmtCurrency, fmtDate, fmtRoas } from "@/lib/format";
+import { MODEL_EVIDENCE } from "@/lib/model-validation.generated";
 import { KpiCard } from "@/components/kpi-card";
 import type { CampaignRow, ForecastPoint } from "@/lib/types";
 
@@ -55,8 +64,8 @@ export const Route = createFileRoute("/app/forecast")({
 type Level = "overall" | "channel" | "campaign_type" | "campaign";
 type ForecastTarget = "revenue" | "roas";
 
-export function ForecastPage() {
-  const { rows, markWorkflow } = useData();
+function ForecastPage() {
+  const { rows, markWorkflow, dataReadiness, planningSnapshot, setForecastSnapshot } = useData();
   const [horizon, setHorizon] = useState<30 | 60 | 90>(30);
   const [level, setLevel] = useState<Level>("overall");
   const [value, setValue] = useState<string>("");
@@ -64,6 +73,8 @@ export function ForecastPage() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [modelValidation, setModelValidation] = useState<ModelValidationResponse | null>(null);
   const [modelValidationError, setModelValidationError] = useState<string | null>(null);
+  const [channelComparisons, setChannelComparisons] = useState<ChannelForecastComparison[]>([]);
+  const [channelComparisonError, setChannelComparisonError] = useState<string | null>(null);
 
   const options = useMemo(() => {
     if (level === "overall") return [];
@@ -97,24 +108,77 @@ export function ForecastPage() {
       setApiForecast(null);
       return;
     }
-    let active = true;
+    const controller = new AbortController();
     setApiError(null);
     setApiForecast(null);
-    fetchForecastApi(rows, horizon, level, selectedValue)
+    fetchForecastApi(rows, horizon, level, selectedValue, { signal: controller.signal })
       .then((response) => {
-        if (!active) return;
         setApiForecast(response);
+        setForecastSnapshot({ horizon, level, value: selectedValue, response });
         markWorkflow("forecast");
       })
       .catch((error: Error) => {
-        if (!active) return;
+        if (error.name === "AbortError") return;
         setApiForecast(null);
         setApiError(error.message);
       });
     return () => {
-      active = false;
+      controller.abort();
     };
-  }, [rows, horizon, level, selectedValue, markWorkflow]);
+  }, [rows, horizon, level, selectedValue, markWorkflow, setForecastSnapshot]);
+
+  useEffect(() => {
+    if (
+      !rows.length ||
+      level !== "overall" ||
+      !apiForecast ||
+      apiForecast.summary.horizonDays !== horizon
+    ) {
+      setChannelComparisons([]);
+      setChannelComparisonError(null);
+      return;
+    }
+    const controller = new AbortController();
+    const channels = [...new Set(rows.map((row) => row.channel))].sort();
+    setChannelComparisons([]);
+    setChannelComparisonError(null);
+    void Promise.allSettled(
+      channels.map(async (channel) => {
+        const response = await fetchForecastApi(rows, horizon, "channel", channel, {
+          signal: controller.signal,
+        });
+        const comparable = comparableRows(
+          rows.filter((row) => row.channel === channel),
+          horizon,
+        );
+        const revenue = comparable.reduce((sum, row) => sum + row.revenue, 0);
+        const spend = comparable.reduce((sum, row) => sum + row.spend, 0);
+        return {
+          channel,
+          historicalRevenue: revenue,
+          expectedRevenue: response.summary.expectedRevenue,
+          lowerRevenue: response.summary.lowerRevenue,
+          upperRevenue: response.summary.upperRevenue,
+          historicalRoas: spend > 0 ? revenue / spend : null,
+          expectedRoas:
+            response.summary.roasStatus === "not_computable" ? null : response.summary.avgRoas,
+        } satisfies ChannelForecastComparison;
+      }),
+    ).then((results) => {
+      if (controller.signal.aborted) return;
+      const successful = results.flatMap((result) =>
+        result.status === "fulfilled" ? [result.value] : [],
+      );
+      const failures = results.length - successful.length;
+      setChannelComparisons(successful);
+      if (failures > 0) {
+        setChannelComparisonError(
+          `${failures} of ${results.length} channel forecasts could not be loaded.`,
+        );
+      }
+    });
+    return () => controller.abort();
+  }, [apiForecast, horizon, level, rows]);
 
   useEffect(() => {
     if (!rows.length) return;
@@ -165,6 +229,14 @@ export function ForecastPage() {
   const revData = buildForecastChartSeries(revFc);
   const roasData = buildForecastChartSeries(roasFc);
   const diagnostics = apiForecast?.summary.diagnostics;
+  const historicalComparableRows = comparableRows(filtered, horizon);
+  const historicalRevenue = historicalComparableRows.reduce((sum, row) => sum + row.revenue, 0);
+  const historicalSpend = historicalComparableRows.reduce((sum, row) => sum + row.spend, 0);
+  const selectedEvidence = MODEL_EVIDENCE.horizons.find((row) => row.horizonDays === horizon);
+  const readinessMetric = (key: string) => {
+    const metric = dataReadiness?.metrics[key];
+    return typeof metric === "number" && Number.isFinite(metric) ? metric : null;
+  };
 
   function retryForecast() {
     setApiError(null);
@@ -194,6 +266,8 @@ export function ForecastPage() {
       <ModelPathConfidenceBadge />
 
       <DataReadinessPanel context="forecast" />
+
+      <ForecastEvidencePanel />
 
       {apiError && !apiForecast && (
         <Card className="mb-6 border-warning/40 bg-warning/5 p-5">
@@ -321,6 +395,18 @@ export function ForecastPage() {
         />
       </div>
 
+      <HistoricalForecastComparison
+        horizon={horizon}
+        historicalRevenue={historicalRevenue}
+        expectedRevenue={expectedRev}
+        lowerRevenue={lowerRev}
+        upperRevenue={upperRev}
+        historicalRoas={historicalSpend > 0 ? historicalRevenue / historicalSpend : null}
+        expectedRoas={apiForecast?.summary.roasStatus === "not_computable" ? null : summaryRoas}
+        channels={channelComparisons}
+        partialError={channelComparisonError}
+      />
+
       <Card
         data-testid="confidence-intervals"
         className="mt-6 bg-gradient-card border-border/60 min-w-0 p-5"
@@ -361,6 +447,22 @@ export function ForecastPage() {
           />
         </div>
       </Card>
+
+      <ForecastConfidencePanel
+        inputs={{
+          readiness: dataReadiness,
+          historyDays: readinessMetric("historyDays"),
+          freshnessDays: readinessMetric("freshnessDays"),
+          missingValueRatePct: readinessMetric("missingValueRatePct"),
+          modelPath:
+            selectedEvidence?.selectedMethod ?? apiForecast?.summary.modelType ?? "unknown",
+          intervalWidthPct: revenueIntervalWidthPct,
+          sampleCount: filtered.length,
+          budgetZone: planningSnapshot?.decisionSupport.overallPlanZone.zone ?? null,
+        }}
+      />
+
+      <WhyThisModelPanel />
 
       <ModelValidationPanel validation={modelValidation} error={modelValidationError} />
 
@@ -590,6 +692,8 @@ export function ForecastPage() {
               <AccuracyPanel title="ROAS model" metrics={diagnostics.roasAccuracy} />
             </div>
           </Card>
+
+          <ForecastContributionWaterfall drivers={diagnostics.whyThisForecast ?? []} />
 
           <Card
             data-testid="explainability-center"
@@ -1166,6 +1270,12 @@ function alignForecastDates(
     nextDate.setUTCDate(base.getUTCDate() + index + 1);
     return { ...point, date: nextDate.toISOString().slice(0, 10) };
   });
+}
+
+function comparableRows(rows: CampaignRow[], horizon: number) {
+  const dates = [...new Set(rows.map((row) => row.date))].sort();
+  const comparableDates = new Set(dates.slice(-Math.min(horizon, dates.length)));
+  return rows.filter((row) => comparableDates.has(row.date));
 }
 
 type TooltipPayload = {

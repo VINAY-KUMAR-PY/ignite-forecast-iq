@@ -19,21 +19,23 @@ MIN_COMPARABLE_WINDOWS = 3
 
 
 def comparable_spend_windows(daily_spend: Sequence[float], horizon: int) -> list[float]:
-    """Return deterministic, non-overlapping, horizon-sized windows.
+    """Return deterministic rolling horizon-sized spend windows.
 
-    Windows are anchored at the latest observation so the recent baseline is
-    directly comparable with the plan. Incomplete oldest windows are excluded.
-    Missing dates must be supplied as zero-spend values by the caller.
+    The last window is anchored at the latest observation so the recent
+    baseline is directly comparable with the plan. Missing dates must be
+    supplied as zero-spend values by the caller.
     """
     width = max(1, int(horizon))
     cleaned = [_non_negative(value) for value in daily_spend]
-    windows: list[float] = []
-    end = len(cleaned)
-    while end >= width:
-        start = end - width
-        windows.append(round(sum(cleaned[start:end]), 2))
-        end = start
-    return list(reversed(windows))
+    if len(cleaned) < width:
+        return []
+    prefix = [0.0]
+    for value in cleaned:
+        prefix.append(prefix[-1] + value)
+    return [
+        round(prefix[end] - prefix[end - width], 2)
+        for end in range(width, len(cleaned) + 1)
+    ]
 
 
 def build_channel_planning_zone(
@@ -339,7 +341,20 @@ def build_optimizer_plan(
         notes.append(
             f"Requested ${requested_total:,.2f} exceeds the ${max_supported_total:,.2f} combined safe ceiling."
         )
-    recommended_total = min(requested_total, max_supported_total)
+    hold_outside_supported = (
+        current_budget > max_supported_total + 0.005
+        and requested_total >= current_budget
+    )
+    recommended_total = (
+        current_budget
+        if hold_outside_supported
+        else min(requested_total, max_supported_total)
+    )
+    if hold_outside_supported:
+        notes.append(
+            "The returned allocation is an infeasible scenario comparison at the current total; "
+            "the maximum supported total is shown as the safe alternative."
+        )
 
     weights: list[float] = []
     controlled_caps: list[float] = []
@@ -359,7 +374,11 @@ def build_optimizer_plan(
         )
         safe = safe_ceilings.get(channel, 0.0)
         controlled_limit = max(budget * 1.5, safe * 0.2) if safe > 0 else 0.0
-        controlled_caps.append(min(safe, controlled_limit))
+        controlled_caps.append(
+            max(safe, budget * 1.5)
+            if hold_outside_supported
+            else min(safe, controlled_limit)
+        )
 
     controlled_total = sum(controlled_caps)
     if recommended_total > controlled_total + 0.005:
@@ -382,6 +401,12 @@ def build_optimizer_plan(
             "Increase" if delta > 0.005 else "Reduce" if delta < -0.005 else "Hold"
         )
         zone = zone_by_channel.get(channel, {})
+        safe_ceiling = _non_negative(zone.get("safeBudgetCeiling", 0))
+        constraint_wording = (
+            f"scenario allocation exceeds the ${safe_ceiling:,.2f} safe ceiling"
+            if recommended_budget > safe_ceiling + 0.005
+            else f"constrained to the ${safe_ceiling:,.2f} evidence ceiling"
+        )
         recommendations.append(
             {
                 "channel": channel,
@@ -396,7 +421,7 @@ def build_optimizer_plan(
                 "expectedRoas": round(_ratio(channel_revenue, recommended_budget), 2),
                 "rationale": (
                     f"{direction} using ROAS, momentum and channel health, constrained to the "
-                    f"${_non_negative(zone.get('safeBudgetCeiling', 0)):,.2f} evidence ceiling."
+                    f"available evidence; {constraint_wording}."
                 ),
             }
         )

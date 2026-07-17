@@ -39,21 +39,21 @@ TRANSCRIPT_PROVENANCE: tuple[dict[str, str], ...] = (
         "file": "live_gemini_transcript_20260707T051959Z.json",
         "captured_at_utc": "20260707T051959Z",
         "model": "gemini-2.5-flash",
-        "sha256": "109ad76778223d3dbe957f53b4d9b9054d06226dc5e55b0417f3dcce7b91bc10",
+        "sha256": "8c0f506c92546d30025b1f8d841f6452410310b84ede875eeb6678d0423d1dde",
     },
     {
         "id": "live_gemini_transcript_20260705T051036Z",
         "file": "live_gemini_transcript_20260705T051036Z.json",
         "captured_at_utc": "20260705T051036Z",
         "model": "gemini-2.5-flash",
-        "sha256": "8f6956e0409000e4ce1aacd629ac15fb1274ce7f88b27d53a2ade2bd3e880dee",
+        "sha256": "ec388a0990109289159211dc8fb9084af7293bbad50ea14b7b25ecd69de543a3",
     },
     {
         "id": "live_gemini_transcript_20260704T142147Z",
         "file": "live_gemini_transcript_20260704T142147Z.json",
         "captured_at_utc": "20260704T142147Z",
         "model": "gemini-2.5-flash",
-        "sha256": "c52f0cdc7593aa0d5b10a1333d221d38a324bd0093cca0f1a04b41d56bb8f1f0",
+        "sha256": "6229638b81683d339fbfa1877f39421500eae12452a51280fe34b8da6e7673d7",
     },
 )
 
@@ -269,18 +269,28 @@ def build_structured_causal_evidence(
         channel_metric = metrics_by_channel.get(channel, {})
         effect_size = safe_float(strongest.get("incrementalRevenue"))
         confidence = str(strongest.get("confidence") or "low").lower()
-        effect_direction = str(strongest.get("effectDirection") or ("positive" if effect_size >= 0 else "negative"))
+        effect_direction = str(
+            strongest.get("effectDirection")
+            or ("positive" if effect_size >= 0 else "negative")
+        )
         baseline_roas = safe_float(channel_metric.get("baseline_roas"), 0.0)
         observed_roas = safe_float(channel_metric.get("observed_roas"), 0.0)
         baseline_revenue = safe_float(channel_metric.get("baseline_revenue"), 0.0)
-        delta_percent = safe_ratio(effect_size, baseline_revenue) * 100 if baseline_revenue else safe_float(
-            strongest.get("roasEffect"), 0.0
-        ) * 100
-        campaign_type = str(channel_metric.get("campaign_type") or "mixed_campaign_types")
+        delta_percent = (
+            safe_ratio(effect_size, baseline_revenue) * 100
+            if baseline_revenue
+            else safe_float(strongest.get("roasEffect"), 0.0) * 100
+        )
+        campaign_type = str(
+            channel_metric.get("campaign_type") or "mixed_campaign_types"
+        )
         intervention_detected = bool(
             strongest.get(
                 "intervention_detected",
-                strongest.get("interventionDetected", strongest.get("statisticallySupported", True)),
+                strongest.get(
+                    "interventionDetected",
+                    strongest.get("statisticallySupported", True),
+                ),
             )
         )
         supporting_metrics = {
@@ -294,7 +304,9 @@ def build_structured_causal_evidence(
                 safe_float(strongest.get("upperRevenue"), 0.0),
             ],
             "parallel_trend_passed": bool(strongest.get("parallelTrendPassed")),
-            "power_check_passed": bool(strongest.get("powerCheckPassed", intervention_detected)),
+            "power_check_passed": bool(
+                strongest.get("powerCheckPassed", intervention_detected)
+            ),
             "low_power_reason": str(strongest.get("lowPowerReason") or ""),
             "pre_window_days": int(safe_float(strongest.get("preWindowDays"), 0)),
             "post_window_days": int(safe_float(strongest.get("postWindowDays"), 0)),
@@ -314,7 +326,11 @@ def build_structured_causal_evidence(
         effect_size = 0.0
         confidence = "low"
         effect_direction = "neutral"
-        delta_percent = safe_ratio(observed_roas - baseline_roas, baseline_roas) * 100 if baseline_roas else 0.0
+        delta_percent = (
+            safe_ratio(observed_roas - baseline_roas, baseline_roas) * 100
+            if baseline_roas
+            else 0.0
+        )
         campaign_type = str(channel_metric.get("campaign_type") or "portfolio")
         intervention_detected = bool(anomalies)
         supporting_metrics = {
@@ -340,7 +356,9 @@ def build_structured_causal_evidence(
         limitations = ["no stable difference-in-differences estimate was available"]
 
     if planned_budgets:
-        limitations.append("planned budget scenario changes the interpretation but is not experimental evidence")
+        limitations.append(
+            "planned budget scenario changes the interpretation but is not experimental evidence"
+        )
 
     return {
         "channel": channel,
@@ -377,7 +395,9 @@ def select_distilled_reasoning(
     return compose_distilled_explanation(evidence, label)
 
 
-def compose_distilled_explanation(evidence: dict[str, Any], label: str | None = None) -> dict[str, Any]:
+def compose_distilled_explanation(
+    evidence: dict[str, Any], label: str | None = None
+) -> dict[str, Any]:
     """Fill a distilled Gemini-authored skeleton with runtime evidence values."""
     selected_label = label or _select_skeleton_label(evidence, None)
     skeleton = _SKELETONS.get(selected_label, _SKELETONS["stable_run_rate"])
@@ -389,7 +409,9 @@ def compose_distilled_explanation(evidence: dict[str, Any], label: str | None = 
         "label": skeleton["label"],
         "summary": skeleton["summary_skeleton"].format_map(values),
         "evidence_focus": skeleton["evidence_focus_skeleton"].format_map(values),
-        "recommended_action": skeleton["recommended_action_skeleton"].format_map(values),
+        "recommended_action": skeleton["recommended_action_skeleton"].format_map(
+            values
+        ),
         "runtime_evidence": runtime_sentence,
         "runtime_synthesis": runtime_synthesis,
         "evidence_fingerprint": evidence_fingerprint(evidence),
@@ -415,14 +437,18 @@ def provenance_for_skeleton(label: str) -> list[dict[str, str]]:
     return [dict(item) for item in TRANSCRIPT_PROVENANCE if item["id"] in source_ids]
 
 
-def validate_transcript_provenance(transcript_dir: Path | None = None) -> list[dict[str, str]]:
+def validate_transcript_provenance(
+    transcript_dir: Path | None = None,
+) -> list[dict[str, str]]:
     """Verify committed transcript hashes still match distilled provenance."""
     root = transcript_dir or transcript_directory()
     checked: list[dict[str, str]] = []
     for item in TRANSCRIPT_PROVENANCE:
         path = root / item["file"]
         if not path.exists():
-            raise FileNotFoundError(f"Missing Gemini transcript provenance file: {path}")
+            raise FileNotFoundError(
+                f"Missing Gemini transcript provenance file: {path}"
+            )
         # Registry hashes are computed over LF-normalized transcript bytes so
         # Windows and Linux checkouts validate the same committed content.
         actual = hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
@@ -435,7 +461,9 @@ def validate_transcript_provenance(transcript_dir: Path | None = None) -> list[d
 
 
 def format_reasoning_provenance(distilled: dict[str, Any]) -> str:
-    records = distilled.get("reasoning_provenance") if isinstance(distilled, dict) else None
+    records = (
+        distilled.get("reasoning_provenance") if isinstance(distilled, dict) else None
+    )
     if not isinstance(records, list) or not records:
         records = [dict(item) for item in TRANSCRIPT_PROVENANCE]
     lines = [
@@ -467,9 +495,21 @@ def synthesize_runtime_interpretation(evidence: dict[str, Any]) -> list[str]:
     current run's delta, effect size, p-value, confidence interval, power check,
     channel, and campaign-type evidence.
     """
-    metrics = evidence.get("supporting_metrics") if isinstance(evidence.get("supporting_metrics"), dict) else {}
-    signals = metrics.get("reasoning_signals") if isinstance(metrics.get("reasoning_signals"), dict) else {}
-    interval = metrics.get("confidence_interval") if isinstance(metrics.get("confidence_interval"), list) else []
+    metrics = (
+        evidence.get("supporting_metrics")
+        if isinstance(evidence.get("supporting_metrics"), dict)
+        else {}
+    )
+    signals = (
+        metrics.get("reasoning_signals")
+        if isinstance(metrics.get("reasoning_signals"), dict)
+        else {}
+    )
+    interval = (
+        metrics.get("confidence_interval")
+        if isinstance(metrics.get("confidence_interval"), list)
+        else []
+    )
     lower = safe_float(interval[0], 0.0) if len(interval) >= 1 else 0.0
     upper = safe_float(interval[1], 0.0) if len(interval) >= 2 else 0.0
     p_value = safe_float(metrics.get("p_value", signals.get("p_value", 1.0)), 1.0)
@@ -478,11 +518,20 @@ def synthesize_runtime_interpretation(evidence: dict[str, Any]) -> list[str]:
     confidence = str(evidence.get("confidence") or "low").lower()
     channel = str(evidence.get("channel") or "portfolio")
     campaign_type = str(evidence.get("campaign_type") or "portfolio")
-    direction = str(evidence.get("effect_direction") or signals.get("direction") or "neutral").lower()
-    power_passed = bool(signals.get("power_check_passed", metrics.get("power_check_passed", False)))
+    direction = str(
+        evidence.get("effect_direction") or signals.get("direction") or "neutral"
+    ).lower()
+    power_passed = bool(
+        signals.get("power_check_passed", metrics.get("power_check_passed", False))
+    )
     ci_crosses_zero = bool(signals.get("ci_crosses_zero", lower <= 0 <= upper))
-    sample_size = int(safe_float(signals.get("sample_size", metrics.get("sample_size", 0)), 0))
-    confidence_basis = str(signals.get("confidence_basis") or "computed from DiD evidence and anomaly context")
+    sample_size = int(
+        safe_float(signals.get("sample_size", metrics.get("sample_size", 0)), 0)
+    )
+    confidence_basis = str(
+        signals.get("confidence_basis")
+        or "computed from DiD evidence and anomaly context"
+    )
     effect_magnitude = abs(effect_size)
 
     if not bool(evidence.get("intervention_detected")):
@@ -544,7 +593,9 @@ def synthesize_runtime_interpretation(evidence: dict[str, Any]) -> list[str]:
     ]
 
 
-def build_reasoning_trace(evidence: dict[str, Any], label: str | None = None) -> list[str]:
+def build_reasoning_trace(
+    evidence: dict[str, Any], label: str | None = None
+) -> list[str]:
     """Return an audit-style reasoning trace for offline causal interpretation.
 
     This is not a hidden model chain-of-thought. It is a deterministic,
@@ -553,8 +604,16 @@ def build_reasoning_trace(evidence: dict[str, Any], label: str | None = None) ->
     decision rules, then compose the final explanation skeleton.
     """
     selected_label = label or _select_skeleton_label(evidence, None)
-    metrics = evidence.get("supporting_metrics") if isinstance(evidence.get("supporting_metrics"), dict) else {}
-    interval = metrics.get("confidence_interval") if isinstance(metrics.get("confidence_interval"), list) else []
+    metrics = (
+        evidence.get("supporting_metrics")
+        if isinstance(evidence.get("supporting_metrics"), dict)
+        else {}
+    )
+    interval = (
+        metrics.get("confidence_interval")
+        if isinstance(metrics.get("confidence_interval"), list)
+        else []
+    )
     lower = safe_float(interval[0], 0.0) if len(interval) >= 1 else 0.0
     upper = safe_float(interval[1], 0.0) if len(interval) >= 2 else 0.0
     confidence = str(evidence.get("confidence") or "low").lower()
@@ -563,11 +622,21 @@ def build_reasoning_trace(evidence: dict[str, Any], label: str | None = None) ->
     p_value = safe_float(metrics.get("p_value"), 1.0)
     strength = safe_float(metrics.get("effect_strength"), 0.0)
     intervention = bool(evidence.get("intervention_detected"))
-    limitations = evidence.get("limitations") if isinstance(evidence.get("limitations"), list) else []
-    driver = evidence.get("primary_driver") if isinstance(evidence.get("primary_driver"), dict) else {}
+    limitations = (
+        evidence.get("limitations")
+        if isinstance(evidence.get("limitations"), list)
+        else []
+    )
+    driver = (
+        evidence.get("primary_driver")
+        if isinstance(evidence.get("primary_driver"), dict)
+        else {}
+    )
 
     anomaly_context = str(metrics.get("anomaly_context") or "")
-    has_material_anomaly = bool(anomaly_context and "no material anomaly" not in anomaly_context)
+    has_material_anomaly = bool(
+        anomaly_context and "no material anomaly" not in anomaly_context
+    )
     power_check_passed = bool(metrics.get("power_check_passed", True))
 
     if not power_check_passed:
@@ -633,25 +702,35 @@ def build_reasoning_trace(evidence: dict[str, Any], label: str | None = None) ->
             role=str(driver.get("role") or "segment"),
             segment=str(driver.get("segment") or "portfolio"),
             metric=str(driver.get("metric") or "observed driver"),
-            limitations="; ".join(str(item) for item in limitations) if limitations else "none identified",
+            limitations="; ".join(str(item) for item in limitations)
+            if limitations
+            else "none identified",
         ),
         "FINAL_COMPOSITION: filled the selected distilled Gemini-authored skeleton with the runtime evidence above.",
     ]
 
 
-def _select_skeleton_label(evidence: dict[str, Any], planned_budgets: dict[str, float] | None) -> str:
+def _select_skeleton_label(
+    evidence: dict[str, Any], planned_budgets: dict[str, float] | None
+) -> str:
     if planned_budgets:
         return "budget_reallocation"
     confidence = str(evidence.get("confidence") or "low").lower()
     direction = str(evidence.get("effect_direction") or "neutral").lower()
     effect_size = safe_float(evidence.get("effect_size"), 0.0)
     delta_percent = safe_float(evidence.get("delta_percent"), 0.0)
-    metrics = evidence.get("supporting_metrics") if isinstance(evidence.get("supporting_metrics"), dict) else {}
+    metrics = (
+        evidence.get("supporting_metrics")
+        if isinstance(evidence.get("supporting_metrics"), dict)
+        else {}
+    )
     lower, upper = (metrics.get("confidence_interval") or [0.0, 0.0])[:2]
     p_value = safe_float(metrics.get("p_value"), 1.0)
     strength = safe_float(metrics.get("effect_strength"), 0.0)
     anomaly_context = str(metrics.get("anomaly_context") or "")
-    has_material_anomaly = bool(anomaly_context and "no material anomaly" not in anomaly_context)
+    has_material_anomaly = bool(
+        anomaly_context and "no material anomaly" not in anomaly_context
+    )
     power_check_passed = bool(metrics.get("power_check_passed", True))
     low_power_reason = str(metrics.get("low_power_reason") or "")
     if not power_check_passed or low_power_reason:
@@ -687,7 +766,11 @@ def _strongest_estimate(estimates: list[dict[str, Any]]) -> dict[str, Any] | Non
 
 def _primary_driver(drivers: list[dict[str, Any]]) -> dict[str, str]:
     if not drivers:
-        return {"role": "portfolio", "segment": "portfolio", "metric": "no segment driver evidence available"}
+        return {
+            "role": "portfolio",
+            "segment": "portfolio",
+            "metric": "no segment driver evidence available",
+        }
     item = drivers[0]
     return {
         "role": str(item.get("role") or "segment"),
@@ -714,8 +797,16 @@ def _limitations(estimate: dict[str, Any], anomaly_text: str) -> list[str]:
 
 
 def _format_values(evidence: dict[str, Any]) -> dict[str, Any]:
-    metrics = evidence.get("supporting_metrics") if isinstance(evidence.get("supporting_metrics"), dict) else {}
-    driver = evidence.get("primary_driver") if isinstance(evidence.get("primary_driver"), dict) else {}
+    metrics = (
+        evidence.get("supporting_metrics")
+        if isinstance(evidence.get("supporting_metrics"), dict)
+        else {}
+    )
+    driver = (
+        evidence.get("primary_driver")
+        if isinstance(evidence.get("primary_driver"), dict)
+        else {}
+    )
     supporting = (
         f"method={metrics.get('method', 'unknown')}, "
         f"p={safe_float(metrics.get('p_value'), 1.0):.3f}, "
@@ -728,11 +819,17 @@ def _format_values(evidence: dict[str, Any]) -> dict[str, Any]:
         f"{driver.get('role', 'segment')} {driver.get('segment', 'unknown')} "
         f"({driver.get('metric', 'observed driver')})"
     )
-    limitations = evidence.get("limitations") if isinstance(evidence.get("limitations"), list) else []
+    limitations = (
+        evidence.get("limitations")
+        if isinstance(evidence.get("limitations"), list)
+        else []
+    )
     return {
         "channel": str(evidence.get("channel") or "portfolio"),
         "campaign_type": str(evidence.get("campaign_type") or "portfolio"),
-        "intervention_detected": str(bool(evidence.get("intervention_detected"))).lower(),
+        "intervention_detected": str(
+            bool(evidence.get("intervention_detected"))
+        ).lower(),
         "effect_direction": str(evidence.get("effect_direction") or "neutral"),
         "effect_size": safe_float(evidence.get("effect_size"), 0.0),
         "confidence": str(evidence.get("confidence") or "low"),
@@ -745,10 +842,16 @@ def _format_values(evidence: dict[str, Any]) -> dict[str, Any]:
         "ci_text": _ci_text(metrics.get("confidence_interval")),
         "sample_size": int(safe_float(metrics.get("sample_size"), 0)),
         "evidence_fingerprint": evidence_fingerprint(evidence),
-        "anomaly_context": str(metrics.get("anomaly_context") or "no material anomaly was detected"),
-        "low_power_reason": str(metrics.get("low_power_reason") or "sample size or power threshold not met"),
+        "anomaly_context": str(
+            metrics.get("anomaly_context") or "no material anomaly was detected"
+        ),
+        "low_power_reason": str(
+            metrics.get("low_power_reason") or "sample size or power threshold not met"
+        ),
         "primary_driver": primary_driver.strip(),
-        "limitations": "; ".join(str(item) for item in limitations) if limitations else "none identified",
+        "limitations": "; ".join(str(item) for item in limitations)
+        if limitations
+        else "none identified",
     }
 
 

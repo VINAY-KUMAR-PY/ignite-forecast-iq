@@ -42,7 +42,7 @@ test("CSV upload covers dashboard, forecasts, simulator, and fallback insights",
   await expect(page.getByTestId("explainability-center")).toBeVisible();
   await expect(page.getByTestId("model-validation-panel")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("heading", { name: "Model Validation" })).toBeVisible();
-  await expect(page.getByText("30 days")).toBeVisible();
+  await expect(page.getByRole("cell", { name: "30 days" })).toBeVisible();
 
   await page.getByRole("combobox").nth(1).click();
   await page.getByRole("option", { name: "Campaign type" }).click();

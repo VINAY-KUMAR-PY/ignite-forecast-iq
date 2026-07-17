@@ -61,7 +61,7 @@ horizon. Rolling-origin paired evidence selects trained residual correction at
 expected/P50-style, and upper/P90-style values are planning cases, not exact
 probabilistic guarantees.
 
-ForecastIQ builds non-overlapping horizon-sized spend windows. Historical p90
+ForecastIQ builds rolling horizon-sized spend windows. Historical p90
 is the safe ceiling. Zones are `SUPPORTED`, `CAUTION`, `HIGH EXTRAPOLATION`,
 and `UNSUPPORTED`; overall support is planned-spend weighted while every
 unsupported channel stays visible.

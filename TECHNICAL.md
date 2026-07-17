@@ -391,8 +391,8 @@ share after evidence loads. A deterministic largest-remainder calculation
 reconciles amounts to cents so channel budgets equal the entered total exactly.
 
 For each horizon, daily channel spend is zero-filled over the observed date
-range and grouped into non-overlapping horizon-sized windows anchored at the
-most recent day. At least three comparable windows are required. Historical
+range and grouped into rolling horizon-sized windows anchored through the most
+recent day. At least three comparable windows are required. Historical
 p90 is the supported ceiling; plans above p90 through 110% of the historical
 maximum are `CAUTION`, through 150% are `HIGH_EXTRAPOLATION`, and larger or
 evidence-insufficient plans are `UNSUPPORTED`. Overall support is the

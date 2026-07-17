@@ -1,0 +1,1376 @@
+{
+  "captured_at_utc": "20260717T160642Z",
+  "source": "gemini",
+  "model": "gemini-2.5-flash",
+  "schema": "backend.schemas.InsightsResponse",
+  "redaction": "GEMINI_API_KEY and Google API key patterns are redacted before writing.",
+  "prompt_sha256": "3640199307e4472a5ea4c9ef3179e6045c71610319b06c9253c40d5a3fa5d1f4",
+  "request_summary": {
+    "totalRevenue": 4170596.49,
+    "totalSpend": 1027759.35,
+    "avgRoas": 4.058,
+    "forecast30dRevenue": 474553.84,
+    "revenueTrendPct": -1.2,
+    "spendTrendPct": -0.74,
+    "roasTrendPct": -0.47,
+    "channels": [
+      {
+        "name": "Google Ads",
+        "spend": 506509.93,
+        "revenue": 2329653.06,
+        "roas": 4.5994,
+        "sharePct": 49.28,
+        "clicks": 1001164.0,
+        "impressions": 32688030.0,
+        "conversions": 47253.0
+      },
+      {
+        "name": "Meta Ads",
+        "spend": 407727.88,
+        "revenue": 1223307.9,
+        "roas": 3.0003,
+        "sharePct": 39.67,
+        "clicks": 823218.0,
+        "impressions": 26522881.0,
+        "conversions": 38393.0
+      },
+      {
+        "name": "Microsoft Ads",
+        "spend": 113521.54,
+        "revenue": 617635.53,
+        "roas": 5.4407,
+        "sharePct": 11.05,
+        "clicks": 229237.0,
+        "impressions": 7412507.0,
+        "conversions": 10888.0
+      }
+    ],
+    "topCampaigns": [
+      {
+        "name": "Shopping Best Sellers",
+        "channel": "Google Ads",
+        "revenue": 823638.46,
+        "spend": 192494.68,
+        "roas": 4.2788
+      },
+      {
+        "name": "Brand Search",
+        "channel": "Google Ads",
+        "revenue": 774143.68,
+        "spend": 144285.42,
+        "roas": 5.3654
+      },
+      {
+        "name": "Generic Search",
+        "channel": "Google Ads",
+        "revenue": 731870.92,
+        "spend": 169729.83,
+        "roas": 4.312
+      },
+      {
+        "name": "Advantage Shopping",
+        "channel": "Meta Ads",
+        "revenue": 458867.39,
+        "spend": 152588.95,
+        "roas": 3.0072
+      },
+      {
+        "name": "Cart Retargeting",
+        "channel": "Meta Ads",
+        "revenue": 409842.52,
+        "spend": 137061.64,
+        "roas": 2.9902
+      }
+    ],
+    "bottomCampaigns": [
+      {
+        "name": "Cart Retargeting",
+        "channel": "Meta Ads",
+        "revenue": 409842.52,
+        "spend": 137061.64,
+        "roas": 2.9902
+      },
+      {
+        "name": "Lookalike Prospecting",
+        "channel": "Meta Ads",
+        "revenue": 354597.99,
+        "spend": 118077.29,
+        "roas": 3.0031
+      },
+      {
+        "name": "Advantage Shopping",
+        "channel": "Meta Ads",
+        "revenue": 458867.39,
+        "spend": 152588.95,
+        "roas": 3.0072
+      },
+      {
+        "name": "Shopping Best Sellers",
+        "channel": "Google Ads",
+        "revenue": 823638.46,
+        "spend": 192494.68,
+        "roas": 4.2788
+      },
+      {
+        "name": "Generic Search",
+        "channel": "Google Ads",
+        "revenue": 731870.92,
+        "spend": 169729.83,
+        "roas": 4.312
+      }
+    ],
+    "anomalies": [
+      {
+        "date": "2026-06-11",
+        "channel": "Google Ads",
+        "metric": "roas",
+        "actual": 4.1157,
+        "expected": 4.6523,
+        "z_score": -2.51,
+        "severity": "warning",
+        "description": "ROAS on Google Ads was below its 28-day expected level."
+      },
+      {
+        "date": "2026-06-08",
+        "channel": "Meta Ads",
+        "metric": "roas",
+        "actual": 3.3078,
+        "expected": 2.9436,
+        "z_score": 2.55,
+        "severity": "warning",
+        "description": "ROAS on Meta Ads was above its 28-day expected level."
+      },
+      {
+        "date": "2026-05-29",
+        "channel": "Meta Ads",
+        "metric": "roas",
+        "actual": 3.2913,
+        "expected": 2.938,
+        "z_score": 2.78,
+        "severity": "warning",
+        "description": "ROAS on Meta Ads was above its 28-day expected level."
+      },
+      {
+        "date": "2026-05-16",
+        "channel": "Google Ads",
+        "metric": "roas",
+        "actual": 5.2018,
+        "expected": 4.6501,
+        "z_score": 2.57,
+        "severity": "warning",
+        "description": "ROAS on Google Ads was above its 28-day expected level."
+      },
+      {
+        "date": "2026-05-11",
+        "channel": "Microsoft Ads",
+        "metric": "roas",
+        "actual": 6.1955,
+        "expected": 5.3923,
+        "z_score": 3.1,
+        "severity": "warning",
+        "description": "ROAS on Microsoft Ads was above its 28-day expected level."
+      },
+      {
+        "date": "2026-05-10",
+        "channel": "Meta Ads",
+        "metric": "revenue",
+        "actual": 3556.89,
+        "expected": 4667.6857,
+        "z_score": -2.55,
+        "severity": "warning",
+        "description": "REVENUE on Meta Ads was below its 28-day expected level."
+      },
+      {
+        "date": "2026-05-05",
+        "channel": "Google Ads",
+        "metric": "revenue",
+        "actual": 10828.16,
+        "expected": 8958.7214,
+        "z_score": 2.86,
+        "severity": "warning",
+        "description": "REVENUE on Google Ads was above its 28-day expected level."
+      },
+      {
+        "date": "2026-04-25",
+        "channel": "Meta Ads",
+        "metric": "ctr",
+        "actual": 0.0398,
+        "expected": 0.0311,
+        "z_score": 2.51,
+        "severity": "warning",
+        "description": "CTR on Meta Ads was above its 28-day expected level."
+      },
+      {
+        "date": "2026-04-15",
+        "channel": "Meta Ads",
+        "metric": "ctr",
+        "actual": 0.0217,
+        "expected": 0.0324,
+        "z_score": -2.85,
+        "severity": "warning",
+        "description": "CTR on Meta Ads was below its 28-day expected level."
+      },
+      {
+        "date": "2026-04-05",
+        "channel": "Meta Ads",
+        "metric": "ctr",
+        "actual": 0.0413,
+        "expected": 0.0323,
+        "z_score": 2.54,
+        "severity": "warning",
+        "description": "CTR on Meta Ads was above its 28-day expected level."
+      },
+      {
+        "date": "2026-04-04",
+        "channel": "Google Ads",
+        "metric": "ctr",
+        "actual": 0.0219,
+        "expected": 0.0314,
+        "z_score": -2.65,
+        "severity": "warning",
+        "description": "CTR on Google Ads was below its 28-day expected level."
+      },
+      {
+        "date": "2026-03-15",
+        "channel": "Google Ads",
+        "metric": "roas",
+        "actual": 4.0409,
+        "expected": 4.6061,
+        "z_score": -2.69,
+        "severity": "warning",
+        "description": "ROAS on Google Ads was below its 28-day expected level."
+      },
+      {
+        "date": "2026-03-02",
+        "channel": "Microsoft Ads",
+        "metric": "revenue",
+        "actual": 2837.72,
+        "expected": 2071.395,
+        "z_score": 3.4,
+        "severity": "warning",
+        "description": "REVENUE on Microsoft Ads was above its 28-day expected level."
+      },
+      {
+        "date": "2026-03-02",
+        "channel": "Microsoft Ads",
+        "metric": "roas",
+        "actual": 6.0706,
+        "expected": 5.4095,
+        "z_score": 2.55,
+        "severity": "warning",
+        "description": "ROAS on Microsoft Ads was above its 28-day expected level."
+      },
+      {
+        "date": "2026-02-23",
+        "channel": "Microsoft Ads",
+        "metric": "revenue",
+        "actual": 2657.75,
+        "expected": 2030.0768,
+        "z_score": 3.32,
+        "severity": "warning",
+        "description": "REVENUE on Microsoft Ads was above its 28-day expected level."
+      },
+      {
+        "date": "2026-02-23",
+        "channel": "Microsoft Ads",
+        "metric": "spend",
+        "actual": 465.22,
+        "expected": 374.2782,
+        "z_score": 2.71,
+        "severity": "warning",
+        "description": "SPEND on Microsoft Ads was above its 28-day expected level."
+      },
+      {
+        "date": "2026-02-19",
+        "channel": "Meta Ads",
+        "metric": "roas",
+        "actual": 3.4132,
+        "expected": 3.0405,
+        "z_score": 2.82,
+        "severity": "warning",
+        "description": "ROAS on Meta Ads was above its 28-day expected level."
+      },
+      {
+        "date": "2026-02-04",
+        "channel": "Microsoft Ads",
+        "metric": "revenue",
+        "actual": 2446.99,
+        "expected": 1894.7768,
+        "z_score": 3.11,
+        "severity": "warning",
+        "description": "REVENUE on Microsoft Ads was above its 28-day expected level."
+      },
+      {
+        "date": "2026-02-03",
+        "channel": "Meta Ads",
+        "metric": "ctr",
+        "actual": 0.042,
+        "expected": 0.0302,
+        "z_score": 2.9,
+        "severity": "warning",
+        "description": "CTR on Meta Ads was above its 28-day expected level."
+      },
+      {
+        "date": "2026-01-31",
+        "channel": "Google Ads",
+        "metric": "roas",
+        "actual": 5.0149,
+        "expected": 4.5219,
+        "z_score": 2.53,
+        "severity": "warning",
+        "description": "ROAS on Google Ads was above its 28-day expected level."
+      },
+      {
+        "date": "2025-12-21",
+        "channel": "Google Ads",
+        "metric": "revenue",
+        "actual": 4748.54,
+        "expected": 8246.8725,
+        "z_score": -3.78,
+        "severity": "critical",
+        "description": "REVENUE on Google Ads was below its 28-day expected level."
+      },
+      {
+        "date": "2025-12-21",
+        "channel": "Google Ads",
+        "metric": "spend",
+        "actual": 1146.44,
+        "expected": 1792.8775,
+        "z_score": -3.32,
+        "severity": "warning",
+        "description": "SPEND on Google Ads was below its 28-day expected level."
+      },
+      {
+        "date": "2025-12-21",
+        "channel": "Microsoft Ads",
+        "metric": "revenue",
+        "actual": 1511.4,
+        "expected": 2167.2643,
+        "z_score": -2.6,
+        "severity": "warning",
+        "description": "REVENUE on Microsoft Ads was below its 28-day expected level."
+      },
+      {
+        "date": "2025-12-21",
+        "channel": "Microsoft Ads",
+        "metric": "spend",
+        "actual": 247.73,
+        "expected": 397.9275,
+        "z_score": -3.38,
+        "severity": "warning",
+        "description": "SPEND on Microsoft Ads was below its 28-day expected level."
+      },
+      {
+        "date": "2025-12-20",
+        "channel": "Google Ads",
+        "metric": "revenue",
+        "actual": 5346.1,
+        "expected": 8288.2796,
+        "z_score": -3.63,
+        "severity": "critical",
+        "description": "REVENUE on Google Ads was below its 28-day expected level."
+      },
+      {
+        "date": "2025-12-20",
+        "channel": "Google Ads",
+        "metric": "spend",
+        "actual": 1167.83,
+        "expected": 1804.1518,
+        "z_score": -3.88,
+        "severity": "critical",
+        "description": "SPEND on Google Ads was below its 28-day expected level."
+      },
+      {
+        "date": "2025-12-20",
+        "channel": "Meta Ads",
+        "metric": "revenue",
+        "actual": 2757.31,
+        "expected": 4291.4664,
+        "z_score": -2.92,
+        "severity": "warning",
+        "description": "REVENUE on Meta Ads was below its 28-day expected level."
+      },
+      {
+        "date": "2025-12-20",
+        "channel": "Meta Ads",
+        "metric": "spend",
+        "actual": 959.04,
+        "expected": 1443.8089,
+        "z_score": -3.36,
+        "severity": "warning",
+        "description": "SPEND on Meta Ads was below its 28-day expected level."
+      },
+      {
+        "date": "2025-12-20",
+        "channel": "Microsoft Ads",
+        "metric": "spend",
+        "actual": 276.79,
+        "expected": 401.9082,
+        "z_score": -3.33,
+        "severity": "warning",
+        "description": "SPEND on Microsoft Ads was below its 28-day expected level."
+      },
+      {
+        "date": "2025-12-16",
+        "channel": "Meta Ads",
+        "metric": "ctr",
+        "actual": 0.0217,
+        "expected": 0.0324,
+        "z_score": -2.85,
+        "severity": "warning",
+        "description": "CTR on Meta Ads was below its 28-day expected level."
+      },
+      {
+        "date": "2025-12-06",
+        "channel": "Meta Ads",
+        "metric": "ctr",
+        "actual": 0.0413,
+        "expected": 0.0323,
+        "z_score": 2.53,
+        "severity": "warning",
+        "description": "CTR on Meta Ads was above its 28-day expected level."
+      },
+      {
+        "date": "2025-12-05",
+        "channel": "Google Ads",
+        "metric": "ctr",
+        "actual": 0.0219,
+        "expected": 0.0314,
+        "z_score": -2.65,
+        "severity": "warning",
+        "description": "CTR on Google Ads was below its 28-day expected level."
+      },
+      {
+        "date": "2025-11-15",
+        "channel": "Google Ads",
+        "metric": "roas",
+        "actual": 4.0409,
+        "expected": 4.6061,
+        "z_score": -2.69,
+        "severity": "warning",
+        "description": "ROAS on Google Ads was below its 28-day expected level."
+      },
+      {
+        "date": "2025-11-10",
+        "channel": "Microsoft Ads",
+        "metric": "spend",
+        "actual": 442.69,
+        "expected": 366.4946,
+        "z_score": 2.6,
+        "severity": "warning",
+        "description": "SPEND on Microsoft Ads was above its 28-day expected level."
+      },
+      {
+        "date": "2025-11-02",
+        "channel": "Microsoft Ads",
+        "metric": "revenue",
+        "actual": 2634.55,
+        "expected": 1903.1714,
+        "z_score": 3.49,
+        "severity": "warning",
+        "description": "REVENUE on Microsoft Ads was above its 28-day expected level."
+      },
+      {
+        "date": "2025-11-02",
+        "channel": "Microsoft Ads",
+        "metric": "roas",
+        "actual": 6.0705,
+        "expected": 5.4096,
+        "z_score": 2.55,
+        "severity": "warning",
+        "description": "ROAS on Microsoft Ads was above its 28-day expected level."
+      },
+      {
+        "date": "2025-10-26",
+        "channel": "Microsoft Ads",
+        "metric": "revenue",
+        "actual": 2454.96,
+        "expected": 1855.3986,
+        "z_score": 3.46,
+        "severity": "warning",
+        "description": "REVENUE on Microsoft Ads was above its 28-day expected level."
+      },
+      {
+        "date": "2025-10-26",
+        "channel": "Microsoft Ads",
+        "metric": "spend",
+        "actual": 429.72,
+        "expected": 342.1171,
+        "z_score": 2.8,
+        "severity": "warning",
+        "description": "SPEND on Microsoft Ads was above its 28-day expected level."
+      },
+      {
+        "date": "2025-10-22",
+        "channel": "Meta Ads",
+        "metric": "roas",
+        "actual": 3.4132,
+        "expected": 3.0405,
+        "z_score": 2.82,
+        "severity": "warning",
+        "description": "ROAS on Meta Ads was above its 28-day expected level."
+      },
+      {
+        "date": "2025-10-07",
+        "channel": "Microsoft Ads",
+        "metric": "revenue",
+        "actual": 2229.02,
+        "expected": 1707.7654,
+        "z_score": 3.2,
+        "severity": "warning",
+        "description": "REVENUE on Microsoft Ads was above its 28-day expected level."
+      },
+      {
+        "date": "2025-10-06",
+        "channel": "Meta Ads",
+        "metric": "ctr",
+        "actual": 0.042,
+        "expected": 0.0302,
+        "z_score": 2.9,
+        "severity": "warning",
+        "description": "CTR on Meta Ads was above its 28-day expected level."
+      },
+      {
+        "date": "2025-10-03",
+        "channel": "Google Ads",
+        "metric": "roas",
+        "actual": 5.0149,
+        "expected": 4.5219,
+        "z_score": 2.53,
+        "severity": "warning",
+        "description": "ROAS on Google Ads was above its 28-day expected level."
+      },
+      {
+        "date": "2025-09-16",
+        "channel": "Meta Ads",
+        "metric": "roas",
+        "actual": 2.6639,
+        "expected": 3.0113,
+        "z_score": -2.57,
+        "severity": "warning",
+        "description": "ROAS on Meta Ads was below its 28-day expected level."
+      },
+      {
+        "date": "2025-09-04",
+        "channel": "Meta Ads",
+        "metric": "revenue",
+        "actual": 3669.59,
+        "expected": 2905.5592,
+        "z_score": 2.6,
+        "severity": "warning",
+        "description": "REVENUE on Meta Ads was above its 28-day expected level."
+      },
+      {
+        "date": "2025-09-03",
+        "channel": "Meta Ads",
+        "metric": "roas",
+        "actual": 2.727,
+        "expected": 2.9694,
+        "z_score": -3.16,
+        "severity": "warning",
+        "description": "ROAS on Meta Ads was below its 28-day expected level."
+      },
+      {
+        "date": "2025-09-02",
+        "channel": "Google Ads",
+        "metric": "revenue",
+        "actual": 7038.86,
+        "expected": 5425.2955,
+        "z_score": 2.73,
+        "severity": "warning",
+        "description": "REVENUE on Google Ads was above its 28-day expected level."
+      }
+    ],
+    "trendBreaks": [
+      {
+        "date": "2026-06-16",
+        "channel": "Microsoft Ads",
+        "direction": "up",
+        "magnitude_pct": 1.52
+      },
+      {
+        "date": "2026-06-04",
+        "channel": "Microsoft Ads",
+        "direction": "down",
+        "magnitude_pct": -0.64
+      },
+      {
+        "date": "2026-06-03",
+        "channel": "Meta Ads",
+        "direction": "up",
+        "magnitude_pct": 1.01
+      },
+      {
+        "date": "2026-06-02",
+        "channel": "Google Ads",
+        "direction": "down",
+        "magnitude_pct": -0.93
+      },
+      {
+        "date": "2026-05-27",
+        "channel": "Microsoft Ads",
+        "direction": "up",
+        "magnitude_pct": 2.65
+      },
+      {
+        "date": "2026-05-21",
+        "channel": "Meta Ads",
+        "direction": "down",
+        "magnitude_pct": -1.15
+      },
+      {
+        "date": "2026-05-19",
+        "channel": "Google Ads",
+        "direction": "down",
+        "magnitude_pct": -1.34
+      },
+      {
+        "date": "2026-05-14",
+        "channel": "Microsoft Ads",
+        "direction": "down",
+        "magnitude_pct": -0.35
+      },
+      {
+        "date": "2026-05-08",
+        "channel": "Meta Ads",
+        "direction": "down",
+        "magnitude_pct": -0.39
+      },
+      {
+        "date": "2026-05-06",
+        "channel": "Google Ads",
+        "direction": "down",
+        "magnitude_pct": -1.76
+      },
+      {
+        "date": "2026-05-01",
+        "channel": "Microsoft Ads",
+        "direction": "up",
+        "magnitude_pct": 3.43
+      },
+      {
+        "date": "2026-04-29",
+        "channel": "Google Ads",
+        "direction": "up",
+        "magnitude_pct": 4.18
+      },
+      {
+        "date": "2026-04-28",
+        "channel": "Meta Ads",
+        "direction": "up",
+        "magnitude_pct": 2.27
+      },
+      {
+        "date": "2026-04-23",
+        "channel": "Microsoft Ads",
+        "direction": "up",
+        "magnitude_pct": 3.72
+      },
+      {
+        "date": "2026-04-16",
+        "channel": "Google Ads",
+        "direction": "up",
+        "magnitude_pct": 4.92
+      },
+      {
+        "date": "2026-04-10",
+        "channel": "Meta Ads",
+        "direction": "up",
+        "magnitude_pct": 3.06
+      },
+      {
+        "date": "2026-04-03",
+        "channel": "Microsoft Ads",
+        "direction": "down",
+        "magnitude_pct": -4.04
+      },
+      {
+        "date": "2026-04-01",
+        "channel": "Google Ads",
+        "direction": "up",
+        "magnitude_pct": 4.85
+      },
+      {
+        "date": "2026-01-25",
+        "channel": "Google Ads",
+        "direction": "up",
+        "magnitude_pct": 8.82
+      },
+      {
+        "date": "2026-01-17",
+        "channel": "Microsoft Ads",
+        "direction": "down",
+        "magnitude_pct": -3.97
+      },
+      {
+        "date": "2026-01-10",
+        "channel": "Google Ads",
+        "direction": "down",
+        "magnitude_pct": -0.12
+      },
+      {
+        "date": "2026-01-04",
+        "channel": "Meta Ads",
+        "direction": "up",
+        "magnitude_pct": 9.28
+      },
+      {
+        "date": "2025-12-27",
+        "channel": "Meta Ads",
+        "direction": "down",
+        "magnitude_pct": -14.09
+      },
+      {
+        "date": "2025-12-27",
+        "channel": "Microsoft Ads",
+        "direction": "down",
+        "magnitude_pct": -12.39
+      },
+      {
+        "date": "2025-12-24",
+        "channel": "Google Ads",
+        "direction": "down",
+        "magnitude_pct": -16.53
+      },
+      {
+        "date": "2025-10-04",
+        "channel": "Microsoft Ads",
+        "direction": "up",
+        "magnitude_pct": 2.95
+      },
+      {
+        "date": "2025-09-26",
+        "channel": "Google Ads",
+        "direction": "up",
+        "magnitude_pct": 7.61
+      },
+      {
+        "date": "2025-09-21",
+        "channel": "Microsoft Ads",
+        "direction": "down",
+        "magnitude_pct": -1.39
+      },
+      {
+        "date": "2025-09-19",
+        "channel": "Google Ads",
+        "direction": "up",
+        "magnitude_pct": 2.27
+      },
+      {
+        "date": "2025-09-19",
+        "channel": "Meta Ads",
+        "direction": "up",
+        "magnitude_pct": 8.64
+      },
+      {
+        "date": "2025-09-13",
+        "channel": "Microsoft Ads",
+        "direction": "up",
+        "magnitude_pct": 1.29
+      },
+      {
+        "date": "2025-09-12",
+        "channel": "Google Ads",
+        "direction": "up",
+        "magnitude_pct": 0.71
+      },
+      {
+        "date": "2025-09-11",
+        "channel": "Meta Ads",
+        "direction": "up",
+        "magnitude_pct": 4.99
+      },
+      {
+        "date": "2025-09-05",
+        "channel": "Google Ads",
+        "direction": "up",
+        "magnitude_pct": 7.43
+      },
+      {
+        "date": "2025-09-05",
+        "channel": "Microsoft Ads",
+        "direction": "up",
+        "magnitude_pct": 11.5
+      },
+      {
+        "date": "2025-09-03",
+        "channel": "Meta Ads",
+        "direction": "up",
+        "magnitude_pct": 10.81
+      },
+      {
+        "date": "2025-08-30",
+        "channel": "Meta Ads",
+        "direction": "up",
+        "magnitude_pct": 0.94
+      },
+      {
+        "date": "2025-08-30",
+        "channel": "Microsoft Ads",
+        "direction": "up",
+        "magnitude_pct": 4.33
+      },
+      {
+        "date": "2025-08-29",
+        "channel": "Google Ads",
+        "direction": "up",
+        "magnitude_pct": 13.67
+      },
+      {
+        "date": "2025-08-26",
+        "channel": "Microsoft Ads",
+        "direction": "down",
+        "magnitude_pct": -0.32
+      },
+      {
+        "date": "2025-08-25",
+        "channel": "Meta Ads",
+        "direction": "up",
+        "magnitude_pct": 18.75
+      },
+      {
+        "date": "2025-08-24",
+        "channel": "Google Ads",
+        "direction": "up",
+        "magnitude_pct": 18.29
+      }
+    ],
+    "driverEvidence": [
+      {
+        "channel": "Google Ads",
+        "observations": 299,
+        "spendRevenueDeltaCorrelation": 0.865,
+        "channelRevenueDeltaCorrelation": 0.846,
+        "laggedRevenueDeltaCorrelation": -0.135,
+        "direction": "positive",
+        "strength": "strong",
+        "interpretation": "Strong positive association between spend changes and revenue changes; use as hypothesis evidence, not proof of incrementality."
+      },
+      {
+        "channel": "Meta Ads",
+        "observations": 299,
+        "spendRevenueDeltaCorrelation": 0.744,
+        "channelRevenueDeltaCorrelation": 0.868,
+        "laggedRevenueDeltaCorrelation": -0.025,
+        "direction": "positive",
+        "strength": "strong",
+        "interpretation": "Strong positive association between spend changes and revenue changes; use as hypothesis evidence, not proof of incrementality."
+      },
+      {
+        "channel": "Microsoft Ads",
+        "observations": 299,
+        "spendRevenueDeltaCorrelation": 0.609,
+        "channelRevenueDeltaCorrelation": 0.855,
+        "laggedRevenueDeltaCorrelation": -0.032,
+        "direction": "positive",
+        "strength": "strong",
+        "interpretation": "Strong positive association between spend changes and revenue changes; use as hypothesis evidence, not proof of incrementality."
+      }
+    ],
+    "causalEstimates": [
+      {
+        "date": "2026-05-10",
+        "channel": "Meta Ads",
+        "metric": "revenue",
+        "method": "difference_in_differences",
+        "interventionDetected": false,
+        "statisticallySupported": false,
+        "powerCheckPassed": false,
+        "lowPowerReason": "p-value 0.202 exceeds 0.15; 95% confidence interval crosses zero",
+        "preWindowDays": 14,
+        "postWindowDays": 14,
+        "incrementalRevenue": -2077.45,
+        "lowerRevenue": -5163.53,
+        "upperRevenue": 812.42,
+        "roasEffect": -0.24,
+        "parallelTrendPct": 0.15,
+        "parallelTrendPassed": true,
+        "ciMethod": "bootstrap",
+        "bootstrapIterations": 500,
+        "effectStandardError": 1629.67,
+        "tStatistic": -1.275,
+        "pValue": 0.2024,
+        "effectStrength": 1.017,
+        "effectDirection": "negative",
+        "confidence": "low",
+        "reasoningSignals": {
+          "direction": "negative",
+          "p_value": 0.2024,
+          "ci_crosses_zero": true,
+          "power_check_passed": false,
+          "sample_size": 28,
+          "effect_strength": 1.017,
+          "confidence_basis": "p-value 0.202 exceeds 0.15; 95% confidence interval crosses zero"
+        },
+        "interpretation": "Estimated incremental effect for Meta Ads: $-2,077 (95% CI $-5,164 to $812); t=-1.27, p=0.202; parallel-trends check passed (0.1% pre-trend gap); observational difference-in-differences, low-power directional diagnostic only; not proof of incrementality."
+      },
+      {
+        "date": "2026-06-08",
+        "channel": "Meta Ads",
+        "metric": "roas",
+        "method": "difference_in_differences",
+        "interventionDetected": false,
+        "statisticallySupported": false,
+        "powerCheckPassed": false,
+        "lowPowerReason": "p-value 0.179 exceeds 0.15; 95% confidence interval crosses zero",
+        "preWindowDays": 14,
+        "postWindowDays": 10,
+        "incrementalRevenue": 2237.68,
+        "lowerRevenue": -1104.63,
+        "upperRevenue": 5399.78,
+        "roasEffect": 0.16,
+        "parallelTrendPct": 0.35,
+        "parallelTrendPassed": true,
+        "ciMethod": "bootstrap",
+        "bootstrapIterations": 500,
+        "effectStandardError": 1666.06,
+        "tStatistic": 1.343,
+        "pValue": 0.1792,
+        "effectStrength": 0.787,
+        "effectDirection": "positive",
+        "confidence": "low",
+        "reasoningSignals": {
+          "direction": "positive",
+          "p_value": 0.1792,
+          "ci_crosses_zero": true,
+          "power_check_passed": false,
+          "sample_size": 24,
+          "effect_strength": 0.787,
+          "confidence_basis": "p-value 0.179 exceeds 0.15; 95% confidence interval crosses zero"
+        },
+        "interpretation": "Estimated incremental effect for Meta Ads: $2,238 (95% CI $-1,105 to $5,400); t=1.34, p=0.179; parallel-trends check passed (0.4% pre-trend gap); observational difference-in-differences, low-power directional diagnostic only; not proof of incrementality."
+      },
+      {
+        "date": "2026-04-25",
+        "channel": "Meta Ads",
+        "metric": "ctr",
+        "method": "difference_in_differences",
+        "interventionDetected": false,
+        "statisticallySupported": false,
+        "powerCheckPassed": false,
+        "lowPowerReason": "p-value 0.290 exceeds 0.15; 95% confidence interval crosses zero",
+        "preWindowDays": 14,
+        "postWindowDays": 14,
+        "incrementalRevenue": 1909.36,
+        "lowerRevenue": -1355.55,
+        "upperRevenue": 5246.69,
+        "roasEffect": 0.17,
+        "parallelTrendPct": 0.67,
+        "parallelTrendPassed": true,
+        "ciMethod": "bootstrap",
+        "bootstrapIterations": 500,
+        "effectStandardError": 1803.88,
+        "tStatistic": 1.058,
+        "pValue": 0.2898,
+        "effectStrength": 0.752,
+        "effectDirection": "positive",
+        "confidence": "low",
+        "reasoningSignals": {
+          "direction": "positive",
+          "p_value": 0.2898,
+          "ci_crosses_zero": true,
+          "power_check_passed": false,
+          "sample_size": 28,
+          "effect_strength": 0.752,
+          "confidence_basis": "p-value 0.290 exceeds 0.15; 95% confidence interval crosses zero"
+        },
+        "interpretation": "Estimated incremental effect for Meta Ads: $1,909 (95% CI $-1,356 to $5,247); t=1.06, p=0.290; parallel-trends check passed (0.7% pre-trend gap); observational difference-in-differences, low-power directional diagnostic only; not proof of incrementality."
+      },
+      {
+        "date": "2026-05-16",
+        "channel": "Google Ads",
+        "metric": "roas",
+        "method": "difference_in_differences",
+        "interventionDetected": false,
+        "statisticallySupported": false,
+        "powerCheckPassed": false,
+        "lowPowerReason": "p-value 0.300 exceeds 0.15; 95% confidence interval crosses zero",
+        "preWindowDays": 14,
+        "postWindowDays": 14,
+        "incrementalRevenue": -3005.7,
+        "lowerRevenue": -8441.57,
+        "upperRevenue": 2526.42,
+        "roasEffect": 0.03,
+        "parallelTrendPct": 0.16,
+        "parallelTrendPassed": true,
+        "ciMethod": "bootstrap",
+        "bootstrapIterations": 500,
+        "effectStandardError": 2897.29,
+        "tStatistic": -1.037,
+        "pValue": 0.2995,
+        "effectStrength": 0.727,
+        "effectDirection": "negative",
+        "confidence": "low",
+        "reasoningSignals": {
+          "direction": "negative",
+          "p_value": 0.2995,
+          "ci_crosses_zero": true,
+          "power_check_passed": false,
+          "sample_size": 28,
+          "effect_strength": 0.727,
+          "confidence_basis": "p-value 0.300 exceeds 0.15; 95% confidence interval crosses zero"
+        },
+        "interpretation": "Estimated incremental effect for Google Ads: $-3,006 (95% CI $-8,442 to $2,526); t=-1.04, p=0.300; parallel-trends check passed (0.2% pre-trend gap); observational difference-in-differences, low-power directional diagnostic only; not proof of incrementality."
+      },
+      {
+        "date": "2026-06-11",
+        "channel": "Google Ads",
+        "metric": "roas",
+        "method": "difference_in_differences",
+        "interventionDetected": false,
+        "statisticallySupported": false,
+        "powerCheckPassed": false,
+        "lowPowerReason": "minimum sample check failed: pre=14, post=7, required=10; p-value 0.185 exceeds 0.15; 95% confidence interval crosses zero",
+        "preWindowDays": 14,
+        "postWindowDays": 7,
+        "incrementalRevenue": -2891.64,
+        "lowerRevenue": -6305.85,
+        "upperRevenue": 1191.75,
+        "roasEffect": -0.23,
+        "parallelTrendPct": 0.52,
+        "parallelTrendPassed": true,
+        "ciMethod": "bootstrap",
+        "bootstrapIterations": 500,
+        "effectStandardError": 2182.53,
+        "tStatistic": -1.325,
+        "pValue": 0.1852,
+        "effectStrength": 0.54,
+        "effectDirection": "negative",
+        "confidence": "low",
+        "reasoningSignals": {
+          "direction": "negative",
+          "p_value": 0.1852,
+          "ci_crosses_zero": true,
+          "power_check_passed": false,
+          "sample_size": 21,
+          "effect_strength": 0.54,
+          "confidence_basis": "minimum sample check failed: pre=14, post=7, required=10; p-value 0.185 exceeds 0.15; 95% confidence interval crosses zero"
+        },
+        "interpretation": "Estimated incremental effect for Google Ads: $-2,892 (95% CI $-6,306 to $1,192); t=-1.32, p=0.185; parallel-trends check passed (0.5% pre-trend gap); observational difference-in-differences, low-power directional diagnostic only; not proof of incrementality."
+      }
+    ],
+    "validation": {
+      "totalRows": 2400,
+      "validRows": 2400,
+      "issueCount": 0,
+      "issueTypes": []
+    }
+  },
+  "response_text": "{\n  \"executiveSummary\": \"Overall performance shows a slight decline in revenue (-1.2%) and ROAS (-0.47%), with total revenue at $4,170,596.49 and an average ROAS of 4.058. Microsoft Ads is outperforming with a ROAS of 5.4407, while Meta Ads is underperforming at 3.0003. Immediate action is required to address Meta Ads' inconsistent performance and capitalize on Microsoft Ads' efficiency to",
+  "response_json": {
+    "executiveSummary": "Overall performance shows a slight decline in revenue (-1.2%) and ROAS (-0.47%), with total revenue at $4,170,596.49 and an average ROAS of 4.058. Microsoft Ads is outperforming with a ROAS of 5.4407, while Meta Ads is underperforming at 3.0003. Immediate action is required to address Meta Ads' inconsistent performance and capitalize on Microsoft Ads' efficiency to",
+    "revenueDrivers": [
+      {
+        "title": "Microsoft Ads efficiency",
+        "detail": "Microsoft Ads is the strongest channel by ROAS, likely because its revenue per dollar is above the blended 4.06x benchmark; use the simulator to test whether that efficiency holds after incremental spend.",
+        "metric": "5.44x ROAS"
+      },
+      {
+        "title": "Forecast momentum",
+        "detail": "The model projects $474,554 over the next 30 days because recent revenue trend is -1.2% while spend trend is -0.7%, indicating whether growth is volume-led or efficiency-led.",
+        "metric": "$474,554"
+      },
+      {
+        "title": "Measured spend association",
+        "detail": "Google Ads has a strong positive spend-to-revenue association of 0.86 across 299 observations; this supports a budget test because association is evidence for a hypothesis, not proof of incrementality.",
+        "metric": "r=0.86 association"
+      }
+    ],
+    "channelPerformance": [
+      {
+        "channel": "Google Ads",
+        "verdict": "outperforming",
+        "insight": "Revenue $2,329,653, spend $506,510, ROAS 4.60x; performance is consistent with spend quality and conversion rate jointly driving revenue.",
+        "recommendation": "Scale gradually because the causal risk is that higher spend worsens CPC or conversion quality; hold budget if intervals widen."
+      },
+      {
+        "channel": "Meta Ads",
+        "verdict": "underperforming",
+        "insight": "Revenue $1,223,308, spend $407,728, ROAS 3.00x; performance is consistent with spend quality and conversion rate jointly driving revenue.",
+        "recommendation": "Scale gradually because the causal risk is that higher spend worsens CPC or conversion quality; hold budget if intervals widen."
+      },
+      {
+        "channel": "Microsoft Ads",
+        "verdict": "outperforming",
+        "insight": "Revenue $617,636, spend $113,522, ROAS 5.44x; performance is consistent with spend quality and conversion rate jointly driving revenue.",
+        "recommendation": "Scale gradually because the causal risk is that higher spend worsens CPC or conversion quality; hold budget if intervals widen."
+      }
+    ],
+    "campaignPerformance": {
+      "top": [
+        {
+          "name": "Shopping Best Sellers",
+          "channel": "Google Ads",
+          "insight": "Generated $823,638 at 4.28x ROAS, likely due to stronger conversion quality relative to spend."
+        },
+        {
+          "name": "Brand Search",
+          "channel": "Google Ads",
+          "insight": "Generated $774,144 at 5.37x ROAS, likely due to stronger conversion quality relative to spend."
+        },
+        {
+          "name": "Generic Search",
+          "channel": "Google Ads",
+          "insight": "Generated $731,871 at 4.31x ROAS, likely due to stronger conversion quality relative to spend."
+        }
+      ],
+      "bottom": [
+        {
+          "name": "Cart Retargeting",
+          "channel": "Meta Ads",
+          "issue": "Low relative efficiency at 2.99x ROAS, consistent with spend not converting into revenue at the blended benchmark.",
+          "action": "Review bids, audiences and creative because the causal failure point is likely click quality, conversion rate, or offer fit before adding budget."
+        },
+        {
+          "name": "Lookalike Prospecting",
+          "channel": "Meta Ads",
+          "issue": "Low relative efficiency at 3.00x ROAS, consistent with spend not converting into revenue at the blended benchmark.",
+          "action": "Review bids, audiences and creative because the causal failure point is likely click quality, conversion rate, or offer fit before adding budget."
+        },
+        {
+          "name": "Advantage Shopping",
+          "channel": "Meta Ads",
+          "issue": "Low relative efficiency at 3.01x ROAS, consistent with spend not converting into revenue at the blended benchmark.",
+          "action": "Review bids, audiences and creative because the causal failure point is likely click quality, conversion rate, or offer fit before adding budget."
+        }
+      ]
+    },
+    "budgetAllocation": [
+      {
+        "channel": "Google Ads",
+        "currentSharePct": 49.3,
+        "recommendedSharePct": 50.7,
+        "rationale": "ROAS is 4.60x versus blended 4.06x, so the likely causal test is whether incremental spend keeps conversion quality above the blended benchmark.",
+        "expectedImpact": "Improve blended ROAS while protecting forecast revenue because spend shifts toward channels with stronger observed conversion economics."
+      },
+      {
+        "channel": "Meta Ads",
+        "currentSharePct": 39.7,
+        "recommendedSharePct": 34.9,
+        "rationale": "ROAS is 3.00x versus blended 4.06x, so the likely causal test is whether incremental spend keeps conversion quality above the blended benchmark.",
+        "expectedImpact": "Improve blended ROAS while protecting forecast revenue because spend shifts toward channels with stronger observed conversion economics."
+      },
+      {
+        "channel": "Microsoft Ads",
+        "currentSharePct": 11.1,
+        "recommendedSharePct": 14.4,
+        "rationale": "ROAS is 5.44x versus blended 4.06x, so the likely causal test is whether incremental spend keeps conversion quality above the blended benchmark.",
+        "expectedImpact": "Improve blended ROAS while protecting forecast revenue because spend shifts toward channels with stronger observed conversion economics."
+      }
+    ],
+    "risks": [
+      {
+        "title": "Forecast uncertainty",
+        "severity": "medium",
+        "description": "Revenue intervals widen with longer horizons and budget changes because compounding spend, conversion-rate, and seasonality assumptions have more time to drift.",
+        "mitigation": "Treat 60 and 90-day views as planning ranges, not exact targets, because residual volatility and thinner segment history widen uncertainty as the horizon extends."
+      },
+      {
+        "title": "Attribution dependency",
+        "severity": "medium",
+        "description": "The model treats provided attribution as source of truth, so missing campaign or tracking rows can cause revenue and ROAS to be assigned to the wrong driver.",
+        "mitigation": "Monitor tracking gaps and campaign naming consistency before each forecast run."
+      },
+      {
+        "title": "Spend efficiency drift",
+        "severity": "low",
+        "description": "Marginal ROAS may decline when spend is scaled too quickly because ROAS trend is -0.5% against spend trend -0.7%.",
+        "mitigation": "Increase budgets in staged increments and compare forecast vs actual weekly."
+      }
+    ],
+    "growthOpportunities": [
+      {
+        "title": "Scale Microsoft Ads",
+        "description": "The strongest ROAS channel is the first candidate for controlled spend increases because it is above blended ROAS at 4.06x.",
+        "expectedImpact": "Potential revenue lift with lower downside because incremental dollars start from the strongest observed efficiency base.",
+        "effort": "low"
+      },
+      {
+        "title": "Repair underperformers",
+        "description": "Meta Ads should be optimized before additional spend because weak ROAS points to conversion quality or CPC pressure rather than a budget shortage.",
+        "expectedImpact": "ROAS recovery and lower wasted spend if the underlying click-to-revenue mechanism improves.",
+        "effort": "medium"
+      },
+      {
+        "title": "Use budget simulator weekly",
+        "description": "Re-run 30, 60 and 90-day scenarios as campaign data refreshes because anomaly and trend-break signals can change the causal hypothesis behind each budget move.",
+        "expectedImpact": "Better media planning discipline and faster risk detection.",
+        "effort": "low"
+      }
+    ],
+    "actionPlan": [
+      {
+        "priority": "high",
+        "timeline": "Next 48 hours",
+        "owner": "Performance marketing lead",
+        "action": "Review budget simulator scenarios for Microsoft Ads and Meta Ads before the next media change.",
+        "kpi": "Forecast revenue lift and blended ROAS"
+      },
+      {
+        "priority": "high",
+        "timeline": "This week",
+        "owner": "Channel managers",
+        "action": "Audit campaign naming, attribution consistency and negative-spend/revenue anomalies before final submission.",
+        "kpi": "Validation issues reduced to zero"
+      },
+      {
+        "priority": "medium",
+        "timeline": "Next 2 weeks",
+        "owner": "Analytics team",
+        "action": "Compare actual revenue against the 30-day forecast band and recalibrate if coverage drifts.",
+        "kpi": "Actual revenue inside forecast interval"
+      },
+      {
+        "priority": "medium",
+        "timeline": "Monthly",
+        "owner": "Growth lead",
+        "action": "Shift incremental spend toward channels with above-average ROAS and stable forecast intervals.",
+        "kpi": "Revenue growth with ROAS at or above target"
+      }
+    ],
+    "causalHypotheses": [
+      {
+        "rank": 1,
+        "title": "Google Ads ROAS compression (May 16)",
+        "confidence": "low",
+        "hypothesis": "Directional evidence suggests Google Ads revenue may have changed alongside a spend, demand, or campaign-mix shift; the $-3,006 observational DiD effect is uncertain because the confidence interval crosses zero.",
+        "supportingEvidence": [
+          "DiD estimate for Google Ads: $-3,006 incremental revenue.",
+          "95% interval spans $-8,442 to $2,526.",
+          "Method: difference_in_differences; confidence=low."
+        ],
+        "contradictingEvidence": [
+          "The confidence interval crosses zero, so the observed effect is uncertain and must not be treated as proven incrementality."
+        ],
+        "recommendedTest": "Run a controlled budget holdout or staged budget ramp and compare actual revenue against the forecast interval."
+      },
+      {
+        "rank": 2,
+        "title": "Google Ads ROAS compression (Jun 11)",
+        "confidence": "low",
+        "hypothesis": "Directional evidence suggests Google Ads revenue may have changed alongside a spend, demand, or campaign-mix shift; the $-2,892 observational DiD effect is uncertain because the confidence interval crosses zero.",
+        "supportingEvidence": [
+          "DiD estimate for Google Ads: $-2,892 incremental revenue.",
+          "95% interval spans $-6,306 to $1,192.",
+          "Method: difference_in_differences; confidence=low."
+        ],
+        "contradictingEvidence": [
+          "The confidence interval crosses zero, so the observed effect is uncertain and must not be treated as proven incrementality."
+        ],
+        "recommendedTest": "Run a controlled budget holdout or staged budget ramp and compare actual revenue against the forecast interval."
+      },
+      {
+        "rank": 3,
+        "title": "Meta Ads ROAS lift (Jun 08)",
+        "confidence": "low",
+        "hypothesis": "Directional evidence suggests Meta Ads revenue may have changed alongside a spend, demand, or campaign-mix shift; the $2,238 observational DiD effect is uncertain because the confidence interval crosses zero.",
+        "supportingEvidence": [
+          "DiD estimate for Meta Ads: $2,238 incremental revenue.",
+          "95% interval spans $-1,105 to $5,400.",
+          "Method: difference_in_differences; confidence=low."
+        ],
+        "contradictingEvidence": [
+          "The confidence interval crosses zero, so the observed effect is uncertain and must not be treated as proven incrementality."
+        ],
+        "recommendedTest": "Run a controlled budget holdout or staged budget ramp and compare actual revenue against the forecast interval."
+      },
+      {
+        "rank": 4,
+        "title": "Google Ads spend-efficiency relationship",
+        "confidence": "medium",
+        "hypothesis": "Google Ads may be driving incremental revenue because spend deltas and revenue deltas move together with correlation 0.86.",
+        "supportingEvidence": [
+          "Spend/revenue delta correlation for Google Ads: 0.86.",
+          "Direction=positive across 299 observations."
+        ],
+        "contradictingEvidence": [
+          "Correlation evidence cannot separate channel causality from seasonality, promotions, or tracking mix."
+        ],
+        "recommendedTest": "Scale the channel in staged increments and monitor marginal ROAS versus the forecast baseline."
+      },
+      {
+        "rank": 5,
+        "title": "Google Ads anomaly signal (Jun 11)",
+        "confidence": "medium",
+        "hypothesis": "Google Ads performance may have shifted because an anomaly or trend break changed the recent baseline used for forecasting.",
+        "supportingEvidence": [
+          "Signal date=2026-06-11, metric=roas.",
+          "Detected anomaly count=46 and trend-break count=42."
+        ],
+        "contradictingEvidence": [
+          "A single anomaly may be a tracking or reporting artifact unless it repeats across adjacent days."
+        ],
+        "recommendedTest": "Audit tracking and campaign changes around the signal date, then rerun the forecast after excluding confirmed data errors."
+      }
+    ],
+    "llmHypothesisRanking": [
+      {
+        "rank": 1,
+        "hypothesis": "budget shift",
+        "confidence": "low",
+        "confidenceScore": 0.34,
+        "supportingEvidence": [
+          "Google Ads DiD effect=$-3,006.",
+          "p=0.299, CI $-8,442 to $2,526."
+        ],
+        "contradictingEvidence": [
+          "Observational DiD is not a randomized lift test.",
+          "Other channels or promotion timing may still explain part of the movement."
+        ],
+        "recommendedValidation": "Run a staged budget holdout or geo split around the affected channel.",
+        "rationale": "The strongest statistical candidate is Google Ads because it has the largest ranked DiD/anomaly evidence among supplied signals."
+      },
+      {
+        "rank": 2,
+        "hypothesis": "platform algorithm change",
+        "confidence": "medium",
+        "confidenceScore": 0.66,
+        "supportingEvidence": [
+          "Google Ads anomaly signal on 2026-06-11.",
+          "Anomaly z-score=-2.51; metric=roas."
+        ],
+        "contradictingEvidence": [
+          "A single-day anomaly can be a tracking or data latency artifact.",
+          "The same pattern could be explained by seasonality or campaign edits."
+        ],
+        "recommendedValidation": "Audit platform change history, bids, budgets, and tracking around the anomaly window.",
+        "rationale": "A sharp break is consistent with an external platform or delivery change, but needs operational evidence."
+      },
+      {
+        "rank": 3,
+        "hypothesis": "budget reallocation implication",
+        "confidence": "medium",
+        "confidenceScore": 0.62,
+        "supportingEvidence": [
+          "Microsoft Ads ROAS=5.44x versus Meta Ads ROAS=3.00x.",
+          "Portfolio ROAS spread=2.44x across observed channels."
+        ],
+        "contradictingEvidence": [
+          "Observed ROAS spread does not prove marginal ROAS after budget moves.",
+          "High-efficiency channels can saturate when spend is increased."
+        ],
+        "recommendedValidation": "Move budget in a staged test from the weakest ROAS channel toward the strongest and monitor marginal ROAS weekly.",
+        "rationale": "The current run's channel efficiency spread creates an actionable reallocation hypothesis even without live LLM access."
+      },
+      {
+        "rank": 4,
+        "hypothesis": "channel cannibalization risk",
+        "confidence": "medium",
+        "confidenceScore": 0.61,
+        "supportingEvidence": [
+          "Google Ads holds 49.3% of observed spend.",
+          "Observed ROAS spread=2.44x suggests incremental spend could shift demand rather than create it."
+        ],
+        "contradictingEvidence": [
+          "The evaluator data does not include user-level path overlap or assisted conversions.",
+          "Cannibalization needs geo, audience, or incrementality testing to confirm."
+        ],
+        "recommendedValidation": "Run a holdout or audience split before moving large budgets across channels with overlapping demand.",
+        "rationale": "Spend concentration and cross-channel ROAS spread are enough to flag cannibalization as a competing deterministic hypothesis."
+      }
+    ],
+    "provenance": null
+  },
+  "causal_hypothesis_count": 5,
+  "llm_hypothesis_ranking_count": 4
+}

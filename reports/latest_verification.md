@@ -1,121 +1,69 @@
-﻿# Latest Verification Report
+# Latest Verification Report
 
-Generated: 2026-07-16
+Generated: 2026-07-17
 
-Scope: finalist horizon champion-challenger policy, rolling-origin backtest
-regeneration, backend coverage, frontend checks, and offline evaluator contract
-validation.
+Scope: final evidence-driven upgrade, evaluator contract, planning guardrails,
+uncertainty-aware optimization, AI provenance, product workflow, security, and
+clean frontend validation.
 
 Environment: Windows (`win32`), Python 3.14.4. SHAP is intentionally excluded
-on Python 3.14, and two POSIX-shell-only tests skip on Windows. Supported
-Python/OS combinations can therefore report slightly different pass, skip,
-and coverage totals; the canonical GitHub Actions result and its enforced
-**92.05%** coverage gate are the submission source of truth.
+on Python 3.14; two POSIX-only tests skip on Windows. The enforced coverage
+gate remains **92.05%**.
 
-## Commands Run
+## Results
 
-```text
-python -m compileall backend scripts tests -q
+| Gate                       | Executed command                                                                                             | Result                                             |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------- |
+| Python compile             | `python -m compileall backend scripts tests -q`                                                              | Pass                                               |
+| Backend full suite         | `python -m pytest tests -q --cov=backend --cov-report=term-missing --cov-report=json --cov-fail-under=92.05` | 274 passed, 2 skipped, 7 warnings; 93.67%; 293.27s |
+| Contract/adversarial group | Nine required test modules in one `pytest -q` invocation                                                     | 78 passed, 1 skipped; 126.78s                      |
+| Ruff                       | `python -m ruff check backend scripts tests`                                                                 | Pass                                               |
+| Python dependencies        | `python -m pip check`                                                                                        | Pass                                               |
+| Clean frontend install     | `npm ci`                                                                                                     | Pass; 603 packages installed                       |
+| Frontend unit tests        | `npm run test`                                                                                               | 6 files, 22 tests passed                           |
+| Typecheck/lint/build       | `npm run check`                                                                                              | Pass; 2,789 modules built                          |
+| Explicit production build  | `npm run build`                                                                                              | Pass                                               |
+| Judge workflow             | `npm run test:e2e`                                                                                           | 1 Chromium test passed; 32.1s                      |
+| Git patch quality          | `git diff --check`                                                                                           | Pass                                               |
+| Evaluator mode             | `git ls-files --stage run.sh`                                                                                | `100755`                                           |
 
-PASS
-```
+## Exact evaluator
 
-```text
-python -m backend.backtest
-
-[ForecastIQ] Loaded 2400 rows from sample_campaigns.csv as ads schema
-Backtest report written to reports\backtest_report.json
-Backtest summary written to reports\backtest_summary.md
-elapsed_seconds=544.67
-
-Trained revenue interval coverage by horizon:
-30d = 95.83%
-60d = 90.28%
-90d = 86.11%
-```
+The evaluator was run twice from the minimal pinned evaluator environment with
+fresh output paths and no Gemini key:
 
 ```text
-python -m pytest tests/test_interval_monotonicity.py::test_interval_calibration_report_matches_source_constants_and_backtest_summary -q
-
-1 passed in 3.64s
+./run.sh ./data ./pickle/model.pkl ./output/final_check_1/predictions.csv
+./run.sh ./data ./pickle/model.pkl ./output/final_check_2/predictions.csv
 ```
 
-```text
-python -m pytest tests -q --cov=backend --cov-report=term-missing --cov-report=json --cov-fail-under=92.05
+Both runs completed offline and emitted byte-identical artifacts.
 
-252 passed, 2 skipped, 7 warnings in 364.31s (0:06:04)
-TOTAL 4805 statements, 303 missing, 93.69% coverage
-Required test coverage of 92.05% reached.
-```
+| Artifact                   | SHA-256                                                            |
+| -------------------------- | ------------------------------------------------------------------ |
+| `predictions.csv`          | `602F679A33EE27BA04ECDFC16E3BC4EE357606183F4E78741F11217633EE59A1` |
+| `causal_summary.txt`       | `B0A9F84448804D19393F13CCBED22372A4112A308C57FB20587774EDE4EDD38B` |
+| `explainability_notes.txt` | `0B1A0CA9C82B5A791977CF8F08FDA1A3A16965C41BCB0C51AE5F1284B690BA4E` |
 
-```text
-npx tsc --noEmit
+The prediction contract has 54 rows and exactly 12 ordered columns. It contains
+18 rows for each of 30/60/90 days; aggregation counts are overall 3, channel 9,
+campaign type 18, and campaign 24. Model types remain 18 `trained_model` and
+36 `trained_model_baseline_anchored`. All parsed numbers are finite and
+non-negative, lower/expected/upper bounds are monotonic, and no network or
+retraining is required.
 
-PASS
-```
+## Evidence and dependency notes
 
-```text
-npx eslint .
-
-PASS
-```
-
-```text
-npm run test
-
-5 test files passed, 17 tests passed
-```
-
-```text
-npm run build
-
-PASS - Vite production build completed.
-```
-
-```text
-./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
-
-=== ForecastIQ AI MODE: OFFLINE_DETERMINISTIC_FALLBACK ===
-[ForecastIQ] No live LLM call will be made; causal_summary.txt uses input-conditioned distilled reasoning.
-[ForecastIQ] Reading CSV data from ./data
-[ForecastIQ] Loaded 2400 rows from sample_campaigns.csv as ads schema
-[ForecastIQ] Validation complete: 2400/2400 usable rows
-[ForecastIQ] Loaded trained evaluator model artifact: trained_model
-[ForecastIQ] Trained-model forecast coverage: 54/54 rows (100.0%) used artifact-backed estimates; 0 row(s) used safe segment fallback.
-[ForecastIQ] Prediction mode: trained_model
-[ForecastIQ] Wrote 54 rows to ./output/predictions.csv
-[ForecastIQ] Causal summary written to output\causal_summary.txt
-[ForecastIQ] Explainability notes written to output\explainability_notes.txt
-[ForecastIQ] Offline AI reasoning trace: deterministic multi-scenario evidence chains written to causal_summary.txt
-[ForecastIQ] scikit-learn version: 1.7.2 (artifact built on 1.7.2)
-Done. Predictions written to ./output/predictions.csv
-[ForecastIQ] Python version: 3.14.4
-Causal summary written to ./output/causal_summary.txt
-
-rows 54
-exact_schema True
-model_counts {'trained_model_baseline_anchored': 36, 'trained_model': 18}
-nan 0
-inf 0
-bounds_ok True
-interval_monotonic_failures 0
-confidence_inversions 0
-deterministic_csv true
-```
-
-## Notes
-
-- The 30-day planning forecast uses the trained residual correction. The 60/90
-  day planning forecasts are explicitly labeled
-  `trained_model_baseline_anchored` because rolling-origin evidence found no
-  reliable trained revenue advantage at those horizons.
-- `backend.backtest.write_report_files` synchronizes
-  `reports/interval_calibration_report.json` from the same in-memory backtest
-  result that writes `reports/backtest_report.json` and
-  `reports/backtest_summary.md`, preventing stale generated-report drift.
-- The committed sample uses trained-artifact variants for every row; no
-  `safe_baseline_fallback` rows are emitted for the sample data.
-- `output/causal_summary.txt` includes `PER_RUN_SYNTHESIS`,
-  `REASONING_TRACE`, and `REASONING PROVENANCE` sections.
-- `reports/model_card.md` and `reports/long_horizon_revenue_ablation.md` are
-  generated from the same canonical backtest report.
+- The 30-day planning forecast uses trained residual correction. The 60/90-day
+  forecasts remain explicitly anchored because the evidence gate did not
+  establish a reliable trained-revenue advantage at those horizons.
+- Generated frontend evidence reads the backtest, interval-calibration,
+  verification, dependency, and sample-output artifacts. Missing evidence is
+  displayed as unavailable rather than replaced by a hardcoded success claim.
+- `npm audit` and `npm audit --omit=dev` both report one low-severity Vite/esbuild
+  Windows development-server file-read advisory (`GHSA-g7r4-m6w7-qqqr`). An
+  audit fix was attempted earlier and did not remove it; no forced or major
+  upgrade was adopted because the graded offline evaluator is unaffected.
+- Repository secret review found placeholders and test fixtures only. `.env`
+  remains ignored, `.env.example` contains placeholders, transcripts are
+  redacted, and the graded path has no runtime network dependency.

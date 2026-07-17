@@ -59,7 +59,7 @@ export type ModelEvidence = {
 export const MODEL_EVIDENCE: ModelEvidence = {
   availability: "available",
   statusLabel: "Verified repository evidence",
-  generatedAt: "2026-07-16T05:55:00Z",
+  generatedAt: "2026-07-17T09:56:58Z",
   horizons: [
     {
       horizonDays: 30,
@@ -110,8 +110,8 @@ export const MODEL_EVIDENCE: ModelEvidence = {
   },
   backendVerification: {
     coverageGatePct: 92.05,
-    measuredCoveragePct: 93.69,
-    passed: 252,
+    measuredCoveragePct: 93.67,
+    passed: 274,
     skipped: 2,
     environmentNote:
       "SHAP is intentionally unavailable on Python 3.14; two POSIX-shell-only tests skip on Windows. Counts may vary slightly across supported environments, while GitHub Actions and the 92.05% coverage gate remain canonical.",

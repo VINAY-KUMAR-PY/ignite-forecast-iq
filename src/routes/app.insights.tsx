@@ -25,6 +25,7 @@ import { aggregateDaily, type DailyAgg } from "@/lib/forecasting";
 import { fetchAnomaliesApi } from "@/lib/backend-api";
 import { generateInsightsApi, type InsightsResponse } from "@/lib/ai-insights";
 import { exportExecutivePdfReport } from "@/lib/report-export";
+import { MODEL_EVIDENCE } from "@/lib/model-validation.generated";
 import { fmtCurrency, fmtPct, fmtRoas } from "@/lib/format";
 import type { CampaignRow } from "@/lib/types";
 
@@ -34,7 +35,7 @@ export const Route = createFileRoute("/app/insights")({
 });
 
 export function InsightsPage() {
-  const { rows } = useData();
+  const { rows, markWorkflow, planningSnapshot } = useData();
   const [insights, setInsights] = useState<InsightsResponse | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -63,6 +64,7 @@ export function InsightsPage() {
       }
       const res = await generateInsightsApi({ ...summary!, ...anomalyContext });
       setInsights(res);
+      markWorkflow("explain");
       toast.success("Executive briefing generated");
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : "Failed to generate insights");
@@ -74,7 +76,20 @@ export function InsightsPage() {
   function exportReport() {
     if (!insights || !summary) return;
     try {
-      exportExecutivePdfReport(summary, insights);
+      const dates = rows.map((row) => row.date).sort();
+      const selectedHorizon = planningSnapshot?.horizon ?? 30;
+      const horizonEvidence = MODEL_EVIDENCE.horizons.find(
+        (item) => item.horizonDays === selectedHorizon,
+      );
+      exportExecutivePdfReport(summary, insights, {
+        dataPeriod: dates.length ? `${dates[0]} to ${dates.at(-1)}` : "Not supplied",
+        selectedHorizon,
+        selectedForecastMethod: horizonEvidence?.selectedMethod ?? "Evidence unavailable",
+        allocationMode: planningSnapshot?.allocationMode,
+        plannedBudgets: planningSnapshot?.budgets,
+        decisionSupport: planningSnapshot?.decisionSupport,
+      });
+      markWorkflow("export");
       toast.success("Executive PDF report ready to print");
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : "Unable to export report");
@@ -85,7 +100,7 @@ export function InsightsPage() {
     <>
       <PageHeader
         title="AI executive insights"
-        description="Board-ready briefing with Gemini when available, plus a deterministic executive fallback for live demos."
+        description="Evidence-grounded briefing with deterministic offline output and optional Gemini wording."
         actions={
           <div className="flex flex-wrap gap-2">
             {insights && (
@@ -141,6 +156,46 @@ export function InsightsPage() {
 
       {insights && (
         <div className="grid gap-6">
+          <Card data-testid="insight-provenance" className="border-border/60 bg-gradient-card p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Evidence provenance
+                </div>
+                <p className="mt-1 text-sm font-semibold">
+                  {insights.provenance?.mode === "live_gemini"
+                    ? "Optional live Gemini enrichment"
+                    : "Deterministic offline distilled explanation"}
+                </p>
+              </div>
+              <Badge variant="outline">
+                Network used for result: {insights.provenance?.networkUsedForResult ? "Yes" : "No"}
+              </Badge>
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Evidence:{" "}
+              {insights.provenance?.evidenceSource.join("; ") ??
+                "Uploaded campaign metrics and deterministic summaries"}
+              .
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Generated: {insights.provenance?.generatedAt ?? "timestamp unavailable"}. Live AI is
+              never required for a valid forecast.
+            </p>
+            <details className="mt-3 text-xs">
+              <summary className="cursor-pointer font-medium">Limitations</summary>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
+                {(
+                  insights.provenance?.limitations ?? [
+                    "Observational evidence is not randomized incrementality proof.",
+                    "Forecast ranges are planning bounds, not guarantees.",
+                  ]
+                ).map((limitation) => (
+                  <li key={limitation}>{limitation}</li>
+                ))}
+              </ul>
+            </details>
+          </Card>
           <Card className="bg-gradient-hero border-border/60 min-w-0 p-6">
             <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-primary-glow">
               <Brain className="h-4 w-4" /> Executive summary

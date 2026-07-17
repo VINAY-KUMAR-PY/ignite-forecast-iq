@@ -55,7 +55,7 @@ type Level = "overall" | "channel" | "campaign_type" | "campaign";
 type ForecastTarget = "revenue" | "roas";
 
 export function ForecastPage() {
-  const { rows } = useData();
+  const { rows, markWorkflow } = useData();
   const [horizon, setHorizon] = useState<30 | 60 | 90>(30);
   const [level, setLevel] = useState<Level>("overall");
   const [value, setValue] = useState<string>("");
@@ -103,6 +103,7 @@ export function ForecastPage() {
       .then((response) => {
         if (!active) return;
         setApiForecast(response);
+        markWorkflow("forecast");
       })
       .catch((error: Error) => {
         if (!active) return;
@@ -112,7 +113,7 @@ export function ForecastPage() {
     return () => {
       active = false;
     };
-  }, [rows, horizon, level, selectedValue]);
+  }, [rows, horizon, level, selectedValue, markWorkflow]);
 
   useEffect(() => {
     if (!rows.length) return;
@@ -170,6 +171,7 @@ export function ForecastPage() {
     fetchForecastApi(rows, horizon, level, selectedValue)
       .then((response) => {
         setApiForecast(response);
+        markWorkflow("forecast");
       })
       .catch((error: Error) => {
         setApiForecast(null);

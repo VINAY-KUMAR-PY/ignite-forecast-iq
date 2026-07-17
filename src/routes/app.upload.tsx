@@ -18,7 +18,7 @@ export const Route = createFileRoute("/app/upload")({
 });
 
 export function UploadPage() {
-  const { setRows, loadDemo, rows, isDemo } = useData();
+  const { setRows, loadDemo, rows, isDemo, markWorkflow } = useData();
   const [result, setResult] = useState<ValidationResult | null>(null);
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -42,6 +42,7 @@ export function UploadPage() {
     setResult(finalResult);
     if (finalResult.rows.length > 0) {
       setRows(finalResult.rows, false);
+      markWorkflow("validate");
       toast.success(`Imported ${finalResult.rows.length.toLocaleString()} rows`);
     } else {
       toast.error("No valid rows found in file");

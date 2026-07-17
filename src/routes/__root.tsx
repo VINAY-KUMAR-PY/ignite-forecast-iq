@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Outlet, Link, createRootRouteWithContext, useRouter } from "@tanstack/react-router";
 import { useEffect } from "react";
 
-import { reportLovableError } from "../lib/lovable-error-reporting";
+import { reportClientError } from "../lib/client-error-reporting";
 import { DataProvider } from "../lib/data-store";
 import { ThemeProvider } from "../lib/theme";
 import { Toaster } from "../components/ui/sonner";
@@ -33,7 +33,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    reportClientError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
 
   return (
@@ -70,14 +70,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "AIgnition ForecastIQ - Ecommerce Forecasting and Budget Decisions" },
+      { title: "ForecastIQ - Ecommerce Forecasting and Budget Decisions" },
       {
         name: "description",
         content:
           "Forecast revenue and ROAS from GA4, Shopify, and Ads data with AI insights, budget simulation, and evaluator-safe offline predictions.",
       },
-      { name: "author", content: "AIgnition" },
-      { property: "og:title", content: "AIgnition ForecastIQ" },
+      { name: "author", content: "Aeddula Vinay Kumar" },
+      { property: "og:title", content: "ForecastIQ" },
       {
         property: "og:description",
         content: "AI-powered revenue and ROAS forecasting for ecommerce marketing teams.",
@@ -85,26 +85,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [
-      {
-        rel: "icon",
-        type: "image/svg+xml",
-        href: "/favicon.svg",
-      },
-      {
-        rel: "preconnect",
-        href: "https://fonts.googleapis.com",
-      },
-      {
-        rel: "preconnect",
-        href: "https://fonts.gstatic.com",
-        crossOrigin: "anonymous",
-      },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap",
-      },
-    ],
+    links: [{ rel: "icon", type: "image/svg+xml", href: "/favicon.svg" }],
   }),
   component: RootComponent,
   notFoundComponent: NotFoundComponent,

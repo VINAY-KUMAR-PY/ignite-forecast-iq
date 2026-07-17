@@ -7,7 +7,9 @@ import {
   Calculator,
   Database,
   LineChart,
+  Moon,
   Sparkles,
+  Sun,
   TrendingUp,
   Upload,
   Zap,
@@ -15,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { DEMO_REQUEST_KEY, useData } from "@/lib/data-store";
 import { MODEL_EVIDENCE } from "@/lib/model-validation.generated";
+import { useTheme } from "@/lib/theme";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -57,6 +60,8 @@ function Landing() {
 }
 
 function Nav({ onTryDemo }: { onTryDemo: () => void }) {
+  const { theme, toggle } = useTheme();
+
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/70 backdrop-blur-xl">
       <div className="container mx-auto flex h-16 items-center justify-between px-6">
@@ -82,11 +87,21 @@ function Nav({ onTryDemo }: { onTryDemo: () => void }) {
             Benefits
           </a>
         </nav>
-        <Link to="/app" onClick={onTryDemo}>
-          <Button variant="hero" size="sm">
-            Try Live Demo <ArrowRight className="ml-1 h-4 w-4" />
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={toggle}
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            className="grid h-9 w-9 place-items-center rounded-md border border-border text-muted-foreground transition hover:bg-accent hover:text-foreground"
+          >
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
+          <Link to="/app" onClick={onTryDemo}>
+            <Button variant="hero" size="sm">
+              Try Live Demo <ArrowRight className="ml-1 h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
       </div>
     </header>
   );
@@ -322,17 +337,17 @@ function MiniChart() {
     >
       <defs>
         <linearGradient id="g" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="oklch(0.7 0.2 265)" stopOpacity="0.5" />
-          <stop offset="100%" stopColor="oklch(0.7 0.2 265)" stopOpacity="0" />
+          <stop offset="0%" stopColor="var(--chart-1)" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="var(--chart-1)" stopOpacity="0" />
         </linearGradient>
       </defs>
       <path d={`${path} L 100 100 L 0 100 Z`} fill="url(#g)" />
-      <path d={path} stroke="oklch(0.7 0.2 265)" strokeWidth="1.2" fill="none" />
+      <path d={path} stroke="var(--chart-1)" strokeWidth="1.2" fill="none" />
       <path
         d={path
           .replace(/M 0 [\d.]+/, (m) => m)
           .replace(/L (\d+\.?\d*) /g, (m, x) => (Number(x) > 65 ? `L ${x} ` : m))}
-        stroke="oklch(0.78 0.18 195)"
+        stroke="var(--chart-2)"
         strokeWidth="1.2"
         strokeDasharray="2 2"
         fill="none"

@@ -39,15 +39,45 @@ class ValidationIssue(BaseModel):
     message: str
 
 
+class DataReadinessComponent(BaseModel):
+    key: Literal[
+        "schema_required",
+        "completeness_validity",
+        "historical_coverage",
+        "freshness",
+        "channel_campaign_coverage",
+        "spend_revenue_consistency",
+        "outliers_duplicates",
+    ]
+    label: str
+    score: int = Field(ge=0, le=100)
+    weight: int = Field(ge=0, le=100)
+    summary: str
+
+
+class DataReadinessScore(BaseModel):
+    score: int = Field(ge=0, le=100)
+    rating: Literal["Excellent", "Good", "Usable with caution", "Needs attention"]
+    components: List[DataReadinessComponent]
+    positiveEvidence: List[str]
+    warnings: List[str]
+    recommendedActions: List[str]
+    confidenceExplanation: str
+    evaluatedAsOf: str
+    metrics: Dict[str, float | int | str | bool]
+
+
 class ValidationResponse(BaseModel):
     rows: List[CampaignRow]
     issues: List[ValidationIssue]
     totalRows: int
     validRows: int
+    dataReadiness: Optional[DataReadinessScore] = None
 
 
 class ValidationRequest(BaseModel):
     rows: List[Dict[str, Any]]
+    asOfDate: Optional[str] = None
 
 
 class ForecastPoint(BaseModel):

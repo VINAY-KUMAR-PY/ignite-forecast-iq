@@ -99,6 +99,35 @@ The simulator provides automatic total-budget allocation and manual channel
 budgets. Each plan includes historical spend-support zones, safe ceilings, and
 an optimizer verdict that compares projected gain with forecast uncertainty.
 
+## Data Readiness Score
+
+Every validated upload receives a deterministic **Data Readiness Score from
+0-100** before it is used for planning. The same persisted assessment appears
+on Data Upload, the Executive Decision Center, and the Forecast confidence
+explanation. It reports a text rating, component scores, positive evidence,
+warnings, corrective actions, and an expandable methodology panel; if the API
+is unavailable, the UI says the score is unavailable instead of inventing a
+browser-only result.
+
+The weighted score reuses the existing schema adapter, row validator,
+multi-source reconciliation, and anomaly detector:
+
+| Component | Weight | Main evidence |
+|---|---:|---|
+| Schema and required fields | 20% | Date/spend/revenue mapping and adapter confidence |
+| Completeness and validity | 20% | Missing, invalid numeric/date, negative, and inconsistent values |
+| Historical coverage | 20% | Date-range length and cross-source date consistency |
+| Freshness | 10% | Latest valid date versus the displayed evaluation date |
+| Channel/campaign coverage | 10% | Usable channels, campaigns, and campaign types |
+| Spend/revenue consistency | 10% | Positive spend and revenue row coverage |
+| Outliers and duplicates | 10% | Existing severe-anomaly evidence and duplicate rows/files |
+
+Ratings are **Excellent** (90-100), **Good** (75-89), **Usable with caution**
+(60-74), and **Needs attention** (below 60). Historical coverage reaches full
+credit at 180 days. Single-source uploads are not penalized for missing
+optional sources. The score explains data-driven forecast confidence; it does
+not alter predictions, select a model, or guarantee accuracy.
+
 ## System Architecture
 
 ```mermaid
@@ -133,11 +162,11 @@ Latest regenerated walk-forward revenue interval coverage is
 **1.26% / 1.56% / 2.46%**. Full tables:
 [reports/backtest_summary.md](./reports/backtest_summary.md).
 
-Backend coverage is **93.69% measured locally** with
+Backend coverage is **94.01% measured locally** with
 `python -m pytest tests -q --cov=backend --cov-report=term-missing`; Evaluator CI
 enforces **92.05%** with `--cov-fail-under=92.05`.
 
-The reported local result is from Windows with Python 3.14.4: **252 passed, 2
+The reported local result is from Windows with Python 3.14.4: **289 passed, 2
 skipped**, with SHAP intentionally unavailable on Python 3.14 and two
 POSIX-shell-only tests skipped on Windows. Test totals can vary slightly by
 supported Python version and OS because SHAP-dependent behavior runs where

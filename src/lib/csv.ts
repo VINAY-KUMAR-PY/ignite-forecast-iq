@@ -1,5 +1,9 @@
 import type { CampaignRow, ValidationIssue, ValidationResult } from "./types";
 
+export interface ParsedCSVResult extends ValidationResult {
+  rawRows: Record<string, string>[];
+}
+
 const REQUIRED = [
   "date",
   "channel",
@@ -148,7 +152,7 @@ function friendlyChannel(value: string) {
   return value;
 }
 
-export function parseCSV(text: string): ValidationResult {
+export function parseCSV(text: string): ParsedCSVResult {
   const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
   const issues: ValidationIssue[] = [];
   if (lines.length < 2) {
@@ -157,6 +161,7 @@ export function parseCSV(text: string): ValidationResult {
       issues: [{ type: "missing", row: 0, message: "Empty file" }],
       totalRows: 0,
       validRows: 0,
+      rawRows: [],
     };
   }
   if (lines.length - 1 > MAX_UPLOAD_ROWS) {
@@ -171,10 +176,15 @@ export function parseCSV(text: string): ValidationResult {
       ],
       totalRows: lines.length - 1,
       validRows: 0,
+      rawRows: [],
     };
   }
 
   const rawHeader = parseLine(lines[0]);
+  const rawRows = lines.slice(1).map((line) => {
+    const values = parseLine(line);
+    return Object.fromEntries(rawHeader.map((column, index) => [column, values[index] ?? ""]));
+  });
   const header = rawHeader.map(normalizeHeader);
   const indexes = Object.fromEntries(
     REQUIRED.map((key) => [key, aliasIndexes(header, key)]),
@@ -185,6 +195,7 @@ export function parseCSV(text: string): ValidationResult {
       issues: [{ type: "missing", row: 0, message: "Missing date column or supported date alias" }],
       totalRows: lines.length - 1,
       validRows: 0,
+      rawRows,
     };
   }
 
@@ -269,7 +280,7 @@ export function parseCSV(text: string): ValidationResult {
       });
     }
   }
-  return { rows, issues, totalRows: lines.length - 1, validRows: rows.length };
+  return { rows, issues, totalRows: lines.length - 1, validRows: rows.length, rawRows };
 }
 
 export function toCSV(rows: CampaignRow[]): string {

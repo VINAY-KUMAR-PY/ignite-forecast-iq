@@ -3,12 +3,19 @@
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass
 from typing import Iterable, List, Tuple
 
 import numpy as np
 import pandas as pd
 
-from .schema_adapters import CANONICAL_COLUMNS, NUMERIC_COLUMNS, normalize_marketing_frame
+from .schema_adapters import (
+    CANONICAL_COLUMNS,
+    NUMERIC_COLUMNS,
+    AdapterResult,
+    normalize_marketing_frame,
+    reconcile_normalized_frames,
+)
 from .schemas import CampaignRow, ValidationIssue, ValidationResponse
 from .utils import parse_dates_safely
 
@@ -25,6 +32,27 @@ HOLIDAY_WEEKS = [
 BLACK_FRIDAY_DATES = ["2024-11-29", "2025-11-28", "2026-11-27"]
 MAX_UPLOAD_ROWS = int(os.getenv("MAX_UPLOAD_ROWS", "20000"))
 DEFAULT_SEASONALITY_REGION = os.getenv("FORECASTIQ_SEASONALITY_REGION", "US")
+SOURCE_FILE_ID_COLUMN = "__source_file_id"
+SOURCE_FILE_NAME_COLUMN = "__source_file_name"
+
+
+@dataclass
+class SourceValidationContext:
+    """Evidence emitted by the existing schema adapter for one uploaded source."""
+
+    source_id: str
+    source_name: str
+    raw_frame: pd.DataFrame
+    adapted: AdapterResult
+
+
+@dataclass
+class ValidationContext:
+    """Internal validation evidence consumed by the readiness scorer."""
+
+    raw_frame: pd.DataFrame
+    normalized_frame: pd.DataFrame
+    sources: list[SourceValidationContext]
 
 
 def rows_to_frame(rows: Iterable[CampaignRow]) -> pd.DataFrame:
@@ -35,6 +63,14 @@ def rows_to_frame(rows: Iterable[CampaignRow]) -> pd.DataFrame:
 
 def validate_records(records: Iterable[dict]) -> Tuple[pd.DataFrame, ValidationResponse]:
     """Normalize raw rows and return both a clean dataframe and validation issues."""
+    clean, response, _ = validate_records_with_context(records)
+    return clean, response
+
+
+def validate_records_with_context(
+    records: Iterable[dict],
+) -> tuple[pd.DataFrame, ValidationResponse, ValidationContext]:
+    """Validate once while retaining adapter evidence for readiness scoring."""
     raw = pd.DataFrame(list(records))
     issues: List[ValidationIssue] = []
     total_rows = len(raw)
@@ -46,7 +82,8 @@ def validate_records(records: Iterable[dict]) -> Tuple[pd.DataFrame, ValidationR
             totalRows=0,
             validRows=0,
         )
-        return pd.DataFrame(columns=REQUIRED_COLUMNS), response
+        context = ValidationContext(raw, pd.DataFrame(columns=REQUIRED_COLUMNS), [])
+        return pd.DataFrame(columns=REQUIRED_COLUMNS), response, context
 
     if total_rows > MAX_UPLOAD_ROWS:
         response = ValidationResponse(
@@ -61,14 +98,23 @@ def validate_records(records: Iterable[dict]) -> Tuple[pd.DataFrame, ValidationR
             totalRows=total_rows,
             validRows=0,
         )
-        return pd.DataFrame(columns=REQUIRED_COLUMNS), response
+        context = ValidationContext(raw, pd.DataFrame(columns=REQUIRED_COLUMNS), [])
+        return pd.DataFrame(columns=REQUIRED_COLUMNS), response, context
 
-    adapted = normalize_marketing_frame(raw)
-    for issue in adapted.issues:
-        issues.append(ValidationIssue(type="schema_adapter", row=0, message=f"{adapted.schema_type}: {issue}"))
-    raw = adapted.frame
+    sources = _normalize_sources(raw)
+    for source in sources:
+        for issue in source.adapted.issues:
+            issues.append(
+                ValidationIssue(
+                    type="schema_adapter",
+                    row=0,
+                    message=f"{source.adapted.schema_type}: {issue}",
+                )
+            )
+    normalized = reconcile_normalized_frames([source.adapted.frame for source in sources])
+    context = ValidationContext(raw, normalized.copy(), sources)
 
-    frame = raw[REQUIRED_COLUMNS].copy()
+    frame = normalized[REQUIRED_COLUMNS].copy()
     valid_mask = pd.Series(True, index=frame.index)
 
     parsed_dates = parse_dates_safely(frame["date"])
@@ -131,7 +177,41 @@ def validate_records(records: Iterable[dict]) -> Tuple[pd.DataFrame, ValidationR
 
     rows = [CampaignRow(**record) for record in clean.to_dict(orient="records")]
     response = ValidationResponse(rows=rows, issues=issues, totalRows=total_rows, validRows=len(rows))
-    return clean, response
+    return clean, response, context
+
+
+def _normalize_sources(raw: pd.DataFrame) -> list[SourceValidationContext]:
+    """Run the canonical adapter per tagged file, then let reconciliation combine them."""
+    if SOURCE_FILE_ID_COLUMN not in raw.columns:
+        source_raw = raw.drop(columns=[SOURCE_FILE_NAME_COLUMN], errors="ignore")
+        return [
+            SourceValidationContext(
+                source_id="source-1",
+                source_name=str(raw.get(SOURCE_FILE_NAME_COLUMN, pd.Series(["Uploaded data"])).iloc[0]),
+                raw_frame=source_raw.copy(),
+                adapted=normalize_marketing_frame(source_raw),
+            )
+        ]
+
+    sources: list[SourceValidationContext] = []
+    source_ids = raw[SOURCE_FILE_ID_COLUMN].fillna("unidentified-source").astype(str)
+    for source_id in dict.fromkeys(source_ids.tolist()):
+        source_mask = source_ids == source_id
+        tagged = raw.loc[source_mask].copy()
+        names = tagged.get(SOURCE_FILE_NAME_COLUMN, pd.Series(dtype=str)).dropna().astype(str)
+        source_name = names.iloc[0] if not names.empty else source_id
+        source_raw = tagged.drop(
+            columns=[SOURCE_FILE_ID_COLUMN, SOURCE_FILE_NAME_COLUMN], errors="ignore"
+        ).dropna(axis=1, how="all")
+        sources.append(
+            SourceValidationContext(
+                source_id=source_id,
+                source_name=source_name,
+                raw_frame=source_raw.copy(),
+                adapted=normalize_marketing_frame(source_raw),
+            )
+        )
+    return sources
 
 
 def aggregate_daily(frame: pd.DataFrame) -> pd.DataFrame:

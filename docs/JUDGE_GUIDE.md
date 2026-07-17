@@ -15,6 +15,7 @@ without hiding uncertainty or silently extrapolating beyond historical evidence.
 | Revenue and ROAS bounds | `lower_*`, `expected_*`, `upper_*` output columns |
 | Channel/campaign-type/campaign visibility | Forecast level and filter controls |
 | Budget planning | Automatic/manual simulator modes |
+| Evidence-based input quality | Data Readiness Score on Upload, Decision Center, and Forecast |
 | AI-assisted causal layer | AI Insights provenance and causal limitations |
 | Evaluator-safe delivery | `run.sh`, pinned `requirements.txt`, committed artifact |
 
@@ -33,7 +34,8 @@ days and 36 `trained_model_baseline_anchored` rows at 60/90 days.
 ## Six-Step Demo
 
 1. **Upload** the sample CSV and show row-level validation.
-2. **Validate** the accepted-row count and any issues.
+2. **Validate** the accepted-row count, then expand **How this score is
+   calculated** under the Data Readiness Score.
 3. **Forecast** all horizons; select **Campaign type** and explain downside,
    expected, and upside planning cases.
 4. **Simulate** one automatic total budget, switch to manual, and cross a safe
@@ -43,6 +45,23 @@ days and 36 `trained_model_baseline_anchored` rows at 60/90 days.
 6. **Export** the executive PDF/text brief.
 
 Use **Show workflow** in the app header for the keyboard-accessible judge tour.
+
+## Data Readiness Methodology
+
+The score is a deterministic weighted sum of evidence already produced by
+ForecastIQ's validation pipeline: schema/required fields 20%, completeness and
+validity 20%, history and cross-source dates 20%, freshness 10%,
+channel/campaign breadth 10%, spend/revenue coverage 10%, and severe
+outliers/duplicates 10%. Ratings are Excellent (90-100), Good (75-89), Usable
+with caution (60-74), and Needs attention (below 60).
+
+The panel names evidence and corrective actions, so quality is never conveyed
+only by color. It accepts a single source without requiring optional files,
+handles unknown filenames and unseen channel labels, and explicitly warns on
+short/stale/future history, zero spend or revenue, invalid values, duplicates,
+severe outliers, and inconsistent source windows. This assessment can widen or
+lower trust in forecast confidence, but it never changes prediction values or
+model selection.
 
 ## Core Technical Evidence
 

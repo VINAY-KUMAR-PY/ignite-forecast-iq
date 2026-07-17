@@ -23,6 +23,7 @@ import {
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { ModelPathConfidenceBadge } from "@/components/model-path-confidence-badge";
+import { DataReadinessPanel } from "@/components/data-readiness-score";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -191,6 +192,8 @@ export function ForecastPage() {
       />
 
       <ModelPathConfidenceBadge />
+
+      <DataReadinessPanel context="forecast" />
 
       {apiError && !apiForecast && (
         <Card className="mb-6 border-warning/40 bg-warning/5 p-5">

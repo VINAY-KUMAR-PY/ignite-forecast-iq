@@ -139,6 +139,21 @@ function decisionResponse(): DecisionSupportResponse {
       expectedProfit: 21500,
       targetGapRevenue: 0,
       targetGapRoas: 0,
+      baselineExpectedRevenue: 29700,
+      optimizedExpectedRevenue: 31000,
+      absoluteGain: 1300,
+      gainPct: 4.38,
+      baselineIntervalHalfWidth: 2700,
+      optimizedIntervalHalfWidth: 2800,
+      uncertaintyNoiseFloor: 5500,
+      uncertaintyCalculation:
+        "Noise floor = baseline half-width $2,700.00 + optimized half-width $2,800.00 = $5,500.00; projected gain = $1,300.00.",
+      meaningful: false,
+      outcome: "IMPROVED_WITHIN_NOISE",
+      verdict: "Hypothesis, not guarantee: the projected gain is inside forecast uncertainty.",
+      safeBudgetCeilings: { "Google Ads": 4000, "Meta Ads": 4000, "Microsoft Ads": 4000 },
+      maxSupportedTotalBudget: 12000,
+      constraintNotes: ["Allocations are reconciled to cents."],
       recommendations: [
         {
           channel: "Google Ads",
@@ -180,6 +195,29 @@ function decisionResponse(): DecisionSupportResponse {
         drivers: ["Strong ROAS"],
       },
     ],
+    planningZones: ["Google Ads", "Meta Ads", "Microsoft Ads"].map((channel) => ({
+      channel,
+      plannedBudget: 3000,
+      recentBaselineBudget: 3000,
+      historicalP90: 4000,
+      historicalMaximum: 4200,
+      safeBudgetCeiling: 4000,
+      ratioVsP90: 0.75,
+      overshootPct: 0,
+      comparableWindowCount: 12,
+      zone: "SUPPORTED" as const,
+      confidenceImpact: "none" as const,
+      underinvestmentRisk: false,
+      reason: "Planned spend is within the historical p90 of comparable windows.",
+    })),
+    overallPlanZone: {
+      zone: "SUPPORTED",
+      weightedSeverityScore: 0,
+      unsupportedChannels: [],
+      plannedBudget: 9000,
+      maxSupportedTotalBudget: 12000,
+      reason: "Spend-weighted severity is 0.00 on a 0-3 scale.",
+    },
     validation: { rows: [], issues: [], totalRows: 1, validRows: 1 },
   };
 }
@@ -368,6 +406,30 @@ describe("core dashboard route behavior", () => {
     expect(screen.getByRole("button", { name: "Base (0%)" })).toHaveClass("border-primary");
     expect(screen.getByRole("button", { name: "+50%" })).toBeInTheDocument();
     expect(await screen.findByText("Projected revenue")).toBeInTheDocument();
+    expect(screen.getByTestId("automatic-allocation")).toBeInTheDocument();
+    expect(screen.getAllByText(/Hypothesis, not guarantee/i)).not.toHaveLength(0);
+  });
+
+  it("switches budget modes while preserving total and sends exact automatic allocations", async () => {
+    const user = userEvent.setup();
+    renderWithData(<SimulatorPage />);
+
+    const totalInput = await screen.findByLabelText("Total budget");
+    await user.clear(totalInput);
+    await user.type(totalInput, "10001");
+
+    await waitFor(() => {
+      const latestCall = apiMocks.simulateBudgetsApi.mock.calls.at(-1);
+      const payload = latestCall?.[2] as Record<string, number>;
+      expect(Object.values(payload).reduce((sum, value) => sum + value, 0)).toBe(10001);
+    });
+
+    await user.click(screen.getByRole("button", { name: "Manual channel budgets" }));
+    expect(screen.queryByTestId("automatic-allocation")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Google Ads planned budget input")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Automatic allocation" }));
+    expect(await screen.findByDisplayValue("10001")).toBeInTheDocument();
   });
 
   it("covers AI insights ready, loading, and error states", async () => {

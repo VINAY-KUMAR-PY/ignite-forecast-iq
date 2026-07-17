@@ -71,7 +71,7 @@ export function DecisionSupportPanel({
           <div>
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-semibold">AI budget optimizer</h3>
+              <h3 className="text-sm font-semibold">Evidence-constrained budget optimizer</h3>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
               Set target revenue and ROAS, then compare recommended Google, Meta and Microsoft
@@ -124,6 +124,65 @@ export function DecisionSupportPanel({
             value={fmtCurrency(optimizer.expectedProfit)}
             hint="revenue minus media spend"
           />
+        </div>
+
+        <div
+          data-testid="optimizer-uncertainty-verdict"
+          className="mt-4 rounded-lg border border-border/60 bg-background/50 p-4"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Uncertainty-aware verdict
+              </div>
+              <p className="mt-1 text-sm font-semibold">{optimizer.verdict}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {optimizer.uncertaintyCalculation}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline" className={optimizerOutcomeBadgeClass(optimizer.outcome)}>
+                {optimizer.outcome.replaceAll("_", " ")}
+              </Badge>
+              <Badge
+                variant="outline"
+                className={
+                  optimizer.meaningful
+                    ? "border-success/50 text-success"
+                    : "border-warning/50 text-warning"
+                }
+              >
+                {optimizer.meaningful
+                  ? "Meaningful vs uncertainty"
+                  : "Not meaningful vs uncertainty"}
+              </Badge>
+            </div>
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <DecisionStat
+              label="Expected gain"
+              value={formatMoneyDelta(optimizer.absoluteGain)}
+              hint={`${optimizer.gainPct >= 0 ? "+" : ""}${optimizer.gainPct.toFixed(2)}% vs current plan`}
+            />
+            <DecisionStat
+              label="Noise floor"
+              value={fmtCurrency(optimizer.uncertaintyNoiseFloor)}
+              hint="sum of baseline and optimized interval half-widths"
+            />
+            <DecisionStat
+              label="Safe alternative"
+              value={fmtCurrency(optimizer.maxSupportedTotalBudget)}
+              hint="maximum combined historical p90 ceiling"
+            />
+          </div>
+          <details className="mt-3 text-xs">
+            <summary className="cursor-pointer font-medium">Why this recommendation?</summary>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
+              {optimizer.constraintNotes.map((note) => (
+                <li key={note}>{note}</li>
+              ))}
+            </ul>
+          </details>
         </div>
 
         <div
@@ -195,10 +254,10 @@ export function DecisionSupportPanel({
           />
           <EvidenceCard
             title="Evidence and Confidence"
-            value={`${brief.confidenceScore}/100 confidence, ${brief.riskLevel.toLowerCase()} risk`}
-            detail={`Expected ${formatMoneyDelta(brief.revenueLift)} revenue lift and ${formatRoasDelta(
-              brief.roasLift,
-            )} ROAS impact from computed simulator outputs.`}
+            value={optimizer.verdict}
+            detail={`Projected gain ${formatMoneyDelta(optimizer.absoluteGain)} versus a ${fmtCurrency(
+              optimizer.uncertaintyNoiseFloor,
+            )} uncertainty noise floor.`}
           />
         </div>
 
@@ -530,6 +589,16 @@ function optimizerRiskBadgeClass(level: RiskLevel) {
   if (level === "High") return "border-destructive/30 bg-destructive/15 text-destructive";
   if (level === "Medium") return "border-warning/30 bg-warning/15 text-warning";
   return "border-success/30 bg-success/15 text-success";
+}
+
+function optimizerOutcomeBadgeClass(outcome: BudgetOptimizerResult["outcome"]) {
+  if (outcome === "IMPROVED_ABOVE_NOISE") {
+    return "border-success/30 bg-success/15 text-success";
+  }
+  if (outcome === "IMPROVED_WITHIN_NOISE" || outcome === "NO_CHANGE") {
+    return "border-warning/30 bg-warning/15 text-warning";
+  }
+  return "border-destructive/30 bg-destructive/15 text-destructive";
 }
 
 function clampNumber(value: number, min: number, max: number) {

@@ -129,7 +129,53 @@ export interface BudgetOptimizerResult {
   expectedProfit: number;
   targetGapRevenue: number;
   targetGapRoas: number;
+  baselineExpectedRevenue: number;
+  optimizedExpectedRevenue: number;
+  absoluteGain: number;
+  gainPct: number;
+  baselineIntervalHalfWidth: number;
+  optimizedIntervalHalfWidth: number;
+  uncertaintyNoiseFloor: number;
+  uncertaintyCalculation: string;
+  meaningful: boolean;
+  outcome:
+    | "NO_CHANGE"
+    | "INFEASIBLE"
+    | "IMPROVED_WITHIN_NOISE"
+    | "IMPROVED_ABOVE_NOISE"
+    | "DEGRADED";
+  verdict: string;
+  safeBudgetCeilings: Record<string, number>;
+  maxSupportedTotalBudget: number;
+  constraintNotes: string[];
   recommendations: BudgetRecommendation[];
+}
+
+export type PlanningZone = "SUPPORTED" | "CAUTION" | "HIGH_EXTRAPOLATION" | "UNSUPPORTED";
+
+export interface ChannelPlanningZone {
+  channel: string;
+  plannedBudget: number;
+  recentBaselineBudget: number;
+  historicalP90: number;
+  historicalMaximum: number;
+  safeBudgetCeiling: number;
+  ratioVsP90?: number | null;
+  overshootPct?: number | null;
+  comparableWindowCount: number;
+  zone: PlanningZone;
+  confidenceImpact: "none" | "moderate" | "material" | "severe";
+  underinvestmentRisk: boolean;
+  reason: string;
+}
+
+export interface OverallPlanningZone {
+  zone: PlanningZone;
+  weightedSeverityScore: number;
+  unsupportedChannels: string[];
+  plannedBudget: number;
+  maxSupportedTotalBudget: number;
+  reason: string;
 }
 
 export interface WhatIfScenarioResult {
@@ -175,6 +221,8 @@ export interface DecisionSupportResponse {
   risks: DetectionItem[];
   opportunities: DetectionItem[];
   channelHealth: ChannelHealthScore[];
+  planningZones: ChannelPlanningZone[];
+  overallPlanZone: OverallPlanningZone;
   validation: ValidationResult;
 }
 
@@ -226,6 +274,14 @@ export interface InsightsResponse {
     contradictingEvidence: string[];
     recommendedTest: string;
   }>;
+  provenance?: {
+    mode: "deterministic_offline" | "live_gemini";
+    networkUsedForResult: boolean;
+    networkRequired: boolean;
+    evidenceSource: string[];
+    generatedAt: string;
+    limitations: string[];
+  };
 }
 
 export interface SpendCurveResponse {

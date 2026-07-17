@@ -9,9 +9,15 @@ aggregates.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import date, timedelta
 import math
 from typing import Iterable
 
+from .planning_guardrails import (
+    build_channel_planning_zone,
+    build_optimizer_plan,
+    build_overall_planning_zone,
+)
 from .schemas import CampaignRow, WhatIfScenarioInput
 
 
@@ -42,6 +48,7 @@ class ChannelAggregate:
 class AggregateBundle:
     row_count: int
     summaries: list[ChannelAggregate]
+    all_dates: list[str] = field(default_factory=list)
 
     @property
     def aggregate_count(self) -> int:
@@ -80,27 +87,37 @@ def aggregate_channel_summaries(rows: Iterable[CampaignRow]) -> AggregateBundle:
             daily["spend"] += spend
             daily["revenue"] += revenue
 
-    sorted_dates = sorted(all_dates)
+    sorted_dates = _complete_date_range(all_dates)
     recent_dates = set(sorted_dates[-30:])
     previous_dates = set(sorted_dates[-60:-30])
     for summary in channels.values():
         summary.recent_spend = sum(
-            values["spend"] for date, values in summary.daily.items() if date in recent_dates
+            values["spend"]
+            for date, values in summary.daily.items()
+            if date in recent_dates
         )
         summary.recent_revenue = sum(
-            values["revenue"] for date, values in summary.daily.items() if date in recent_dates
+            values["revenue"]
+            for date, values in summary.daily.items()
+            if date in recent_dates
         )
         summary.previous_spend = sum(
-            values["spend"] for date, values in summary.daily.items() if date in previous_dates
+            values["spend"]
+            for date, values in summary.daily.items()
+            if date in previous_dates
         )
         summary.previous_revenue = sum(
-            values["revenue"] for date, values in summary.daily.items() if date in previous_dates
+            values["revenue"]
+            for date, values in summary.daily.items()
+            if date in previous_dates
         )
         summary.recent_days = max(1, len(summary.dates & recent_dates))
         summary.previous_days = max(1, len(summary.dates & previous_dates))
 
     ordered = sorted(channels.values(), key=lambda item: item.channel)
-    return AggregateBundle(row_count=row_count, summaries=ordered)
+    return AggregateBundle(
+        row_count=row_count, summaries=ordered, all_dates=sorted_dates
+    )
 
 
 def public_summary_rows(bundle: AggregateBundle) -> list[dict[str, float | str]]:
@@ -118,9 +135,15 @@ def public_summary_rows(bundle: AggregateBundle) -> list[dict[str, float | str]]
     ]
 
 
-def validate_budget_channels(bundle: AggregateBundle, budgets: dict[str, float], operation: str) -> None:
+def validate_budget_channels(
+    bundle: AggregateBundle, budgets: dict[str, float], operation: str
+) -> None:
     observed = {summary.channel.casefold() for summary in bundle.summaries}
-    unknown = [channel for channel in budgets if str(channel).strip().casefold() not in observed]
+    unknown = [
+        channel
+        for channel in budgets
+        if str(channel).strip().casefold() not in observed
+    ]
     if unknown:
         raise ValueError(
             f"{operation} budget channel '{unknown[0]}' is not present in the uploaded data. "
@@ -128,8 +151,13 @@ def validate_budget_channels(bundle: AggregateBundle, budgets: dict[str, float],
         )
 
 
-def build_lightweight_simulation(bundle: AggregateBundle, horizon: int, budgets: dict[str, float]) -> dict:
-    channels = [_simulate_channel(summary, int(horizon), budgets) for summary in bundle.summaries]
+def build_lightweight_simulation(
+    bundle: AggregateBundle, horizon: int, budgets: dict[str, float]
+) -> dict:
+    channels = [
+        _simulate_channel(summary, int(horizon), budgets)
+        for summary in bundle.summaries
+    ]
     total_new_spend = sum(item["newTotalSpend"] for item in channels)
     total_base_spend = sum(item["baselineTotalSpend"] for item in channels)
     total_projected = sum(item["projectedRevenue"] for item in channels)
@@ -143,7 +171,12 @@ def build_lightweight_simulation(bundle: AggregateBundle, horizon: int, budgets:
     for item in channels:
         efficiency = 50
         if projected_roas > 0:
-            efficiency += min(35, max(-35, (item["projectedRoas"] - projected_roas) / projected_roas * 50))
+            efficiency += min(
+                35,
+                max(
+                    -35, (item["projectedRoas"] - projected_roas) / projected_roas * 50
+                ),
+            )
         roas_decomposition.append(
             {
                 "channel": item["channel"],
@@ -185,9 +218,22 @@ def build_lightweight_decision_support(
     simulation = build_lightweight_simulation(bundle, horizon, budgets)
     stats = _channel_stats(bundle, simulation, budgets)
     health = _channel_health(stats)
-    optimizer = _optimizer(stats, health, simulation["totals"], target_revenue, target_roas)
-    scenario_results = _scenario_results(stats, simulation["totals"], budgets, scenarios or _default_scenarios(stats))
-    risks = _risks(stats, health, simulation["totals"], target_revenue, target_roas)
+    planning_zones = _planning_zones(bundle, horizon, budgets)
+    overall_plan_zone = build_overall_planning_zone(planning_zones)
+    optimizer = _optimizer(
+        stats,
+        health,
+        simulation["totals"],
+        target_revenue,
+        target_roas,
+        planning_zones,
+    )
+    scenario_results = _scenario_results(
+        stats, simulation["totals"], budgets, scenarios or _default_scenarios(stats)
+    )
+    risks = _risks(
+        stats, health, simulation["totals"], target_revenue, target_roas, planning_zones
+    )
     opportunities = _opportunities(stats, health, optimizer["recommendations"])
     return {
         "optimizer": optimizer,
@@ -195,7 +241,28 @@ def build_lightweight_decision_support(
         "risks": risks,
         "opportunities": opportunities,
         "channelHealth": health,
+        "planningZones": planning_zones,
+        "overallPlanZone": overall_plan_zone,
     }
+
+
+def _planning_zones(
+    bundle: AggregateBundle, horizon: int, budgets: dict[str, float]
+) -> list[dict]:
+    zones = []
+    for summary in bundle.summaries:
+        daily_spend = [
+            summary.daily.get(day, {}).get("spend", 0.0) for day in bundle.all_dates
+        ]
+        zones.append(
+            build_channel_planning_zone(
+                summary.channel,
+                budgets.get(summary.channel, _baseline_total_spend(summary, horizon)),
+                daily_spend,
+                horizon,
+            )
+        )
+    return zones
 
 
 def build_lightweight_spend_curve(
@@ -220,14 +287,22 @@ def build_lightweight_spend_curve(
         revenue = _project_revenue(baseline_revenue, baseline_spend, spend, summary)
         roas = _safe_ratio(revenue, spend)
         if previous is not None:
-            marginal = _safe_ratio(revenue - previous["revenue"], spend - previous["spend"])
+            marginal = _safe_ratio(
+                revenue - previous["revenue"], spend - previous["spend"]
+            )
             if saturation_spend == 0.0 and marginal < 1.5:
                 saturation_spend = spend
-        curve.append({"spend": _round(spend), "revenue": _round(revenue), "roas": _round(roas)})
+        curve.append(
+            {"spend": _round(spend), "revenue": _round(revenue), "roas": _round(roas)}
+        )
         previous = {"spend": spend, "revenue": revenue}
 
-    plus_revenue = _project_revenue(baseline_revenue, baseline_spend, current_spend + 1000.0, summary)
-    current_revenue = _project_revenue(baseline_revenue, baseline_spend, current_spend, summary)
+    plus_revenue = _project_revenue(
+        baseline_revenue, baseline_spend, current_spend + 1000.0, summary
+    )
+    current_revenue = _project_revenue(
+        baseline_revenue, baseline_spend, current_spend, summary
+    )
     return {
         "curve": curve,
         "saturation_spend": _round(saturation_spend or curve[-1]["spend"]),
@@ -235,13 +310,22 @@ def build_lightweight_spend_curve(
     }
 
 
-def _simulate_channel(summary: ChannelAggregate, horizon: int, budgets: dict[str, float]) -> dict:
+def _simulate_channel(
+    summary: ChannelAggregate, horizon: int, budgets: dict[str, float]
+) -> dict:
     horizon = max(1, int(horizon))
     baseline_total_spend = _baseline_total_spend(summary, horizon)
     baseline_revenue = _baseline_total_revenue(summary, horizon)
     new_total_spend = _non_negative(budgets.get(summary.channel, baseline_total_spend))
-    projected_revenue = _project_revenue(baseline_revenue, baseline_total_spend, new_total_spend, summary)
-    uncertainty = 0.15 + min(0.18, abs(new_total_spend - baseline_total_spend) / max(baseline_total_spend, 1.0) * 0.08)
+    projected_revenue = _project_revenue(
+        baseline_revenue, baseline_total_spend, new_total_spend, summary
+    )
+    uncertainty = 0.15 + min(
+        0.18,
+        abs(new_total_spend - baseline_total_spend)
+        / max(baseline_total_spend, 1.0)
+        * 0.08,
+    )
     lower = max(0.0, projected_revenue * (1 - uncertainty))
     upper = projected_revenue * (1 + uncertainty)
     return {
@@ -261,12 +345,16 @@ def _simulate_channel(summary: ChannelAggregate, horizon: int, budgets: dict[str
     }
 
 
-def _channel_stats(bundle: AggregateBundle, simulation: dict, budgets: dict[str, float]) -> list[dict]:
+def _channel_stats(
+    bundle: AggregateBundle, simulation: dict, budgets: dict[str, float]
+) -> list[dict]:
     by_channel = {item["channel"]: item for item in simulation["channels"]}
     total_budget = sum(_non_negative(value) for value in budgets.values()) or sum(
         item["newTotalSpend"] for item in simulation["channels"]
     )
-    total_recent_revenue = sum(summary.recent_revenue or summary.revenue for summary in bundle.summaries)
+    total_recent_revenue = sum(
+        summary.recent_revenue or summary.revenue for summary in bundle.summaries
+    )
     stats = []
     for summary in bundle.summaries:
         simulated = by_channel[summary.channel]
@@ -282,7 +370,9 @@ def _channel_stats(bundle: AggregateBundle, simulation: dict, budgets: dict[str,
                 "channel": summary.channel,
                 "budget": budget,
                 "budget_share": _safe_ratio(budget, total_budget),
-                "recent_revenue_share": _safe_ratio(recent_revenue, total_recent_revenue),
+                "recent_revenue_share": _safe_ratio(
+                    recent_revenue, total_recent_revenue
+                ),
                 "recent_revenue": recent_revenue,
                 "recent_spend": recent_spend,
                 "recent_roas": recent_roas,
@@ -299,10 +389,15 @@ def _channel_stats(bundle: AggregateBundle, simulation: dict, budgets: dict[str,
 
 
 def _channel_health(stats: list[dict]) -> list[dict]:
-    avg_roas = _weighted_average([item["projected_roas"] for item in stats], [max(item["budget"], 1.0) for item in stats])
+    avg_roas = _weighted_average(
+        [item["projected_roas"] for item in stats],
+        [max(item["budget"], 1.0) for item in stats],
+    )
     health = []
     for item in stats:
-        roas_score = _clamp(_safe_ratio(item["projected_roas"], max(avg_roas, 0.01)) * 35, 0, 40)
+        roas_score = _clamp(
+            _safe_ratio(item["projected_roas"], max(avg_roas, 0.01)) * 35, 0, 40
+        )
         growth_score = _clamp(25 + item["revenue_trend_pct"] * 0.45, 0, 30)
         efficiency_delta = (item["recent_revenue_share"] - item["budget_share"]) * 100
         efficiency_score = _clamp(18 + efficiency_delta * 0.7, 0, 20)
@@ -311,15 +406,25 @@ def _channel_health(stats: list[dict]) -> list[dict]:
             {
                 "channel": item["channel"],
                 "score": score,
-                "status": "healthy" if score >= 75 else "watch" if score >= 55 else "critical",
+                "status": "healthy"
+                if score >= 75
+                else "watch"
+                if score >= 55
+                else "critical",
                 "revenueTrendPct": _round(item["revenue_trend_pct"]),
                 "roasTrendPct": _round(item["roas_trend_pct"]),
                 "spendSharePct": _round(item["budget_share"] * 100),
                 "revenueSharePct": _round(item["recent_revenue_share"] * 100),
                 "drivers": [
-                    "ROAS above blended average" if item["projected_roas"] >= avg_roas else "ROAS below blended average",
-                    "Revenue momentum positive" if item["revenue_trend_pct"] >= 0 else "Revenue momentum declining",
-                    "Revenue share exceeds spend share" if efficiency_delta >= 5 else "Spend share broadly aligned",
+                    "ROAS above blended average"
+                    if item["projected_roas"] >= avg_roas
+                    else "ROAS below blended average",
+                    "Revenue momentum positive"
+                    if item["revenue_trend_pct"] >= 0
+                    else "Revenue momentum declining",
+                    "Revenue share exceeds spend share"
+                    if efficiency_delta >= 5
+                    else "Spend share broadly aligned",
                 ],
             }
         )
@@ -332,66 +437,16 @@ def _optimizer(
     totals: dict,
     target_revenue: float | None,
     target_roas: float | None,
+    planning_zones: list[dict],
 ) -> dict:
-    current_budget = totals["totalNewSpend"]
-    current_revenue = totals["totalProjectedRevenue"]
-    current_roas = totals["projectedRoas"]
-    health_by_channel = {item["channel"]: item for item in health}
-    weighted_roas = max(
-        0.01,
-        _weighted_average([item["projected_roas"] for item in stats], [max(item["budget"], 1.0) for item in stats]),
+    return build_optimizer_plan(
+        stats,
+        health,
+        totals,
+        target_revenue,
+        target_roas,
+        planning_zones,
     )
-    recommended_total = current_budget
-    if target_revenue and target_revenue > current_revenue:
-        recommended_total = max(recommended_total, target_revenue / max(weighted_roas * 0.97, 0.01))
-    if target_roas and target_roas > current_roas and (not target_revenue or target_revenue <= current_revenue):
-        recommended_total *= max(0.75, min(1.0, _safe_ratio(current_roas, target_roas)))
-    if current_budget > 0:
-        recommended_total = _clamp(recommended_total, current_budget * 0.65, current_budget * 1.65)
-
-    weights = []
-    for item in stats:
-        health_score = health_by_channel.get(item["channel"], {}).get("score", 50.0)
-        momentum = _clamp(1 + item["revenue_trend_pct"] / 100, 0.6, 1.45)
-        weights.append(max(item["projected_roas"], item["recent_roas"], 0.05) * momentum * (0.55 + health_score / 100))
-    total_weight = sum(weights) or 1.0
-
-    recommendations = []
-    expected_revenue = 0.0
-    for item, weight in zip(stats, weights):
-        recommended_budget = recommended_total * weight / total_weight
-        recommended_budget = recommended_budget * 0.65 + item["budget"] * 0.35
-        revenue = _scenario_revenue(item, recommended_budget)
-        expected_revenue += revenue
-        delta = recommended_budget - item["budget"]
-        direction = "Increase" if delta > 0 else "Reduce" if delta < 0 else "Hold"
-        recommendations.append(
-            {
-                "channel": item["channel"],
-                "currentBudget": _round(item["budget"]),
-                "recommendedBudget": _round(recommended_budget),
-                "deltaBudget": _round(delta),
-                "currentSharePct": _round(item["budget_share"] * 100),
-                "recommendedSharePct": _round(_safe_ratio(recommended_budget, recommended_total) * 100),
-                "expectedRevenue": _round(revenue),
-                "expectedRoas": _round(_safe_ratio(revenue, recommended_budget)),
-                "rationale": f"{direction} based on ROAS, revenue momentum and spend/revenue share balance.",
-            }
-        )
-
-    expected_roas = _safe_ratio(expected_revenue, recommended_total)
-    return {
-        "targetRevenue": target_revenue,
-        "targetRoas": target_roas,
-        "currentBudget": _round(current_budget),
-        "recommendedBudget": _round(recommended_total),
-        "expectedRevenue": _round(expected_revenue),
-        "expectedRoas": _round(expected_roas),
-        "expectedProfit": _round(expected_revenue - recommended_total),
-        "targetGapRevenue": _round((target_revenue - expected_revenue) if target_revenue else 0.0),
-        "targetGapRoas": _round((target_roas - expected_roas) if target_roas else 0.0),
-        "recommendations": sorted(recommendations, key=lambda item: item["deltaBudget"], reverse=True),
-    }
 
 
 def _scenario_results(
@@ -408,8 +463,12 @@ def _scenario_results(
         scenario_budgets = {}
         scenario_revenue = 0.0
         for item in stats:
-            multiplier = _non_negative(scenario.budgetMultipliers.get(item["channel"], 1.0))
-            new_budget = _non_negative(budgets.get(item["channel"], item["budget"])) * multiplier
+            multiplier = _non_negative(
+                scenario.budgetMultipliers.get(item["channel"], 1.0)
+            )
+            new_budget = (
+                _non_negative(budgets.get(item["channel"], item["budget"])) * multiplier
+            )
             scenario_budgets[item["channel"]] = _round(new_budget)
             scenario_revenue += _scenario_revenue(item, new_budget)
         spend = sum(scenario_budgets.values())
@@ -422,7 +481,9 @@ def _scenario_results(
                 "projectedRevenue": _round(scenario_revenue),
                 "projectedRoas": _round(roas),
                 "projectedProfit": _round(profit),
-                "revenueDeltaPct": _round(_pct_change(scenario_revenue, baseline_revenue)),
+                "revenueDeltaPct": _round(
+                    _pct_change(scenario_revenue, baseline_revenue)
+                ),
                 "roasDeltaPct": _round(_pct_change(roas, baseline_roas)),
                 "profitDelta": _round(profit - baseline_profit),
                 "budgets": scenario_budgets,
@@ -437,68 +498,182 @@ def _risks(
     totals: dict,
     target_revenue: float | None,
     target_roas: float | None,
+    planning_zones: list[dict],
 ) -> list[dict]:
     risks = []
+    zone_by_channel = {item["channel"]: item for item in planning_zones}
     for item in stats:
-        recent_spend = max(0.0, float(item["recent_spend"]))
-        budget = max(0.0, float(item["budget"]))
-        extrapolation_ratio = budget / max(recent_spend, 1.0)
-        if budget > 0 and (recent_spend <= 0 or extrapolation_ratio >= 20):
-            severity = "high" if extrapolation_ratio >= 50 or recent_spend <= 0 else "medium"
+        planning_zone = zone_by_channel.get(item["channel"])
+        if planning_zone and planning_zone["zone"] != "SUPPORTED":
+            severity = (
+                "high"
+                if planning_zone["zone"] in {"HIGH_EXTRAPOLATION", "UNSUPPORTED"}
+                else "medium"
+            )
+            zone_name = str(planning_zone["zone"]).replace("_", " ").lower()
             risks.append(
                 _detection(
                     "budget_extrapolation",
                     item["channel"],
                     severity,
-                    min(100, extrapolation_ratio),
+                    min(100, float(planning_zone["overshootPct"] or 0) + 40),
+                    f"{item['channel']} is {zone_name}: {planning_zone['reason']}",
                     (
-                        f"{item['channel']} planned budget is {extrapolation_ratio:.1f}x recent 30-day spend, "
-                        "so projected returns are extrapolated beyond observed history."
-                    ),
-                    (
-                        "Treat this scenario as low-confidence; stage the increase through controlled tests "
-                        "or add more historical evidence before approving the full budget."
+                        f"Treat this scenario as low-confidence; keep spend at or below the "
+                        f"${planning_zone['safeBudgetCeiling']:,.2f} evidence ceiling or stage a controlled test."
                     ),
                 )
             )
+        if planning_zone and planning_zone["underinvestmentRisk"]:
+            risks.append(
+                _detection(
+                    "underinvestment_risk",
+                    item["channel"],
+                    "medium",
+                    50,
+                    f"{item['channel']} is below 25% of its recent comparable spend baseline.",
+                    "Confirm intentional demand reduction before treating the lower plan as safe.",
+                )
+            )
         if item["revenue_trend_pct"] < -8:
-            risks.append(_detection("revenue_decline_risk", item["channel"], "medium", abs(item["revenue_trend_pct"]), f"{item['channel']} revenue is declining versus the prior period.", "Review campaigns before scaling."))
+            risks.append(
+                _detection(
+                    "revenue_decline_risk",
+                    item["channel"],
+                    "medium",
+                    abs(item["revenue_trend_pct"]),
+                    f"{item['channel']} revenue is declining versus the prior period.",
+                    "Review campaigns before scaling.",
+                )
+            )
         if item["budget_share"] - item["recent_revenue_share"] > 0.08:
-            risks.append(_detection("budget_inefficiency", item["channel"], "medium", 60, f"{item['channel']} receives more budget share than recent revenue share.", "Rebalance toward higher-return channels."))
+            risks.append(
+                _detection(
+                    "budget_inefficiency",
+                    item["channel"],
+                    "medium",
+                    60,
+                    f"{item['channel']} receives more budget share than recent revenue share.",
+                    "Rebalance toward higher-return channels.",
+                )
+            )
     if target_revenue and totals["totalProjectedRevenue"] < target_revenue:
-        risks.append(_detection("target_revenue_gap", None, "medium", 55, "Current plan is below the target revenue goal.", "Use the optimizer allocation or increase total budget."))
+        risks.append(
+            _detection(
+                "target_revenue_gap",
+                None,
+                "medium",
+                55,
+                "Current plan is below the target revenue goal.",
+                "Use the optimizer allocation or increase total budget.",
+            )
+        )
     if target_roas and totals["projectedRoas"] < target_roas:
-        risks.append(_detection("target_roas_gap", None, "medium", 55, "Current plan is below the target ROAS goal.", "Prioritize channels with stronger health scores."))
+        risks.append(
+            _detection(
+                "target_roas_gap",
+                None,
+                "medium",
+                55,
+                "Current plan is below the target ROAS goal.",
+                "Prioritize channels with stronger health scores.",
+            )
+        )
     for item in health:
         if item["status"] == "critical":
-            risks.append(_detection("channel_health_risk", item["channel"], "high", 100 - item["score"], f"{item['channel']} health score is critical.", "Audit this channel before approving additional spend."))
-    return risks[:8] or [_detection("monitoring", None, "low", 12, "No severe revenue, ROAS or overspending risk detected.", "Continue monitoring daily ROAS movement.")]
+            risks.append(
+                _detection(
+                    "channel_health_risk",
+                    item["channel"],
+                    "high",
+                    100 - item["score"],
+                    f"{item['channel']} health score is critical.",
+                    "Audit this channel before approving additional spend.",
+                )
+            )
+    return risks[:8] or [
+        _detection(
+            "monitoring",
+            None,
+            "low",
+            12,
+            "No severe revenue, ROAS or overspending risk detected.",
+            "Continue monitoring daily ROAS movement.",
+        )
+    ]
 
 
-def _opportunities(stats: list[dict], health: list[dict], recommendations: list[dict]) -> list[dict]:
+def _opportunities(
+    stats: list[dict], health: list[dict], recommendations: list[dict]
+) -> list[dict]:
     opportunities = []
-    avg_roas = _weighted_average([item["projected_roas"] for item in stats], [max(item["budget"], 1.0) for item in stats])
+    avg_roas = _weighted_average(
+        [item["projected_roas"] for item in stats],
+        [max(item["budget"], 1.0) for item in stats],
+    )
     for item in stats:
         if item["projected_roas"] >= avg_roas and item["revenue_trend_pct"] >= 0:
-            opportunities.append(_detection("high_growth_channel", item["channel"], "medium", 70, f"{item['channel']} combines positive revenue momentum with above-average ROAS.", "Test controlled budget expansion."))
+            opportunities.append(
+                _detection(
+                    "high_growth_channel",
+                    item["channel"],
+                    "medium",
+                    70,
+                    f"{item['channel']} combines positive revenue momentum with above-average ROAS.",
+                    "Test controlled budget expansion.",
+                )
+            )
     for rec in recommendations:
         if rec["deltaBudget"] > max(500, rec["currentBudget"] * 0.08):
-            opportunities.append(_detection("budget_reallocation", rec["channel"], "low", 60, f"Optimizer recommends adding ${rec['deltaBudget']:,.0f} to {rec['channel']}.", rec["rationale"]))
+            opportunities.append(
+                _detection(
+                    "budget_reallocation",
+                    rec["channel"],
+                    "low",
+                    60,
+                    f"Optimizer recommends adding ${rec['deltaBudget']:,.0f} to {rec['channel']}.",
+                    rec["rationale"],
+                )
+            )
     if not opportunities and health:
         leader = health[0]
-        opportunities.append(_detection("channel_scaling_test", leader["channel"], "low", leader["score"], f"{leader['channel']} has the strongest channel health score.", "Run a small incrementality test before a larger shift."))
+        opportunities.append(
+            _detection(
+                "channel_scaling_test",
+                leader["channel"],
+                "low",
+                leader["score"],
+                f"{leader['channel']} has the strongest channel health score.",
+                "Run a small incrementality test before a larger shift.",
+            )
+        )
     return opportunities[:8]
 
 
 def _default_scenarios(stats: list[dict]) -> list[WhatIfScenarioInput]:
     return [
-        WhatIfScenarioInput(name="Conservative (-20% all)", budgetMultipliers={item["channel"]: 0.8 for item in stats}),
-        WhatIfScenarioInput(name="Base (0%)", budgetMultipliers={item["channel"]: 1.0 for item in stats}),
-        WhatIfScenarioInput(name="Aggressive (+30% all)", budgetMultipliers={item["channel"]: 1.3 for item in stats}),
+        WhatIfScenarioInput(
+            name="Conservative (-20% all)",
+            budgetMultipliers={item["channel"]: 0.8 for item in stats},
+        ),
+        WhatIfScenarioInput(
+            name="Base (0%)", budgetMultipliers={item["channel"]: 1.0 for item in stats}
+        ),
+        WhatIfScenarioInput(
+            name="Aggressive (+30% all)",
+            budgetMultipliers={item["channel"]: 1.3 for item in stats},
+        ),
     ]
 
 
-def _detection(kind: str, channel: str | None, severity: str, score: float, message: str, recommendation: str) -> dict:
+def _detection(
+    kind: str,
+    channel: str | None,
+    severity: str,
+    score: float,
+    message: str,
+    recommendation: str,
+) -> dict:
     return {
         "type": kind,
         "channel": channel,
@@ -513,6 +688,24 @@ def _baseline_total_spend(summary: ChannelAggregate, horizon: int) -> float:
     recent_daily = _safe_ratio(summary.recent_spend, summary.recent_days)
     fallback_daily = _safe_ratio(summary.spend, max(1, len(summary.dates)))
     return max(0.0, (recent_daily or fallback_daily) * horizon)
+
+
+def _complete_date_range(raw_dates: Iterable[str]) -> list[str]:
+    parsed: list[date] = []
+    for value in raw_dates:
+        try:
+            parsed.append(date.fromisoformat(str(value)[:10]))
+        except ValueError:
+            continue
+    if not parsed:
+        return sorted(str(value) for value in raw_dates)
+    current = min(parsed)
+    end = max(parsed)
+    dates: list[str] = []
+    while current <= end:
+        dates.append(current.isoformat())
+        current += timedelta(days=1)
+    return dates
 
 
 def _baseline_total_revenue(summary: ChannelAggregate, horizon: int) -> float:
@@ -544,7 +737,10 @@ def _scenario_revenue(item: dict, new_budget: float) -> float:
 
 
 def _weighted_average(values: Iterable[float], weights: Iterable[float]) -> float:
-    pairs = [(float(value), max(0.0, float(weight))) for value, weight in zip(values, weights)]
+    pairs = [
+        (float(value), max(0.0, float(weight)))
+        for value, weight in zip(values, weights)
+    ]
     total_weight = sum(weight for _, weight in pairs)
     if total_weight <= 0:
         return 0.0

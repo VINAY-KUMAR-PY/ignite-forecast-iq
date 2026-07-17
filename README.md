@@ -68,12 +68,12 @@ the source of truth for these counts.
 For a concise requirement map and six-step demo, see
 [`docs/JUDGE_GUIDE.md`](./docs/JUDGE_GUIDE.md).
 
-| Grain | Example | Horizon | Expected revenue | Revenue range | Expected ROAS |
-|---|---|---:|---:|---:|---:|
-| Overall | all | 90d | $1,407,079 | $1,197,278-$1,616,880 | 4.05x |
-| Channel | Microsoft Ads | 90d | $213,676 | $180,330-$247,022 | 5.40x |
-| Campaign type | Advantage+ | 90d | $161,610 | $128,339-$194,881 | 3.03x |
-| Campaign | Brand Search | 30d | $84,058 | $73,924-$94,193 | 5.33x |
+| Grain         | Example       | Horizon | Expected revenue |         Revenue range | Expected ROAS |
+| ------------- | ------------- | ------: | ---------------: | --------------------: | ------------: |
+| Overall       | all           |     90d |       $1,407,079 | $1,197,278-$1,616,880 |         4.05x |
+| Channel       | Microsoft Ads |     90d |         $213,676 |     $180,330-$247,022 |         5.40x |
+| Campaign type | Advantage+    |     90d |         $161,610 |     $128,339-$194,881 |         3.03x |
+| Campaign      | Brand Search  |     30d |          $84,058 |       $73,924-$94,193 |         5.33x |
 
 Example decision: Google Ads shows low-confidence directional
 underperformance around the June 11 ROAS anomaly (`p=0.185`), while Microsoft
@@ -84,12 +84,12 @@ stays unchanged.
 
 ## Deliverables Map
 
-| Brief deliverable | ForecastIQ artifact |
-|---|---|
-| Working Prototype | `run.sh`, `pickle/model.pkl`, `backend/predict.py`, FastAPI + React app |
-| Technical Documentation | [TECHNICAL.md](./TECHNICAL.md) |
-| Architecture Overview | [ARCHITECTURE.md](./ARCHITECTURE.md) |
-| Demo Workflow | [DEMO_GUIDE.md](./DEMO_GUIDE.md) and the one-click demo path |
+| Brief deliverable       | ForecastIQ artifact                                                     |
+| ----------------------- | ----------------------------------------------------------------------- |
+| Working Prototype       | `run.sh`, `pickle/model.pkl`, `backend/predict.py`, FastAPI + React app |
+| Technical Documentation | [TECHNICAL.md](./TECHNICAL.md)                                          |
+| Architecture Overview   | [ARCHITECTURE.md](./ARCHITECTURE.md)                                    |
+| Demo Workflow           | [DEMO_GUIDE.md](./DEMO_GUIDE.md) and the one-click demo path            |
 
 Campaign-level and channel-level budget elasticity, saturation curves,
 scenario simulation, and budget optimization are implemented through
@@ -112,15 +112,15 @@ browser-only result.
 The weighted score reuses the existing schema adapter, row validator,
 multi-source reconciliation, and anomaly detector:
 
-| Component | Weight | Main evidence |
-|---|---:|---|
-| Schema and required fields | 20% | Date/spend/revenue mapping and adapter confidence |
-| Completeness and validity | 20% | Missing, invalid numeric/date, negative, and inconsistent values |
-| Historical coverage | 20% | Date-range length and cross-source date consistency |
-| Freshness | 10% | Latest valid date versus the displayed evaluation date |
-| Channel/campaign coverage | 10% | Usable channels, campaigns, and campaign types |
-| Spend/revenue consistency | 10% | Positive spend and revenue row coverage |
-| Outliers and duplicates | 10% | Existing severe-anomaly evidence and duplicate rows/files |
+| Component                  | Weight | Main evidence                                                    |
+| -------------------------- | -----: | ---------------------------------------------------------------- |
+| Schema and required fields |    20% | Date/spend/revenue mapping and adapter confidence                |
+| Completeness and validity  |    20% | Missing, invalid numeric/date, negative, and inconsistent values |
+| Historical coverage        |    20% | Date-range length and cross-source date consistency              |
+| Freshness                  |    10% | Latest valid date versus the displayed evaluation date           |
+| Channel/campaign coverage  |    10% | Usable channels, campaigns, and campaign types                   |
+| Spend/revenue consistency  |    10% | Positive spend and revenue row coverage                          |
+| Outliers and duplicates    |    10% | Existing severe-anomaly evidence and duplicate rows/files        |
 
 Ratings are **Excellent** (90-100), **Good** (75-89), **Usable with caution**
 (60-74), and **Needs attention** (below 60). Historical coverage reaches full
@@ -214,14 +214,14 @@ access.
 
 ## Evaluation Criteria Mapping
 
-| Criterion | Fast verification path |
-|---|---|
-| Technical Soundness | `./run.sh`, horizon champion-challenger policy in `reports/backtest_summary.md`, `reports/interval_calibration_report.json`, `reports/model_card.md`, `tests/test_offline_predict.py`, `tests/test_interval_monotonicity.py` |
-| Practical Relevance | `backend/decision_support.py`, `scripts/validate_budget_elasticity.py`, `reports/budget_elasticity_summary.md`, simulator UI |
-| AI Integration | Graded path: per-run offline synthesis plus automatic one-call Gemini enrichment when `GEMINI_API_KEY` is present, with redacted request/response evidence in `output/causal_summary.txt`; demo path: live Gemini calls through `npm run demo:ai`, `scripts/demo_live_ai_reasoning.py`, and `docs/gemini_sample_transcripts/SCENARIO_COVERAGE.md`. |
-| Product Thinking | One-click demo flow, Upload -> Dashboard -> Forecast -> Simulator -> Insights, `DEMO_GUIDE.md` |
-| Engineering Quality | Evaluator CI, frontend tests, Playwright flow, coverage gate, pinned evaluator dependencies |
-| Independent reproduction | `npm run verify` regenerates interval calibration, rolling-origin backtest reports, coverage summary, and `reports/verification_summary.json` |
+| Criterion                | Fast verification path                                                                                                                                                                                                                                                                                                                             |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Technical Soundness      | `./run.sh`, horizon champion-challenger policy in `reports/backtest_summary.md`, `reports/interval_calibration_report.json`, `reports/model_card.md`, `tests/test_offline_predict.py`, `tests/test_interval_monotonicity.py`                                                                                                                       |
+| Practical Relevance      | `backend/decision_support.py`, `scripts/validate_budget_elasticity.py`, `reports/budget_elasticity_summary.md`, simulator UI                                                                                                                                                                                                                       |
+| AI Integration           | Graded path: per-run offline synthesis plus automatic one-call Gemini enrichment when `GEMINI_API_KEY` is present, with redacted request/response evidence in `output/causal_summary.txt`; demo path: live Gemini calls through `npm run demo:ai`, `scripts/demo_live_ai_reasoning.py`, and `docs/gemini_sample_transcripts/SCENARIO_COVERAGE.md`. |
+| Product Thinking         | One-click demo flow, Upload -> Dashboard -> Forecast -> Simulator -> Insights, `DEMO_GUIDE.md`                                                                                                                                                                                                                                                     |
+| Engineering Quality      | Evaluator CI, frontend tests, Playwright flow, coverage gate, pinned evaluator dependencies                                                                                                                                                                                                                                                        |
+| Independent reproduction | `npm run verify` regenerates interval calibration, rolling-origin backtest reports, coverage summary, and `reports/verification_summary.json`                                                                                                                                                                                                      |
 
 ## Verify In 60 Seconds
 
@@ -254,6 +254,32 @@ npm run dev
 
 Open the frontend and click **Try Live Demo** to load sample campaign data and
 walk through Dashboard -> Forecast -> Budget Simulator -> AI Insights.
+
+## Product Evidence And Decision Support
+
+The Forecast page now exposes a generated Forecast Evidence Panel with revenue
+MAPE, ROAS MAPE, interval coverage, champion path, challenger result, artifact
+version, artifact training period, verification date, and deterministic/offline
+status. `scripts/generate_model_validation_metadata.mjs` reads the committed
+backtest, calibration, evaluator verification, artifact metadata, predictions,
+and sample training rows; the UI does not contain hand-entered model metrics.
+
+For the selected forecast, ForecastIQ also compares the previous comparable
+period with expected revenue, ROAS, bounds, percentage change, and independently
+requested channel forecasts. Confidence names both supporting and reducing
+factors from Data Readiness, history, freshness, missingness, interval width,
+sample count, model path, and the latest planning zone. Local contribution bars
+reuse the backend's permutation effects and are explicitly not presented as an
+additive revenue reconciliation.
+
+The simulator adds an Action Priority Matrix and five-plan comparison: current,
+automatic, optimized, conservative, and growth. A plan is marked **Best
+supported** by evidence-zone strength and uncertainty significance before
+expected upside. The Insights page can download a versioned ForecastIQ Evidence
+Bundle JSON containing the executive report, selected-view predictions CSV,
+scenario evidence, Data Readiness report, model evidence, causal hypotheses,
+limitations, and provenance/configuration. Missing workflow sections carry an
+actionable next step rather than invented evidence.
 
 ## Documentation Map
 

@@ -12,10 +12,15 @@ import type {
   SimulationApiResponse,
   SpendCurveResponse,
 } from "@/lib/backend-api";
-import { UploadPage } from "./app.upload";
-import { ForecastPage } from "./app.forecast";
-import { SimulatorPage } from "./app.simulator";
-import { InsightsPage } from "./app.insights";
+import { Route as UploadRoute } from "./app.upload";
+import { Route as ForecastRoute } from "./app.forecast";
+import { Route as SimulatorRoute } from "./app.simulator";
+import { Route as InsightsRoute } from "./app.insights";
+
+const UploadPage = UploadRoute.options.component as React.ComponentType;
+const ForecastPage = ForecastRoute.options.component as React.ComponentType;
+const SimulatorPage = SimulatorRoute.options.component as React.ComponentType;
+const InsightsPage = InsightsRoute.options.component as React.ComponentType;
 
 const apiMocks = vi.hoisted(() => ({
   validateRowsApi: vi.fn(),
@@ -235,7 +240,7 @@ function decisionResponse(): DecisionSupportResponse {
     },
     scenarios: [
       {
-        name: "Base (0%)",
+        name: "Current plan",
         totalSpend: 9000,
         projectedRevenue: 27000,
         projectedRoas: 3,
@@ -446,12 +451,11 @@ describe("core dashboard route behavior", () => {
     await user.click(await screen.findByRole("option", { name: "60 days" }));
 
     await waitFor(() => {
-      expect(apiMocks.fetchForecastApi).toHaveBeenLastCalledWith(
-        expect.any(Array),
-        60,
-        "overall",
-        undefined,
-      );
+      expect(
+        apiMocks.fetchForecastApi.mock.calls.some(
+          (call) => call[1] === 60 && call[2] === "overall" && call[3] === undefined,
+        ),
+      ).toBe(true);
     });
   });
 
@@ -461,8 +465,12 @@ describe("core dashboard route behavior", () => {
     expect(await screen.findByText("Revenue forecast")).toBeInTheDocument();
     expect(await screen.findByText("Model Validation")).toBeInTheDocument();
     expect(screen.getByTestId("model-path-confidence")).toBeInTheDocument();
-    expect(await screen.findByText("$1,200")).toBeInTheDocument();
-    expect(await screen.findByText("3.20x")).toBeInTheDocument();
+    expect((await screen.findAllByText("$1,200")).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText("3.20x")).length).toBeGreaterThan(0);
+    expect(screen.getByTestId("forecast-evidence-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("historical-forecast-comparison")).toBeInTheDocument();
+    expect(screen.getByTestId("forecast-confidence-explanation")).toBeInTheDocument();
+    expect(screen.getByTestId("why-this-model")).toBeInTheDocument();
     await waitFor(() => expect(apiMocks.fetchForecastApi).toHaveBeenCalled());
   });
 
@@ -471,10 +479,13 @@ describe("core dashboard route behavior", () => {
 
     expect(await screen.findByText("What-If Scenarios")).toBeInTheDocument();
     await waitFor(() => expect(apiMocks.decisionSupportApi).toHaveBeenCalled());
-    expect(screen.getByRole("button", { name: "Base (0%)" })).toHaveClass("border-primary");
+    expect(screen.getByRole("button", { name: "Current plan" })).toHaveClass("border-primary");
     expect(screen.getByRole("button", { name: "+50%" })).toBeInTheDocument();
-    expect(await screen.findByText("Projected revenue")).toBeInTheDocument();
+    expect((await screen.findAllByText("Projected revenue")).length).toBeGreaterThan(0);
     expect(screen.getByTestId("automatic-allocation")).toBeInTheDocument();
+    expect(screen.getByTestId("action-priority-matrix")).toBeInTheDocument();
+    expect(screen.getByText("Supported-plan scenario comparison")).toBeInTheDocument();
+    expect(screen.getByText("Best supported plan")).toBeInTheDocument();
     expect(screen.getAllByText(/Hypothesis, not guarantee/i)).not.toHaveLength(0);
   });
 

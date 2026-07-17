@@ -1,18 +1,15 @@
 {
-  "generated_at": "2026-07-16T05:55:00Z",
+  "generated_at": "2026-07-17T09:56:58Z",
   "environment": {
     "os": "Windows (win32)",
     "python": "3.14.4",
+    "node": "clean npm ci installation",
     "optional_test_behavior": "SHAP is intentionally unavailable on Python 3.14; two POSIX-shell-only tests skip on Windows. Counts may vary slightly across supported environments, while GitHub Actions and the 92.05% coverage gate remain canonical."
   },
   "commands": [
     {
-      "name": "rolling-origin backtest",
-      "command": [
-        "python",
-        "-m",
-        "backend.backtest"
-      ],
+      "name": "python compilation",
+      "command": ["python", "-m", "compileall", "backend", "scripts", "tests", "-q"],
       "returncode": 0
     },
     {
@@ -31,67 +28,86 @@
       "returncode": 0
     },
     {
-      "name": "offline evaluator",
+      "name": "contract and adversarial group",
+      "command": [
+        "python",
+        "-m",
+        "pytest",
+        "tests/test_run_sh_contract.py",
+        "tests/test_evaluator_contract.py",
+        "tests/test_evaluator_e2e.py",
+        "tests/test_adversarial_inputs.py",
+        "tests/test_schema_adapters.py",
+        "tests/test_interval_monotonicity.py",
+        "tests/test_budget_validation.py",
+        "tests/test_decision_support.py",
+        "tests/test_model_selection.py",
+        "-q"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "python lint",
+      "command": ["python", "-m", "ruff", "check", "backend", "scripts", "tests"],
+      "returncode": 0
+    },
+    {
+      "name": "python dependency integrity",
+      "command": ["python", "-m", "pip", "check"],
+      "returncode": 0
+    },
+    {
+      "name": "offline evaluator repeated",
       "command": [
         "./run.sh",
         "./data",
         "./pickle/model.pkl",
-        "./output/predictions.csv"
+        "./output/final_check_{1,2}/predictions.csv"
       ],
+      "runs": 2,
       "returncode": 0
     },
     {
-      "name": "frontend build",
-      "command": [
-        "npm",
-        "run",
-        "build"
-      ],
-      "returncode": 0
-    },
-    {
-      "name": "frontend typecheck",
-      "command": [
-        "npx",
-        "tsc",
-        "--noEmit"
-      ],
-      "returncode": 0
-    },
-    {
-      "name": "frontend lint",
-      "command": [
-        "npx",
-        "eslint",
-        "."
-      ],
+      "name": "frontend clean install",
+      "command": ["npm", "ci"],
       "returncode": 0
     },
     {
       "name": "frontend tests",
-      "command": [
-        "npm",
-        "run",
-        "test"
-      ],
+      "command": ["npm", "run", "test"],
+      "returncode": 0
+    },
+    {
+      "name": "frontend typecheck lint and build",
+      "command": ["npm", "run", "check"],
+      "returncode": 0
+    },
+    {
+      "name": "frontend production build",
+      "command": ["npm", "run", "build"],
+      "returncode": 0
+    },
+    {
+      "name": "judge workflow e2e",
+      "command": ["npm", "run", "test:e2e"],
       "returncode": 0
     }
   ],
   "coverage": {
-    "statements": 4805,
-    "missing": 303,
-    "coverage_pct": 93.69,
-    "passed": 252,
+    "statements": 5075,
+    "missing": 321,
+    "coverage_pct": 93.67,
+    "passed": 274,
     "skipped": 2,
     "warnings": 7,
-    "duration_seconds": 364.31,
+    "duration_seconds": 293.27,
     "modules": {
       "backend/__init__.py": 100.0,
       "backend/anomaly.py": 94.81,
       "backend/causal_lite.py": 87.76,
-      "backend/causal_reasoning.py": 97.9,
+      "backend/causal_reasoning.py": 97.97,
       "backend/data_preprocessing.py": 90.4,
-      "backend/decision_support.py": 94.09,
+      "backend/decision_support.py": 93.22,
       "backend/evaluator_contract.py": 100.0,
       "backend/evaluator_intervals.py": 92.59,
       "backend/evaluator_io.py": 94.91,
@@ -99,16 +115,50 @@
       "backend/gemini.py": 92.04,
       "backend/gemini_offline_cache.py": 98.02,
       "backend/inference.py": 92.91,
-      "backend/lightweight_api.py": 93.92,
-      "backend/main.py": 89.58,
+      "backend/lightweight_api.py": 93.58,
+      "backend/main.py": 89.69,
       "backend/model_selection.py": 89.23,
+      "backend/planning_guardrails.py": 93.22,
       "backend/predict.py": 98.15,
       "backend/schema_adapters.py": 94.07,
-      "backend/schemas.py": 98.26,
+      "backend/schemas.py": 98.46,
       "backend/segment_utils.py": 95.6,
       "backend/train.py": 91.95,
       "backend/utils.py": 96.0
     }
+  },
+  "frontend": {
+    "unit_test_files": 6,
+    "unit_tests_passed": 22,
+    "playwright_tests_passed": 1,
+    "typecheck": "pass",
+    "lint": "pass",
+    "production_build": "pass"
+  },
+  "evaluator": {
+    "output_paths": [
+      "output/final_check_1/predictions.csv",
+      "output/final_check_2/predictions.csv"
+    ],
+    "rows": 54,
+    "schema_columns": 12,
+    "horizons": [30, 60, 90],
+    "model_type_counts": {
+      "trained_model": 18,
+      "trained_model_baseline_anchored": 36
+    },
+    "deterministic": true,
+    "network_required": false,
+    "sha256": {
+      "predictions.csv": "602F679A33EE27BA04ECDFC16E3BC4EE357606183F4E78741F11217633EE59A1",
+      "causal_summary.txt": "B0A9F84448804D19393F13CCBED22372A4112A308C57FB20587774EDE4EDD38B",
+      "explainability_notes.txt": "0B1A0CA9C82B5A791977CF8F08FDA1A3A16965C41BCB0C51AE5F1284B690BA4E"
+    }
+  },
+  "dependency_review": {
+    "pip_check": "pass",
+    "npm_audit": "1 low-severity Vite development-server advisory on Windows; no forced or major upgrade adopted",
+    "npm_audit_omit_dev": "same single low-severity advisory"
   },
   "artifacts": [
     "reports/interval_calibration_report.json",
@@ -116,7 +166,9 @@
     "reports/backtest_summary.md",
     "reports/model_card.md",
     "reports/long_horizon_revenue_ablation.md",
-    "reports/coverage_summary.md"
+    "reports/coverage_summary.md",
+    "reports/frontend_evidence.generated.json",
+    "reports/final_upgrade_report.md"
   ],
   "status": "pass"
 }

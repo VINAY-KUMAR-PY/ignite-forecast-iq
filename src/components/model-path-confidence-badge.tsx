@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { MODEL_PATH_CONFIDENCE } from "@/lib/model-validation.generated";
+import { MODEL_EVIDENCE, MODEL_PATH_CONFIDENCE } from "@/lib/model-validation.generated";
 
 export function ModelPathConfidenceBadge() {
   return (
@@ -9,8 +9,10 @@ export function ModelPathConfidenceBadge() {
         <div className="min-w-0">
           <div className="text-sm font-semibold">Live/offline model confidence</div>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            ForecastIQ uses a richer live dashboard model and a compact offline evaluator artifact.
-            Backtest evidence keeps the paths directionally reconciled for planning decisions.
+            The offline evaluator uses a committed scikit-learn artifact with horizon-specific
+            champion-challenger selection. The live application may use optional XGBoost diagnostics
+            when app dependencies are installed; frontend estimates are labeled as fallbacks.{" "}
+            {MODEL_EVIDENCE.modelPathPolicy}
           </p>
         </div>
         <Badge variant="outline" className="w-fit shrink-0 border-primary/40 text-primary">

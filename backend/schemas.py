@@ -100,7 +100,9 @@ class ForecastDiagnostics(BaseModel):
     roasExplanation: str
     explainabilityMethod: str = "permutation_baseline"
     shap_importance: List[Dict[str, Any]] = Field(default_factory=list)
-    shap_method: Literal["shap", "feature_importances_fallback"] = "feature_importances_fallback"
+    shap_method: Literal["shap", "feature_importances_fallback"] = (
+        "feature_importances_fallback"
+    )
     whyThisForecast: List[ForecastContribution] = Field(default_factory=list)
     whyThisForecastSummary: str = ""
     businessBrief: ForecastBusinessBrief
@@ -209,7 +211,9 @@ class WhatIfScenarioInput(BaseModel):
 
     @field_validator("budgetMultipliers")
     @classmethod
-    def budget_multipliers_must_be_non_negative(cls, value: Dict[str, float]) -> Dict[str, float]:
+    def budget_multipliers_must_be_non_negative(
+        cls, value: Dict[str, float]
+    ) -> Dict[str, float]:
         cleaned: Dict[str, float] = {}
         for channel, multiplier in value.items():
             channel_name = str(channel).strip()
@@ -219,7 +223,9 @@ class WhatIfScenarioInput(BaseModel):
             if not math.isfinite(numeric):
                 raise ValueError(f"Budget multiplier for {channel_name} must be finite")
             if numeric < 0:
-                raise ValueError(f"Budget multiplier for {channel_name} must be non-negative")
+                raise ValueError(
+                    f"Budget multiplier for {channel_name} must be non-negative"
+                )
             cleaned[channel_name] = numeric
         return cleaned
 
@@ -244,10 +250,16 @@ class DecisionSupportRequest(BaseModel):
             return self
         submitted_budget_total = sum(float(value) for value in self.budgets.values())
         observed_spend_total = sum(float(row.spend) for row in self.rows)
-        budgets_were_explicitly_zero = bool(self.budgets) and submitted_budget_total <= 1e-9
-        no_spend_signal = submitted_budget_total <= 1e-9 and observed_spend_total <= 1e-9
+        budgets_were_explicitly_zero = (
+            bool(self.budgets) and submitted_budget_total <= 1e-9
+        )
+        no_spend_signal = (
+            submitted_budget_total <= 1e-9 and observed_spend_total <= 1e-9
+        )
         if budgets_were_explicitly_zero or no_spend_signal:
-            raise ValueError("Positive revenue or ROAS targets require at least one positive planned budget")
+            raise ValueError(
+                "Positive revenue or ROAS targets require at least one positive planned budget"
+            )
         return self
 
 
@@ -288,6 +300,26 @@ class BudgetOptimizerResult(BaseModel):
     expectedProfit: float
     targetGapRevenue: float
     targetGapRoas: float
+    baselineExpectedRevenue: float
+    optimizedExpectedRevenue: float
+    absoluteGain: float
+    gainPct: float
+    baselineIntervalHalfWidth: float
+    optimizedIntervalHalfWidth: float
+    uncertaintyNoiseFloor: float
+    uncertaintyCalculation: str
+    meaningful: bool
+    outcome: Literal[
+        "NO_CHANGE",
+        "INFEASIBLE",
+        "IMPROVED_WITHIN_NOISE",
+        "IMPROVED_ABOVE_NOISE",
+        "DEGRADED",
+    ]
+    verdict: str
+    safeBudgetCeilings: Dict[str, float]
+    maxSupportedTotalBudget: float
+    constraintNotes: List[str]
     recommendations: List[BudgetRecommendation]
 
 
@@ -323,12 +355,39 @@ class ChannelHealthScore(BaseModel):
     drivers: List[str]
 
 
+class ChannelPlanningZone(BaseModel):
+    channel: str
+    plannedBudget: float
+    recentBaselineBudget: float
+    historicalP90: float
+    historicalMaximum: float
+    safeBudgetCeiling: float
+    ratioVsP90: Optional[float] = None
+    overshootPct: Optional[float] = None
+    comparableWindowCount: int
+    zone: Literal["SUPPORTED", "CAUTION", "HIGH_EXTRAPOLATION", "UNSUPPORTED"]
+    confidenceImpact: Literal["none", "moderate", "material", "severe"]
+    underinvestmentRisk: bool
+    reason: str
+
+
+class OverallPlanningZone(BaseModel):
+    zone: Literal["SUPPORTED", "CAUTION", "HIGH_EXTRAPOLATION", "UNSUPPORTED"]
+    weightedSeverityScore: float
+    unsupportedChannels: List[str]
+    plannedBudget: float
+    maxSupportedTotalBudget: float
+    reason: str
+
+
 class DecisionSupportResponse(BaseModel):
     optimizer: BudgetOptimizerResult
     scenarios: List[WhatIfScenarioResult]
     risks: List[DetectionItem]
     opportunities: List[DetectionItem]
     channelHealth: List[ChannelHealthScore]
+    planningZones: List[ChannelPlanningZone]
+    overallPlanZone: OverallPlanningZone
     validation: ValidationResponse
 
 
@@ -418,6 +477,15 @@ class LlmHypothesisRanking(BaseModel):
     rationale: str
 
 
+class InsightProvenance(BaseModel):
+    mode: Literal["deterministic_offline", "live_gemini"]
+    networkUsedForResult: bool
+    networkRequired: bool = False
+    evidenceSource: List[str]
+    generatedAt: str
+    limitations: List[str]
+
+
 class InsightsResponse(BaseModel):
     executiveSummary: str
     revenueDrivers: List[RevenueDriver]
@@ -429,6 +497,7 @@ class InsightsResponse(BaseModel):
     actionPlan: List[ActionPlanItem]
     causalHypotheses: List[CausalHypothesis] = Field(default_factory=list)
     llmHypothesisRanking: List[LlmHypothesisRanking] = Field(default_factory=list)
+    provenance: Optional[InsightProvenance] = None
 
 
 class TrainRequest(BaseModel):

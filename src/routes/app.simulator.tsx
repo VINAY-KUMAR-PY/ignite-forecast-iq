@@ -11,7 +11,12 @@ import {
   YAxis,
   ZAxis,
 } from "recharts";
-import { BudgetSliders, type BudgetSliderChannel } from "@/components/simulator/BudgetSliders";
+import {
+  BudgetSliders,
+  zoneBadgeClass,
+  zoneLabel,
+  type BudgetSliderChannel,
+} from "@/components/simulator/BudgetSliders";
 import { SimulatorResultsPanel } from "@/components/simulator/ChannelResultCard";
 import { DecisionSupportPanel } from "@/components/simulator/DecisionSupportPanel";
 import { SpendCurveChart } from "@/components/simulator/SpendCurveChart";
@@ -21,6 +26,8 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -32,12 +39,14 @@ import {
   decisionSupportApi,
   fetchSpendCurveApi,
   simulateBudgetsApi,
+  type ChannelPlanningZone,
   type DecisionSupportResponse,
   type SimChannelResult,
   type SpendCurveResponse,
   type WhatIfScenarioInput,
 } from "@/lib/backend-api";
 import { useData } from "@/lib/data-store";
+import { allocateBudgetExact, budgetTotal as sumBudgets } from "@/lib/budget-allocation";
 import { buildEfficientFrontier, type FrontierPoint } from "@/lib/efficient-frontier";
 import { fmtCurrency, fmtRoas } from "@/lib/format";
 
@@ -66,8 +75,14 @@ function buildWhatIfScenarios(): WhatIfScenarioInput[] {
 }
 
 export function SimulatorPage() {
-  const { rows } = useData();
+  const { rows, markWorkflow, setPlanningSnapshot } = useData();
   const [horizon, setHorizon] = useState<30 | 60 | 90>(30);
+  const [planningMode, setPlanningMode] = useState<"automatic" | "manual">("automatic");
+  const [allocationMethod, setAllocationMethod] = useState<"historical" | "optimizer">(
+    "historical",
+  );
+  const [automaticTotal, setAutomaticTotal] = useState<number | null>(null);
+  const [optimizerWeights, setOptimizerWeights] = useState<Record<string, number> | null>(null);
   const [budgets, setBudgets] = useState<Record<string, number>>({});
   const [apiSims, setApiSims] = useState<SimChannelResult[] | null>(null);
   const [apiSimError, setApiSimError] = useState<string | null>(null);
@@ -102,9 +117,31 @@ export function SimulatorPage() {
     [baselines, budgets, horizon],
   );
 
+  const baselineBudgetMap = useMemo(
+    () =>
+      Object.fromEntries(
+        CHANNELS.map((channel) => [
+          channel,
+          Math.max(0, Math.round((baselines?.[channel]?.dailySpend ?? 0) * horizon * 100) / 100),
+        ]),
+      ),
+    [baselines, horizon],
+  );
+  const baselineTotalBudget = useMemo(() => sumBudgets(baselineBudgetMap), [baselineBudgetMap]);
+  const effectiveAutomaticTotal = automaticTotal ?? baselineTotalBudget;
+  const allocationWeights =
+    allocationMethod === "optimizer" && optimizerWeights ? optimizerWeights : baselineBudgetMap;
+  const automaticBudgets = useMemo(
+    () => allocateBudgetExact(effectiveAutomaticTotal, CHANNELS, allocationWeights),
+    [allocationWeights, effectiveAutomaticTotal],
+  );
+
   const budgetPayload = useMemo(
-    () => Object.fromEntries(CHANNELS.map((channel) => [channel, totalBudget(channel)])),
-    [totalBudget],
+    () =>
+      planningMode === "automatic"
+        ? automaticBudgets
+        : Object.fromEntries(CHANNELS.map((channel) => [channel, totalBudget(channel)])),
+    [automaticBudgets, planningMode, totalBudget],
   );
 
   useEffect(() => {
@@ -127,7 +164,7 @@ export function SimulatorPage() {
         channelRows.reduce((sum, row) => sum + row.revenue, 0) / activeDays;
       const baselineTotalSpend = baselineDailySpend * horizon;
       const baselineRevenue = baselineDailyRevenue * horizon;
-      const newTotalSpend = totalBudget(channel);
+      const newTotalSpend = budgetPayload[channel] ?? 0;
       const spendRatio = baselineTotalSpend > 0 ? newTotalSpend / baselineTotalSpend : 1;
       const projectedRevenue = baselineRevenue * Math.pow(Math.max(0, spendRatio), 0.85);
       return {
@@ -146,7 +183,7 @@ export function SimulatorPage() {
         daily: [],
       };
     });
-  }, [baselines, horizon, rows, totalBudget]);
+  }, [baselines, budgetPayload, horizon, rows]);
 
   useEffect(() => {
     if (!rows.length || !baselines) return;
@@ -176,7 +213,16 @@ export function SimulatorPage() {
     setDecisionSupport(null);
     decisionSupportApi(rows, horizon, budgetPayload, targets, whatIfScenarios)
       .then((response) => {
-        if (active) setDecisionSupport(response);
+        if (active) {
+          setDecisionSupport(response);
+          markWorkflow("simulate");
+          setPlanningSnapshot({
+            horizon,
+            allocationMode: planningMode,
+            budgets: budgetPayload,
+            decisionSupport: response,
+          });
+        }
       })
       .catch((error: Error) => {
         if (!active) return;
@@ -186,12 +232,22 @@ export function SimulatorPage() {
     return () => {
       active = false;
     };
-  }, [baselines, budgetPayload, horizon, rows, targets, whatIfScenarios]);
+  }, [
+    baselines,
+    budgetPayload,
+    horizon,
+    markWorkflow,
+    planningMode,
+    rows,
+    setPlanningSnapshot,
+    targets,
+    whatIfScenarios,
+  ]);
 
   useEffect(() => {
     if (!rows.length || !baselines) return;
     let active = true;
-    fetchSpendCurveApi(rows, curveChannel, horizon, totalBudget(curveChannel))
+    fetchSpendCurveApi(rows, curveChannel, horizon, budgetPayload[curveChannel] ?? 0)
       .then((response) => {
         if (active) setSpendCurve(response);
       })
@@ -201,7 +257,7 @@ export function SimulatorPage() {
     return () => {
       active = false;
     };
-  }, [baselines, curveChannel, horizon, rows, totalBudget]);
+  }, [baselines, budgetPayload, curveChannel, horizon, rows]);
 
   if (!rows.length || !baselines) {
     return (
@@ -247,6 +303,10 @@ export function SimulatorPage() {
 
   function applyBudgetScenario(multiplier: number) {
     if (!baselines) return;
+    if (planningMode === "automatic") {
+      setAutomaticTotal(Math.max(0, Math.round(baselineTotalBudget * multiplier * 100) / 100));
+      return;
+    }
     setBudgets(
       Object.fromEntries(
         CHANNELS.map((channel) => [
@@ -255,6 +315,41 @@ export function SimulatorPage() {
         ]),
       ),
     );
+  }
+
+  function switchPlanningMode(nextMode: "automatic" | "manual") {
+    if (nextMode === planningMode) return;
+    if (nextMode === "manual") {
+      setBudgets(budgetPayload);
+    } else {
+      setAutomaticTotal(sumBudgets(budgetPayload));
+    }
+    setPlanningMode(nextMode);
+  }
+
+  function selectAllocationMethod(nextMethod: "historical" | "optimizer") {
+    if (nextMethod === "optimizer") {
+      if (!decisionSupport) return;
+      setOptimizerWeights(
+        Object.fromEntries(
+          decisionSupport.optimizer.recommendations.map((item) => [
+            item.channel,
+            Math.max(0, item.recommendedBudget),
+          ]),
+        ),
+      );
+    }
+    setAllocationMethod(nextMethod);
+  }
+
+  function resetPlanningBudgets() {
+    if (planningMode === "automatic") {
+      setAutomaticTotal(null);
+      setAllocationMethod("historical");
+      setOptimizerWeights(null);
+    } else {
+      setBudgets({});
+    }
   }
 
   function retrySimulation() {
@@ -317,8 +412,10 @@ export function SimulatorPage() {
         <Card className="bg-gradient-card border-border/60 p-6 lg:col-span-2">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h3 className="text-sm font-semibold">Channel budgets</h3>
-              <p className="text-xs text-muted-foreground">Set spend for the next {horizon} days</p>
+              <h3 className="text-sm font-semibold">Budget plan</h3>
+              <p className="text-xs text-muted-foreground">
+                Plan spend for the next {horizon} days
+              </p>
             </div>
             <Select
               value={String(horizon)}
@@ -335,14 +432,79 @@ export function SimulatorPage() {
             </Select>
           </div>
 
+          <div
+            className="mt-5 grid grid-cols-2 rounded-lg border border-border/60 bg-background/40 p-1"
+            role="group"
+            aria-label="Budget planning mode"
+          >
+            <button
+              type="button"
+              aria-pressed={planningMode === "automatic"}
+              className={`rounded-md px-3 py-2 text-xs font-medium ${
+                planningMode === "automatic"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              onClick={() => switchPlanningMode("automatic")}
+            >
+              Automatic allocation
+            </button>
+            <button
+              type="button"
+              aria-pressed={planningMode === "manual"}
+              className={`rounded-md px-3 py-2 text-xs font-medium ${
+                planningMode === "manual"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              onClick={() => switchPlanningMode("manual")}
+            >
+              Manual channel budgets
+            </button>
+          </div>
+
+          {decisionSupport?.overallPlanZone && (
+            <div className="mt-4 rounded-lg border border-border/50 bg-background/40 p-3 text-xs">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="font-medium">Overall plan support</span>
+                <Badge
+                  variant="outline"
+                  className={zoneBadgeClass(decisionSupport.overallPlanZone.zone)}
+                >
+                  {zoneLabel(decisionSupport.overallPlanZone.zone)}
+                </Badge>
+              </div>
+              <p className="mt-2 text-muted-foreground">
+                Spend-weighted score{" "}
+                {decisionSupport.overallPlanZone.weightedSeverityScore.toFixed(2)}; maximum
+                supported total{" "}
+                {fmtCurrency(decisionSupport.overallPlanZone.maxSupportedTotalBudget)}.
+              </p>
+            </div>
+          )}
+
           <div className="mt-6">
-            <BudgetSliders
-              channels={sliderChannels}
-              budgets={budgetPayload}
-              onChange={(channel, value) =>
-                setBudgets((current) => ({ ...current, [channel]: value }))
-              }
-            />
+            {planningMode === "automatic" ? (
+              <AutomaticAllocationPanel
+                total={effectiveAutomaticTotal}
+                onTotalChange={setAutomaticTotal}
+                method={allocationMethod}
+                onMethodChange={selectAllocationMethod}
+                optimizerAvailable={Boolean(decisionSupport)}
+                budgets={budgetPayload}
+                historicalBudgets={baselineBudgetMap}
+                planningZones={decisionSupport?.planningZones ?? []}
+              />
+            ) : (
+              <BudgetSliders
+                channels={sliderChannels}
+                budgets={budgetPayload}
+                planningZones={decisionSupport?.planningZones}
+                onChange={(channel, value) =>
+                  setBudgets((current) => ({ ...current, [channel]: value }))
+                }
+              />
+            )}
           </div>
 
           <div className="mt-6 rounded-lg border border-border/40 bg-background/40 p-4">
@@ -374,7 +536,7 @@ export function SimulatorPage() {
 
           <button
             type="button"
-            onClick={() => setBudgets({})}
+            onClick={resetPlanningBudgets}
             className="mt-6 w-full rounded-md border border-border/60 bg-background/40 px-3 py-2 text-xs font-medium text-muted-foreground transition hover:bg-background/80 hover:text-foreground"
           >
             Reset to baseline
@@ -408,7 +570,7 @@ export function SimulatorPage() {
             </div>
             <SpendCurveChart
               data={spendCurve?.curve ?? []}
-              currentSpend={totalBudget(curveChannel)}
+              currentSpend={budgetPayload[curveChannel] ?? 0}
               saturationSpend={spendCurve?.saturation_spend}
               marginalRoas={spendCurve?.marginal_roas}
             />
@@ -527,6 +689,133 @@ export function SimulatorPage() {
         )}
       </Card>
     </>
+  );
+}
+
+function AutomaticAllocationPanel({
+  total,
+  onTotalChange,
+  method,
+  onMethodChange,
+  optimizerAvailable,
+  budgets,
+  historicalBudgets,
+  planningZones,
+}: {
+  total: number;
+  onTotalChange: (value: number) => void;
+  method: "historical" | "optimizer";
+  onMethodChange: (method: "historical" | "optimizer") => void;
+  optimizerAvailable: boolean;
+  budgets: Record<string, number>;
+  historicalBudgets: Record<string, number>;
+  planningZones: ChannelPlanningZone[];
+}) {
+  const historicalTotal = sumBudgets(historicalBudgets);
+  return (
+    <div data-testid="automatic-allocation" className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <Label htmlFor="total-planned-budget">Total budget</Label>
+          <Input
+            id="total-planned-budget"
+            type="number"
+            min={0}
+            step="0.01"
+            value={total}
+            onChange={(event) => onTotalChange(Math.max(0, Number(event.target.value) || 0))}
+            className="mt-2"
+          />
+        </div>
+        <div>
+          <Label htmlFor="allocation-method">Allocation method</Label>
+          <Select value={method} onValueChange={onMethodChange}>
+            <SelectTrigger id="allocation-method" className="mt-2">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="historical">Recent historical spend share</SelectItem>
+              <SelectItem value="optimizer" disabled={!optimizerAvailable}>
+                Optimizer-recommended share
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-border/50">
+        <table className="w-full min-w-[500px] text-xs">
+          <caption className="sr-only">
+            Automatic channel allocations that sum to the entered total budget
+          </caption>
+          <thead className="bg-background/60 text-muted-foreground">
+            <tr>
+              <th scope="col" className="px-3 py-2 text-left">
+                Channel
+              </th>
+              <th scope="col" className="px-3 py-2 text-right">
+                Amount
+              </th>
+              <th scope="col" className="px-3 py-2 text-right">
+                Share
+              </th>
+              <th scope="col" className="px-3 py-2 text-right">
+                Historical
+              </th>
+              <th scope="col" className="px-3 py-2 text-right">
+                Evidence
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {CHANNELS.map((channel) => {
+              const amount = budgets[channel] ?? 0;
+              const evidence = planningZones.find((item) => item.channel === channel);
+              return (
+                <tr key={channel} className="border-t border-border/40">
+                  <th scope="row" className="px-3 py-2 text-left font-medium">
+                    {channel}
+                  </th>
+                  <td className="px-3 py-2 text-right">{fmtCurrency(amount)}</td>
+                  <td className="px-3 py-2 text-right">
+                    {total > 0 ? ((amount / total) * 100).toFixed(1) : "0.0"}%
+                  </td>
+                  <td className="px-3 py-2 text-right">
+                    {historicalTotal > 0
+                      ? (((historicalBudgets[channel] ?? 0) / historicalTotal) * 100).toFixed(1)
+                      : "No history"}
+                    {historicalTotal > 0 ? "%" : ""}
+                  </td>
+                  <td className="px-3 py-2 text-right">
+                    {evidence ? (
+                      <Badge variant="outline" className={zoneBadgeClass(evidence.zone)}>
+                        {zoneLabel(evidence.zone)}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground">Pending</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+          <tfoot>
+            <tr className="border-t border-border/60 font-semibold">
+              <th scope="row" className="px-3 py-2 text-left">
+                Total
+              </th>
+              <td className="px-3 py-2 text-right">{fmtCurrency(sumBudgets(budgets))}</td>
+              <td className="px-3 py-2 text-right">100.0%</td>
+              <td colSpan={2} />
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      {!optimizerAvailable && (
+        <p className="text-xs text-muted-foreground">
+          Optimizer share becomes available after decision-support evidence loads.
+        </p>
+      )}
+    </div>
   );
 }
 

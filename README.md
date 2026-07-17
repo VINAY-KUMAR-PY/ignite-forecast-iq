@@ -60,6 +60,14 @@ narwhals 2.22.1, and packaging 24.1.
 
 Current committed sample output includes all required forecast grains:
 
+The 54 committed rows use two evidence-selected paths: **18 `trained_model`**
+rows at 30 days and **36 `trained_model_baseline_anchored`** rows at 60/90
+days. `output/predictions.csv` and the generated frontend evidence object are
+the source of truth for these counts.
+
+For a concise requirement map and six-step demo, see
+[`docs/JUDGE_GUIDE.md`](./docs/JUDGE_GUIDE.md).
+
 | Grain | Example | Horizon | Expected revenue | Revenue range | Expected ROAS |
 |---|---|---:|---:|---:|---:|
 | Overall | all | 90d | $1,407,079 | $1,197,278-$1,616,880 | 4.05x |
@@ -86,6 +94,10 @@ stays unchanged.
 Campaign-level and channel-level budget elasticity, saturation curves,
 scenario simulation, and budget optimization are implemented through
 `backend/forecasting.py` and `backend/decision_support.py`.
+
+The simulator provides automatic total-budget allocation and manual channel
+budgets. Each plan includes historical spend-support zones, safe ceilings, and
+an optimizer verdict that compares projected gain with forecast uncertainty.
 
 ## System Architecture
 

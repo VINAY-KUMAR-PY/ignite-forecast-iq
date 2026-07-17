@@ -22,7 +22,9 @@ def test_train_without_admin_token_returns_401(valid_campaign_row) -> None:
     assert "Training admin token is required" in response.text
 
 
-def test_train_rejects_wrong_length_admin_token_without_traceback(valid_campaign_row) -> None:
+def test_train_rejects_wrong_length_admin_token_without_traceback(
+    valid_campaign_row,
+) -> None:
     with patch.dict(os.environ, {"TRAINING_ADMIN_TOKEN": "secret-token"}, clear=False):
         response = TestClient(app).post(
             "/api/train",
@@ -54,7 +56,10 @@ def test_train_persists_model_when_authorized(valid_campaign_row) -> None:
             with patch("backend.main.joblib.dump") as dump:
                 response = TestClient(app).post(
                     "/api/train",
-                    json={"rows": [valid_campaign_row()], "modelPath": "judge-test.pkl"},
+                    json={
+                        "rows": [valid_campaign_row()],
+                        "modelPath": "judge-test.pkl",
+                    },
                     headers={"X-Training-Admin-Token": "secret"},
                 )
 
@@ -64,14 +69,20 @@ def test_train_persists_model_when_authorized(valid_campaign_row) -> None:
 
 
 def test_oversized_payload_returns_clear_422(valid_campaign_row) -> None:
-    rows = [valid_campaign_row((index % 28) + 1) for index in range(MAX_UPLOAD_ROWS + 1)]
-    response = TestClient(app).post("/api/forecast", json={"rows": rows, "horizon": 30, "level": "overall"})
+    rows = [
+        valid_campaign_row((index % 28) + 1) for index in range(MAX_UPLOAD_ROWS + 1)
+    ]
+    response = TestClient(app).post(
+        "/api/forecast", json={"rows": rows, "horizon": 30, "level": "overall"}
+    )
 
     assert response.status_code == 422
     assert "maximum supported upload" in response.text
 
 
-def test_forecast_happy_path_returns_summary_and_diagnostics(sample_campaign_rows) -> None:
+def test_forecast_happy_path_returns_summary_and_diagnostics(
+    sample_campaign_rows,
+) -> None:
     response = TestClient(app).post(
         "/api/forecast",
         json={"rows": sample_campaign_rows(), "horizon": 30, "level": "overall"},
@@ -107,7 +118,9 @@ class ApiSecurityTests(unittest.TestCase):
     def test_health_supports_get_and_head(self) -> None:
         get_response = self.client.get("/health")
         self.assertEqual(get_response.status_code, 200)
-        self.assertEqual(get_response.json(), {"status": "ok", "service": "forecastiq-api"})
+        self.assertEqual(
+            get_response.json(), {"status": "ok", "service": "forecastiq-api"}
+        )
 
         head_response = self.client.head("/health")
         self.assertEqual(head_response.status_code, 200)
@@ -127,7 +140,9 @@ class ApiSecurityTests(unittest.TestCase):
     def test_cors_origins_parse_comma_separated_environment_values(self) -> None:
         with patch.dict(
             os.environ,
-            {"CORS_ORIGINS": " https://preview-one.vercel.app,https://preview-two.onrender.com "},
+            {
+                "CORS_ORIGINS": " https://preview-one.vercel.app,https://preview-two.onrender.com "
+            },
             clear=False,
         ):
             origins = _load_cors_origins()
@@ -143,7 +158,9 @@ class ApiSecurityTests(unittest.TestCase):
     def test_cors_origins_accept_legacy_json_array_environment_values(self) -> None:
         with patch.dict(
             os.environ,
-            {"CORS_ORIGINS": '["https://legacy-preview.vercel.app","https://api-preview.onrender.com"]'},
+            {
+                "CORS_ORIGINS": '["https://legacy-preview.vercel.app","https://api-preview.onrender.com"]'
+            },
             clear=False,
         ):
             origins = _load_cors_origins()
@@ -169,7 +186,9 @@ class ApiSecurityTests(unittest.TestCase):
         )
 
 
-def test_spend_curve_endpoint_is_rate_limited(sample_campaign_rows, valid_campaign_row) -> None:
+def test_spend_curve_endpoint_is_rate_limited(
+    sample_campaign_rows, valid_campaign_row
+) -> None:
     """Verify /api/spend-curve has rate-limit decorator applied (smoke test, not volume test)."""
     from fastapi.testclient import TestClient
     from backend.main import app
@@ -177,7 +196,12 @@ def test_spend_curve_endpoint_is_rate_limited(sample_campaign_rows, valid_campai
     client = TestClient(app)
     response = client.post(
         "/api/spend-curve",
-        json={"rows": sample_campaign_rows(), "channel": "Google Ads", "horizon": 30, "currentBudget": 3000},
+        json={
+            "rows": sample_campaign_rows(),
+            "channel": "Google Ads",
+            "horizon": 30,
+            "currentBudget": 3000,
+        },
     )
     assert response.status_code == 200, response.text
     assert "curve" in response.json()
@@ -212,7 +236,9 @@ def test_simulate_and_decision_support_happy_paths(sample_campaign_rows) -> None
     budgets = {"Google Ads": 5000, "Meta Ads": 4200, "Microsoft Ads": 2800}
     client = TestClient(app)
 
-    simulate = client.post("/api/simulate", json={"rows": rows, "horizon": 30, "budgets": budgets})
+    simulate = client.post(
+        "/api/simulate", json={"rows": rows, "horizon": 30, "budgets": budgets}
+    )
     assert simulate.status_code == 200, simulate.text
     assert simulate.json()["totals"]["totalProjectedRevenue"] > 0
     assert simulate.json()["channels"]
@@ -234,13 +260,17 @@ def test_simulate_and_decision_support_happy_paths(sample_campaign_rows) -> None
     assert payload["channelHealth"]
 
 
-def test_large_frontend_simulator_payload_uses_fast_memory_safe_paths(sample_campaign_rows) -> None:
+def test_large_frontend_simulator_payload_uses_fast_memory_safe_paths(
+    sample_campaign_rows,
+) -> None:
     rows = sample_campaign_rows(days=1582)
     budgets = {"Google Ads": 5000, "Meta Ads": 4200, "Microsoft Ads": 2800}
     client = TestClient(app)
 
     started = perf_counter()
-    simulate = client.post("/api/simulate", json={"rows": rows, "horizon": 30, "budgets": budgets})
+    simulate = client.post(
+        "/api/simulate", json={"rows": rows, "horizon": 30, "budgets": budgets}
+    )
     decision = client.post(
         "/api/decision-support",
         json={
@@ -253,7 +283,12 @@ def test_large_frontend_simulator_payload_uses_fast_memory_safe_paths(sample_cam
     )
     spend_curve = client.post(
         "/api/spend-curve",
-        json={"rows": rows, "channel": "Google Ads", "horizon": 30, "currentBudget": 5000},
+        json={
+            "rows": rows,
+            "channel": "Google Ads",
+            "horizon": 30,
+            "currentBudget": 5000,
+        },
     )
     elapsed = perf_counter() - started
 
@@ -279,11 +314,37 @@ def test_insights_anomalies_and_spend_curve_happy_paths(sample_campaign_rows) ->
         "spendTrendPct": 4.1,
         "roasTrendPct": 3.8,
         "channels": [
-            {"name": "Google Ads", "revenue": 65000, "spend": 13000, "roas": 5.0, "sharePct": 65},
-            {"name": "Meta Ads", "revenue": 35000, "spend": 12000, "roas": 2.9, "sharePct": 35},
+            {
+                "name": "Google Ads",
+                "revenue": 65000,
+                "spend": 13000,
+                "roas": 5.0,
+                "sharePct": 65,
+            },
+            {
+                "name": "Meta Ads",
+                "revenue": 35000,
+                "spend": 12000,
+                "roas": 2.9,
+                "sharePct": 35,
+            },
         ],
-        "topCampaigns": [{"name": "Brand Search", "channel": "Google Ads", "revenue": 50000, "roas": 5.5}],
-        "bottomCampaigns": [{"name": "Prospecting", "channel": "Meta Ads", "revenue": 12000, "roas": 1.8}],
+        "topCampaigns": [
+            {
+                "name": "Brand Search",
+                "channel": "Google Ads",
+                "revenue": 50000,
+                "roas": 5.5,
+            }
+        ],
+        "bottomCampaigns": [
+            {
+                "name": "Prospecting",
+                "channel": "Meta Ads",
+                "revenue": 12000,
+                "roas": 1.8,
+            }
+        ],
     }
 
     insights = client.post("/api/insights", json={"summary": summary})
@@ -291,6 +352,12 @@ def test_insights_anomalies_and_spend_curve_happy_paths(sample_campaign_rows) ->
     assert insights.headers.get("X-ForecastIQ-AI-Source") in {"gemini", "fallback"}
     assert insights.json()["executiveSummary"]
     assert insights.json()["actionPlan"]
+    assert insights.json()["provenance"]["mode"] in {
+        "live_gemini",
+        "deterministic_offline",
+    }
+    assert insights.json()["provenance"]["networkRequired"] is False
+    assert insights.json()["provenance"]["limitations"]
 
     anomalies = client.post("/api/anomalies", json={"rows": rows})
     assert anomalies.status_code == 200, anomalies.text
@@ -302,7 +369,12 @@ def test_insights_anomalies_and_spend_curve_happy_paths(sample_campaign_rows) ->
 
     spend_curve = client.post(
         "/api/spend-curve",
-        json={"rows": rows, "channel": "Google Ads", "horizon": 30, "currentBudget": 5000},
+        json={
+            "rows": rows,
+            "channel": "Google Ads",
+            "horizon": 30,
+            "currentBudget": 5000,
+        },
     )
     assert spend_curve.status_code == 200, spend_curve.text
     assert spend_curve.json()["curve"]

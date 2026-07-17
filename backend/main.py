@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import secrets
+from datetime import datetime, timezone
 from pathlib import Path
 from time import perf_counter
 
@@ -34,6 +35,7 @@ from .schemas import (
     DecisionSupportResponse,
     ForecastRequest,
     ForecastResponse,
+    InsightProvenance,
     InsightsRequest,
     InsightsResponse,
     SimulationRequest,
@@ -102,8 +104,12 @@ def _parse_cors_origin_config(raw: str | None) -> list[str]:
         except json.JSONDecodeError:
             decoded = None
         if isinstance(decoded, list):
-            return [_clean_origin(origin) for origin in decoded if _clean_origin(origin)]
-    return [_clean_origin(origin) for origin in value.split(",") if _clean_origin(origin)]
+            return [
+                _clean_origin(origin) for origin in decoded if _clean_origin(origin)
+            ]
+    return [
+        _clean_origin(origin) for origin in value.split(",") if _clean_origin(origin)
+    ]
 
 
 def _clean_origin(origin: object) -> str:
@@ -151,7 +157,11 @@ def _validate_budget_channels(frame, budgets: dict[str, float], operation: str) 
         for channel in frame.get("channel", [])
         if str(channel).strip()
     }
-    unknown = [channel for channel in budgets if str(channel).strip().casefold() not in observed]
+    unknown = [
+        channel
+        for channel in budgets
+        if str(channel).strip().casefold() not in observed
+    ]
     if unknown:
         raise HTTPException(
             status_code=422,
@@ -193,7 +203,9 @@ def _lightweight_validation(bundle) -> ValidationResponse:
     )
 
 
-def _log_lightweight_api(operation: str, row_count: int, aggregate_count: int, started: float) -> None:
+def _log_lightweight_api(
+    operation: str, row_count: int, aggregate_count: int, started: float
+) -> None:
     logger.info(
         "%s memory-safe path used: row_count=%s aggregate_count=%s elapsed_ms=%.1f",
         operation,
@@ -212,13 +224,20 @@ def _authorized_training_token(token: str | None) -> None:
 
 def _safe_model_path(model_path: str) -> Path:
     requested = Path(model_path)
-    if requested.name != model_path and requested.parent not in {Path("."), Path("pickle")}:
-        raise HTTPException(status_code=400, detail="modelPath must stay inside pickle/")
+    if requested.name != model_path and requested.parent not in {
+        Path("."),
+        Path("pickle"),
+    }:
+        raise HTTPException(
+            status_code=400, detail="modelPath must stay inside pickle/"
+        )
     resolved = (MODEL_DIR / requested.name).resolve()
     try:
         resolved.relative_to(MODEL_DIR)
     except ValueError as exc:
-        raise HTTPException(status_code=400, detail="modelPath must stay inside pickle/") from exc
+        raise HTTPException(
+            status_code=400, detail="modelPath must stay inside pickle/"
+        ) from exc
     if resolved.suffix != ".pkl":
         raise HTTPException(status_code=400, detail="modelPath must be a .pkl file")
     return resolved
@@ -229,9 +248,13 @@ def _load_model_validation_report() -> dict:
     try:
         report = json.loads(BACKTEST_REPORT_PATH.read_text(encoding="utf-8"))
     except FileNotFoundError as exc:
-        raise HTTPException(status_code=503, detail="Backtest report is not available") from exc
+        raise HTTPException(
+            status_code=503, detail="Backtest report is not available"
+        ) from exc
     except json.JSONDecodeError as exc:
-        raise HTTPException(status_code=503, detail="Backtest report is malformed") from exc
+        raise HTTPException(
+            status_code=503, detail="Backtest report is malformed"
+        ) from exc
 
     rows = []
     for item in report.get("per_horizon_performance", []):
@@ -247,12 +270,24 @@ def _load_model_validation_report() -> dict:
                 "trainedRevenueMae": float(trained.get("mae", 0.0) or 0.0),
                 "trainedRevenueRmse": float(trained.get("rmse", 0.0) or 0.0),
                 "trainedRevenueMape": float(trained.get("mape", 0.0) or 0.0),
-                "trainedRevenueCoverage": float(trained.get("interval_coverage", 0.0) or 0.0),
-                "trainedRevenueWidthPct": float(trained.get("mean_interval_width_pct", 0.0) or 0.0),
-                "trainedRoasMae": float(trained.get("roas_mae", trained_roas.get("mae", 0.0)) or 0.0),
-                "trainedRoasRmse": float(trained.get("roas_rmse", trained_roas.get("rmse", 0.0)) or 0.0),
+                "trainedRevenueCoverage": float(
+                    trained.get("interval_coverage", 0.0) or 0.0
+                ),
+                "trainedRevenueWidthPct": float(
+                    trained.get("mean_interval_width_pct", 0.0) or 0.0
+                ),
+                "trainedRoasMae": float(
+                    trained.get("roas_mae", trained_roas.get("mae", 0.0)) or 0.0
+                ),
+                "trainedRoasRmse": float(
+                    trained.get("roas_rmse", trained_roas.get("rmse", 0.0)) or 0.0
+                ),
                 "trainedRoasCoverage": float(
-                    trained.get("roas_interval_coverage", trained_roas.get("interval_coverage", 0.0)) or 0.0
+                    trained.get(
+                        "roas_interval_coverage",
+                        trained_roas.get("interval_coverage", 0.0),
+                    )
+                    or 0.0
                 ),
                 "baselineRevenueMae": float(safe.get("mae", 0.0) or 0.0),
                 "baselineRevenueRmse": float(safe.get("rmse", 0.0) or 0.0),
@@ -309,7 +344,9 @@ def model_validation() -> dict:
 @limiter.limit("30/minute")
 def forecast(request: Request, body: ForecastRequest) -> ForecastResponse:
     """Generate revenue and ROAS forecasts for the requested planning level."""
-    frame, validation = _validated_frame([row.model_dump() for row in body.rows], "forecasting")
+    frame, validation = _validated_frame(
+        [row.model_dump() for row in body.rows], "forecasting"
+    )
     result = forecast_frame(frame, body.horizon, body.level, body.value)
     return ForecastResponse(
         revenue=result["revenue"],
@@ -330,7 +367,9 @@ def simulate(request: Request, body: SimulationRequest) -> SimulationResponse:
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     result = build_lightweight_simulation(bundle, body.horizon, body.budgets)
-    _log_lightweight_api("simulation", bundle.row_count, bundle.aggregate_count, started)
+    _log_lightweight_api(
+        "simulation", bundle.row_count, bundle.aggregate_count, started
+    )
     return SimulationResponse(
         channels=result["channels"],
         totals=result["totals"],
@@ -345,8 +384,12 @@ def spend_curve(request: Request, body: SpendCurveRequest) -> dict:
     """Return channel-level spend response curve and saturation estimate."""
     started = perf_counter()
     bundle = _lightweight_bundle(body.rows, "spend curve")
-    result = build_lightweight_spend_curve(bundle, body.channel, int(body.horizon), float(body.current_budget))
-    _log_lightweight_api("spend_curve", bundle.row_count, bundle.aggregate_count, started)
+    result = build_lightweight_spend_curve(
+        bundle, body.channel, int(body.horizon), float(body.current_budget)
+    )
+    _log_lightweight_api(
+        "spend_curve", bundle.row_count, bundle.aggregate_count, started
+    )
     return result
 
 
@@ -354,7 +397,9 @@ def spend_curve(request: Request, body: SpendCurveRequest) -> dict:
 @limiter.limit("30/minute")
 def get_anomalies(request: Request, body: AnomalyRequest) -> dict:
     """Detect performance anomalies and structural trend breaks."""
-    frame, _ = _validated_frame([row.model_dump() for row in body.rows], "anomaly detection")
+    frame, _ = _validated_frame(
+        [row.model_dump() for row in body.rows], "anomaly detection"
+    )
     anomalies = [item.to_dict() for item in detect_anomalies(frame)]
     trend_breaks = compute_trend_breaks(frame)
     driver_evidence = compute_driver_evidence(frame)
@@ -369,7 +414,9 @@ def get_anomalies(request: Request, body: AnomalyRequest) -> dict:
 
 @app.post("/api/decision-support", response_model=DecisionSupportResponse)
 @limiter.limit("30/minute")
-def decision_support(request: Request, body: DecisionSupportRequest) -> DecisionSupportResponse:
+def decision_support(
+    request: Request, body: DecisionSupportRequest
+) -> DecisionSupportResponse:
     """Return optimizer, what-if, risk, opportunity and health analytics."""
     started = perf_counter()
     bundle = _lightweight_bundle(body.rows, "decision support")
@@ -385,15 +432,37 @@ def decision_support(request: Request, body: DecisionSupportRequest) -> Decision
         target_roas=body.targetRoas,
         scenarios=body.scenarios,
     )
-    _log_lightweight_api("decision_support", bundle.row_count, bundle.aggregate_count, started)
+    _log_lightweight_api(
+        "decision_support", bundle.row_count, bundle.aggregate_count, started
+    )
     return DecisionSupportResponse(**result, validation=_lightweight_validation(bundle))
 
 
 @app.post("/api/insights", response_model=InsightsResponse)
 @limiter.limit("30/minute")
-async def insights(request: Request, body: InsightsRequest, response: Response) -> InsightsResponse:
+async def insights(
+    request: Request, body: InsightsRequest, response: Response
+) -> InsightsResponse:
     """Turn forecast and performance summaries into executive recommendations."""
     result, source = await generate_gemini_insights_with_source(body.summary)
+    result.provenance = InsightProvenance(
+        **{
+            "mode": "live_gemini" if source == "gemini" else "deterministic_offline",
+            "networkUsedForResult": source == "gemini",
+            "networkRequired": False,
+            "evidenceSource": [
+                "Uploaded campaign summary",
+                "Forecast and trend metrics",
+                "Anomaly, driver-association and observational DiD evidence when available",
+            ],
+            "generatedAt": datetime.now(timezone.utc).isoformat(),
+            "limitations": [
+                "Observational evidence is not randomized incrementality proof.",
+                "Forecast ranges are planning bounds, not guarantees.",
+                "Optional Gemini wording does not change deterministic metrics.",
+            ],
+        }
+    )
     response.headers["X-ForecastIQ-AI-Source"] = source
     return result
 
@@ -401,12 +470,16 @@ async def insights(request: Request, body: InsightsRequest, response: Response) 
 @app.post("/api/train", response_model=TrainResponse)
 def train(
     request: TrainRequest,
-    x_training_admin_token: str | None = Header(default=None, alias="X-Training-Admin-Token"),
+    x_training_admin_token: str | None = Header(
+        default=None, alias="X-Training-Admin-Token"
+    ),
 ) -> TrainResponse:
     """Train and persist an evaluator-safe model artifact from uploaded rows."""
     _authorized_training_token(x_training_admin_token)
     model_path = _safe_model_path(request.modelPath)
-    frame, validation = _validated_frame([row.model_dump() for row in request.rows], "training")
+    frame, validation = _validated_frame(
+        [row.model_dump() for row in request.rows], "training"
+    )
     bundle = train_evaluator_model(frame)
     model_path.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(bundle, model_path)

@@ -16,6 +16,13 @@ output/*
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.coverage
+coverage.json
+reports/coverage.json
+htmlcov/
+test-results/
+.venv/
+venv/
 .env
 .env.*
 !.env.example

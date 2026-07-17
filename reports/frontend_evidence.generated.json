@@ -1,0 +1,112 @@
+{
+  "availability": "available",
+  "statusLabel": "Verified repository evidence",
+  "generatedAt": "2026-07-17T09:56:58Z",
+  "horizons": [
+    {
+      "horizonDays": 30,
+      "selectedMethod": "trained_model",
+      "selectionReason": "Trained residual correction has statistically lower paired error.",
+      "revenueMapePct": 2.81,
+      "roasMapePct": 1.26,
+      "revenueIntervalCoveragePct": 95.83,
+      "roasIntervalCoveragePct": 100,
+      "meanRevenueIntervalWidthPct": 20.3,
+      "folds": 4,
+      "segmentsEvaluated": 72
+    },
+    {
+      "horizonDays": 60,
+      "selectedMethod": "trained_model_baseline_anchored",
+      "selectionReason": "Evaluator scorer applied the baseline anchor for this horizon after rolling-origin evidence found no reliable trained revenue advantage.",
+      "revenueMapePct": 10.11,
+      "roasMapePct": 1.56,
+      "revenueIntervalCoveragePct": 90.28,
+      "roasIntervalCoveragePct": 100,
+      "meanRevenueIntervalWidthPct": 31.56,
+      "folds": 4,
+      "segmentsEvaluated": 72
+    },
+    {
+      "horizonDays": 90,
+      "selectedMethod": "trained_model_baseline_anchored",
+      "selectionReason": "Evaluator scorer applied the baseline anchor for this horizon after rolling-origin evidence found no reliable trained revenue advantage.",
+      "revenueMapePct": 7.89,
+      "roasMapePct": 2.46,
+      "revenueIntervalCoveragePct": 86.11,
+      "roasIntervalCoveragePct": 100,
+      "meanRevenueIntervalWidthPct": 25.96,
+      "folds": 2,
+      "segmentsEvaluated": 36
+    }
+  ],
+  "modelPathPolicy": "The committed evaluator uses the trained artifact at 30 days and baseline-anchored revenue planning at 60/90 days when rolling-origin evidence does not support a trained-model advantage.",
+  "modelPathConfidence": {
+    "maxRevenueDeltaPct": 14.9,
+    "maxRoasDeltaPct": 13.87,
+    "badgePct": 15,
+    "label": "Confidence: live/offline paths may differ up to 15%"
+  },
+  "backendVerification": {
+    "coverageGatePct": 92.05,
+    "measuredCoveragePct": 93.67,
+    "passed": 274,
+    "skipped": 2,
+    "environmentNote": "SHAP is intentionally unavailable on Python 3.14; two POSIX-shell-only tests skip on Windows. Counts may vary slightly across supported environments, while GitHub Actions and the 92.05% coverage gate remain canonical."
+  },
+  "sampleOutput": {
+    "rowCount": 54,
+    "modelTypeCounts": {
+      "trained_model": 18,
+      "trained_model_baseline_anchored": 36
+    },
+    "overallByHorizon": [
+      {
+        "horizonDays": 30,
+        "expectedRevenue": 460823.06,
+        "lowerRevenue": 435016.97,
+        "upperRevenue": 486629.15,
+        "expectedRoas": 4.05,
+        "lowerRoas": 3.91,
+        "upperRoas": 4.19,
+        "modelType": "trained_model",
+        "forecastConfidence": "high"
+      },
+      {
+        "horizonDays": 60,
+        "expectedRevenue": 941076.91,
+        "lowerRevenue": 810169.35,
+        "upperRevenue": 1071984.47,
+        "expectedRoas": 4.05,
+        "lowerRoas": 3.74,
+        "upperRoas": 4.35,
+        "modelType": "trained_model_baseline_anchored",
+        "forecastConfidence": "high"
+      },
+      {
+        "horizonDays": 90,
+        "expectedRevenue": 1407078.7,
+        "lowerRevenue": 1197277.64,
+        "upperRevenue": 1616879.76,
+        "expectedRoas": 4.05,
+        "lowerRoas": 3.69,
+        "upperRoas": 4.41,
+        "modelType": "trained_model_baseline_anchored",
+        "forecastConfidence": "high"
+      }
+    ]
+  },
+  "modelArtifact": {
+    "type": "forecastiq_evaluator_model",
+    "version": 5,
+    "modelType": "trained_model",
+    "scikitLearnVersion": "1.7.2"
+  },
+  "sources": [
+    "reports/backtest_report.json",
+    "reports/interval_calibration_report.json",
+    "reports/verification_summary.json",
+    "requirements.txt",
+    "output/predictions.csv"
+  ]
+}

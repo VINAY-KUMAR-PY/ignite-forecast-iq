@@ -382,3 +382,25 @@ allow a caller to trigger model training work on the deployed backend. Rotate
 the token immediately after exposure and redeploy the backend with a new value.
 
 The offline evaluator path ignores these secrets and remains deterministic.
+
+## Budget Planning Evidence And Constraints
+
+The simulator supports automatic total-budget allocation and manual channel
+budgets. Automatic allocations use recent spend shares or a frozen optimizer
+share after evidence loads. A deterministic largest-remainder calculation
+reconciles amounts to cents so channel budgets equal the entered total exactly.
+
+For each horizon, daily channel spend is zero-filled over the observed date
+range and grouped into rolling horizon-sized windows anchored through the most
+recent day. At least three comparable windows are required. Historical
+p90 is the supported ceiling; plans above p90 through 110% of the historical
+maximum are `CAUTION`, through 150% are `HIGH_EXTRAPOLATION`, and larger or
+evidence-insufficient plans are `UNSUPPORTED`. Overall support is the
+planned-spend-weighted 0-3 severity, while every unsupported channel is listed.
+
+The optimizer preserves expected values and does not apply an unvalidated
+revenue haircut. It constrains allocations to non-negative values, historical
+p90 ceilings, controlled increases, and exact reconciliation. Its conservative
+noise floor is the sum of baseline and optimized interval half-widths. Positive
+gains inside that floor are **Hypothesis, not guarantee**; only gains above it
+are marked meaningful.

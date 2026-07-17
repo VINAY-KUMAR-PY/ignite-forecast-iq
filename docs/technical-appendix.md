@@ -25,12 +25,11 @@
 ForecastIQ trains supervised regressors on validated campaign rows aggregated
 to daily grain per segment (overall, channel, campaign type, campaign).
 
-### Live API Path (XGBoost)
-The live `/api/forecast` endpoint uses XGBoost (`reg:squarederror`) because it
-handles non-linear spend-revenue relationships, provides native feature
-importance for the Explainability Center, and is fast enough for interactive
-forecasting. A scikit-learn GradientBoostingRegressor is the fallback when
-XGBoost is unavailable.
+### Live API Path
+The live `/api/forecast` endpoint may use optional XGBoost diagnostics when app
+dependencies are installed. This is separate from the committed evaluator and
+is not the model identity of the whole project. Frontend-only estimates are
+labeled as fallbacks when the API is unavailable.
 
 ### Offline Evaluator Path (sklearn GBR)
 The offline `run.sh` path uses a compact joblib sklearn GradientBoostingRegressor
@@ -166,7 +165,7 @@ The artifact stores dedicated training-sample counts by horizon:
 - 90-day: 126 samples
 
 Sample counts reflect the artifact committed at `pickle/model.pkl` version 5
-(retrained with quantile interval models on Python 3.14.4, scikit-learn 1.9.0).
+(trained on Python 3.14.4 with the pinned scikit-learn 1.7.2 artifact runtime).
 
 If a horizon has fewer than the minimum required samples, it is marked
 `fallback_only` instead of training on mismatched target scales.
@@ -242,11 +241,11 @@ non-associativity rather than unpinned randomness. The committed
 scores the already-trained artifact instead of retraining during `run.sh`.
 
 Artifact environment: Python 3.14.4, pandas 3.0.3, numpy 2.4.6,
-scikit-learn 1.9.0, scipy 1.17.1, joblib 1.5.3, packaging 24.1.
+scikit-learn 1.7.2, scipy 1.17.1, joblib 1.5.3, packaging 24.1.
 
 Compatibility evidence: the evaluator CI job `exact-sklearn-zero-fallback`
 installs `requirements.txt` without pip cache, force-reinstalls the exact
-artifact build dependency `scikit-learn==1.9.0` with `--no-deps`, runs
+artifact build dependency `scikit-learn==1.7.2` with `--no-deps`, runs
 `backend.predict`, and fails if stdout contains the sklearn mismatch warning
 `differs from artifact build version`. The same job asserts 54 committed-sample
 rows and `model_type=trained_model`, proving the supported evaluator runtime is
@@ -386,12 +385,10 @@ in `reports/backtest_summary.md` is not used for calibration.
 | 60 days | 2.7792 | 21.68% | 1.00 |
 | 90 days | 2.7792 | 22.18% | 1.10 |
 
-The achieved walk-forward revenue coverage is 100.0% at 30, 60, and 90 days on
-the committed sample, so the current split-conformal bands are conservative
-rather than exactly 90%. Mean trained-model revenue widths are 14.75%, 51.76%,
-and 57.08% for 30/60/90 days. This is a real conformal procedure, but the sample
-is still small; larger merchant-specific calibration slices should be used
-before tightening production budget-risk bands further.
+The achieved walk-forward revenue coverage is 95.83%, 90.28%, and 86.11% at
+30, 60, and 90 days. Mean widths are reported alongside coverage in the
+generated calibration report. The 90-day evaluation has fewer windows, so
+merchant-specific calibration should precede tighter production risk bands.
 
 The monotonic enforcement pass (in `backend/inference.py`) ensures that each
 horizon's `interval_width_pct` is strictly larger than the previous horizon's
@@ -420,7 +417,7 @@ spend is zero, ROAS is set to `expected_roas = lower_roas = upper_roas = 0` and
 | expected_roas | float | >= 0, finite | isfinite |
 | lower_roas | float | >= 0, finite | isfinite + <= expected_roas |
 | upper_roas | float | >= 0, finite | isfinite + >= expected_roas |
-| model_type | str | trained_model, trained_model_estimated_spend, safe_baseline_fallback | trained_model on Python 3.11-3.14 with pinned sklearn 1.9.0 when spend is observed |
+| model_type | str | trained_model, trained_model_baseline_anchored, trained_model_estimated_spend, safe_baseline_fallback | Current sample is 18 trained and 36 baseline anchored |
 | interval_width_pct | float | >= 0, finite | monotonic across horizons |
 | forecast_confidence | str | high, medium, low, not_computable | non-null |
 
@@ -522,7 +519,7 @@ coverage commands cited in the reports, then prints a pass/fail summary.
 Clean evaluator venv:
 PASS clean venv install
 python 3.14.4
-sklearn 1.9.0
+sklearn 1.7.2
 pandas 3.0.3
 numpy 2.4.6
 
@@ -531,31 +528,31 @@ Offline evaluator:
 [ForecastIQ] Wrote 54 rows to ./output/predictions.csv
 [ForecastIQ] Causal summary written to output\causal_summary.txt
 [ForecastIQ] Explainability notes written to output\explainability_notes.txt
-[ForecastIQ] scikit-learn version: 1.9.0 (artifact built on 1.9.0)
-PASS offline evaluator: 54 rows ['trained_model']
+[ForecastIQ] scikit-learn version: 1.7.2 (artifact built on 1.7.2)
+PASS offline evaluator: 54 rows; 18 trained_model and 36 trained_model_baseline_anchored
 PASS causal summary: 8308 bytes, including OFFLINE_DETERMINISTIC_FALLBACK and DISTILLED_LLM_DERIVED_OFFLINE_CACHE labels
 PASS explainability notes: per segment/horizon recent trend, seasonality, ROAS stability, and confidence signals
 
 Backend tests:
-186 passed, 2 skipped, 7 warnings in 202.99s with 92.05% backend coverage from a full local backend run with `requirements-app.txt`
+Counts vary by environment; the enforced backend coverage gate is 92.05% and the current result is in `reports/latest_verification.md`.
 
 Frontend validation:
 npm ci: added 603 packages and audited 604 packages; one low-severity advisory remains
-npm run test: Vitest passed 4 files and 14 tests in 5.11s
+npm run test: see `reports/latest_verification.md` for the current executed total.
 npm run check: tsc, eslint, and Vite build passed; Vite transformed 2,787 modules and built in 6.22s
 npm run build: Vite transformed 2,787 modules and built in 31.58s
 npm run test:e2e: Playwright passed 1 Chromium workflow in 24.1s
 
 Sklearn zero-fallback guard:
 the CI job `exact-sklearn-zero-fallback` installs the pinned evaluator runtime
-without pip cache, force-reinstalls `scikit-learn==1.9.0` with `--no-deps`,
+without pip cache, force-reinstalls `scikit-learn==1.7.2` with `--no-deps`,
 and fails if the sklearn mismatch warning appears. It also asserts 54 rows and
 model_type=trained_model.
 
 Sklearn drift tolerance:
 the CI job `sklearn-version-drift-smoke` intentionally tests available older
 sklearn versions outside the pinned artifact runtime (`1.7.2` and `1.8.0`;
-the configured package index currently has no release above `1.9.0`). It
+the exact matrix changes over time). It
 passes only when the run either emits valid `trained_model` output or emits a
 loud compatibility warning before accepting `safe_baseline_fallback`,
 preventing silent bad predictions under reviewer-side dependency experiments.
@@ -565,7 +562,7 @@ preventing silent bad predictions under reviewer-side dependency experiments.
 
 - `run.sh` runs offline without starting servers or calling external APIs.
 - `pickle/model.pkl` is a committed joblib sklearn artifact (<=2 MB, version 5,
-  scikit-learn 1.9.0).
+  scikit-learn 1.7.2).
 - `output/predictions.csv` matches the required 12-column schema with horizons
   {30, 60, 90}, finite values, non-negative lower bounds, and monotonically
   widening interval widths across horizons.
@@ -657,7 +654,7 @@ sharpness further while preserving coverage.
 - `tests/test_causal_stability.py` perturbs spend and revenue with small
   realistic noise and checks that the top DiD hypothesis remains stable or
   loses confidence instead of silently flipping.
-- `.github/workflows/evaluator-ci.yml` now enforces at least 75% coverage on
+- `.github/workflows/evaluator-ci.yml` enforces targeted module coverage on
   `backend/inference.py`, `backend/train.py`, `backend/gemini.py`,
   `backend/decision_support.py`, and `backend/evaluator_io.py` in addition to
   the aggregate backend gate.

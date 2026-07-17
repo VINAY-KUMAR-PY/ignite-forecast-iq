@@ -14,11 +14,12 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DEMO_REQUEST_KEY, useData } from "@/lib/data-store";
+import { MODEL_EVIDENCE } from "@/lib/model-validation.generated";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "AIgnition ForecastIQ - Ecommerce Forecasting and Budget Decisions" },
+      { title: "ForecastIQ - Ecommerce Forecasting and Budget Decisions" },
       {
         name: "description",
         content:
@@ -64,7 +65,7 @@ function Nav({ onTryDemo }: { onTryDemo: () => void }) {
             <Sparkles className="h-4 w-4 text-primary-foreground" />
           </div>
           <span className="text-lg font-semibold tracking-tight">
-            AIgnition <span className="text-gradient-brand">ForecastIQ</span>
+            <span className="text-gradient-brand">ForecastIQ</span>
           </span>
         </Link>
         <nav className="hidden items-center gap-8 text-sm text-muted-foreground md:flex">
@@ -110,6 +111,9 @@ function Hero({ onTryDemo }: { onTryDemo: () => void }) {
     const channelCount = new Set(rows.map((row) => row.channel).filter(Boolean)).size;
     return { totalRevenue, avgRoas, channelCount };
   }, [rows]);
+  const sampleForecast = MODEL_EVIDENCE.sampleOutput.overallByHorizon.find(
+    (row) => row.horizonDays === 90,
+  );
 
   return (
     <section className="relative overflow-hidden bg-gradient-hero">
@@ -182,18 +186,37 @@ function Hero({ onTryDemo }: { onTryDemo: () => void }) {
           <div className="absolute -inset-4 rounded-3xl bg-gradient-brand opacity-30 blur-3xl" />
           <div className="relative rounded-2xl border border-border/60 bg-gradient-card p-6 shadow-elevated">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Projected Revenue (next 90d)</span>
-              <span className="rounded-full bg-success/15 px-2 py-0.5 text-xs font-medium text-success">
-                +18.4%
+              <span className="text-muted-foreground">Committed sample forecast (90 days)</span>
+              <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
+                {MODEL_EVIDENCE.statusLabel}
               </span>
             </div>
-            <div className="mt-2 text-4xl font-bold tracking-tight">$2.41M</div>
+            <div className="mt-2 text-4xl font-bold tracking-tight">
+              {formatEvidenceCurrency(sampleForecast?.expectedRevenue)}
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {sampleForecast
+                ? `${humanizeModelType(sampleForecast.modelType)}; planning range, not a guarantee.`
+                : "Evidence unavailable"}
+            </p>
             <MiniChart />
             <div className="mt-6 grid grid-cols-3 gap-3 text-center text-xs">
               {[
-                { l: "Google", v: "4.6x", c: "var(--chart-1)" },
-                { l: "Meta", v: "3.2x", c: "var(--chart-3)" },
-                { l: "Bing", v: "5.4x", c: "var(--chart-5)" },
+                {
+                  l: "Lower / P10-style",
+                  v: formatEvidenceCurrency(sampleForecast?.lowerRevenue),
+                  c: "var(--chart-1)",
+                },
+                {
+                  l: "Expected / P50-style",
+                  v: formatEvidenceCurrency(sampleForecast?.expectedRevenue),
+                  c: "var(--chart-3)",
+                },
+                {
+                  l: "Upper / P90-style",
+                  v: formatEvidenceCurrency(sampleForecast?.upperRevenue),
+                  c: "var(--chart-5)",
+                },
               ].map((c) => (
                 <div key={c.l} className="rounded-lg border border-border/60 bg-card/40 p-3">
                   <div className="text-muted-foreground">{c.l}</div>
@@ -225,12 +248,12 @@ function HowItWorks() {
     {
       icon: LineChart,
       title: "Forecast revenue and ROAS",
-      desc: "XGBoost models generate 30/60/90-day forecasts with confidence intervals.",
+      desc: "The committed scikit-learn artifact uses horizon-specific champion-challenger selection and calibrated planning ranges.",
     },
     {
       icon: Brain,
       title: "Generate executive actions",
-      desc: "Gemini turns forecasts, anomalies, and budget curves into leadership recommendations.",
+      desc: "Deterministic evidence works offline; optional Gemini enrichment can improve the wording when configured.",
     },
   ];
   return (
@@ -255,10 +278,14 @@ function HowItWorks() {
           ))}
         </div>
         <div className="mt-8 grid gap-3 rounded-2xl border border-border/60 bg-background/60 p-4 text-center text-sm font-semibold md:grid-cols-4">
-          <span>2.83% MAPE</span>
-          <span>100% interval coverage</span>
-          <span>3 channels</span>
-          <span>30/60/90-day horizons</span>
+          <span>{formatHorizonMetric("revenueMapePct", "MAPE")}</span>
+          <span>{formatHorizonMetric("revenueIntervalCoveragePct", "coverage")}</span>
+          <span>
+            {MODEL_EVIDENCE.sampleOutput.rowCount === null
+              ? "Evidence unavailable"
+              : `${MODEL_EVIDENCE.sampleOutput.rowCount} committed forecast rows`}
+          </span>
+          <span>30 / 60 / 90-day evidence</span>
         </div>
       </div>
     </section>
@@ -286,7 +313,13 @@ function MiniChart() {
     )
     .join(" ");
   return (
-    <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="mt-4 h-32 w-full">
+    <svg
+      viewBox="0 0 100 100"
+      preserveAspectRatio="none"
+      className="mt-4 h-32 w-full"
+      role="img"
+      aria-label="Illustrative forecast trajectory; verified values are shown in the adjacent planning range."
+    >
       <defs>
         <linearGradient id="g" x1="0" x2="0" y1="0" y2="1">
           <stop offset="0%" stopColor="oklch(0.7 0.2 265)" stopOpacity="0.5" />
@@ -365,6 +398,9 @@ function Features() {
 }
 
 function ForecastingSection() {
+  const sampleForecast = MODEL_EVIDENCE.sampleOutput.overallByHorizon.find(
+    (row) => row.horizonDays === 90,
+  );
   return (
     <section id="forecasting" className="border-t border-border/60 bg-muted/30 py-24">
       <div className="container mx-auto grid gap-12 px-6 lg:grid-cols-2 lg:items-center">
@@ -378,7 +414,7 @@ function ForecastingSection() {
             {[
               "Trained evaluator model with calibrated confidence intervals",
               "Forecast at overall, channel, campaign-type or campaign level",
-              "Lower / Expected / Upper bounds visualised on every chart",
+              "Lower / P10-style, Expected / P50-style, and Upper / P90-style planning cases",
               "Offline-safe predictions with safe baseline fallback for hidden datasets",
             ].map((t) => (
               <li key={t} className="flex items-start gap-3">
@@ -393,9 +429,12 @@ function ForecastingSection() {
           <MiniChart />
           <div className="grid grid-cols-3 gap-3 text-center text-xs">
             {[
-              { l: "Lower", v: "$1.92M" },
-              { l: "Expected", v: "$2.41M" },
-              { l: "Upper", v: "$2.84M" },
+              { l: "Lower / P10-style", v: formatEvidenceCurrency(sampleForecast?.lowerRevenue) },
+              {
+                l: "Expected / P50-style",
+                v: formatEvidenceCurrency(sampleForecast?.expectedRevenue),
+              },
+              { l: "Upper / P90-style", v: formatEvidenceCurrency(sampleForecast?.upperRevenue) },
             ].map((s) => (
               <div key={s.l} className="rounded-lg border border-border/60 bg-card/40 p-3">
                 <div className="text-muted-foreground">{s.l}</div>
@@ -447,19 +486,18 @@ function AIInsightsSection() {
       <div className="container mx-auto grid gap-12 px-6 lg:grid-cols-2 lg:items-center">
         <div className="rounded-2xl border border-border/60 bg-gradient-card p-6 shadow-elevated">
           <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-primary-glow">
-            <Brain className="h-4 w-4" /> Executive briefing
+            <Brain className="h-4 w-4" /> Illustrative executive briefing
           </div>
-          <h4 className="mt-3 text-lg font-semibold">Q4 outlook</h4>
+          <h4 className="mt-3 text-lg font-semibold">What the brief explains</h4>
           <p className="mt-2 text-sm text-muted-foreground">
-            Revenue is trending +18% QoQ driven by Performance Max and branded search. Meta
-            retargeting ROAS slipped to 1.9x; reallocating 15% of its spend to Google PMax projects
-            an additional $142K in the next 30 days.
+            ForecastIQ separates observed statistical evidence, testable causal hypotheses, and
+            optional LLM wording. Recommendations show their data, uncertainty, and limitations.
           </p>
           <div className="mt-4 grid gap-2 text-xs">
             {[
-              "Action: Shift 15% Meta retargeting to Google PMax",
-              "Risk: Bing Generic CPC up 22% MoM; bid cap recommended",
-              "Protect: Brand Search ROAS 6.8x; protect budget",
+              "Action: stage unsupported budget changes as controlled tests",
+              "Risk: widen uncertainty when planned spend leaves observed history",
+              "Evidence: show sample size, interval, trend, and recommendation provenance",
             ].map((l) => (
               <div key={l} className="rounded-md bg-card/40 px-3 py-2">
                 {l}
@@ -533,7 +571,10 @@ function Footer() {
   return (
     <footer className="border-t border-border/60 py-10">
       <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-6 text-sm text-muted-foreground md:flex-row">
-        <div>(c) {new Date().getFullYear()} AIgnition ForecastIQ. Built for hackathon demos.</div>
+        <div>
+          (c) {new Date().getFullYear()} ForecastIQ. Decision intelligence for ecommerce marketing
+          planning.
+        </div>
         <div className="flex gap-6">
           <Link to="/app">App</Link>
           <a href="#features">Features</a>
@@ -542,4 +583,35 @@ function Footer() {
       </div>
     </footer>
   );
+}
+
+function formatEvidenceCurrency(value: number | null | undefined) {
+  if (value === null || value === undefined || !Number.isFinite(value))
+    return "Evidence unavailable";
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    notation: "compact",
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+function humanizeModelType(value: string) {
+  return value === "trained_model_baseline_anchored"
+    ? "Baseline-anchored evaluator path"
+    : value === "trained_model"
+      ? "Trained evaluator path"
+      : value.replaceAll("_", " ");
+}
+
+function formatHorizonMetric(
+  field: "revenueMapePct" | "revenueIntervalCoveragePct",
+  label: string,
+) {
+  if (MODEL_EVIDENCE.availability !== "available" || MODEL_EVIDENCE.horizons.length === 0) {
+    return "Evidence unavailable";
+  }
+  const values = MODEL_EVIDENCE.horizons.map((row) => row[field]);
+  if (values.some((value) => value === null)) return "Evidence unavailable";
+  return `${values.map((value) => `${Number(value).toFixed(2)}%`).join(" / ")} ${label}`;
 }

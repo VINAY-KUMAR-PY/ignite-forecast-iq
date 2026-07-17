@@ -54,7 +54,7 @@ Use a tight 2-minute recording so judges see product value before technical deta
 
 ## Demo Script
 
-"ForecastIQ helps ecommerce marketing teams answer a practical question: if we change media spend across Google, Meta, and Microsoft, what happens to revenue, ROAS, risk, and action planning? We validate uploaded campaign data, train XGBoost revenue and ROAS forecasts, quantify uncertainty, explain the model drivers, simulate budget changes, and convert the result into an executive brief."
+"ForecastIQ helps ecommerce marketing teams answer a practical question: if we change media spend across Google, Meta, and Microsoft, what happens to revenue, ROAS, risk, and action planning? We validate uploaded campaign data, use an evidence-selected committed forecasting artifact, quantify uncertainty, simulate constrained budget changes, and convert the result into an executive brief."
 
 ## 30-Second Judge Path
 
@@ -73,7 +73,11 @@ Use a tight 2-minute recording so judges see product value before technical deta
 | Forecast generation | `/app/forecast` creates 30/60/90-day revenue and ROAS forecasts. |
 | Why this forecast? | Local explainability cards show positive and negative drivers for the current forecast. |
 | Budget simulator | `/app/simulator` compares budget changes and recommended allocation. |
-| AI insights | `/app/insights` generates Gemini or fallback executive recommendations. |
+| AI insights | `/app/insights` generates deterministic evidence-grounded recommendations with optional Gemini wording. |
+
+In the simulator, enter one total budget under **Automatic allocation**, then
+switch to **Manual channel budgets** and cross a safe ceiling. Call out the
+channel zone, spend-weighted overall zone, and gain-versus-noise verdict.
 | Export/report | Export PDF from the Insights page. |
 | Offline evaluator | Run `./run.sh ./data ./pickle/model.pkl ./output/predictions.csv`. |
 | Health check | Verify `GET /health` returns service status. |

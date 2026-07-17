@@ -11,7 +11,7 @@
 
 3. Technical Differentiation
    - FastAPI backend with typed Pydantic contracts.
-   - XGBoost revenue and ROAS models.
+   - Committed scikit-learn artifact with horizon champion-challenger selection.
    - Lag, rolling, seasonality, and media-volume feature engineering.
    - Forecast accuracy dashboard with MAE, RMSE, MAPE, and R2.
    - Explainability center with feature importance and driver explanations.
@@ -37,7 +37,7 @@
 7. Demo screenshots
 8. Results, limitations, and roadmap
 
-## Grand Finale Tips
+## Presentation Tips
 
 - Lead with business impact, not technology names.
 - Show the full workflow in under 3 minutes.

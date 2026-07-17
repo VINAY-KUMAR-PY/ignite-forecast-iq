@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-07-17
+
+- Replaced duplicated product claims with generated backtest, calibration,
+  verification, dependency, and committed-output evidence.
+- Added automatic total-budget and manual channel-budget planning modes with
+  exact largest-remainder reconciliation.
+- Added historical spend envelopes, channel and spend-weighted overall support
+  zones, safe ceilings, and underinvestment warnings.
+- Added evidence-constrained optimizer allocations and explicit
+  gain-versus-noise verdicts in the UI and executive report.
+- Added a six-step workflow indicator, keyboard-accessible judge tour, AI
+  provenance, and weak-causal-evidence wording guards.
+- Kept the evaluator artifact unchanged; no candidate model was eligible under
+  the strict adoption gate.
+
 ## 2026-07-09
 
 - Added automatic, bounded Gemini enrichment in the graded evaluator path when

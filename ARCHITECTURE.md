@@ -8,25 +8,30 @@ and LLM integration workflow.
 
 ```mermaid
 flowchart LR
-  CSV["CSV folder"] --> Adapter["Schema adapters + validation"]
-  Adapter --> Features["Feature engineering + segment hierarchy"]
-  Features --> Evaluator["run.sh / backend.predict"]
-  Evaluator --> Model["pickle/model.pkl trained artifact"]
-  Evaluator --> Baseline["safe seasonal baseline"]
-  Model --> Intervals["interval calibration + monotonic widening"]
-  Baseline --> Intervals
-  Intervals --> Predictions["output/predictions.csv"]
-  Features --> Causal["anomaly.py + causal_lite.py"]
-  Causal --> OfflineAI["offline evidence synthesis"]
-  Causal --> LiveAI["optional Gemini call when GEMINI_API_KEY exists"]
-  OfflineAI --> Summary["output/causal_summary.txt"]
-  LiveAI --> Summary
+  CSV["Marketing CSV ingestion"] --> Adapter["Schema adapters"]
+  Adapter --> Validate["Validation + canonical campaign rows"]
+  Validate --> Features["Time, hierarchy, spend and seasonality features"]
+  Features --> Evaluator["Offline evaluator: run.sh"]
+  Evaluator --> Artifact["Committed sklearn artifact"]
+  Evaluator --> Challenger["Seasonal baseline challenger"]
+  Artifact --> Selection["30/60/90 champion-challenger policy"]
+  Challenger --> Selection
+  Selection --> Intervals["Calibrated, monotonic planning intervals"]
+  Intervals --> Predictions["predictions.csv + explanations"]
 
-  Adapter --> API["FastAPI backend"]
-  API --> XGB["live XGBoost/product inference"]
-  API --> Gemini["Gemini insights fallback-safe"]
-  XGB --> UI["React dashboard/forecast/simulator"]
+  Validate --> API["FastAPI application API"]
+  API --> Forecast["Interactive forecast diagnostics"]
+  API --> Simulator["Budget simulator"]
+  Simulator --> Zones["Historical spend envelopes + support zones"]
+  Zones --> Optimizer["Constrained optimizer + uncertainty verdict"]
+  Validate --> Evidence["Anomalies, associations and observational DiD"]
+  Evidence --> OfflineAI["Deterministic offline explanation"]
+  Evidence --> Gemini["Optional Gemini wording enrichment"]
+  Forecast --> UI["React decision workspace"]
+  Optimizer --> UI
+  OfflineAI --> UI
   Gemini --> UI
+  UI --> Reports["PDF/text executive report"]
 ```
 
 ## Frontend Stack
@@ -44,6 +49,8 @@ flowchart LR
   backend.predict` and does not start frontend or backend servers.
 - `requirements.txt` is sufficient for the graded path; `requirements-app.txt`
   adds API, Gemini, and frontend-test dependencies for local product demos.
+- The spend-support calculation is shared by the pandas and memory-safe API
+  paths, so zones and optimizer constraints serialize identically.
 
 ## Forecasting Pipeline
 
@@ -64,9 +71,8 @@ flowchart LR
   `backend/gemini_offline_cache.py`, and `backend/evaluator_io.py` compute
   structured causal evidence and synthesize `causal_summary.txt` without any
   network call.
-- Live enrichment: when `GEMINI_API_KEY` is configured, the graded path may add
-  one bounded, redacted Gemini request/response appendix; failure keeps the
-  deterministic offline summary.
+- Optional enrichment: when `GEMINI_API_KEY` is configured, bounded Gemini
+  wording can enrich the evidence. Valid results never require this path.
 - Product API: `backend/gemini.py` and `backend/main.py` provide Gemini-powered
   AI insights for the interactive FastAPI + React experience, with deterministic
   fallback behavior when Gemini is unavailable.

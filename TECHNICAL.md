@@ -62,6 +62,12 @@ ForecastIQ intentionally uses two model paths:
 | Live app | XGBoost when available | Better interactive feature importance and non-linear diagnostics for the dashboard. |
 | Safe fallback | deterministic seasonal baseline | Prevents crashes on empty, malformed, sparse, or incompatible hidden evaluator data. |
 
+The committed scikit-learn artifact is the evaluator source of truth. The
+horizon champion-challenger policy decides whether trained or baseline-anchored
+revenue is safer at each horizon. Optional app-only XGBoost supports interactive
+diagnostics and does not replace the graded artifact. This separation is
+intentional dependency and reliability governance, not an inconsistency.
+
 Two paths are safer than one because the evaluator needs reproducible offline
 execution while the live app needs richer diagnostics. Both paths are compared
 against the same deterministic baseline in `reports/backtest_summary.md`, and
@@ -228,36 +234,26 @@ forecast_confidence`
 
 ## Assumptions & Limitations
 
-- Spend-response curves are directional planning aids, not media mix modeling.
-- Promotion calendars, inventory constraints, and price changes are not first
-  class model inputs yet. A production v2 should accept reserved columns such as
-  `promo_flag`, `discount_pct`, `inventory_status`, and `price_change_pct`.
-- Observational DiD can flag plausible interventions but cannot prove causality.
-  Confidence is downgraded when p-values are weak or confidence intervals cross
-  zero.
-- Budget inputs reject negative budgets and guard against zero-spend with
-  nonzero target revenue to avoid nonsensical simulator output.
-- The evaluator prioritizes reproducibility over live cloud services.
-
-Interval widths are calibrated from empirical residuals and then enforced as
-monotonic for each `(level, segment)` row group in `predictions.csv`. When
-reviewing aggregate calibration tables, apparent non-monotonic
-`interval_width_pct` patterns across 30/60/90 day horizons can still appear
-because each horizon has different valid rolling windows, segment sparsity,
-calendar effects, and spend-response nonlinearity. The supporting comparison is
-stored in [reports/interval_calibration_report.json](./reports/interval_calibration_report.json).
-
-### Known Limitations
-
-- The graded evaluator path uses synthesized, offline LLM-style reasoning rather
-  than a live Gemini call. This is intentional: the submission guide requires
-  the `run.sh` artifact to work without network access, so live AI is exposed
-  only through the optional app/demo path.
-- Severely degraded inputs with no usable marketing signal, invalid dates,
-  negative spend/revenue, or all-zero revenue/spend fall back to
-  `safe_baseline_fallback`. That baseline has lower expected accuracy than the
-  trained artifact, but it preserves schema-valid forecasts and prevents hidden
-  evaluator crashes.
+| Assumption | Why it is needed | Risk | Mitigation | Evidence file |
+| --- | --- | --- | --- | --- |
+| Uploaded sources use one consistent currency. | The evaluator does not perform FX conversion. | Mixed currencies distort totals, ROAS, and allocation comparisons. | Convert all sources to one reporting currency before upload and record it outside the fixed output schema. | [`backend/schema_adapters.py`](./backend/schema_adapters.py), [`tests/test_schema_adapters.py`](./tests/test_schema_adapters.py) |
+| Spend and revenue are supplied in account-currency units, not mixed unit scales. | Ratios and forecasts assume comparable numeric magnitudes. | Cents, dollars, and micros can create 100x-1,000,000x errors. | Locale/currency strings are parsed; recognized Google cost-micros are scaled; otherwise normalize units before upload. | [`backend/schema_adapters.py`](./backend/schema_adapters.py), [`tests/test_schema_adapters.py`](./tests/test_schema_adapters.py) |
+| Duplicate rows represent repeated facts, not additive events. | Double counting would inflate spend and revenue. | Legitimate same-day events could be collapsed if their canonical keys are identical. | Rows sharing date/channel/campaign-type/campaign are aggregated and duplicates are disclosed in validation. | [`backend/evaluator_io.py`](./backend/evaluator_io.py), [`tests/test_schema_adapters.py`](./tests/test_schema_adapters.py) |
+| Campaign name alone is not a cross-source identity key. | Platforms can reuse names such as "Brand". | Name-only joins can merge unrelated campaigns. | Canonical grouping retains channel and campaign type; inconsistent name mappings are flagged. | [`backend/data_preprocessing.py`](./backend/data_preprocessing.py), [`backend/evaluator_io.py`](./backend/evaluator_io.py) |
+| GA4/Shopify revenue-only exports may omit media spend. | These systems often contain outcomes without complete ad cost. | ROAS and spend response cannot be observed directly. | Revenue-of-record reconciliation is used and missing spend enters the labeled estimated-spend path when usable. | [`backend/schema_adapters.py`](./backend/schema_adapters.py), [`backend/inference.py`](./backend/inference.py) |
+| Estimated spend uses training-time channel ROAS benchmarks. | A bounded estimate permits forecasts from supported revenue-only data. | Estimated ROAS can inherit stale or mismatched channel economics. | Output is labeled `trained_model_estimated_spend`, confidence is reduced, and notes disclose the assumption. | [`backend/inference.py`](./backend/inference.py), [`backend/evaluator_io.py`](./backend/evaluator_io.py) |
+| Negative spend or revenue is invalid input. | Negative monetary rows are ambiguous refunds/corrections without an explicit schema. | Dropping them can omit legitimate accounting adjustments. | Reject those rows and require upstream normalization into the reporting convention. | [`backend/evaluator_io.py`](./backend/evaluator_io.py), [`tests/test_adversarial_inputs.py`](./tests/test_adversarial_inputs.py) |
+| History can be incomplete. | Hidden uploads may contain fewer than a full seasonal cycle. | Seasonality and segment estimates become unstable. | Data Readiness warns below 180 days; thin inputs lower confidence or use the safe baseline. | [`backend/data_readiness.py`](./backend/data_readiness.py), [`tests/test_data_readiness.py`](./tests/test_data_readiness.py) |
+| The latest observation may be stale. | File exports are evaluated as supplied. | A regime change after the export can invalidate the plan. | Freshness is scored, stale data produces a corrective action, and users are told to refresh before acting. | [`backend/data_readiness.py`](./backend/data_readiness.py), [`tests/test_data_readiness.py`](./tests/test_data_readiness.py) |
+| Unknown channels may have little learned support. | Hidden evaluators can introduce unseen labels. | Segment forecasts may rely more heavily on pooled or baseline behavior. | Preserve unseen labels, expose support/confidence, and keep deterministic fallbacks. | [`tests/test_run_sh_contract.py`](./tests/test_run_sh_contract.py), [`tests/fixtures/heldout_unseen_channels_campaign_types.csv`](./tests/fixtures/heldout_unseen_channels_campaign_types.csv) |
+| Single-source uploads are valid but contain less reconciliation evidence. | Requiring every platform would reject common workflows. | Attribution, revenue-of-record, or spend context may be incomplete. | Do not penalize absent optional sources; validate the available schema and disclose missing evidence. | [`reports/final_submission_audit.md`](./reports/final_submission_audit.md), [`tests/test_run_sh_contract.py`](./tests/test_run_sh_contract.py) |
+| Revenue is baseline-anchored at 60/90 days under current evidence. | Rolling-origin results do not justify a trained residual advantage there. | Long-horizon point forecasts can miss a new regime or structural lift. | Keep the artifact loaded, label the selected path, and rerun champion-challenger validation after material drift. | [`reports/backtest_summary.md`](./reports/backtest_summary.md), [`reports/model_card.md`](./reports/model_card.md) |
+| The 90-day interval has 86.11% empirical coverage. | Only two non-overlapping 90-day validation windows are available. | Undercoverage means realized revenue may fall outside the planning range more often than at shorter horizons. | Report coverage and width together, keep monotonic production bounds, and treat 90-day values as planning cases. | [`reports/interval_calibration_report.json`](./reports/interval_calibration_report.json) |
+| Causal evidence is observational, not randomized incrementality. | Uploaded CSVs do not contain controlled assignment. | Confounding can make association or DiD movement look causal. | Qualify hypotheses, report p-values/intervals and contradictions, and recommend holdout, geo, or staged tests. | [`backend/causal_lite.py`](./backend/causal_lite.py), [`tests/test_causal_wording_guardrails.py`](./tests/test_causal_wording_guardrails.py) |
+| Gemini availability is optional. | The evaluator must work without secrets, provider access, or network. | Live wording may be unavailable or provider behavior may change. | Keep deterministic offline synthesis and validate committed redacted transcripts separately. | [`tests/test_gemini_transcript_evidence.py`](./tests/test_gemini_transcript_evidence.py), [`docs/gemini_sample_transcripts`](./docs/gemini_sample_transcripts) |
+| Budget plans outside historical spend support are extrapolations. | The model has no direct evidence for arbitrary scale changes. | Saturation, auction pressure, or cannibalization can erase projected gains. | Show support zones and safe ceilings; mark high extrapolation/unsupported plans and require staged validation. | [`backend/planning_guardrails.py`](./backend/planning_guardrails.py), [`reports/budget_elasticity_summary.md`](./reports/budget_elasticity_summary.md) |
+| Spend-response curves are planning aids, not a media mix model. | The available CSV lacks the design and controls required for MMM. | Users may interpret simulated lift as guaranteed incrementality. | Compare gains with interval noise and label weak improvements as hypotheses. | [`backend/decision_support.py`](./backend/decision_support.py), [`tests/test_budget_validation.py`](./tests/test_budget_validation.py) |
+| Promotions, inventory, pricing, auctions, and tracking drift are not first-class inputs. | The fixed evaluator schema prioritizes portable marketing exports. | Omitted business events can move outcomes outside forecast ranges. | Audit event windows, refresh after material changes, and consider explicit exogenous fields in a future artifact version. | [`reports/model_card.md`](./reports/model_card.md), [`backend/evaluator_io.py`](./backend/evaluator_io.py) |
 
 ## AI Reasoning Architecture
 

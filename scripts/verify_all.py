@@ -2,7 +2,8 @@
 
 The command intentionally uses existing repo scripts and writes objective
 artifacts under ``reports/``. It does not run the frontend or live Gemini; it is
-for reproducible evaluator/model evidence.
+for reproducible evaluator/model evidence, including the generated judge
+scorecard.
 """
 
 from __future__ import annotations
@@ -138,7 +139,8 @@ def main() -> None:
         print(
             "usage: python scripts/verify_all.py\n\n"
             "Regenerates interval calibration, rolling-origin backtest reports, "
-            "backend coverage evidence, and reports/verification_summary.json."
+            "backend coverage evidence, reports/verification_summary.json, and "
+            "reports/judge_scorecard.json."
         )
         return
 
@@ -154,7 +156,16 @@ def main() -> None:
     coverage = _parse_coverage(pytest_result.stdout + "\n" + pytest_result.stderr)
     _write_coverage_summary(coverage)
 
+    existing_summary: dict[str, object] = {}
+    if SUMMARY_REPORT.exists():
+        existing_summary = json.loads(SUMMARY_REPORT.read_text(encoding="utf-8"))
+    preserved_evidence = {
+        key: existing_summary[key]
+        for key in ("environment", "frontend", "evaluator", "dependency_review")
+        if key in existing_summary
+    }
     summary = {
+        **preserved_evidence,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "commands": [
             {"name": item.name, "command": _public_command(item.command), "returncode": item.returncode}
@@ -166,14 +177,31 @@ def main() -> None:
             "reports/backtest_report.json",
             "reports/backtest_summary.md",
             "reports/coverage_summary.md",
+            "reports/frontend_evidence.generated.json",
+            "reports/judge_scorecard.json",
         ],
         "status": "pass",
     }
     SUMMARY_REPORT.write_text(json.dumps(summary, indent=2), encoding="utf-8")
     print(f"Wrote {SUMMARY_REPORT}")
+
+    scorecard_result = _run(
+        "generated judge scorecard",
+        ["node", "scripts/generate_model_validation_metadata.mjs"],
+    )
+    summary["commands"].append(
+        {
+            "name": scorecard_result.name,
+            "command": scorecard_result.command,
+            "returncode": scorecard_result.returncode,
+        }
+    )
+    SUMMARY_REPORT.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    print(f"Wrote {SUMMARY_REPORT}")
     print(
         "PASS verify-all: regenerated interval calibration, backtest reports, "
-        f"and coverage evidence ({coverage['coverage_pct']:.2f}%)."
+        "coverage evidence, and judge scorecard "
+        f"({coverage['coverage_pct']:.2f}%)."
     )
 
 

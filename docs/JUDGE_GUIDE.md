@@ -1,23 +1,8 @@
 # ForecastIQ Judge Guide
 
-## 30-Second Value Proposition
-
 ForecastIQ turns ecommerce campaign history into evaluator-safe 30/60/90-day
 revenue and ROAS planning ranges, then helps a marketing manager allocate spend
 without hiding uncertainty or silently extrapolating beyond historical evidence.
-
-## Official Brief Mapping
-
-| Requirement                               | Where to verify                                               |
-| ----------------------------------------- | ------------------------------------------------------------- |
-| Aggregate and segment forecasts           | `output/predictions.csv`; Forecast level selector             |
-| 30/60/90 horizons                         | Evaluator output and Forecast horizon selector                |
-| Revenue and ROAS bounds                   | `lower_*`, `expected_*`, `upper_*` output columns             |
-| Channel/campaign-type/campaign visibility | Forecast level and filter controls                            |
-| Budget planning                           | Automatic/manual simulator modes                              |
-| Evidence-based input quality              | Data Readiness Score on Upload, Decision Center, and Forecast |
-| AI-assisted causal layer                  | AI Insights provenance and causal limitations                 |
-| Evaluator-safe delivery                   | `run.sh`, pinned `requirements.txt`, committed artifact       |
 
 ## Exact Evaluator Command
 
@@ -27,108 +12,118 @@ chmod +x run.sh
 ./run.sh ./data ./pickle/model.pkl ./output/predictions.csv
 ```
 
-The evaluator is offline, deterministic, and never retrains. The committed
-sample produces 54 rows with 12 fixed columns: 18 `trained_model` rows at 30
-days and 36 `trained_model_baseline_anchored` rows at 60/90 days.
+The committed sample produces 54 rows with 12 ordered columns: 18
+`trained_model` rows at 30 days and 36
+`trained_model_baseline_anchored` rows at 60/90 days. The evaluator is offline,
+deterministic, and never retrains.
 
-## Six-Step Demo
+The committed scikit-learn artifact is the evaluator source of truth. The
+horizon champion-challenger policy decides whether trained or baseline-anchored
+revenue is safer at each horizon. Optional app-only XGBoost supports interactive
+diagnostics and does not replace the graded artifact. This separation is
+intentional dependency and reliability governance, not an inconsistency.
 
-1. **Upload** the sample CSV and show row-level validation.
-2. **Validate** the accepted-row count, then expand **How this score is
-   calculated** under the Data Readiness Score.
-3. **Forecast** all horizons; select **Campaign type** and explain downside,
-   expected, and upside planning cases.
-4. **Simulate** one automatic total budget, switch to manual, and cross a safe
-   ceiling to reveal a support warning.
-5. **Explain** the statistical evidence, observational causal hypothesis, and
-   deterministic-offline versus optional-Gemini provenance.
-6. **Export** the executive PDF and ForecastIQ Evidence Bundle.
+The fastest machine-readable overview is
+[`reports/judge_scorecard.json`](../reports/judge_scorecard.json); its consistency
+test traces each metric to predictions, backtest, calibration, and verification
+JSON rather than parsing prose.
 
-Use **Show workflow** in the app header for the keyboard-accessible judge tour.
-The adjacent one-click controls load/reset demo data, clear uploaded data, or
-restart the judge workflow without refreshing the application.
+## Technical Soundness
 
-## Final Product Evidence Walkthrough
+- **Strongest evidence:** Rolling-origin 30/60/90-day accuracy, interval
+  calibration, horizon model selection, and deterministic output are reconciled
+  in the generated judge scorecard.
+- **Exact file:** [`reports/judge_scorecard.json`](../reports/judge_scorecard.json)
+- **Exact command:**
 
-On **Forecast**, open the Forecast Evidence Panel and compare 30/60/90-day
-revenue MAPE, ROAS MAPE, interval coverage, selected path, artifact/training
-period, and offline verification. Continue through **Historical vs Forecast**,
-the transparent confidence factors, **Why this model?**, and the local
-contribution waterfall. Channel rows are separate backend forecasts; a failed
-channel remains visibly partial and does not hide successful channels.
+  ```bash
+  python -m pytest tests/test_evidence_consistency.py tests/test_evaluator_e2e.py -q
+  ```
 
-On **Budget Simulator**, use the Action Priority Matrix to inspect revenue and
-ROAS impact, channel-health confidence, extrapolation risk, supporting evidence,
-test period, and stop condition. The five-plan table marks **Best supported
-plan** by guardrail zone and whether its gain clears the interval noise floor,
-not merely by the largest point estimate.
+- **One limitation:** The 90-day interval has 86.11% empirical coverage from
+  only two non-overlapping validation windows.
+- **Judge takeaway:** ForecastIQ selects the safer horizon path and exposes the
+  remaining uncertainty instead of forcing one model to win everywhere.
 
-On **AI Insights**, download **Evidence Bundle**. It is a versioned JSON artifact
-with an embedded selected-view predictions CSV plus executive, scenario,
-readiness, model, causal, limitations, and provenance sections. This export is
-optional and does not alter evaluator output or require a network connection.
+## Practical Relevance
 
-## Data Readiness Methodology
+- **Strongest evidence:** Budget plans reconcile exactly, disclose historical
+  spend support, compare projected gain with interval noise, and supply a test
+  period and stop condition.
+- **Exact file:** [`reports/budget_elasticity_summary.md`](../reports/budget_elasticity_summary.md)
+- **Exact command:**
 
-The score is a deterministic weighted sum of evidence already produced by
-ForecastIQ's validation pipeline: schema/required fields 20%, completeness and
-validity 20%, history and cross-source dates 20%, freshness 10%,
-channel/campaign breadth 10%, spend/revenue coverage 10%, and severe
-outliers/duplicates 10%. Ratings are Excellent (90-100), Good (75-89), Usable
-with caution (60-74), and Needs attention (below 60).
+  ```bash
+  python -m pytest tests/test_budget_validation.py tests/test_decision_support.py tests/test_planning_guardrails.py -q
+  ```
 
-The panel names evidence and corrective actions, so quality is never conveyed
-only by color. It accepts a single source without requiring optional files,
-handles unknown filenames and unseen channel labels, and explicitly warns on
-short/stale/future history, zero spend or revenue, invalid values, duplicates,
-severe outliers, and inconsistent source windows. This assessment can widen or
-lower trust in forecast confidence, but it never changes prediction values or
-model selection.
+- **One limitation:** Spend-response curves are directional planning aids, not
+  a media mix model or a guarantee of marginal return.
+- **Judge takeaway:** A marketer receives a bounded decision and validation
+  plan, not just a forecast number.
 
-## Core Technical Evidence
+## AI Integration
 
-- 30/60/90 revenue MAPE: 2.81% / 10.11% / 7.89%.
-- Revenue interval coverage: 95.83% / 90.28% / 86.11%.
-- Artifact: version 5, scikit-learn 1.7.2.
-- Backend quality gate: 92.05%; the current executed result is recorded in
-  `reports/latest_verification.md`.
-- Machine-readable sources: `reports/frontend_evidence.generated.json`.
+- **Strongest evidence:** A committed redacted Gemini response validates against
+  `InsightsResponse`, contains ranked competing causal hypotheses with
+  supporting and contradicting evidence, and links back to deterministic files.
+- **Exact file:** [`docs/gemini_sample_transcripts/live_gemini_transcript_20260718T053954Z.json`](./gemini_sample_transcripts/live_gemini_transcript_20260718T053954Z.json)
+- **Exact command:**
 
-## Model And Uncertainty Policy
+  ```bash
+  python scripts/replay_gemini_transcript.py docs/gemini_sample_transcripts/live_gemini_transcript_20260718T053954Z.json
+  ```
 
-The committed scikit-learn artifact competes with a seasonal baseline at each
-horizon. Rolling-origin paired evidence selects trained residual correction at
-30 days and baseline anchoring at 60/90 days. Lower/P10-style,
-expected/P50-style, and upper/P90-style values are planning cases, not exact
-probabilistic guarantees.
+- **One limitation:** The response is observational reasoning captured at its
+  recorded timestamp; it is neither randomized incrementality proof nor a claim
+  of current provider freshness.
+- **Judge takeaway:** Statistical evidence, causal hypotheses, and LLM wording
+  have separate provenance and failure boundaries.
 
-ForecastIQ builds rolling horizon-sized spend windows. Historical p90
-is the safe ceiling. Zones are `SUPPORTED`, `CAUTION`, `HIGH EXTRAPOLATION`,
-and `UNSUPPORTED`; overall support is planned-spend weighted while every
-unsupported channel stays visible.
+Live Gemini execution is optional; committed redacted transcripts provide
+reproducible evidence of the live reasoning path, while the evaluator remains
+offline-safe.
 
-The optimizer compares projected gain with a conservative noise floor equal to
-the baseline plus optimized interval half-widths. A positive gain inside that
-floor is labeled **Hypothesis, not guarantee**. Allocations are non-negative,
-constrained by safe ceilings and controlled change, and reconcile exactly.
+## Product Thinking
 
-## AI Evidence Layers
+- **Strongest evidence:** The judge workflow connects Data Readiness, forecast
+  evidence, confidence factors, scenario comparisons, stop conditions, and a
+  versioned Evidence Bundle.
+- **Exact file:** [`tests/e2e/demo.spec.ts`](../tests/e2e/demo.spec.ts)
+- **Exact command:**
 
-1. Statistical evidence: trends, intervals, anomalies, correlations, and
-   observational DiD estimates.
-2. Causal hypothesis: directional and explicitly not incrementality proof.
-3. Explanation: deterministic offline wording, optionally enriched by Gemini.
+  ```bash
+  npm run test:e2e
+  ```
 
-The provenance card states the mode, whether a network result was used, source
-evidence, timestamp, and limitations. Gemini is never required.
+- **One limitation:** Promotions, pricing, inventory, auctions, and tracking
+  drift are not first-class fields in the fixed evaluator schema.
+- **Judge takeaway:** The product carries evidence and limitations through the
+  decision workflow instead of hiding them in technical documentation.
 
-## Known Limitations
+## Engineering Quality
 
-- Attribution is used as supplied; ForecastIQ is not an MMM or custom
-  attribution system.
-- Observational evidence cannot replace randomized holdouts.
-- Sparse or novel channels receive unsupported zones and zero safe ceiling.
-- Promotions, pricing, auctions, and tracking drift can move outcomes outside
-  the planning range.
-- Correlation-aware aggregation was not adopted because paired held-out channel
-  residuals are not retained; see `reports/correlation_aggregation_review.md`.
+- **Strongest evidence:** The committed verification record covers compilation,
+  backend tests and coverage, lint, dependency integrity, clean frontend install,
+  Vitest, typecheck, builds, Playwright, and repeated evaluator output.
+- **Exact file:** [`reports/verification_summary.json`](../reports/verification_summary.json)
+- **Exact command:**
+
+  ```bash
+  python -m pytest tests -q --cov=backend --cov-report=term-missing --cov-fail-under=92.05
+  ```
+
+- **One limitation:** Supported-platform test totals vary because POSIX-only
+  contracts skip on Windows and optional SHAP behavior depends on the Python
+  environment.
+- **Judge takeaway:** The minimal grader path is pinned and offline-safe, while
+  optional product dependencies cannot replace or break the scored artifact.
+
+## Assumptions Reference
+
+The single assumptions and limitations ledger is in
+[`TECHNICAL.md`](../TECHNICAL.md#assumptions--limitations). It covers currency
+and unit consistency, duplicate handling, missing and estimated spend, invalid
+values, history and freshness, unknown channels, source breadth, horizon
+anchoring, interval coverage, causal claims, optional Gemini, and spend-support
+extrapolation.

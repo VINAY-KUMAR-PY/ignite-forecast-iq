@@ -9,7 +9,11 @@ import {
   type ReactNode,
 } from "react";
 import type { CampaignRow, DataReadinessScore } from "./types";
-import { validateRowsApi, type DecisionSupportResponse } from "./backend-api";
+import {
+  validateRowsApi,
+  type DecisionSupportResponse,
+  type ForecastApiResponse,
+} from "./backend-api";
 import { generateDemoData } from "./demo-data";
 
 interface DataCtx {
@@ -18,6 +22,7 @@ interface DataCtx {
   setRows: (rows: CampaignRow[], demo?: boolean, readiness?: DataReadinessScore | null) => void;
   loadDemo: () => void;
   clear: () => void;
+  restartWorkflow: () => void;
   dataReadiness: DataReadinessScore | null;
   readinessStatus: ReadinessStatus;
   readinessError: string | null;
@@ -26,6 +31,8 @@ interface DataCtx {
   markWorkflow: (step: WorkflowStep) => void;
   planningSnapshot: PlanningSnapshot | null;
   setPlanningSnapshot: (snapshot: PlanningSnapshot) => void;
+  forecastSnapshot: ForecastSnapshot | null;
+  setForecastSnapshot: (snapshot: ForecastSnapshot) => void;
 }
 
 export type WorkflowStep = "upload" | "validate" | "forecast" | "simulate" | "explain" | "export";
@@ -36,6 +43,13 @@ export interface PlanningSnapshot {
   allocationMode: "automatic" | "manual";
   budgets: Record<string, number>;
   decisionSupport: DecisionSupportResponse;
+}
+
+export interface ForecastSnapshot {
+  horizon: 30 | 60 | 90;
+  level: "overall" | "channel" | "campaign_type" | "campaign";
+  value?: string;
+  response: ForecastApiResponse;
 }
 
 const EMPTY_WORKFLOW: WorkflowState = {
@@ -57,6 +71,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [isDemo, setIsDemo] = useState(true);
   const [workflow, setWorkflow] = useState<WorkflowState>(EMPTY_WORKFLOW);
   const [planningSnapshot, setPlanningSnapshotState] = useState<PlanningSnapshot | null>(null);
+  const [forecastSnapshot, setForecastSnapshotState] = useState<ForecastSnapshot | null>(null);
   const [dataReadiness, setDataReadiness] = useState<DataReadinessScore | null>(null);
   const [readinessStatus, setReadinessStatus] = useState<ReadinessStatus>("idle");
   const [readinessError, setReadinessError] = useState<string | null>(null);
@@ -90,6 +105,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           ...(parsed.workflow ?? {}),
         });
         setPlanningSnapshotState(parsed.planningSnapshot ?? null);
+        setForecastSnapshotState(parsed.forecastSnapshot ?? null);
         setDataReadiness(parsed.dataReadiness ?? null);
         setReadinessStatus(parsed.dataReadiness ? "available" : "idle");
       } else {
@@ -113,18 +129,28 @@ export function DataProvider({ children }: { children: ReactNode }) {
     try {
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ rows, isDemo, workflow, planningSnapshot, dataReadiness }),
+        JSON.stringify({
+          rows,
+          isDemo,
+          workflow,
+          planningSnapshot,
+          forecastSnapshot,
+          dataReadiness,
+        }),
       );
     } catch {
       // ignore quota
     }
-  }, [rows, isDemo, workflow, planningSnapshot, dataReadiness, hydrated]);
+  }, [rows, isDemo, workflow, planningSnapshot, forecastSnapshot, dataReadiness, hydrated]);
 
   const markWorkflow = useCallback((step: WorkflowStep) => {
     setWorkflow((current) => (current[step] ? current : { ...current, [step]: true }));
   }, []);
   const setPlanningSnapshot = useCallback((snapshot: PlanningSnapshot) => {
     setPlanningSnapshotState(snapshot);
+  }, []);
+  const setForecastSnapshot = useCallback((snapshot: ForecastSnapshot) => {
+    setForecastSnapshotState(snapshot);
   }, []);
 
   const ensureDataReadiness = useCallback(
@@ -176,6 +202,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setReadinessStatus(readiness ? "available" : "idle");
         setReadinessError(null);
         setPlanningSnapshotState(null);
+        setForecastSnapshotState(null);
         setWorkflow((current) => ({ ...current, upload: r.length > 0 }));
       },
       loadDemo: () => {
@@ -187,6 +214,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setReadinessStatus("idle");
         setReadinessError(null);
         setPlanningSnapshotState(null);
+        setForecastSnapshotState(null);
         setWorkflow({ ...EMPTY_WORKFLOW, upload: true, validate: true });
         try {
           localStorage.removeItem(DEMO_REQUEST_KEY);
@@ -204,6 +232,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setReadinessError(null);
         setWorkflow(EMPTY_WORKFLOW);
         setPlanningSnapshotState(null);
+        setForecastSnapshotState(null);
+      },
+      restartWorkflow: () => {
+        setWorkflow({ ...EMPTY_WORKFLOW, upload: rows.length > 0, validate: rows.length > 0 });
+        setPlanningSnapshotState(null);
+        setForecastSnapshotState(null);
       },
       dataReadiness,
       readinessStatus,
@@ -213,6 +247,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       markWorkflow,
       planningSnapshot,
       setPlanningSnapshot,
+      forecastSnapshot,
+      setForecastSnapshot,
     }),
     [
       rows,
@@ -221,6 +257,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       markWorkflow,
       planningSnapshot,
       setPlanningSnapshot,
+      forecastSnapshot,
+      setForecastSnapshot,
       dataReadiness,
       readinessStatus,
       readinessError,

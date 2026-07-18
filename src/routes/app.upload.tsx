@@ -18,68 +18,79 @@ export const Route = createFileRoute("/app/upload")({
   component: UploadPage,
 });
 
-export function UploadPage() {
+function UploadPage() {
   const { setRows, loadDemo, rows, isDemo, markWorkflow } = useData();
   const [result, setResult] = useState<ValidationResult | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [validationWarning, setValidationWarning] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function handleFiles(fileList: FileList | File[]) {
     const files = Array.from(fileList);
     if (!files.length) return;
-    const parsedFiles = await Promise.all(
-      files.map(async (file, sourceIndex) => ({
-        file,
-        sourceIndex,
-        parsed: parseCSV(await file.text()),
-      })),
-    );
-    let rowOffset = 0;
-    const browserIssues = parsedFiles.flatMap(({ parsed, file }) => {
-      const adjusted = parsed.issues.map((issue) => ({
-        ...issue,
-        row: issue.row > 1 ? issue.row + rowOffset : issue.row,
-        message: files.length > 1 ? `${file.name}: ${issue.message}` : issue.message,
-      }));
-      rowOffset += parsed.totalRows;
-      return adjusted;
-    });
-    const browserRows = parsedFiles.flatMap(({ parsed }) => parsed.rows);
-    const totalRows = parsedFiles.reduce((sum, { parsed }) => sum + parsed.totalRows, 0);
-    const rawRows = parsedFiles.flatMap(({ parsed, file, sourceIndex }) =>
-      parsed.rawRows.map((row) => ({
-        ...row,
-        __source_file_id: `source-${sourceIndex + 1}`,
-        __source_file_name: file.name,
-      })),
-    );
-    let finalResult: ValidationResult = {
-      rows: browserRows,
-      issues: browserIssues,
-      totalRows,
-      validRows: browserRows.length,
-    };
+    setProcessing(true);
+    setValidationWarning(null);
     try {
-      const backendResult = await validateRowsApi(rawRows);
-      finalResult = {
-        ...backendResult,
-        issues: uniqueIssues([...browserIssues, ...backendResult.issues]),
+      const parsedFiles = await Promise.all(
+        files.map(async (file, sourceIndex) => ({
+          file,
+          sourceIndex,
+          parsed: parseCSV(await file.text()),
+        })),
+      );
+      let rowOffset = 0;
+      const browserIssues = parsedFiles.flatMap(({ parsed, file }) => {
+        const adjusted = parsed.issues.map((issue) => ({
+          ...issue,
+          row: issue.row > 1 ? issue.row + rowOffset : issue.row,
+          message: files.length > 1 ? `${file.name}: ${issue.message}` : issue.message,
+        }));
+        rowOffset += parsed.totalRows;
+        return adjusted;
+      });
+      const browserRows = parsedFiles.flatMap(({ parsed }) => parsed.rows);
+      const totalRows = parsedFiles.reduce((sum, { parsed }) => sum + parsed.totalRows, 0);
+      const rawRows = parsedFiles.flatMap(({ parsed, file, sourceIndex }) =>
+        parsed.rawRows.map((row) => ({
+          ...row,
+          __source_file_id: `source-${sourceIndex + 1}`,
+          __source_file_name: file.name,
+        })),
+      );
+      let finalResult: ValidationResult = {
+        rows: browserRows,
+        issues: browserIssues,
         totalRows,
+        validRows: browserRows.length,
       };
-    } catch {
-      toast.warning(
-        "Backend validation unavailable; using browser validation without a readiness score",
-      );
-    }
-    setResult(finalResult);
-    if (finalResult.rows.length > 0) {
-      setRows(finalResult.rows, false, finalResult.dataReadiness ?? null);
-      markWorkflow("validate");
-      toast.success(
-        `Imported ${finalResult.rows.length.toLocaleString()} rows from ${files.length} file${files.length === 1 ? "" : "s"}`,
-      );
-    } else {
-      toast.error("No valid rows found in file");
+      try {
+        const backendResult = await validateRowsApi(rawRows);
+        finalResult = {
+          ...backendResult,
+          issues: uniqueIssues([...browserIssues, ...backendResult.issues]),
+          totalRows,
+        };
+      } catch {
+        setValidationWarning(
+          "Backend validation is unavailable. Browser validation completed, but readiness and cross-source evidence are incomplete.",
+        );
+        toast.warning(
+          "Backend validation unavailable; using browser validation without a readiness score",
+        );
+      }
+      setResult(finalResult);
+      if (finalResult.rows.length > 0) {
+        setRows(finalResult.rows, false, finalResult.dataReadiness ?? null);
+        markWorkflow("validate");
+        toast.success(
+          `Imported ${finalResult.rows.length.toLocaleString()} rows from ${files.length} file${files.length === 1 ? "" : "s"}`,
+        );
+      } else {
+        toast.error("No valid rows found in file");
+      }
+    } finally {
+      setProcessing(false);
     }
   }
 
@@ -172,6 +183,7 @@ export function UploadPage() {
         }`}
         role="button"
         tabIndex={0}
+        aria-busy={processing}
         aria-label="Upload CSV drop target. Press Enter or Space to choose a campaign data file."
         onKeyDown={handleDropzoneKeyDown}
         onDragOver={(e) => {
@@ -204,8 +216,8 @@ export function UploadPage() {
             if (e.target.files?.length) void handleFiles(e.target.files);
           }}
         />
-        <Button variant="hero" className="mt-6" onClick={openFilePicker}>
-          Choose file(s)
+        <Button variant="hero" className="mt-6" onClick={openFilePicker} disabled={processing}>
+          {processing ? "Validating files…" : "Choose file(s)"}
         </Button>
         <p className="mt-2 text-[13px] text-muted-foreground">
           Need sample data?{" "}
@@ -218,6 +230,34 @@ export function UploadPage() {
           </a>
         </p>
       </Card>
+
+      {validationWarning && (
+        <Card className="mt-6 border-warning/40 bg-warning/5 p-4" role="status">
+          <p className="text-sm">{validationWarning}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Next step: start the API with <code>npm run api</code>, then upload the same files
+            again.
+          </p>
+        </Card>
+      )}
+
+      {result && result.rows.length === 0 && (
+        <Card className="mt-6 border-destructive/40 bg-destructive/5 p-5" role="alert">
+          <h2 className="text-sm font-semibold">Unsupported schema or no usable rows</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            ForecastIQ could not map required date, channel/campaign, spend and revenue fields from
+            this file. The validation details below identify the rejected columns and rows.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button variant="outline" onClick={openFilePicker}>
+              Choose corrected file(s)
+            </Button>
+            <Button variant="outline" onClick={loadDemo}>
+              Load known-good demo data
+            </Button>
+          </div>
+        </Card>
+      )}
 
       <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card className="bg-gradient-card border-border/60 min-w-0 p-4">

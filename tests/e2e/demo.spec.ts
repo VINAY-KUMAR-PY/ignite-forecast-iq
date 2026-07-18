@@ -10,6 +10,9 @@ test("CSV upload covers dashboard, forecasts, simulator, and fallback insights",
   page.on("pageerror", (error) => consoleErrors.push(error.message));
 
   await page.goto("/app/upload");
+  await expect(page.getByRole("button", { name: "Reset demo" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Clear uploaded data" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Restart judge workflow" })).toBeVisible();
   await page.getByRole("button", { name: "Show workflow" }).click();
   await expect(page.getByRole("dialog", { name: "Upload" })).toBeVisible();
   await page.getByRole("button", { name: /next/i }).click();
@@ -42,6 +45,10 @@ test("CSV upload covers dashboard, forecasts, simulator, and fallback insights",
   await expect(page.getByTestId("data-readiness-score")).toBeVisible();
   await expect(page.getByTestId("confidence-intervals")).toBeVisible({ timeout: 45_000 });
   await expect(page.getByText("Expected revenue (30d)")).toBeVisible();
+  await expect(page.getByTestId("forecast-evidence-panel")).toBeVisible();
+  await expect(page.getByTestId("historical-forecast-comparison")).toBeVisible();
+  await expect(page.getByTestId("forecast-confidence-explanation")).toBeVisible();
+  await expect(page.getByTestId("why-this-model")).toBeVisible();
 
   await page.getByRole("combobox").nth(0).click();
   await page.getByRole("option", { name: "60 days" }).click();
@@ -53,7 +60,9 @@ test("CSV upload covers dashboard, forecasts, simulator, and fallback insights",
   await expect(page.getByTestId("explainability-center")).toBeVisible();
   await expect(page.getByTestId("model-validation-panel")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("heading", { name: "Model Validation" })).toBeVisible();
-  await expect(page.getByRole("cell", { name: "30 days" })).toBeVisible();
+  await expect(
+    page.getByTestId("model-validation-panel").getByRole("cell", { name: "30 days" }),
+  ).toBeVisible();
 
   await page.getByRole("combobox").nth(1).click();
   await page.getByRole("option", { name: "Campaign type" }).click();
@@ -72,14 +81,17 @@ test("CSV upload covers dashboard, forecasts, simulator, and fallback insights",
   await expect(page.getByTestId("optimizer-uncertainty-verdict")).toBeVisible({
     timeout: 45_000,
   });
+  await expect(page.getByTestId("action-priority-matrix")).toBeVisible();
+  await expect(page.getByText("Supported-plan scenario comparison")).toBeVisible();
+  await expect(page.getByText("Best supported plan")).toBeVisible();
   await page.getByRole("button", { name: "Manual channel budgets" }).click();
   await expect(page.getByLabel("Google Ads planned budget input")).toBeVisible();
   await expect(page.getByText("Why this planning zone?").first()).toBeVisible();
   await page.getByRole("button", { name: "Automatic allocation" }).click();
-  await expect(page.getByRole("button", { name: "Base (0%)" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Current plan" })).toBeVisible();
   await page.getByRole("button", { name: "+20%" }).click();
   await expect(page.getByText("Spend efficiency analysis")).toBeVisible();
-  await page.getByRole("button", { name: "Base (0%)" }).click();
+  await page.getByRole("button", { name: "Current plan" }).click();
   await expect(page.getByText("Projected revenue").first()).toBeVisible();
 
   await page.route("**/api/anomalies", async (route) => {
@@ -206,6 +218,11 @@ test("CSV upload covers dashboard, forecasts, simulator, and fallback insights",
   await page.getByRole("button", { name: /export pdf/i }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toMatch(/^ForecastIQ_Executive_Brief_.*\.pdf$/);
+
+  const bundlePromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: /evidence bundle/i }).click();
+  const bundle = await bundlePromise;
+  expect(bundle.suggestedFilename()).toMatch(/^forecastiq-evidence-bundle-.*\.json$/);
 
   const actionableErrors = consoleErrors.filter(
     (entry) => !entry.includes("favicon") && !entry.includes("ResizeObserver"),

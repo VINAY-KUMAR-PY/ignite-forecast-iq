@@ -62,19 +62,32 @@ const CHANNEL_COLORS: Record<string, string> = {
   "Microsoft Ads": "var(--color-chart-3)",
 };
 const WHAT_IF_PRESETS = [
-  { name: "Conservative (−20% all)", multiplier: 0.8 },
-  { name: "Base (0%)", multiplier: 1 },
-  { name: "Aggressive (+30% all)", multiplier: 1.3 },
+  { name: "Conservative plan (−20%)", multiplier: 0.8 },
+  { name: "Current plan", multiplier: 1 },
+  { name: "Growth plan (+30%)", multiplier: 1.3 },
 ];
 
-function buildWhatIfScenarios(): WhatIfScenarioInput[] {
-  return WHAT_IF_PRESETS.map((preset) => ({
+function buildWhatIfScenarios(
+  currentBudgets: Record<string, number>,
+  automaticBudgets: Record<string, number>,
+): WhatIfScenarioInput[] {
+  const presets = WHAT_IF_PRESETS.map((preset) => ({
     name: preset.name,
     budgetMultipliers: Object.fromEntries(CHANNELS.map((channel) => [channel, preset.multiplier])),
   }));
+  presets.splice(1, 0, {
+    name: "Automatic allocation",
+    budgetMultipliers: Object.fromEntries(
+      CHANNELS.map((channel) => [
+        channel,
+        currentBudgets[channel] > 0 ? automaticBudgets[channel] / currentBudgets[channel] : 1,
+      ]),
+    ),
+  });
+  return presets;
 }
 
-export function SimulatorPage() {
+function SimulatorPage() {
   const { rows, markWorkflow, setPlanningSnapshot } = useData();
   const [horizon, setHorizon] = useState<30 | 60 | 90>(30);
   const [planningMode, setPlanningMode] = useState<"automatic" | "manual">("automatic");
@@ -145,11 +158,10 @@ export function SimulatorPage() {
   );
 
   useEffect(() => {
-    if (rows.length > 0 && baselines && whatIfScenarios.length === 0) {
-      setSelectedWhatIfMultiplier(1);
-      setWhatIfScenarios(buildWhatIfScenarios());
+    if (rows.length > 0 && baselines) {
+      setWhatIfScenarios(buildWhatIfScenarios(budgetPayload, automaticBudgets));
     }
-  }, [baselines, rows.length, whatIfScenarios.length]);
+  }, [automaticBudgets, baselines, budgetPayload, rows.length]);
 
   const baselineSims = useMemo<SimChannelResult[]>(() => {
     if (!rows.length || !baselines) return [];
@@ -187,51 +199,44 @@ export function SimulatorPage() {
 
   useEffect(() => {
     if (!rows.length || !baselines) return;
-    let active = true;
+    const controller = new AbortController();
     setApiSimError(null);
-    simulateBudgetsApi(rows, horizon, budgetPayload)
+    simulateBudgetsApi(rows, horizon, budgetPayload, { signal: controller.signal })
       .then((response) => {
-        if (active) {
-          setApiSims(response.channels);
-        }
+        setApiSims(response.channels);
       })
       .catch((error: Error) => {
-        if (active) {
-          setApiSims(null);
-          setApiSimError(error.message);
-        }
+        if (error.name === "AbortError") return;
+        setApiSims(null);
+        setApiSimError(error.message);
       });
-    return () => {
-      active = false;
-    };
+    return () => controller.abort();
   }, [baselines, budgetPayload, horizon, rows]);
 
   useEffect(() => {
-    if (!rows.length || !baselines) return;
-    let active = true;
+    if (!rows.length || !baselines || whatIfScenarios.length === 0) return;
+    const controller = new AbortController();
     setDecisionError(null);
     setDecisionSupport(null);
-    decisionSupportApi(rows, horizon, budgetPayload, targets, whatIfScenarios)
+    decisionSupportApi(rows, horizon, budgetPayload, targets, whatIfScenarios, {
+      signal: controller.signal,
+    })
       .then((response) => {
-        if (active) {
-          setDecisionSupport(response);
-          markWorkflow("simulate");
-          setPlanningSnapshot({
-            horizon,
-            allocationMode: planningMode,
-            budgets: budgetPayload,
-            decisionSupport: response,
-          });
-        }
+        setDecisionSupport(response);
+        markWorkflow("simulate");
+        setPlanningSnapshot({
+          horizon,
+          allocationMode: planningMode,
+          budgets: budgetPayload,
+          decisionSupport: response,
+        });
       })
       .catch((error: Error) => {
-        if (!active) return;
+        if (error.name === "AbortError") return;
         setDecisionSupport(null);
         setDecisionError(error.message);
       });
-    return () => {
-      active = false;
-    };
+    return () => controller.abort();
   }, [
     baselines,
     budgetPayload,
@@ -246,17 +251,17 @@ export function SimulatorPage() {
 
   useEffect(() => {
     if (!rows.length || !baselines) return;
-    let active = true;
-    fetchSpendCurveApi(rows, curveChannel, horizon, budgetPayload[curveChannel] ?? 0)
+    const controller = new AbortController();
+    fetchSpendCurveApi(rows, curveChannel, horizon, budgetPayload[curveChannel] ?? 0, {
+      signal: controller.signal,
+    })
       .then((response) => {
-        if (active) setSpendCurve(response);
+        setSpendCurve(response);
       })
-      .catch(() => {
-        if (active) setSpendCurve(null);
+      .catch((error: Error) => {
+        if (error.name !== "AbortError") setSpendCurve(null);
       });
-    return () => {
-      active = false;
-    };
+    return () => controller.abort();
   }, [baselines, budgetPayload, curveChannel, horizon, rows]);
 
   if (!rows.length || !baselines) {
@@ -367,7 +372,7 @@ export function SimulatorPage() {
 
   function runWhatIfPreset(multiplier: number) {
     setSelectedWhatIfMultiplier(multiplier);
-    setWhatIfScenarios(buildWhatIfScenarios());
+    setWhatIfScenarios(buildWhatIfScenarios(budgetPayload, automaticBudgets));
     applyBudgetScenario(multiplier);
   }
 
@@ -596,8 +601,12 @@ export function SimulatorPage() {
       </div>
 
       {decisionError && (
-        <Card className="mt-6 border-warning/40 bg-warning/5 p-4 text-sm text-warning">
-          Decision-support engine unavailable: {decisionError}
+        <Card className="mt-6 border-warning/40 bg-warning/5 p-4 text-sm text-warning" role="alert">
+          <p>Decision-support engine unavailable: {decisionError}</p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Next step: start the API with <code>npm run api</code>, then change a budget or retry
+            the current plan.
+          </p>
         </Card>
       )}
 
@@ -608,6 +617,8 @@ export function SimulatorPage() {
           riskAlerts={decisionSupport.risks}
           opportunityAlerts={decisionSupport.opportunities}
           channelHealth={decisionSupport.channelHealth}
+          simulations={sims}
+          planningZones={decisionSupport.planningZones}
           currentRevenue={totalProjectedRevenue}
           currentRoas={projectedRoas}
           horizon={horizon}

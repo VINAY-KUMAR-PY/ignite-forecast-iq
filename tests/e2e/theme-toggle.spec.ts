@@ -21,7 +21,8 @@ test("landing theme toggle stays visible and persists across landing and dashboa
   await page.locator("header").getByRole("link", { name: "Try Live Demo" }).click();
   await expect(page).toHaveURL(/\/app$/);
   await expect(page.locator("html")).not.toHaveClass(/dark/);
-  await expect(page.getByRole("button", { name: "Toggle theme" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Switch to dark mode" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Restart judge workflow" })).toBeVisible();
 
   await page.locator('header a[href="/"]').click();
   await expect(page).toHaveURL(/\/$/);

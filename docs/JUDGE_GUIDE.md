@@ -8,16 +8,16 @@ without hiding uncertainty or silently extrapolating beyond historical evidence.
 
 ## Official Brief Mapping
 
-| Requirement | Where to verify |
-|---|---|
-| Aggregate and segment forecasts | `output/predictions.csv`; Forecast level selector |
-| 30/60/90 horizons | Evaluator output and Forecast horizon selector |
-| Revenue and ROAS bounds | `lower_*`, `expected_*`, `upper_*` output columns |
-| Channel/campaign-type/campaign visibility | Forecast level and filter controls |
-| Budget planning | Automatic/manual simulator modes |
-| Evidence-based input quality | Data Readiness Score on Upload, Decision Center, and Forecast |
-| AI-assisted causal layer | AI Insights provenance and causal limitations |
-| Evaluator-safe delivery | `run.sh`, pinned `requirements.txt`, committed artifact |
+| Requirement                               | Where to verify                                               |
+| ----------------------------------------- | ------------------------------------------------------------- |
+| Aggregate and segment forecasts           | `output/predictions.csv`; Forecast level selector             |
+| 30/60/90 horizons                         | Evaluator output and Forecast horizon selector                |
+| Revenue and ROAS bounds                   | `lower_*`, `expected_*`, `upper_*` output columns             |
+| Channel/campaign-type/campaign visibility | Forecast level and filter controls                            |
+| Budget planning                           | Automatic/manual simulator modes                              |
+| Evidence-based input quality              | Data Readiness Score on Upload, Decision Center, and Forecast |
+| AI-assisted causal layer                  | AI Insights provenance and causal limitations                 |
+| Evaluator-safe delivery                   | `run.sh`, pinned `requirements.txt`, committed artifact       |
 
 ## Exact Evaluator Command
 
@@ -42,9 +42,31 @@ days and 36 `trained_model_baseline_anchored` rows at 60/90 days.
    ceiling to reveal a support warning.
 5. **Explain** the statistical evidence, observational causal hypothesis, and
    deterministic-offline versus optional-Gemini provenance.
-6. **Export** the executive PDF/text brief.
+6. **Export** the executive PDF and ForecastIQ Evidence Bundle.
 
 Use **Show workflow** in the app header for the keyboard-accessible judge tour.
+The adjacent one-click controls load/reset demo data, clear uploaded data, or
+restart the judge workflow without refreshing the application.
+
+## Final Product Evidence Walkthrough
+
+On **Forecast**, open the Forecast Evidence Panel and compare 30/60/90-day
+revenue MAPE, ROAS MAPE, interval coverage, selected path, artifact/training
+period, and offline verification. Continue through **Historical vs Forecast**,
+the transparent confidence factors, **Why this model?**, and the local
+contribution waterfall. Channel rows are separate backend forecasts; a failed
+channel remains visibly partial and does not hide successful channels.
+
+On **Budget Simulator**, use the Action Priority Matrix to inspect revenue and
+ROAS impact, channel-health confidence, extrapolation risk, supporting evidence,
+test period, and stop condition. The five-plan table marks **Best supported
+plan** by guardrail zone and whether its gain clears the interval noise floor,
+not merely by the largest point estimate.
+
+On **AI Insights**, download **Evidence Bundle**. It is a versioned JSON artifact
+with an embedded selected-view predictions CSV plus executive, scenario,
+readiness, model, causal, limitations, and provenance sections. This export is
+optional and does not alter evaluator output or require a network connection.
 
 ## Data Readiness Methodology
 

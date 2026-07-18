@@ -13,8 +13,10 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   type BudgetOptimizerResult,
+  type ChannelPlanningZone,
   type ChannelHealthScore,
   type DetectionItem,
+  type SimChannelResult,
   type WhatIfScenarioResult,
 } from "@/lib/backend-api";
 import { fmtCurrency, fmtRoas } from "@/lib/format";
@@ -27,6 +29,8 @@ export function DecisionSupportPanel({
   riskAlerts,
   opportunityAlerts,
   channelHealth,
+  simulations,
+  planningZones,
   currentRevenue,
   currentRoas,
   horizon,
@@ -41,6 +45,8 @@ export function DecisionSupportPanel({
   riskAlerts: DetectionItem[];
   opportunityAlerts: DetectionItem[];
   channelHealth: ChannelHealthScore[];
+  simulations: SimChannelResult[];
+  planningZones: ChannelPlanningZone[];
   currentRevenue: number;
   currentRoas: number;
   horizon: 30 | 60 | 90;
@@ -60,6 +66,13 @@ export function DecisionSupportPanel({
   const topOpportunity = opportunityAlerts[0];
   const topRisk = riskAlerts[0];
   const topRecommendation = optimizer.recommendations[0];
+  const scenarioComparison = buildScenarioComparison(
+    optimizer,
+    whatIf,
+    planningZones,
+    currentRevenue,
+    currentRoas,
+  );
 
   return (
     <div data-testid="decision-support" className="mt-6 grid min-w-0 gap-4">
@@ -307,6 +320,14 @@ export function DecisionSupportPanel({
             ))}
           </div>
         </div>
+
+        <ActionPriorityMatrix
+          optimizer={optimizer}
+          simulations={simulations}
+          planningZones={planningZones}
+          channelHealth={channelHealth}
+          horizon={horizon}
+        />
       </Card>
 
       <div className="grid min-w-0 gap-4 xl:grid-cols-2">
@@ -316,22 +337,32 @@ export function DecisionSupportPanel({
         >
           <div className="mb-4 flex items-center gap-2">
             <ArrowRightLeft className="h-4 w-4 text-primary" />
-            <h3 className="text-sm font-semibold">What-if scenario engine</h3>
+            <h3 className="text-sm font-semibold">Supported-plan scenario comparison</h3>
           </div>
+          <p className="mb-3 text-xs text-muted-foreground">
+            Bounds scale the current calibrated interval; meaningful gains must clear the combined
+            uncertainty noise floor. Best supported prioritizes evidence zones before upside.
+          </p>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[1120px] text-sm">
+              <caption className="sr-only">
+                Current, automatic, optimized, conservative and growth plan comparison
+              </caption>
               <thead className="text-xs uppercase tracking-wider text-muted-foreground">
                 <tr>
-                  <th className="px-2 py-2 text-left">Scenario</th>
+                  <th className="px-2 py-2 text-left">Plan</th>
                   <th className="px-2 py-2 text-right">Revenue</th>
                   <th className="px-2 py-2 text-right">ROAS</th>
-                  <th className="px-2 py-2 text-right">Profit</th>
-                  <th className="px-2 py-2 text-right">Revenue impact</th>
+                  <th className="px-2 py-2 text-right">Bounds</th>
+                  <th className="px-2 py-2 text-right">Gain</th>
+                  <th className="px-2 py-2 text-right">Noise floor</th>
+                  <th className="px-2 py-2 text-left">Zone</th>
+                  <th className="px-2 py-2 text-left">Verdict</th>
                 </tr>
               </thead>
               <tbody>
-                {whatIf.slice(0, 7).map((scenario) => (
-                  <ScenarioRow key={scenario.name} scenario={scenario} />
+                {scenarioComparison.map((scenario) => (
+                  <SupportedScenarioRow key={scenario.name} scenario={scenario} />
                 ))}
               </tbody>
             </table>
@@ -451,17 +482,139 @@ function EvidenceCard({ title, value, detail }: { title: string; value: string; 
   );
 }
 
-function ScenarioRow({ scenario }: { scenario: WhatIfScenarioResult }) {
+interface SupportedScenario {
+  name: string;
+  projectedRevenue: number;
+  projectedRoas: number;
+  lowerRevenue: number;
+  upperRevenue: number;
+  gain: number;
+  noiseFloor: number;
+  zone: string;
+  meaningful: boolean;
+  bestSupported: boolean;
+}
+
+function SupportedScenarioRow({ scenario }: { scenario: SupportedScenario }) {
   return (
     <tr className="border-t border-border/40">
-      <td className="px-2 py-2 font-medium">{scenario.name}</td>
+      <td className="px-2 py-2 font-medium">
+        {scenario.name}
+        {scenario.bestSupported && (
+          <Badge variant="outline" className="ml-2 border-success/40 text-success">
+            Best supported plan
+          </Badge>
+        )}
+      </td>
       <td className="px-2 py-2 text-right">{fmtCurrency(scenario.projectedRevenue)}</td>
       <td className="px-2 py-2 text-right">{fmtRoas(scenario.projectedRoas)}</td>
-      <td className="px-2 py-2 text-right">{fmtCurrency(scenario.projectedProfit)}</td>
-      <td className={`px-2 py-2 text-right font-medium ${deltaClass(scenario.revenueDeltaPct)}`}>
-        {formatPctDelta(scenario.revenueDeltaPct)}
+      <td className="px-2 py-2 text-right">
+        {fmtCurrency(scenario.lowerRevenue)} – {fmtCurrency(scenario.upperRevenue)}
+      </td>
+      <td className={`px-2 py-2 text-right font-medium ${deltaClass(scenario.gain)}`}>
+        {formatMoneyDelta(scenario.gain)}
+      </td>
+      <td className="px-2 py-2 text-right">{fmtCurrency(scenario.noiseFloor)}</td>
+      <td className="px-2 py-2">
+        <Badge variant="outline">{scenario.zone.replaceAll("_", " ")}</Badge>
+      </td>
+      <td className="px-2 py-2">
+        {scenario.meaningful ? "Meaningful vs uncertainty" : "Not meaningful vs uncertainty"}
       </td>
     </tr>
+  );
+}
+
+function ActionPriorityMatrix({
+  optimizer,
+  simulations,
+  planningZones,
+  channelHealth,
+  horizon,
+}: {
+  optimizer: BudgetOptimizerResult;
+  simulations: SimChannelResult[];
+  planningZones: ChannelPlanningZone[];
+  channelHealth: ChannelHealthScore[];
+  horizon: number;
+}) {
+  const rows = optimizer.recommendations.map((recommendation) => {
+    const current = simulations.find((item) => item.channel === recommendation.channel);
+    const zone = planningZones.find((item) => item.channel === recommendation.channel);
+    const health = channelHealth.find((item) => item.channel === recommendation.channel);
+    const revenueImpact = recommendation.expectedRevenue - (current?.projectedRevenue ?? 0);
+    const roasImpact = recommendation.expectedRoas - (current?.projectedRoas ?? 0);
+    const confidence = Math.round(health?.score ?? 50);
+    const priority =
+      revenueImpact > 0 && confidence >= 75 && zone?.zone !== "UNSUPPORTED"
+        ? "High"
+        : revenueImpact > 0 && zone?.zone !== "HIGH_EXTRAPOLATION"
+          ? "Medium"
+          : "Low";
+    return { recommendation, current, zone, revenueImpact, roasImpact, confidence, priority };
+  });
+  return (
+    <section
+      data-testid="action-priority-matrix"
+      className="mt-4 rounded-lg border border-border/50 p-4"
+    >
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        Action Priority Matrix
+      </h3>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Impact is the optimizer recommendation minus the current channel simulation. Confidence
+        reuses the channel health score; extrapolation reuses planning guardrails.
+      </p>
+      <div className="mt-3 overflow-x-auto">
+        <table className="w-full min-w-[1280px] text-xs">
+          <thead className="text-left uppercase tracking-wider text-muted-foreground">
+            <tr>
+              <th className="px-2 py-2">Action</th>
+              <th className="px-2 py-2 text-right">Revenue impact</th>
+              <th className="px-2 py-2 text-right">ROAS impact</th>
+              <th className="px-2 py-2">Confidence</th>
+              <th className="px-2 py-2">Extrapolation risk</th>
+              <th className="px-2 py-2">Supporting evidence</th>
+              <th className="px-2 py-2">Priority</th>
+              <th className="px-2 py-2">Test period</th>
+              <th className="px-2 py-2">Stop condition</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(
+              ({
+                recommendation,
+                current,
+                zone,
+                revenueImpact,
+                roasImpact,
+                confidence,
+                priority,
+              }) => (
+                <tr key={recommendation.channel} className="border-t border-border/40 align-top">
+                  <td className="px-2 py-2 font-medium">
+                    {formatMoneyDelta(recommendation.deltaBudget)} on {recommendation.channel}
+                  </td>
+                  <td className="px-2 py-2 text-right">{formatMoneyDelta(revenueImpact)}</td>
+                  <td className="px-2 py-2 text-right">{formatRoasDelta(roasImpact)}</td>
+                  <td className="px-2 py-2">{confidence}/100</td>
+                  <td className="px-2 py-2">{zone?.zone.replaceAll("_", " ") ?? "Not assessed"}</td>
+                  <td className="max-w-[260px] px-2 py-2">{recommendation.rationale}</td>
+                  <td className="px-2 py-2">
+                    <Badge variant="outline">{priority}</Badge>
+                  </td>
+                  <td className="px-2 py-2">{Math.min(14, horizon)} days</td>
+                  <td className="max-w-[260px] px-2 py-2">
+                    Stop if observed ROAS falls below {fmtRoas(current?.projectedRoas ?? 0)} or
+                    spend exceeds {fmtCurrency(zone?.safeBudgetCeiling ?? 0)}.
+                  </td>
+                </tr>
+              ),
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
 
@@ -540,6 +693,99 @@ function DetectionPanel({
         ))}
       </div>
     </Card>
+  );
+}
+
+function buildScenarioComparison(
+  optimizer: BudgetOptimizerResult,
+  scenarios: WhatIfScenarioResult[],
+  planningZones: ChannelPlanningZone[],
+  currentRevenue: number,
+  currentRoas: number,
+): SupportedScenario[] {
+  const find = (prefix: string) =>
+    scenarios.find((scenario) => scenario.name.toLowerCase().startsWith(prefix.toLowerCase()));
+  const current = find("current plan");
+  const namedPlans = [
+    ["Current plan", current],
+    ["Automatic allocation", find("automatic allocation")],
+    ["Conservative plan", find("conservative plan")],
+    ["Growth plan", find("growth plan")],
+  ] as const;
+  const baselineHalfWidth = Math.max(0, optimizer.baselineIntervalHalfWidth);
+  const rows: SupportedScenario[] = namedPlans.map(([name, scenario]) => {
+    const revenue = scenario?.projectedRevenue ?? currentRevenue;
+    const roas = scenario?.projectedRoas ?? currentRoas;
+    const intervalScale = currentRevenue > 0 ? Math.max(0.25, revenue / currentRevenue) : 1;
+    const halfWidth = baselineHalfWidth * intervalScale;
+    const gain = revenue - currentRevenue;
+    const noiseFloor = baselineHalfWidth + halfWidth;
+    return {
+      name,
+      projectedRevenue: revenue,
+      projectedRoas: roas,
+      lowerRevenue: Math.max(0, revenue - halfWidth),
+      upperRevenue: revenue + halfWidth,
+      gain,
+      noiseFloor,
+      zone: classifyPlanZone(scenario?.budgets ?? current?.budgets ?? {}, planningZones),
+      meaningful: Math.abs(gain) > noiseFloor,
+      bestSupported: false,
+    };
+  });
+  const optimizedBudgets = Object.fromEntries(
+    optimizer.recommendations.map((item) => [item.channel, item.recommendedBudget]),
+  );
+  rows.splice(2, 0, {
+    name: "Optimized allocation",
+    projectedRevenue: optimizer.optimizedExpectedRevenue,
+    projectedRoas: optimizer.expectedRoas,
+    lowerRevenue: Math.max(
+      0,
+      optimizer.optimizedExpectedRevenue - optimizer.optimizedIntervalHalfWidth,
+    ),
+    upperRevenue: optimizer.optimizedExpectedRevenue + optimizer.optimizedIntervalHalfWidth,
+    gain: optimizer.absoluteGain,
+    noiseFloor: optimizer.uncertaintyNoiseFloor,
+    zone: classifyPlanZone(optimizedBudgets, planningZones),
+    meaningful: optimizer.meaningful,
+    bestSupported: false,
+  });
+  const ranked = [...rows].sort((left, right) => {
+    const zoneDelta = zoneSeverity(left.zone) - zoneSeverity(right.zone);
+    if (zoneDelta) return zoneDelta;
+    const leftSupportedGain = left.meaningful && left.gain > 0 ? 1 : 0;
+    const rightSupportedGain = right.meaningful && right.gain > 0 ? 1 : 0;
+    if (leftSupportedGain !== rightSupportedGain) return rightSupportedGain - leftSupportedGain;
+    return right.projectedRevenue - left.projectedRevenue;
+  });
+  const bestName = ranked[0]?.name;
+  return rows.map((row) => ({ ...row, bestSupported: row.name === bestName }));
+}
+
+function classifyPlanZone(budgets: Record<string, number>, evidence: ChannelPlanningZone[]) {
+  if (!evidence.length) return "UNSUPPORTED";
+  const severity = evidence.reduce((worst, item) => {
+    const budget = Math.max(0, budgets[item.channel] ?? 0);
+    let zone = "UNSUPPORTED";
+    if (item.comparableWindowCount >= 3 && item.historicalMaximum > 0) {
+      if (budget <= item.historicalP90) zone = "SUPPORTED";
+      else if (budget <= item.historicalMaximum * 1.1) zone = "CAUTION";
+      else if (budget <= item.historicalMaximum * 1.5) zone = "HIGH_EXTRAPOLATION";
+    }
+    return Math.max(worst, zoneSeverity(zone));
+  }, 0);
+  return ["SUPPORTED", "CAUTION", "HIGH_EXTRAPOLATION", "UNSUPPORTED"][severity];
+}
+
+function zoneSeverity(zone: string) {
+  return (
+    {
+      SUPPORTED: 0,
+      CAUTION: 1,
+      HIGH_EXTRAPOLATION: 2,
+      UNSUPPORTED: 3,
+    }[zone] ?? 3
   );
 }
 

@@ -4,6 +4,29 @@
   "model": "gemini-2.5-flash",
   "schema": "backend.schemas.InsightsResponse",
   "redaction": "GEMINI_API_KEY and Google API key patterns are redacted before writing.",
+  "redaction_status": "redacted",
+  "scenario_id": "sample_portfolio_causal_hypothesis_ranking",
+  "provider_metadata": {
+    "provider": "Google Gemini",
+    "model": "gemini-2.5-flash",
+    "capture_mode": "live_provider_response"
+  },
+  "limitations": [
+    "This response is a captured sample, not a freshness claim about current provider behavior.",
+    "The causal rankings are observational hypotheses and not randomized incrementality proof.",
+    "The offline evaluator does not require this transcript or a Gemini API key."
+  ],
+  "deterministic_evidence_provenance": {
+    "files": [
+      "data/sample_campaigns.csv",
+      "output/predictions.csv",
+      "reports/backtest_report.json",
+      "reports/interval_calibration_report.json"
+    ],
+    "normalized_predictions_sha256": "f72c4854098ef5bb382162c66c74a1ef692cda33c1dc4c08c19c7cdf1c2f1362",
+    "relationship": "These committed files anchor the reproducible evaluator evidence; the provider response below remains the captured live transcript payload."
+  },
+  "metadata_note": "Judge-evidence metadata was added after capture; response_text and response_json were not changed.",
   "prompt_sha256": "3640199307e4472a5ea4c9ef3179e6045c71610319b06c9253c40d5a3fa5d1f4",
   "request_summary": {
     "totalRevenue": 4170596.49,

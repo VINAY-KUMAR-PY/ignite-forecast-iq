@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-17T09:56:58Z",
+  "generated_at": "2026-07-18T08:35:23Z",
   "environment": {
     "os": "Windows (win32)",
     "python": "3.14.4",
@@ -62,7 +62,7 @@
         "./run.sh",
         "./data",
         "./pickle/model.pkl",
-        "./output/final_check_{1,2}/predictions.csv"
+        "./output/judge_polish_{1,2}/predictions.csv"
       ],
       "runs": 2,
       "returncode": 0
@@ -94,19 +94,20 @@
     }
   ],
   "coverage": {
-    "statements": 5075,
-    "missing": 321,
-    "coverage_pct": 93.67,
-    "passed": 274,
+    "statements": 5379,
+    "missing": 322,
+    "coverage_pct": 94.01,
+    "passed": 293,
     "skipped": 2,
     "warnings": 7,
-    "duration_seconds": 293.27,
+    "duration_seconds": 193.53,
     "modules": {
       "backend/__init__.py": 100.0,
-      "backend/anomaly.py": 94.81,
+      "backend/anomaly.py": 97.4,
       "backend/causal_lite.py": 87.76,
       "backend/causal_reasoning.py": 97.97,
-      "backend/data_preprocessing.py": 90.4,
+      "backend/data_preprocessing.py": 93.87,
+      "backend/data_readiness.py": 95.56,
       "backend/decision_support.py": 93.22,
       "backend/evaluator_contract.py": 100.0,
       "backend/evaluator_intervals.py": 92.59,
@@ -116,29 +117,29 @@
       "backend/gemini_offline_cache.py": 98.02,
       "backend/inference.py": 92.91,
       "backend/lightweight_api.py": 93.58,
-      "backend/main.py": 89.69,
+      "backend/main.py": 91.37,
       "backend/model_selection.py": 89.23,
       "backend/planning_guardrails.py": 93.22,
       "backend/predict.py": 98.15,
-      "backend/schema_adapters.py": 94.07,
-      "backend/schemas.py": 98.46,
+      "backend/schema_adapters.py": 94.49,
+      "backend/schemas.py": 98.53,
       "backend/segment_utils.py": 95.6,
       "backend/train.py": 91.95,
       "backend/utils.py": 96.0
     }
   },
   "frontend": {
-    "unit_test_files": 6,
-    "unit_tests_passed": 22,
-    "playwright_tests_passed": 1,
+    "unit_test_files": 11,
+    "unit_tests_passed": 38,
+    "playwright_tests_passed": 3,
     "typecheck": "pass",
     "lint": "pass",
     "production_build": "pass"
   },
   "evaluator": {
     "output_paths": [
-      "output/final_check_1/predictions.csv",
-      "output/final_check_2/predictions.csv"
+      "output/judge_polish_1/predictions.csv",
+      "output/judge_polish_2/predictions.csv"
     ],
     "rows": 54,
     "schema_columns": 12,
@@ -168,6 +169,7 @@
     "reports/long_horizon_revenue_ablation.md",
     "reports/coverage_summary.md",
     "reports/frontend_evidence.generated.json",
+    "reports/judge_scorecard.json",
     "reports/final_upgrade_report.md"
   ],
   "status": "pass"

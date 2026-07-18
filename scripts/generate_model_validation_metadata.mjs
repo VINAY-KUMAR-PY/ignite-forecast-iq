@@ -1,4 +1,5 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { format } from "prettier";
@@ -6,6 +7,7 @@ import { format } from "prettier";
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const outputPath = join(root, "src", "lib", "model-validation.generated.ts");
 const jsonOutputPath = join(root, "reports", "frontend_evidence.generated.json");
+const judgeScorecardOutputPath = join(root, "reports", "judge_scorecard.json");
 const sourcePaths = {
   backtest: join(root, "reports", "backtest_report.json"),
   calibration: join(root, "reports", "interval_calibration_report.json"),
@@ -31,6 +33,15 @@ function readCsv(path) {
     .map((line) =>
       Object.fromEntries(line.split(",").map((value, index) => [headers[index], value])),
     );
+}
+
+function readCsvHeaders(path) {
+  return readFileSync(path, "utf8").trim().split(/\r?\n/, 1)[0].split(",");
+}
+
+function normalizedSha256(path) {
+  const normalized = readFileSync(path, "utf8").replace(/\r\n?/g, "\n");
+  return createHash("sha256").update(normalized, "utf8").digest("hex");
 }
 
 function finiteNumber(value) {
@@ -185,6 +196,90 @@ function buildEvidence() {
   };
 }
 
+function buildJudgeScorecard(evidence) {
+  const backtest = readJson(sourcePaths.backtest);
+  const calibration = readJson(sourcePaths.calibration);
+  const verification = readJson(sourcePaths.verification);
+  const predictionHeaders = readCsvHeaders(sourcePaths.predictions);
+  const reportSchema = backtest.required_output_columns ?? [];
+  if (JSON.stringify(predictionHeaders) !== JSON.stringify(reportSchema)) {
+    throw new Error("Prediction CSV schema does not match reports/backtest_report.json");
+  }
+
+  return {
+    projectName: "ForecastIQ",
+    artifactVersion: evidence.modelArtifact.version,
+    generatedAt: evidence.generatedAt,
+    evaluatorCommand: "./run.sh ./data ./pickle/model.pkl ./output/predictions.csv",
+    outputSchema: {
+      columnCount: predictionHeaders.length,
+      columns: predictionHeaders,
+    },
+    rowCount: evidence.sampleOutput.rowCount,
+    horizons: evidence.horizons.map((row) => row.horizonDays),
+    modelPathCounts: evidence.sampleOutput.modelTypeCounts,
+    accuracyByHorizon: evidence.horizons.map((row) => ({
+      horizonDays: row.horizonDays,
+      revenueMapePct: row.revenueMapePct,
+      roasMapePct: row.roasMapePct,
+    })),
+    coverageByHorizon: evidence.horizons.map((row) => ({
+      horizonDays: row.horizonDays,
+      revenueIntervalCoveragePct: row.revenueIntervalCoveragePct,
+    })),
+    testCounts: {
+      backend: {
+        passed: evidence.backendVerification.passed,
+        skipped: evidence.backendVerification.skipped,
+      },
+      frontend: {
+        files: finiteNumber(verification.frontend?.unit_test_files),
+        passed: finiteNumber(verification.frontend?.unit_tests_passed),
+      },
+      playwright: {
+        passed: finiteNumber(verification.frontend?.playwright_tests_passed),
+      },
+    },
+    backendCoveragePct: evidence.backendVerification.measuredCoveragePct,
+    deterministicNormalizedSha256: normalizedSha256(sourcePaths.predictions),
+    supportedDataAdapters: [
+      "GA4",
+      "Shopify",
+      "Google/Meta Ads exports",
+      "Microsoft/Bing Ads",
+      "canonical and generic marketing CSV",
+    ],
+    keyProductCapabilities: [
+      "30/60/90-day revenue and ROAS forecasts",
+      "overall, channel, campaign-type, and campaign output grains",
+      "calibrated downside, expected, and upside planning ranges",
+      "horizon champion-challenger model-path governance",
+      "data-readiness and anomaly diagnostics",
+      "guardrailed budget scenarios and observational causal hypotheses",
+    ],
+    knownLimitations: [
+      "Uploaded monetary values must use a consistent currency and unit scale.",
+      "Missing spend is estimated for supported revenue-only inputs and lowers confidence.",
+      "The 60/90-day revenue path is baseline-anchored under current validation evidence.",
+      "The 90-day interval coverage is 86.11% with only two non-overlapping validation windows.",
+      "Observational causal evidence is not randomized incrementality proof.",
+      "Live Gemini is optional and never required by the offline evaluator.",
+      "Plans outside historical spend support are extrapolations, not guarantees.",
+    ],
+    provenanceSourceFiles: [
+      sourceName(sourcePaths.backtest),
+      sourceName(sourcePaths.calibration),
+      sourceName(sourcePaths.verification),
+      sourceName(sourcePaths.predictions),
+      "reports/final_submission_audit.md",
+      "backend/schema_adapters.py",
+    ],
+    evidenceStatus: evidence.availability,
+    evaluatorDeterministic: verification.evaluator?.deterministic === true,
+    calibrationSource: calibration.latest_walk_forward_source ?? "reports/backtest_report.json",
+  };
+}
+
 function unavailableEvidence(error) {
   return {
     availability: "unavailable",
@@ -228,8 +323,10 @@ function unavailableEvidence(error) {
 }
 
 let evidence;
+let judgeScorecard;
 try {
   evidence = buildEvidence();
+  judgeScorecard = buildJudgeScorecard(evidence);
 } catch (error) {
   evidence = unavailableEvidence(error);
   console.warn(`Generating explicit evidence fallback: ${evidence.error}`);
@@ -324,6 +421,9 @@ writeFileSync(
   "utf8",
 );
 writeFileSync(jsonOutputPath, `${JSON.stringify(evidence, null, 2)}\n`, "utf8");
+if (judgeScorecard) {
+  writeFileSync(judgeScorecardOutputPath, `${JSON.stringify(judgeScorecard, null, 2)}\n`, "utf8");
+}
 console.log(
-  `Generated ${outputPath} and ${jsonOutputPath} from ${evidence.sources.join(", ")} (${evidence.availability})`,
+  `Generated ${outputPath}, ${jsonOutputPath}, and ${judgeScorecardOutputPath} from ${evidence.sources.join(", ")} (${evidence.availability})`,
 );

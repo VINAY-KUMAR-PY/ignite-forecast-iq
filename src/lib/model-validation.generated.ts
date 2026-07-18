@@ -73,7 +73,7 @@ export type ModelEvidence = {
 export const MODEL_EVIDENCE: ModelEvidence = {
   availability: "available",
   statusLabel: "Verified repository evidence",
-  generatedAt: "2026-07-17T09:56:58Z",
+  generatedAt: "2026-07-18T08:35:23Z",
   horizons: [
     {
       horizonDays: 30,
@@ -141,8 +141,8 @@ export const MODEL_EVIDENCE: ModelEvidence = {
   },
   backendVerification: {
     coverageGatePct: 92.05,
-    measuredCoveragePct: 93.67,
-    passed: 274,
+    measuredCoveragePct: 94.01,
+    passed: 293,
     skipped: 2,
     environmentNote:
       "SHAP is intentionally unavailable on Python 3.14; two POSIX-shell-only tests skip on Windows. Counts may vary slightly across supported environments, while GitHub Actions and the 92.05% coverage gate remain canonical.",
@@ -200,7 +200,7 @@ export const MODEL_EVIDENCE: ModelEvidence = {
     trainingEndDate: "2026-05-18",
   },
   runtime: {
-    verificationDate: "2026-07-17T09:56:58Z",
+    verificationDate: "2026-07-18T08:35:23Z",
     deterministic: true,
     networkRequired: false,
     outputSha256: "602F679A33EE27BA04ECDFC16E3BC4EE357606183F4E78741F11217633EE59A1",

@@ -29,3 +29,16 @@ test("landing theme toggle stays visible and persists across landing and dashboa
   await expect(page.getByRole("button", { name: "Switch to dark mode" })).toBeVisible();
   await expect(page.locator("html")).not.toHaveClass(/dark/);
 });
+
+test("budget simulator contains wide planning tables on mobile", async ({ page }) => {
+  await page.route("**/api/**", async (route) => route.abort());
+  await page.goto("/app/simulator");
+  await expect(page.getByRole("heading", { name: "Budget simulator" })).toBeVisible();
+  await expect(page.getByTestId("automatic-allocation")).toBeVisible();
+
+  const documentWidth = await page.evaluate(() => ({
+    client: document.documentElement.clientWidth,
+    scroll: document.body.scrollWidth,
+  }));
+  expect(documentWidth.scroll).toBeLessThanOrEqual(documentWidth.client);
+});

@@ -166,7 +166,7 @@ Backend coverage is **94.01% measured locally** with
 `python -m pytest tests -q --cov=backend --cov-report=term-missing`; Evaluator CI
 enforces **92.05%** with `--cov-fail-under=92.05`.
 
-The reported local result is from Windows with Python 3.14.4: **289 passed, 2
+The reported local result is from Windows with Python 3.14.4: **291 passed, 2
 skipped**, with SHAP intentionally unavailable on Python 3.14 and two
 POSIX-shell-only tests skipped on Windows. Test totals can vary slightly by
 supported Python version and OS because SHAP-dependent behavior runs where

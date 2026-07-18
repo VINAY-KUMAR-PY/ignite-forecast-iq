@@ -414,7 +414,7 @@ function SimulatorPage() {
       )}
 
       <div className="grid gap-6 lg:grid-cols-5">
-        <Card className="bg-gradient-card border-border/60 p-6 lg:col-span-2">
+        <Card className="min-w-0 bg-gradient-card border-border/60 p-6 lg:col-span-2">
           <div className="flex items-start justify-between gap-3">
             <div>
               <h3 className="text-sm font-semibold">Budget plan</h3>

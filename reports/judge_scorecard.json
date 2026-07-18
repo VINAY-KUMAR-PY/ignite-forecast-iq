@@ -34,19 +34,26 @@
     {
       "horizonDays": 30,
       "revenueMapePct": 2.81,
+      "latestWalkForwardRevenueMapePct": 2.81,
       "roasMapePct": 1.26
     },
     {
       "horizonDays": 60,
       "revenueMapePct": 10.11,
+      "latestWalkForwardRevenueMapePct": 10.11,
       "roasMapePct": 1.56
     },
     {
       "horizonDays": 90,
       "revenueMapePct": 7.89,
+      "latestWalkForwardRevenueMapePct": 7.89,
       "roasMapePct": 2.46
     }
   ],
+  "metricDefinitions": {
+    "revenueMapePct": "reports/backtest_report.json → horizon_planning_selection → selected_forecast_mape",
+    "latestWalkForwardRevenueMapePct": "reports/interval_calibration_report.json → latest_walk_forward_backtest → revenue_mape"
+  },
   "coverageByHorizon": [
     {
       "horizonDays": 30,

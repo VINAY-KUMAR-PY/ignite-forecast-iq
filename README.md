@@ -15,7 +15,7 @@ guardrails tied to reproducible offline evidence.
 | Horizons | 30, 60, and 90 days for expected revenue, ROAS, and downside/upside planning bounds. |
 | Decision supported | Compare channel outlooks, test budget reallocations, and stop unsupported spend extrapolation before execution. |
 | Differentiator | An offline committed artifact, horizon-specific champion-challenger policy, calibrated intervals, and evidence-linked decision guardrails in one evaluator-safe workflow. |
-| Verified headline | 54 rows; revenue MAPE 2.81% / 10.11% / 7.89%; ROAS MAPE 1.26% / 1.56% / 2.46%; interval coverage 95.83% / 90.28% / 86.11%. |
+| Verified headline | 54 rows; latest walk-forward revenue MAPE 2.81% / 10.11% / 7.89%; selected planning-policy revenue MAPE 2.87% / 10.11% / 7.89%; ROAS MAPE 1.26% / 1.56% / 2.46%; interval coverage 95.83% / 90.28% / 86.11%. |
 
 The graded path is intentionally simple: `run.sh` loads `pickle/model.pkl`,
 normalizes CSVs from `data/`, writes `predictions.csv`, `causal_summary.txt`,
@@ -47,7 +47,8 @@ the machine-readable version.
 | Evaluator rows | 54 | [`output/predictions.csv`](./output/predictions.csv), [`verification_summary.json`](./reports/verification_summary.json) |
 | Output schema | 12 ordered columns | [`output/predictions.csv`](./output/predictions.csv), [`backtest_report.json`](./reports/backtest_report.json) |
 | Forecast horizons | 30 / 60 / 90 days | [`output/predictions.csv`](./output/predictions.csv), [`backtest_summary.md`](./reports/backtest_summary.md) |
-| Revenue MAPE by horizon | 2.81% / 10.11% / 7.89% | [`backtest_summary.md`](./reports/backtest_summary.md) |
+| Latest walk-forward revenue MAPE by horizon | 2.81% / 10.11% / 7.89% | [`interval_calibration_report.json`](./reports/interval_calibration_report.json) |
+| Selected planning-policy revenue MAPE by horizon | 2.87% / 10.11% / 7.89% (30-day policy metric differs) | [`backtest_report.json`](./reports/backtest_report.json) |
 | ROAS MAPE by horizon | 1.26% / 1.56% / 2.46% | [`backtest_summary.md`](./reports/backtest_summary.md) |
 | Revenue interval coverage | 95.83% / 90.28% / 86.11% | [`interval_calibration_report.json`](./reports/interval_calibration_report.json) |
 | Model paths | 18 trained / 36 baseline-anchored | [`output/predictions.csv`](./output/predictions.csv), [`final_submission_audit.md`](./reports/final_submission_audit.md) |
@@ -213,10 +214,13 @@ Core Flow:
 ## Forecast Accuracy At A Glance
 
 Latest regenerated walk-forward revenue interval coverage is
-**95.83% / 90.28% / 86.11%** for 30/60/90-day selected planning intervals. Revenue MAPE is
-**2.81% / 10.11% / 7.89%** for 30/60/90 days; pooled ROAS MAPE is
-**1.26% / 1.56% / 2.46%**. Full tables:
-[reports/backtest_summary.md](./reports/backtest_summary.md).
+**95.83% / 90.28% / 86.11%** for 30/60/90-day selected planning intervals. Latest walk-forward
+revenue MAPE is **2.81% / 10.11% / 7.89%** for 30/60/90 days. The selected planning-policy
+revenue MAPE is **2.87% / 10.11% / 7.89%**; only the 30-day value differs because this metric
+comes from the selected planning-policy report rather than the latest calibration snapshot.
+Pooled ROAS MAPE is **1.26% / 1.56% / 2.46%**. Full tables:
+[reports/backtest_summary.md](./reports/backtest_summary.md) and
+[reports/interval_calibration_report.json](./reports/interval_calibration_report.json).
 
 Backend coverage is **94.01% measured locally** with
 `python -m pytest tests -q --cov=backend --cov-report=term-missing`; Evaluator CI

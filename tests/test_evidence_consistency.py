@@ -131,6 +131,9 @@ def test_judge_scorecard_matches_canonical_machine_readable_evidence() -> None:
     for row in scorecard["accuracyByHorizon"]:
         horizon = row["horizonDays"]
         assert row["revenueMapePct"] == selected[horizon]["selected_forecast_mape"]
+        assert row["latestWalkForwardRevenueMapePct"] == calibrated[horizon][
+            "revenue_mape"
+        ]
         assert row["roasMapePct"] == calibrated[horizon]["roas_mape"]
     for row in scorecard["coverageByHorizon"]:
         horizon = row["horizonDays"]
@@ -166,3 +169,13 @@ def test_judge_scorecard_matches_canonical_machine_readable_evidence() -> None:
         "reports/interval_calibration_report.json",
         "reports/verification_summary.json",
     }.issubset(scorecard["provenanceSourceFiles"])
+    assert scorecard["metricDefinitions"] == {
+        "revenueMapePct": (
+            "reports/backtest_report.json → horizon_planning_selection → "
+            "selected_forecast_mape"
+        ),
+        "latestWalkForwardRevenueMapePct": (
+            "reports/interval_calibration_report.json → "
+            "latest_walk_forward_backtest → revenue_mape"
+        ),
+    }

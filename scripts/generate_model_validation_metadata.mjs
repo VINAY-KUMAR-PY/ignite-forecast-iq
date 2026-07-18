@@ -200,6 +200,9 @@ function buildJudgeScorecard(evidence) {
   const backtest = readJson(sourcePaths.backtest);
   const calibration = readJson(sourcePaths.calibration);
   const verification = readJson(sourcePaths.verification);
+  const selectedPlanningByHorizon = new Map(
+    (backtest.horizon_planning_selection ?? []).map((row) => [Number(row.horizon_days), row]),
+  );
   const predictionHeaders = readCsvHeaders(sourcePaths.predictions);
   const reportSchema = backtest.required_output_columns ?? [];
   if (JSON.stringify(predictionHeaders) !== JSON.stringify(reportSchema)) {
@@ -220,9 +223,18 @@ function buildJudgeScorecard(evidence) {
     modelPathCounts: evidence.sampleOutput.modelTypeCounts,
     accuracyByHorizon: evidence.horizons.map((row) => ({
       horizonDays: row.horizonDays,
-      revenueMapePct: row.revenueMapePct,
+      revenueMapePct: finiteNumber(
+        selectedPlanningByHorizon.get(row.horizonDays)?.selected_forecast_mape,
+      ),
+      latestWalkForwardRevenueMapePct: row.revenueMapePct,
       roasMapePct: row.roasMapePct,
     })),
+    metricDefinitions: {
+      revenueMapePct:
+        "reports/backtest_report.json → horizon_planning_selection → selected_forecast_mape",
+      latestWalkForwardRevenueMapePct:
+        "reports/interval_calibration_report.json → latest_walk_forward_backtest → revenue_mape",
+    },
     coverageByHorizon: evidence.horizons.map((row) => ({
       horizonDays: row.horizonDays,
       revenueIntervalCoveragePct: row.revenueIntervalCoveragePct,
